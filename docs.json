@@ -8,7 +8,7 @@
     "dark": "#bf9667"
   },
   "appearance": {
-    "default": "dark",
+    "default": "light",
     "strict": true
   },
   "favicon": "/images/polystack-favicon.png",
@@ -785,15 +785,7 @@
         "title": "Contact",
         "items": [
           {
-            "label": "1612, Logix City Center Office Tower,",
-            "href": "https://polystack.tech/contact-us/"
-          },
-          {
-            "label": "Sector- 32 Noida , UP-201301",
-            "href": "https://polystack.tech/contact-us/"
-          },
-          {
-            "label": "India.",
+            "label": "1612, Logix City Center Office Tower, Sector-32 Noida, UP-201301, India",
             "href": "https://polystack.tech/contact-us/"
           }
         ],
@@ -811,12 +803,16 @@
             "href": "https://polystack.tech/products/datacenter-solutions/"
           },
           {
-            "label": "Cyber Range",
-            "href": "https://polystack.tech/cyber-range"
+            "label": "IronFlex HCI",
+            "href": "https://polystack.tech/ironflex-hci/"
           },
           {
-            "label": "Anti Ransomware",
-            "href": "https://polystack.tech/anti-ransomware"
+            "label": "IronPeak Servers",
+            "href": "https://polystack.tech/ironpeak-servers/"
+          },
+          {
+            "label": "Workstations",
+            "href": "https://polystack.tech/workstations/"
           }
         ],
         "header": "Solutions"
@@ -826,15 +822,15 @@
         "items": [
           {
             "label": "VIDS",
-            "href": "https://polystack.tech/vids"
+            "href": "https://polystack.tech/industry-solutions/atms-nhai/vids/"
           },
           {
             "label": "ATCC",
-            "href": "https://polystack.tech/atcc"
+            "href": "https://polystack.tech/industry-solutions/atms-nhai/atcc/"
           },
           {
             "label": "AVCC",
-            "href": "https://polystack.tech/avcc"
+            "href": "https://polystack.tech/industry-solutions/atms-nhai/avcc/"
           }
         ],
         "header": "Products"
@@ -843,16 +839,20 @@
         "title": "Company",
         "items": [
           {
-            "label": "Technical assistance",
-            "href": "https://polystack.tech/contact-us/"
+            "label": "Technical Assistance",
+            "href": "https://polystack.tech/support/technical-assistance-center/"
+          },
+          {
+            "label": "Support",
+            "href": "https://polystack.tech/support/"
           },
           {
             "label": "Partners",
-            "href": "https://polystack.tech/partners"
+            "href": "https://polystack.tech/partners/channel-partners/"
           },
           {
             "label": "Career",
-            "href": "https://polystack.tech/career"
+            "href": "https://polystack.tech/career/"
           },
           {
             "label": "About Us",
@@ -867,7 +867,7 @@
       }
     ],
     "socials": {
-      "linkedin": "https://linkedin.com/company/polystack",
+      "linkedin": "https://www.linkedin.com/company/polystack-technologies/",
       "website": "https://polystack.tech/"
     }
   },
