@@ -1,11 +1,11 @@
 {
   "$schema": "https://mintlify.com/docs.json",
-  "theme": "linden",
+  "theme": "willow",
   "name": "Docs",
   "colors": {
-    "primary": "#197560",
-    "light": "#3F8F7E",
-    "dark": "#197560"
+    "primary": "#bf9667",
+    "light": "#d7b98e",
+    "dark": "#8f6a43"
   },
   "favicon": "/images/favicon.ico",
   "icons": {
