@@ -631,41 +631,6 @@
             ]
           }
         ]
-      },
-      {
-        "group": "Security",
-        "icon": "shield-halved",
-        "root": "security/index",
-        "pages": [
-          {
-            "group": "Polystack SIEM",
-            "root": "security/polystack-siem",
-            "pages": [
-              "security/wazuh",
-              "security/lynis",
-              "security/openscap"
-            ]
-          },
-          "security/infrastructure",
-          "security/vm-security",
-          "security/api-security",
-          "security/data-security",
-          "security/network-security",
-          "security/compliance",
-          "security/hardening-guide"
-        ]
-      },
-      {
-        "group": "Integrations",
-        "icon": "plug",
-        "root": "integrations/index",
-        "pages": [
-          "integrations/terraform",
-          "integrations/ansible",
-          "integrations/prometheus",
-          "integrations/grafana",
-          "integrations/wazuh"
-        ]
       }
     ],
     "global": {
