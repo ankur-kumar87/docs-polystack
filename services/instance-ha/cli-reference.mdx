@@ -1,0 +1,105 @@
+---
+title: "Instance HA CLI Reference"
+description: "Complete openstack ha CLI commands for managing failover segments, hosts, and notifications in Xloud Instance HA."
+sidebarTitle: "CLI Reference"
+---
+
+## Overview
+
+The `openstack ha` command group manages Instance HA — failover segments, segment hosts, and notification drivers.
+
+<Note>
+  **Prerequisites**
+  - CLI installed and authenticated — see [CLI Setup](/cli-setup)
+  - Python masakariclient installed: `pip install python-masakariclient`
+  - Admin role required for all HA operations
+</Note>
+
+---
+
+## Failover Segments
+
+<CodeGroup>
+```bash title="List segments"
+openstack ha segment list
+```
+
+```bash title="Create segment"
+openstack ha segment create \
+  --recovery-method auto \
+  --service-type COMPUTE \
+  primary-zone
+```
+
+```bash title="Show segment"
+openstack ha segment show primary-zone
+```
+
+```bash title="Update segment"
+openstack ha segment update \
+  --recovery-method reserved_host \
+  primary-zone
+```
+
+```bash title="Delete segment"
+openstack ha segment delete primary-zone
+```
+</CodeGroup>
+
+---
+
+## Segment Hosts
+
+<CodeGroup>
+```bash title="List hosts in a segment"
+openstack ha host list primary-zone
+```
+
+```bash title="Add host to segment"
+openstack ha host create \
+  --segment primary-zone \
+  --name compute-01 \
+  --type COMPUTE \
+  --control-attributes "SSH"
+```
+
+```bash title="Show host"
+openstack ha host show primary-zone compute-01
+```
+
+```bash title="Update host"
+openstack ha host update primary-zone compute-01 \
+  --on-maintenance True
+```
+
+```bash title="Remove host from segment"
+openstack ha host delete primary-zone compute-01
+```
+</CodeGroup>
+
+---
+
+## Notifications
+
+<CodeGroup>
+```bash title="List notifications"
+openstack ha notification list
+```
+
+```bash title="Show notification"
+openstack ha notification show <notification-uuid>
+```
+</CodeGroup>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="How Instance HA Works" href="/services/instance-ha/user-guide/how-it-works" color="#197560">
+    Understand the automatic recovery workflow
+  </Card>
+  <Card title="Failover Segments Guide" href="/services/instance-ha/admin-guide/failover-segments" color="#197560">
+    Configure segments and assign hosts
+  </Card>
+</CardGroup>

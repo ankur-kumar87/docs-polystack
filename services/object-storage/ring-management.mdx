@@ -1,0 +1,148 @@
+---
+title: "Ring Management"
+description: "Manage Xloud Object Storage consistent hash rings — add and remove devices, adjust weights, rebalance rings, and distribute updated ring files to all nodes."
+sidebarTitle: "Ring Management"
+---
+
+import AdminWarning from '/snippets/admin-warning.mdx';
+
+## Overview
+
+The consistent hash rings determine where every object, container, and account lives
+in the cluster. Ring changes require building new ring files and distributing them
+to all nodes. Object rebalancing occurs gradually as the replicator daemon synchronizes
+data to its new target locations.
+
+<AdminWarning />
+
+---
+
+## Ring Structure
+
+Each ring file (e.g., `object.ring.gz`) contains:
+
+| Component | Description |
+|-----------|-------------|
+| **Devices** | All registered storage drives with zone, region, IP, port, and weight |
+| **Partitions** | Virtual partition slots distributed across devices based on weight |
+| **Replicas** | Number of copies maintained for each partition |
+
+---
+
+## Add a Storage Device
+
+Adding new drives expands cluster capacity. New drives start with weight 0 and are
+gradually weighted up to prevent sudden data movement storms.
+
+<Steps titleSize="h3">
+  <Step title="Add the device to the ring builder">
+    ```bash title="Add device to object ring"
+    xavs-ring-builder object.builder add \
+      --region 1 \
+      --zone 1 \
+      --ip <storage-node-ip> \
+      --port 6200 \
+      --device <device-name> \
+      --weight 100
+    ```
+  </Step>
+  <Step title="Rebalance the ring">
+    ```bash title="Rebalance ring"
+    xavs-ring-builder object.builder rebalance
+    ```
+
+    <Warning>
+      Rebalancing moves data between nodes. In large clusters, a full rebalance can
+      take hours and generate significant network traffic. Use `--max-balance` to
+      limit the percentage of partitions moved per rebalance cycle.
+    </Warning>
+  </Step>
+  <Step title="Write and distribute the ring file">
+    ```bash title="Write the updated ring file"
+    xavs-ring-builder object.builder write_ring
+    ```
+
+    Distribute `object.ring.gz` to `/etc/xavs-object-storage/` on all proxy and
+    storage nodes.
+  </Step>
+</Steps>
+
+---
+
+## Remove a Storage Device
+
+Graceful device removal involves reducing weight to 0 and rebalancing before
+physically removing the device.
+
+<Steps titleSize="h3">
+  <Step title="Set device weight to 0">
+    ```bash title="Drain device weight"
+    xavs-ring-builder object.builder set_weight <device-id> 0
+    ```
+  </Step>
+  <Step title="Rebalance to drain the device">
+    ```bash title="Rebalance to migrate data off device"
+    xavs-ring-builder object.builder rebalance
+    ```
+  </Step>
+  <Step title="Wait for replication to complete">
+    Monitor with `xavs-storage-recon --replication` until the device shows zero
+    pending objects and no replication errors.
+  </Step>
+  <Step title="Remove the device from the ring">
+    ```bash title="Remove device and final rebalance"
+    xavs-ring-builder object.builder remove <device-id>
+    xavs-ring-builder object.builder rebalance
+    xavs-ring-builder object.builder write_ring
+    ```
+    Redistribute the updated ring file to all nodes.
+  </Step>
+</Steps>
+
+---
+
+## Verify Ring Consistency
+
+After distributing updated ring files, verify all nodes are using the same ring:
+
+```bash title="Check MD5 hash of ring files on all nodes"
+xavs-storage-recon --md5
+```
+
+All nodes should report identical MD5 hashes for each ring file. Mismatched hashes
+indicate stale ring files on specific nodes.
+
+---
+
+## Ring Builder Operations Reference
+
+<CodeGroup>
+```bash title="Show ring builder contents"
+xavs-ring-builder object.builder show
+```
+```bash title="List devices in the ring"
+xavs-ring-builder object.builder list
+```
+```bash title="Show ring balance report"
+xavs-ring-builder object.builder rebalance --dry-run
+```
+</CodeGroup>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Replication" href="/services/object-storage/replication" color="#197560">
+    Monitor data migration after ring changes
+  </Card>
+  <Card title="Storage Policies" href="/services/object-storage/storage-policies" color="#197560">
+    Understand how storage policies map to ring files
+  </Card>
+  <Card title="Monitoring" href="/services/object-storage/monitoring" color="#197560">
+    Track rebalancing progress and disk usage
+  </Card>
+  <Card title="Admin Troubleshooting" href="/services/object-storage/admin-troubleshooting" color="#197560">
+    Diagnose ring inconsistencies and rebalancing failures
+  </Card>
+</CardGroup>

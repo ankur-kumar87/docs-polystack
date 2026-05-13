@@ -1,0 +1,165 @@
+---
+title: "DNS Configuration"
+description: "Configure DNS name servers and hostname resolution for Xloud tenant subnets. Push resolvers to instances via DHCP for private and public name resolution."
+sidebarTitle: "DNS Configuration"
+---
+
+import CliAuth from '/snippets/cli-auth.mdx';
+
+## Overview
+
+DNS configuration in Xloud Networking controls which resolvers instances use for hostname
+resolution. Name servers are set at the subnet level and pushed to instances via DHCP at
+boot time. You can configure private internal resolvers, public fallback resolvers, or a
+combination — giving instances access to both internal service hostnames and public domain
+names.
+
+<Note>
+  **Prerequisites**
+  - An existing subnet with DHCP enabled ([Create and Manage Subnets](/services/networking/subnets))
+  - Dashboard access or CLI configured with valid credentials
+</Note>
+
+---
+
+## Configure DNS on a Subnet
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Open the subnet for editing" icon="compass">
+        Navigate to
+        **Network > Networks**. Click the network name, open the **Subnets** tab,
+        and click **Edit Subnet** on the target subnet.
+      </Step>
+      <Step title="Update DNS">
+        In the **Advanced Options** section, update the **DNS** field.
+        Enter one resolver per line.
+
+        | Resolver Type | Example | Use Case |
+        |---------------|---------|----------|
+        | Internal resolver | `10.0.0.53` | Resolve private hostnames (e.g., `db.internal`) |
+        | Public fallback | `8.8.8.8` | Resolve public internet domains |
+        | Secondary public | `8.8.4.4` | Redundant public resolver |
+
+        <Tip>
+          Place your internal resolver first. Instances try resolvers in the order they
+          are listed — putting the internal resolver first speeds up private hostname lookups.
+        </Tip>
+      </Step>
+      <Step title="Save and verify" icon="circle-check">
+        Click **Save**. Existing instances pick up the new resolvers on their next DHCP renewal.
+
+        <Check>New instances launched on this subnet receive the updated DNS resolvers automatically.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    <Steps titleSize="h3">
+      <Step title="Authenticate" icon="key">
+        <CliAuth />
+      </Step>
+      <Step title="Set DNS resolvers on a subnet" icon="settings">
+        ```bash title="Update DNS name servers"
+        openstack subnet set app-subnet \
+          --dns-nameserver 10.0.0.53 \
+          --dns-nameserver 8.8.8.8
+        ```
+        Repeat `--dns-nameserver` for each resolver. The order of the flags determines
+        the resolver priority.
+      </Step>
+      <Step title="Verify the configuration" icon="circle-check">
+        ```bash title="Show subnet DNS config"
+        openstack subnet show app-subnet -f json | grep dns_nameservers
+        ```
+
+        <Check>Output lists the configured resolvers in priority order.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+</Tabs>
+
+---
+
+## Apply DNS Changes to Running Instances
+
+DNS resolvers are delivered via DHCP at instance boot. Running instances retain their
+current resolvers until their DHCP lease renews or you force a renewal.
+
+<Tabs>
+  <Tab title="Linux instances" icon="terminal">
+    ```bash title="Force DHCP renewal (systemd-networkd)"
+    sudo networkctl renew eth0
+    ```
+    ```bash title="Force DHCP renewal (NetworkManager)"
+    sudo nmcli device reapply eth0
+    ```
+    ```bash title="Force DHCP renewal (dhclient)"
+    sudo dhclient -r eth0 && sudo dhclient eth0
+    ```
+  </Tab>
+  <Tab title="Verify resolution" icon="circle-check">
+    After renewal, confirm the instance is using the updated resolvers:
+
+    ```bash title="Check /etc/resolv.conf"
+    cat /etc/resolv.conf
+    ```
+    ```bash title="Test internal resolution"
+    nslookup db.internal 10.0.0.53
+    ```
+    ```bash title="Test public resolution"
+    nslookup google.com 8.8.8.8
+    ```
+
+    <Check>Both internal and public hostnames resolve correctly.</Check>
+  </Tab>
+</Tabs>
+
+---
+
+## Remove DNS Resolvers
+
+```bash title="Clear DNS name servers from subnet"
+openstack subnet set app-subnet --no-dns-nameservers
+```
+
+<Warning>
+  Removing all DNS resolvers means instances will have no resolvers after their next
+  DHCP renewal. They will be unable to resolve any hostnames, including internal ones.
+  Always configure at least one resolver.
+</Warning>
+
+---
+
+## DNS Reference
+
+| Resolver | Address | Notes |
+|----------|---------|-------|
+| Google Public DNS | `8.8.8.8`, `8.8.4.4` | Low-latency, widely available |
+| Cloudflare DNS | `1.1.1.1`, `1.0.0.1` | Privacy-focused, fast |
+| Internal (example) | `10.0.0.53` | Resolves private hostnames within your cluster |
+
+<Info>
+  For deployments with a dedicated DNS service, Xloud Networking supports the optional
+  DNS service (Xloud DNS) which provides zone management, record lifecycle, and floating
+  IP-to-hostname associations. Contact your administrator to enable Xloud DNS.
+</Info>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Create and Manage Subnets" href="/services/networking/subnets" color="#197560">
+    Manage all subnet settings including DHCP, allocation pools, and host routes
+  </Card>
+  <Card title="Network Troubleshooting" href="/services/networking/troubleshooting" color="#197560">
+    Diagnose DHCP and name resolution failures on your instances
+  </Card>
+  <Card title="Floating IP Addresses" href="/services/networking/floating-ips" color="#197560">
+    Assign public IPs to instances with DNS-resolvable hostnames
+  </Card>
+  <Card title="Network Topologies" href="/services/networking/network-topology" color="#197560">
+    Design multi-tier topologies with DNS-aware subnets
+  </Card>
+</CardGroup>

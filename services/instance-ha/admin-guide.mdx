@@ -1,0 +1,115 @@
+---
+title: "Instance HA Admin Guide"
+description: "Configure and operate Xloud Instance HA — deploy monitors, create failover segments, register hosts, tune recovery methods, and integrate with compute clusters."
+sidebarTitle: "Admin Guide"
+mode: "wide"
+---
+
+<p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Overview</p>
+
+Xloud Instance HA provides automated detection and recovery of failed compute hosts and
+instances. Administrators configure the failover infrastructure — segments, host monitors,
+instance monitors, and notification drivers — that power zero-touch recovery for project
+workloads. This guide covers the full administrative lifecycle, from initial deployment
+to tuning recovery policies for production.
+
+<Warning>
+  All operations in this guide require administrator privileges. Changes to segment
+  configuration and monitor settings affect active recovery workflows immediately.
+</Warning>
+
+<Tabs>
+  <Tab title="XDeploy" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Open XDeploy Configuration" icon="settings">
+        Log in to **XDeploy** (`https://xdeploy.<your-domain>`) and navigate to **Configuration**.
+      </Step>
+      <Step title="Enable Host HA" icon="toggle-right">
+        Select the **Advance Features** tab. Toggle **Enable Host HA** to **Yes**.
+
+        This automatically enables the underlying services (`enable_masakari` and
+        `enable_hacluster`) with no manual file editing required.
+      </Step>
+      <Step title="Save and deploy" icon="play">
+        Click **Save Configuration**, then navigate to **Operations** and run a
+        **deploy** or **reconfigure** action.
+
+        <Check>Instance HA services start automatically across all registered compute hosts.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    Enable Instance HA by setting the flags in the globals configuration and deploying:
+
+    ```bash title="Create Instance HA globals override"
+    cat > /etc/xavs/globals.d/_50_instance_ha.yml << 'EOF'
+    enable_masakari: "yes"
+    enable_hacluster: "yes"
+    EOF
+    ```
+
+    ```bash title="Deploy the Instance HA service"
+    xavs-ansible deploy -t masakari
+    ```
+
+    <Check>Instance HA API, engine, host monitor, and instance monitor containers are running on all target hosts.</Check>
+  </Tab>
+</Tabs>
+
+---
+
+<p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>In This Guide</p>
+
+<CardGroup cols={4}>
+  <Card title="Architecture" icon="layers" href="/services/instance-ha/admin-guide/architecture" color="#197560">
+    Component diagram, service roles, and the detection-to-recovery data flow.
+  </Card>
+  <Card title="Failover Segments" icon="shield-check" href="/services/instance-ha/admin-guide/failover-segments" color="#197560">
+    Create and manage failover segments that define recovery scope and host groupings.
+  </Card>
+  <Card title="Host Monitors" icon="heart-pulse" href="/services/instance-ha/admin-guide/host-monitors" color="#197560">
+    Deploy and configure host monitors for host-level failure detection.
+  </Card>
+  <Card title="Instance Monitors" icon="monitor" href="/services/instance-ha/admin-guide/instance-monitors" color="#197560">
+    Configure instance-level monitors for guest OS and process failure detection.
+  </Card>
+  <Card title="Notification Drivers" icon="bell" href="/services/instance-ha/admin-guide/notification-drivers" color="#197560">
+    Configure IPMI, libvirt, and custom notification drivers for failure signaling.
+  </Card>
+  <Card title="Recovery Methods" icon="rotate" href="/services/instance-ha/admin-guide/recovery-methods" color="#197560">
+    Configure and tune recovery methods — rescheduler, reserved host, and auto-evacuate.
+  </Card>
+  <Card title="Engine Configuration" icon="settings" href="/services/instance-ha/admin-guide/engine-config" color="#197560">
+    Configure the recovery engine — timeouts, retry limits, and notification handling.
+  </Card>
+  <Card title="Security" icon="lock" href="/services/instance-ha/admin-guide/security" color="#197560">
+    Harden the Instance HA service account and restrict API access via RBAC.
+  </Card>
+  <Card title="Troubleshooting" icon="wrench" href="/services/instance-ha/admin-guide/troubleshooting" color="#197560">
+    Diagnose monitor failures, recovery timeouts, and notification processing errors.
+  </Card>
+</CardGroup>
+
+---
+
+<p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Architecture Summary</p>
+
+| Service | Role |
+|---------|------|
+| **API** | REST API for segment, host, and notification management |
+| **Engine** | Processes notifications and orchestrates recovery workflows |
+| **Host Monitor** | Detects host failures via IPMI/libvirt probing |
+| **Instance Monitor** | Detects instance failures via XAVS Guest Agent probing |
+
+---
+
+<p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Next Steps</p>
+
+<CardGroup cols={4}>
+  <Card title="Instance HA User Guide" icon="book-open" href="/services/instance-ha/user-guide" color="#197560">
+    Enable protection on instances and monitor recovery events from an operator perspective.
+  </Card>
+  <Card title="Instance HA Overview" icon="layers" href="/services/instance-ha/index" color="#197560">
+    Service overview and getting started with Instance HA.
+  </Card>
+</CardGroup>

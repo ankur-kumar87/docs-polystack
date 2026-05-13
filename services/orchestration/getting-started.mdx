@@ -1,0 +1,289 @@
+---
+title: "Create Your First Stack"
+description: "Learn how to define an orchestration template, deploy a stack on Xloud, and manage the stack lifecycle using the Dashboard and CLI."
+sidebarTitle: "Getting Started"
+---
+
+import AdminWarning from '/snippets/admin-warning.mdx';
+
+## Overview
+
+A <Tooltip tip="A stack is a collection of cloud resources — instances, networks, volumes, and more — defined in a single template and managed as a unit.">stack</Tooltip>
+is the fundamental unit of Xloud Orchestration. You describe the desired infrastructure
+in an orchestration template, submit it to the Orchestration API, and the engine provisions
+every resource in dependency order, reporting the overall stack status when complete.
+
+<Note>
+  **Prerequisites**
+  - A project with `member` or `admin` role
+  - At least one image available in the Xloud Image Service
+  - At least one flavor available for your project
+  - A network available in your project
+  - `xloud` CLI installed and authenticated (see [CLI Setup](/cli-setup))
+</Note>
+
+---
+
+## What Is a Stack?
+
+A stack groups related cloud resources into a single deployable unit:
+
+| Concept | Description |
+|---------|-------------|
+| **Template** | A YAML file declaring the resources, parameters, and outputs for a deployment |
+| **Stack** | The live instantiation of a template — the actual running resources |
+| **Parameter** | A runtime variable that customizes a template without editing it |
+| **Output** | A value produced by the stack (e.g., an IP address) returned after creation |
+| **Resource** | A single cloud object managed by the stack (instance, network, volume, etc.) |
+
+---
+
+## Example Template
+
+The following template launches a single compute instance with a configurable flavor.
+Save it as `first-stack.yaml`:
+
+```yaml title="first-stack.yaml"
+xloud_template_version: "2025-10-15"
+
+description: >
+  A minimal orchestration template that launches a single compute
+  instance with a parameterized flavor and key pair.
+
+parameters:
+  instance_name:
+    type: string
+    label: Instance Name
+    description: Display name for the compute instance
+    default: my-first-instance
+
+  flavor:
+    type: string
+    label: Flavor
+    description: Compute flavor (vCPU and RAM profile)
+    default: m1.small
+
+  image:
+    type: string
+    label: Image
+    description: OS image name or ID to boot from
+    default: Ubuntu-22.04
+
+  key_name:
+    type: string
+    label: Key Pair
+    description: SSH key pair for instance access
+
+  network:
+    type: string
+    label: Network
+    description: Network to attach the instance to
+    default: default
+
+resources:
+  my_instance:
+    type: Xloud::Compute::Server
+    properties:
+      name: { get_param: instance_name }
+      flavor: { get_param: flavor }
+      image: { get_param: image }
+      key_name: { get_param: key_name }
+      networks:
+        - network: { get_param: network }
+
+outputs:
+  instance_id:
+    description: The ID of the created instance
+    value: { get_resource: my_instance }
+
+  instance_ip:
+    description: The assigned IP address
+    value: { get_attr: [my_instance, first_address] }
+```
+
+---
+
+## Create a Stack
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Navigate to Orchestration" icon="compass">
+        Navigate to
+        **Orchestration > Stacks**.
+      </Step>
+      <Step title="Open the Create Stack wizard">
+        Click **Create Stack**. The 2-step wizard opens.
+      </Step>
+      <Step title="Step 1 — Prepare Template">
+        | Field | Type | Required | Description |
+        |-------|------|----------|-------------|
+        | **Template Content** | Text area with file upload | Yes | Paste YAML template or upload a `.yaml` file |
+        | **Environment Variable** | Text area with file upload | No | Optional environment variables file for template parameters |
+
+        The template is validated for YAML syntax. Click **Next** to proceed.
+
+        <Tip>
+          Environment variable files let you separate configuration from the template.
+          Parameters in the environment file must match those defined in the template.
+        </Tip>
+      </Step>
+      <Step title="Step 2 — Orchestration Information">
+        | Field | Type | Required | Default | Description |
+        |-------|------|----------|---------|-------------|
+        | **Stack Name** | Text | Yes | — | Unique name for this stack |
+        | **Creation Timeout (Minutes)** | Number | Yes | 60 | Time before creation is marked as failed |
+        | **Fail Rollback** | Radio | Yes | Enable | Enable: delete resources on failure. Disable: keep resources on failure |
+
+        Below these fields, **dynamic parameter fields** appear based on the template's
+        `parameters` section. Each template parameter becomes a form field with:
+        - Type mapped from template: `string` → text input, `number` → number input,
+          `json` → JSON input, `boolean` → Yes/No radio
+        - Default values pre-populated from template
+        - Description shown as help text
+
+        Click **Confirm** to create the stack.
+
+        <Check>The stack appears in the list with status **Create In Progress**.</Check>
+      </Step>
+      <Step title="Monitor progress">
+        Click the stack name to open the detail view. Four tabs are available:
+
+        - **Detail** — Startup parameters (timeout, rollback), outputs, deployment parameters
+        - **Stack Resources** — List of provisioned resources with links to their detail pages
+        - **Stack Events** — Real-time provisioning events with timestamps and status
+        - **YAML File** — Read-only view of the template YAML
+
+        <Check>
+          Status transitions to **Create Complete** when all resources are successfully
+          provisioned.
+        </Check>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    <Steps titleSize="h3">
+      <Step title="Authenticate" icon="key">
+        ```bash title="Source credentials"
+        source openrc.sh
+        ```
+      </Step>
+      <Step title="Validate the template" icon="circle-check">
+        ```bash title="Validate template syntax"
+        openstack orchestration template validate -t first-stack.yaml
+        ```
+
+        A valid template returns the parsed parameter and resource definitions.
+        Fix any reported errors before proceeding.
+      </Step>
+      <Step title="Create the stack" icon="play">
+        ```bash title="Create stack with parameters"
+        openstack stack create \
+          --template first-stack.yaml \
+          --parameter key_name=my-keypair \
+          --parameter flavor=m1.small \
+          --parameter network=default \
+          --wait \
+          my-first-stack
+        ```
+
+        The `--wait` flag blocks until the stack reaches a terminal state.
+
+        | Flag | Description |
+        |------|-------------|
+        | `--template` | Path to local template file (or `--template-url` for remote) |
+        | `--parameter` | Override a template parameter (repeat for each parameter) |
+        | `--wait` | Wait for stack creation to complete before returning |
+        | `--timeout` | Maximum minutes to wait before marking as failed (default: 60) |
+      </Step>
+      <Step title="Verify stack status" icon="circle-check">
+        ```bash title="Show stack details"
+        openstack stack show my-first-stack
+        ```
+
+        ```bash title="List stack resources"
+        openstack stack resource list my-first-stack
+        ```
+
+        ```bash title="Show stack outputs"
+        openstack stack output list my-first-stack
+        openstack stack output show my-first-stack instance_ip
+        ```
+
+        <Check>
+          `stack_status` shows `CREATE_COMPLETE`. Every resource in the list displays
+          `CREATE_COMPLETE`.
+        </Check>
+      </Step>
+    </Steps>
+  </Tab>
+</Tabs>
+
+---
+
+## List and Inspect Stacks
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    Navigate to **Orchestration > Stacks** to see all stacks in your project.
+    Click any stack to view its detail, resources, events, and template.
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="List all stacks"
+    openstack stack list
+    ```
+
+    ```bash title="Show stack detail"
+    openstack stack show my-first-stack
+    ```
+
+    ```bash title="List stack events"
+    openstack stack event list my-first-stack
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Delete a Stack
+
+<Warning>
+  Deleting a stack permanently deletes all resources it manages. This includes instances,
+  volumes, networks, and any other resources created by the template. This operation
+  cannot be undone.
+</Warning>
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    In the Stacks list, check the box next to your stack and click **Delete Stacks**.
+    Confirm the deletion in the dialog.
+
+    <Check>Stack status transitions to **Delete In Progress**, then disappears from the list.</Check>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Delete a stack"
+    openstack stack delete --yes --wait my-first-stack
+    ```
+
+    <Check>`openstack stack list` no longer shows the deleted stack.</Check>
+  </Tab>
+</Tabs>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Template Guide" href="/services/orchestration/template-guide" color="#197560">
+    Learn template structure, parameter types, and intrinsic functions
+  </Card>
+  <Card title="Resource Types" href="/services/orchestration/resources" color="#197560">
+    Explore compute, network, storage, and identity resource definitions
+  </Card>
+  <Card title="Manage Stacks" href="/services/orchestration/stacks" color="#197560">
+    Update, suspend, resume, and manage the stack lifecycle
+  </Card>
+  <Card title="Auto-Scaling" href="/services/orchestration/autoscaling" color="#197560">
+    Scale instance groups automatically with alarm-driven policies
+  </Card>
+</CardGroup>

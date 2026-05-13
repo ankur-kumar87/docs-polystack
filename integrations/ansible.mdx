@@ -1,0 +1,340 @@
+---
+title: "Ansible Integration"
+description: "Automate instance configuration, patch management, compliance enforcement, and operational workflows on Xloud using Ansible modules and dynamic inventory."
+sidebarTitle: "Ansible"
+---
+
+## Overview
+
+Ansible integrates with Xloud through two complementary mechanisms: the `openstack.cloud`
+collection for infrastructure automation, and SSH/WinRM-based playbooks for instance
+configuration. Ansible operates agentlessly — no software is installed on your managed instances
+beyond a working SSH daemon and Python interpreter.
+
+The Xloud dynamic inventory plugin sources instance metadata directly from the compute API,
+automatically organizing hosts by project, availability zone, image, and custom metadata tags.
+
+<Note>
+  **Prerequisites**
+  - Ansible 2.12 or later installed
+  - `openstack.cloud` collection: `ansible-galaxy collection install openstack.cloud`
+  - Xloud application credentials or `openrc` file sourced in the shell
+  - `openstacksdk` Python library: `pip install openstacksdk`
+</Note>
+
+---
+
+## Dynamic Inventory
+
+The `openstack.cloud.openstack` inventory plugin generates a live host list from the Xloud
+compute API. Hosts are grouped by instance metadata, eliminating the need to maintain static
+inventory files.
+
+```yaml title="inventory/openstack.yml"
+plugin: openstack.cloud.openstack
+auth:
+  auth_url: "https://api.<your-domain>:5000/v3"
+  username: "{{ lookup('env', 'OS_USERNAME') }}"
+  password: "{{ lookup('env', 'OS_PASSWORD') }}"
+  project_name: "{{ lookup('env', 'OS_PROJECT_NAME') }}"
+  user_domain_name: Default
+  project_domain_name: Default
+expand_hostvars: true
+fail_on_errors: false
+groups:
+  web_servers: "'web' in name"
+  app_servers: "'app' in name"
+  db_servers: "'db' in name"
+compose:
+  ansible_host: access_ipv4
+```
+
+Test inventory resolution:
+
+```bash title="List dynamic inventory hosts"
+ansible-inventory -i inventory/openstack.yml --list
+```
+
+---
+
+## Playbook Examples
+
+### OS Bootstrap
+
+Bootstrap a newly provisioned instance with required packages, users, and firewall rules:
+
+```yaml title="playbooks/bootstrap.yml"
+---
+- name: Bootstrap new instances
+  hosts: all
+  become: true
+  vars:
+    admin_users:
+      - name: deploy
+        groups: sudo
+        ssh_key: "{{ lookup('file', '~/.ssh/id_rsa.pub') }}"
+
+  tasks:
+    - name: Update package cache and upgrade
+      apt:
+        update_cache: true
+        upgrade: dist
+        cache_valid_time: 3600
+
+    - name: Install required packages
+      apt:
+        name:
+          - curl
+          - vim
+          - htop
+          - unattended-upgrades
+          - ufw
+        state: present
+
+    - name: Create admin users
+      user:
+        name: "{{ item.name }}"
+        groups: "{{ item.groups }}"
+        shell: /bin/bash
+        create_home: true
+      loop: "{{ admin_users }}"
+
+    - name: Add SSH authorized keys
+      authorized_key:
+        user: "{{ item.name }}"
+        key: "{{ item.ssh_key }}"
+        state: present
+      loop: "{{ admin_users }}"
+
+    - name: Configure UFW default deny
+      ufw:
+        state: enabled
+        direction: incoming
+        policy: deny
+
+    - name: Allow SSH
+      ufw:
+        rule: allow
+        port: "22"
+        proto: tcp
+```
+
+### Patch Management
+
+Apply security patches across all instances in a project:
+
+```yaml title="playbooks/patch.yml"
+---
+- name: Apply security patches
+  hosts: all
+  become: true
+  serial: "25%"
+
+  tasks:
+    - name: Update package cache
+      apt:
+        update_cache: true
+        cache_valid_time: 0
+
+    - name: Apply security updates only
+      apt:
+        upgrade: safe
+        update_cache: false
+
+    - name: Check if reboot is required
+      stat:
+        path: /var/run/reboot-required
+      register: reboot_required
+
+    - name: Reboot if kernel was updated
+      reboot:
+        reboot_timeout: 300
+        msg: "Rebooting after kernel patch"
+      when: reboot_required.stat.exists
+
+    - name: Verify instance is responsive after reboot
+      wait_for_connection:
+        delay: 10
+        timeout: 120
+```
+
+### CIS Compliance Enforcement
+
+Apply CIS baseline hardening to Linux instances:
+
+```yaml title="playbooks/cis-harden.yml"
+---
+- name: Apply CIS Level 1 baseline
+  hosts: all
+  become: true
+
+  tasks:
+    - name: Disable unused filesystems
+      lineinfile:
+        path: /etc/modprobe.d/disable-filesystems.conf
+        line: "install {{ item }} /bin/true"
+        create: true
+        mode: "0644"
+      loop:
+        - cramfs
+        - freevxfs
+        - jffs2
+        - hfs
+        - hfsplus
+        - udf
+
+    - name: Set password minimum length
+      lineinfile:
+        path: /etc/security/pwquality.conf
+        regexp: "^minlen"
+        line: "minlen = 14"
+
+    - name: Set SSH MaxAuthTries
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: "^MaxAuthTries"
+        line: "MaxAuthTries 4"
+      notify: Restart SSH
+
+    - name: Disable root SSH login
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: "^PermitRootLogin"
+        line: "PermitRootLogin no"
+      notify: Restart SSH
+
+    - name: Enable auditd
+      service:
+        name: auditd
+        state: started
+        enabled: true
+
+  handlers:
+    - name: Restart SSH
+      service:
+        name: sshd
+        state: restarted
+```
+
+### Infrastructure Management via Xloud Modules
+
+Create and manage Xloud resources directly from playbooks:
+
+```yaml title="playbooks/provision.yml"
+---
+- name: Provision application tier
+  hosts: localhost
+  gather_facts: false
+
+  tasks:
+    - name: Create application network
+      openstack.cloud.network:
+        state: present
+        name: app-network
+        external: false
+
+    - name: Create subnet
+      openstack.cloud.subnet:
+        state: present
+        network_name: app-network
+        name: app-subnet
+        cidr: 10.200.0.0/24
+        dns_nameservers:
+          - 8.8.8.8
+
+    - name: Launch application instances
+      openstack.cloud.server:
+        state: present
+        name: "app-{{ item }}"
+        image: Ubuntu-22.04
+        flavor: m1.medium
+        key_name: deployer-key
+        network: app-network
+        security_groups:
+          - default
+          - app-sg
+        wait: true
+      loop: "{{ range(1, 4) | list }}"
+      register: created_servers
+
+    - name: Add new instances to in-memory inventory
+      add_host:
+        hostname: "{{ item.server.access_ipv4 }}"
+        groups: new_instances
+      loop: "{{ created_servers.results }}"
+```
+
+---
+
+## Credential Management
+
+<Tip>
+  Store secrets used in playbooks in Xloud Key Manager (Barbican) or HashiCorp Vault.
+  Retrieve them at runtime using the `community.general.hashi_vault` or
+  `openstack.cloud.identity_user` lookup plugins rather than hardcoding in vars files.
+</Tip>
+
+```yaml title="group_vars/all/vault.yml"
+# Encrypted with ansible-vault
+db_password: !vault |
+  $ANSIBLE_VAULT;1.1;AES256
+  ...encrypted blob...
+```
+
+```bash title="Run playbook with vault password"
+ansible-playbook -i inventory/openstack.yml playbooks/bootstrap.yml \
+  --vault-password-file ~/.vault-pass
+```
+
+---
+
+## Running Playbooks
+
+<Steps titleSize="h3">
+  <Step title="Source credentials" icon="key">
+    ```bash title="Load Xloud credentials"
+    source admin-openrc.sh
+    ```
+  </Step>
+  <Step title="Test connectivity" icon="wifi">
+    ```bash title="Ping all dynamic inventory hosts"
+    ansible -i inventory/openstack.yml all -m ping
+    ```
+    <Check>All targeted instances return a `pong` response.</Check>
+  </Step>
+  <Step title="Run a playbook" icon="play">
+    ```bash title="Run bootstrap playbook"
+    ansible-playbook -i inventory/openstack.yml playbooks/bootstrap.yml \
+      --limit web_servers \
+      --diff \
+      --check
+    ```
+    Remove `--check` to apply changes. `--diff` shows what would change on each host.
+  </Step>
+  <Step title="Verify results" icon="circle-check">
+    ```bash title="Check instance facts"
+    ansible -i inventory/openstack.yml web_servers -m setup \
+      -a "filter=ansible_distribution*"
+    ```
+    <Check>Playbook completes with no failed tasks. Verify changes on instances via SSH or the Dashboard console.</Check>
+  </Step>
+</Steps>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Terraform Integration" href="/integrations/terraform" color="#197560">
+    Use Terraform for provisioning and Ansible for post-provision configuration
+  </Card>
+  <Card title="Wazuh Integration" href="/integrations/wazuh" color="#197560">
+    Deploy Wazuh agents using Ansible playbooks for SIEM and compliance monitoring
+  </Card>
+  <Card title="Key Manager" href="/services/key-manager/store-secrets" color="#197560">
+    Store playbook secrets in Xloud Key Manager for secure credential retrieval
+  </Card>
+  <Card title="Auto-Scaling" href="/services/orchestration/autoscaling" color="#197560">
+    Bootstrap auto-scaled instances using Ansible cloud-init integration
+  </Card>
+</CardGroup>

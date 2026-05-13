@@ -1,0 +1,243 @@
+---
+title: "Storage Backend Configuration"
+description: "Configure block storage backends including RBD, LVM, and NFS. Manage backend registration and status verification."
+sidebarTitle: "Storage Backends"
+---
+
+import AdminWarning from '/snippets/admin-warning.mdx';
+import CliAuth from '/snippets/cli-auth.mdx';
+
+## Overview
+
+A storage backend is the combination of a driver and a physical storage system that serves Xloud Block Storage volumes. Backends are configured at deploy time through XDeploy and registered with the scheduler. Each backend must have a unique `volume_backend_name` that maps to at least one volume type, making it accessible to users.
+
+<AdminWarning />
+
+<Note>
+  **Prerequisites**
+  - Administrator credentials with the `admin` role
+  - Access to XDeploy for infrastructure-level configuration
+  - The storage system (distributed storage cluster, LVM volume group, or NFS server) must
+    be provisioned before configuring the backend
+</Note>
+
+---
+
+## Supported Backends
+
+| Backend | Driver | Protocol | Use Case | HA |
+|---------|--------|----------|----------|----|
+| **Distributed Storage (RBD)** | `cinder.volume.drivers.rbd.RBDDriver` | RBD | Production — full replication, zero-copy clones | Yes |
+| **LVM** | `cinder.volume.drivers.lvm.LVMVolumeDriver` | iSCSI | Development / single-node testing | No |
+| **NFS** | `cinder.volume.drivers.nfs.NfsDriver` | NFS | Shared NAS appliances, legacy NFS integration | Depends on server |
+| **NetApp ONTAP** | `cinder.volume.drivers.netapp.common.NetAppDriver` | iSCSI / NFS / FC | Enterprise NAS/SAN — FlexVol, thin provisioning, dedup | Yes |
+| **Pure Storage FlashArray** | `cinder.volume.drivers.pure.PureISCSIDriver` | iSCSI / FC / NVMe-oF | All-flash arrays, high IOPS, thin by default | Yes |
+| **Dell PowerStore** | `cinder.volume.drivers.dell_emc.powerstore.driver.PowerStoreDriver` | iSCSI / FC / NVMe-oF | Dell enterprise all-flash and hybrid arrays | Yes |
+| **HPE 3PAR / Primera** | `cinder.volume.drivers.hpe.hpe_3par_iscsi.HPE3PARISCSIDriver` | iSCSI / FC | HPE enterprise SAN — CPG-based provisioning | Yes |
+| **Hitachi VSP** | `cinder.volume.drivers.hitachi.hbsd_iscsi.HBSDISCSIDriver` | iSCSI / FC | Hitachi enterprise storage systems | Yes |
+| **IBM FlashSystem** | `cinder.volume.drivers.ibm.storwize_svc.storwize_svc_iscsi.StorwizeSVCISCSIDriver` | iSCSI / FC / NVMe-oF | IBM all-flash and Storwize arrays | Yes |
+| **iSCSI (generic)** | `cinder.volume.drivers.iscsi.ISCSIDriver` | iSCSI | Generic iSCSI targets not covered by vendor drivers | Depends on array |
+| **Fibre Channel (generic)** | `cinder.volume.drivers.fibre_channel.FibreChannelDriver` | FC | Generic Fibre Channel targets | Depends on array |
+
+---
+
+## Configure a Distributed Storage (RBD) Backend
+
+The distributed storage driver is the recommended backend for all production deployments. It uses RADOS Block Devices backed by a Xloud Distributed Storage cluster.
+
+<Tabs>
+  <Tab title="XDeploy" icon="package">
+    <Steps titleSize="h3">
+      <Step title="Open Block Storage configuration" icon="settings">
+        Log in to XDeploy and navigate to **Configuration → Block Storage**.
+      </Step>
+      <Step title="Select the distributed storage driver" icon="database">
+        Select **Distributed Storage (RBD)** from the **Backend Driver** dropdown.
+
+        <Tip>
+          Ensure the storage pool is created and the authentication keyring is available
+          on all volume service nodes before completing this step.
+        </Tip>
+      </Step>
+      <Step title="Configure RBD parameters" icon="sliders">
+        | Parameter | Description | Example |
+        |-----------|-------------|---------|
+        | Pool Name | Name of the storage pool for volumes | `volumes` |
+        | Auth Username | Storage authentication user | `xloud-volume` |
+        | Keyring Path | Path to the keyring file on volume service nodes | `/etc/ceph/ceph.client.xloud-volume.keyring` |
+        | Cluster Name | Storage cluster identifier | `ceph` |
+        | Backend Name | Unique name for this backend | `rbd-ssd` |
+      </Step>
+      <Step title="Apply and deploy" icon="play">
+        Click **Save Configuration**, then click **Deploy Block Storage**. XDeploy
+        restarts the volume service and validates backend connectivity.
+
+        <Check>Backend configured — volume service restarted and backend registered with scheduler.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    <Steps titleSize="h3">
+      <Step title="Authenticate" icon="key">
+        <CliAuth />
+      </Step>
+      <Step title="Verify volume service status" icon="activity">
+        ```bash title="List volume service endpoints"
+        openstack volume service list
+        ```
+
+        All services should show state `up` and status `enabled`.
+      </Step>
+      <Step title="List configured backends" icon="database">
+        ```bash title="List storage backends and capacity"
+        openstack volume backend pool list --long
+        ```
+
+        This shows all active backend pools registered with the scheduler, including
+        free capacity, reserved capacity, and driver version.
+      </Step>
+    </Steps>
+  </Tab>
+</Tabs>
+
+---
+
+## Configure Enterprise Storage Backends
+
+For NetApp, Pure Storage, Dell, HPE, Hitachi, and IBM backends, configuration is applied through XDeploy globals and Ansible. The `cinder.conf` sections are generated from templates. See [External Storage Integration](/services/storage/external-storage) for full configuration examples, driver parameters, and volume type mapping for each enterprise backend.
+
+<Note>
+  Enterprise backend drivers require vendor-specific Python packages installed on the volume service nodes. XDeploy manages driver installation for supported backends during deployment.
+</Note>
+
+---
+
+## Configure an LVM Backend
+
+LVM backends are suitable for development and single-node testing environments only.
+
+<Tabs>
+  <Tab title="XDeploy" icon="package">
+    <Steps titleSize="h3">
+      <Step title="Select LVM driver" icon="database">
+        In XDeploy, navigate to **Configuration → Block Storage** and select
+        **LVM** from the Backend Driver dropdown.
+      </Step>
+      <Step title="Configure LVM parameters" icon="sliders">
+        | Parameter | Description | Example |
+        |-----------|-------------|---------|
+        | Volume Group | LVM volume group name | `xloud-volumes` |
+        | Target Helper | iSCSI helper binary | `lioadm` |
+        | Backend Name | Unique name for this backend | `lvm-local` |
+      </Step>
+      <Step title="Apply" icon="play">
+        Click **Save Configuration** and **Deploy Block Storage**.
+
+        <Warning>
+          LVM provides no replication or redundancy. Do not use LVM backends for
+          production workloads where data durability is required.
+        </Warning>
+      </Step>
+    </Steps>
+  </Tab>
+</Tabs>
+
+---
+
+## Backend Health Verification
+
+After configuration, verify that the backend is registered and reporting capacity:
+
+```bash title="List backends with capacity details"
+openstack volume backend pool list --long
+```
+
+Key columns to verify:
+
+| Column | Expected Value |
+|--------|---------------|
+| `free_capacity_gb` | Greater than 0 — confirms backend is reporting capacity |
+| `total_capacity_gb` | Matches expected pool size |
+| `driver_version` | Populated — confirms driver initialized correctly |
+| `storage_protocol` | `rbd`, `iSCSI`, or `NFS` depending on backend type |
+
+---
+
+## Enable or Disable a Backend Service
+
+<Warning>
+  Disabling a volume service prevents the scheduler from sending new volume operations
+  to that backend. Existing volumes on the backend are unaffected. Re-enable the service
+  to restore normal scheduling.
+</Warning>
+
+```bash title="Disable a volume service (maintenance)"
+openstack volume service set \
+  --disable \
+  --disable-reason "Scheduled maintenance" \
+  <volume-service-host> \
+  cinder-volume
+```
+
+```bash title="Re-enable a volume service"
+openstack volume service set \
+  --enable \
+  <volume-service-host> \
+  cinder-volume
+```
+
+---
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Backend pool does not appear in list" icon="database">
+    **Cause**: The volume service has not registered the backend with the scheduler, or
+    the service is not running.
+
+    **Resolution**:
+    ```bash title="Check service status"
+    openstack volume service list
+    ```
+
+    Look for the volume service on the affected storage node. If state is `down`,
+    check service logs via XDeploy for driver initialization errors.
+  </Accordion>
+
+  <Accordion title="Backend reporting zero free capacity" icon="triangle-alert">
+    **Cause**: The storage pool is full, or the backend driver cannot reach the storage
+    cluster to report capacity.
+
+    **Resolution**:
+    - Verify distributed storage cluster health: check cluster status from the storage
+      administration interface
+    - Verify the authentication keyring is present on the volume service node
+    - Verify the pool name matches the configured backend pool
+    - Increase pool capacity or add OSDs to the storage cluster
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="External Storage Integration" href="/services/storage/external-storage" color="#197560">
+    Full configuration guide for NetApp, Pure Storage, Dell, HPE, and IBM backends
+  </Card>
+  <Card title="Volume Types & QoS" href="/services/storage/volume-types-admin" color="#197560">
+    Map volume types to backends and configure QoS policies
+  </Card>
+  <Card title="Thin Provisioning" href="/services/storage/thin-provisioning" color="#197560">
+    Configure thin and thick provisioning with overcommit ratios
+  </Card>
+  <Card title="Storage Tiers" href="/services/storage/storage-tiers" color="#197560">
+    Configure multi-tier storage with NVMe, SSD, and HDD backends
+  </Card>
+  <Card title="Backup Backends" href="/services/storage/backup-backends" color="#197560">
+    Configure Ceph, Swift, S3, or NFS as the volume backup destination
+  </Card>
+  <Card title="Migration" href="/services/storage/migration" color="#197560">
+    Migrate volumes between backends for rebalancing or hardware retirement
+  </Card>
+</CardGroup>

@@ -1,0 +1,353 @@
+---
+title: "Secret Containers"
+description: "Create and manage secret containers in Xloud Key Manager. Bundle certificates, keys, and secrets into named groups for use with Load Balancer TLS and."
+sidebarTitle: "Containers"
+---
+
+import PrerequisitesAuth from '/snippets/prerequisites-auth.mdx';
+
+## Overview
+
+Containers group related secrets into a named bundle. The most common use case is
+bundling a TLS certificate with its private key for use with the Load Balancer
+service. Containers reference secrets by UUID — they do not copy secret payloads.
+
+Like secrets, containers are **project-scoped** — they are visible only to users
+within the project that created them unless shared via [ACL](/services/key-manager/acl).
+
+<PrerequisitesAuth />
+
+<Note>
+  **Project Scope** — Containers belong to the project that created them.
+  The Load Balancer service accesses containers through the project's service
+  credentials. If you create a container in Project A and configure a listener
+  in Project B, the listener cannot access the container unless an ACL is set.
+</Note>
+
+---
+
+## Container Types
+
+| Container Type | Contents | Primary Use Case |
+|----------------|----------|-----------------|
+| **certificate** | Certificate + private key + intermediates + passphrase | TLS termination for Load Balancer HTTPS listeners |
+| **rsa** | Public key + private key + passphrase | RSA key pair management |
+| **generic** | Any combination of secrets | API credential bundles, configuration groups |
+
+---
+
+## Create a Certificate Container
+
+The Dashboard provides a dedicated **Create Certificate** workflow that creates
+both the secrets and the container in a single step. This is the recommended
+approach for TLS certificate management.
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+
+    <Steps titleSize="h3">
+      <Step title="Navigate to Certificate Manager">
+        Navigate to **Network > Certificates** in the sidebar.
+
+        Click **Create Certificate** in the upper-right corner.
+      </Step>
+      <Step title="Enter the certificate name">
+        Enter a **Certificate Name** for the container. This name identifies the
+        certificate bundle in the Load Balancer listener configuration.
+
+        <Note>
+          The name must contain only letters, numbers, and hyphens. Special characters
+          and spaces are not permitted.
+        </Note>
+      </Step>
+      <Step title="Select the certificate type">
+        Choose the **Certificate Type**:
+
+        | Type | Description | Required Fields |
+        |------|-------------|----------------|
+        | **Server** | A server certificate with its private key for TLS termination | Certificate Content, Private Key |
+        | **CA** | A Certificate Authority certificate for client certificate validation | Certificate Content only |
+
+        <Tip>
+          Use **Server** for HTTPS listener termination — this is the most common
+          use case. Use **CA** when you need to validate client certificates in
+          mutual TLS (mTLS) configurations.
+        </Tip>
+      </Step>
+      <Step title="Provide the certificate content">
+        Paste the certificate content into the **Certificate Content** text area,
+        or click the upload button to load it from a `.crt` or `.pem` file.
+
+        The certificate must be in PEM format:
+
+        ```text title="Expected format"
+        -----BEGIN CERTIFICATE-----
+        MIIDdzCCAl+gAwIBAgIEAgAAuTANBgkqhki...
+        -----END CERTIFICATE-----
+        ```
+
+        <Warning>
+          The form validates that the content starts with `-----BEGIN CERTIFICATE-----`
+          and ends with `-----END CERTIFICATE-----`. Certificates in other formats
+          (DER, PKCS#7) must be converted to PEM first.
+        </Warning>
+      </Step>
+      <Step title="Provide the private key (Server type only)">
+        For **Server** type certificates, paste the private key into the **Private Key**
+        text area, or upload a `.key` or `.pem` file.
+
+        The key must be in PEM format:
+
+        ```text title="Expected format"
+        -----BEGIN RSA PRIVATE KEY-----
+        MIIEpAIBAAKCAQEA2a2rwplBQLYV0...
+        -----END RSA PRIVATE KEY-----
+        ```
+
+        <Note>
+          This field is hidden for CA type certificates. The private key must be
+          in RSA format — ECDSA and Ed25519 keys must be converted first.
+        </Note>
+      </Step>
+      <Step title="Add domain names (optional, Server type only)">
+        For SNI (Server Name Indication) certificates, enter the **Domain Name(s)**
+        that this certificate covers.
+
+        | Rule | Limit |
+        |------|-------|
+        | Multiple domains | Separated by commas |
+        | Maximum domains | 30 per certificate |
+        | Single domain length | 100 characters max |
+        | Total length | 1024 characters max |
+        | Valid characters | Letters, numbers, hyphens, dots |
+
+        <Tip>
+          Domain names are used for SNI-based certificate selection in the Load
+          Balancer. If your listener serves multiple domains, specify all of them
+          here so the correct certificate is presented for each domain.
+        </Tip>
+      </Step>
+      <Step title="Set an expiration date (optional)">
+        Use the **Expires At** date picker to set an optional expiration date.
+        Only future dates are selectable.
+
+        <Warning>
+          This is the container-level expiration, independent of the certificate's
+          own validity period. Set it to match your certificate's actual expiry date
+          for consistency.
+        </Warning>
+      </Step>
+      <Step title="Create the certificate">
+        Click **Confirm** to create the certificate container. The system stores the
+        certificate and private key as separate secrets and bundles them into a
+        container automatically.
+
+        <Check>
+          The certificate container appears in the Certificates list and is ready
+          to reference in Load Balancer HTTPS listener configuration.
+        </Check>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+
+    With the CLI, you create the individual secrets first, then bundle them into
+    a container. Source your project credentials first:
+
+    ```bash title="Source credentials"
+    source openrc.sh
+    ```
+
+    <Steps titleSize="h3">
+      <Step title="Store the certificate secret">
+        ```bash title="Store TLS certificate"
+        CERT_HREF=$(openstack secret store \
+          --name app-tls-cert \
+          --secret-type certificate \
+          --payload-content-type "application/pkix-cert" \
+          --payload-content-encoding base64 \
+          --payload "$(base64 -w 0 certificate.pem)" \
+          -f value -c Secret\ href)
+        ```
+      </Step>
+      <Step title="Store the private key secret">
+        ```bash title="Store private key"
+        KEY_HREF=$(openstack secret store \
+          --name app-tls-key \
+          --secret-type private \
+          --payload-content-type "application/pkcs8" \
+          --payload-content-encoding base64 \
+          --payload "$(base64 -w 0 private_key.pem)" \
+          -f value -c Secret\ href)
+        ```
+      </Step>
+      <Step title="Store the CA chain (recommended)">
+        ```bash title="Store CA chain"
+        CA_HREF=$(openstack secret store \
+          --name app-ca-chain \
+          --secret-type certificate \
+          --payload-content-type "application/pkix-cert" \
+          --payload-content-encoding base64 \
+          --payload "$(base64 -w 0 ca-chain.pem)" \
+          -f value -c Secret\ href)
+        ```
+      </Step>
+      <Step title="Create the certificate container">
+        ```bash title="Bundle into certificate container"
+        openstack secret container create \
+          --name app-tls-bundle \
+          --type certificate \
+          --secret "certificate=$CERT_HREF" \
+          --secret "private_key=$KEY_HREF" \
+          --secret "intermediates=$CA_HREF"
+        ```
+
+        <Check>Container is ready to reference in Load Balancer HTTPS listener configuration.</Check>
+      </Step>
+    </Steps>
+
+    <AccordionGroup>
+      <Accordion title="Create an RSA container">
+        ```bash title="RSA key pair container"
+        openstack secret container create \
+          --name app-signing-keypair \
+          --type rsa \
+          --secret "public_key=$PUB_HREF" \
+          --secret "private_key=$KEY_HREF" \
+          --secret "private_key_passphrase=$PASS_HREF"
+        ```
+      </Accordion>
+      <Accordion title="Create a generic container">
+        ```bash title="Generic container for grouped credentials"
+        openstack secret container create \
+          --name app-credentials \
+          --type generic \
+          --secret "db_password=$DB_HREF" \
+          --secret "api_key=$API_HREF" \
+          --secret "encryption_key=$ENC_HREF"
+        ```
+      </Accordion>
+    </AccordionGroup>
+  </Tab>
+</Tabs>
+
+---
+
+## View Container Details
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Navigate to containers">
+        Go to **Project > Key Manager > Containers**. The list shows all
+        containers in your current project.
+
+        | Column | Description |
+        |--------|-------------|
+        | **Name** | Container identifier (clickable to view details) |
+        | **Type** | Container type: certificate, rsa, or generic |
+        | **Status** | Active or Error |
+        | **Secrets** | Number of secret references in the container |
+        | **Created** | Creation timestamp |
+      </Step>
+      <Step title="View detail page">
+        Click a container name to view its detail page. The detail page shows:
+
+        | Field | Description |
+        |-------|-------------|
+        | **Type** | Container type |
+        | **Status** | Current status |
+        | **Secret References** | List of name and secret reference pairs |
+        | **Created** | Creation timestamp |
+        | **Updated** | Last modification timestamp |
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    <CodeGroup>
+    ```bash title="List all containers"
+    openstack secret container list
+    ```
+    ```bash title="Show container detail"
+    openstack secret container show <container-href>
+    ```
+    </CodeGroup>
+  </Tab>
+</Tabs>
+
+---
+
+## Delete a Container
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Select containers to delete">
+        Navigate to **Project > Key Manager > Containers**. Select one or more
+        containers using the checkboxes, then click **Delete** in the batch actions bar.
+
+        Alternatively, click the **More** menu on a single container row and
+        select **Delete Container**.
+      </Step>
+      <Step title="Confirm deletion">
+        Confirm the deletion in the dialog.
+
+        <Danger>
+          Deleting a container through the Dashboard also deletes all associated
+          secrets within it. Verify that no services reference these secrets
+          before proceeding.
+        </Danger>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Delete a container"
+    openstack secret container delete <container-href>
+    ```
+
+    <Note>
+      Deleting a container via the CLI does **not** delete the secrets it
+      references. The secrets remain in Key Manager and must be deleted
+      separately if no longer needed.
+    </Note>
+  </Tab>
+</Tabs>
+
+---
+
+## Project Scope and Access
+
+Containers follow the same project-scoping rules as secrets:
+
+| Behavior | Description |
+|----------|-------------|
+| **Ownership** | Containers belong to the project that created them |
+| **Visibility** | Only visible to users within the same project |
+| **Service access** | The Load Balancer accesses containers through the project's service credentials |
+| **Cross-project sharing** | Requires an [ACL](/services/key-manager/acl) on the container |
+| **Contained secrets** | Secrets within the container must also be accessible to the consuming service |
+
+<Warning>
+  When sharing a container via ACL, you must also set ACLs on each secret
+  referenced by the container. Granting access to the container alone does
+  not grant access to the secret payloads within it.
+</Warning>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Certificates" icon="shield" href="/services/key-manager/certificates" color="#197560">
+    Manage the full certificate lifecycle from storage to renewal
+  </Card>
+  <Card title="Access Control (ACL)" icon="lock" href="/services/key-manager/acl" color="#197560">
+    Share containers and secrets across projects
+  </Card>
+  <Card title="Store Secrets" icon="lock" href="/services/key-manager/store-secrets" color="#197560">
+    Create individual secrets to populate containers
+  </Card>
+  <Card title="Load Balancer" icon="combine" href="/services/load-balancer/user-guide" color="#197560">
+    Use certificate containers for HTTPS listener configuration
+  </Card>
+</CardGroup>

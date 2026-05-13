@@ -1,0 +1,143 @@
+---
+title: "Key Manager Troubleshooting"
+description: "Resolve common Xloud Key Manager issues — 403 Forbidden errors, secret payload retrieval failures, Load Balancer TLS container rejections, and expired secrets."
+sidebarTitle: "Troubleshooting"
+---
+
+## Overview
+
+This guide covers user-facing Key Manager issues. For platform-level issues such as
+backend connectivity failures or CA plugin errors, see the
+[Admin Troubleshooting](/services/key-manager/admin-troubleshooting) guide.
+
+---
+
+## Common Issues
+
+<AccordionGroup>
+  <Accordion title="Secret creation returns 403 Forbidden" icon="lock" defaultOpen>
+    **Cause**: The current user's role does not include the Key Manager creator policy.
+
+    **Diagnosis**:
+    ```bash title="Check role assignments"
+    openstack role assignment list --user $OS_USERNAME --project $OS_PROJECT_NAME
+    ```
+
+    **Resolution**: Verify your project role assignment includes `member` or a custom
+    role with Key Manager create permissions. Contact your administrator to assign the
+    appropriate role.
+  </Accordion>
+
+  <Accordion title="Cannot retrieve secret payload" icon="eye-off">
+    **Cause**: The secret has an ACL that does not include your user, or the secret
+    belongs to a different project.
+
+    **Diagnosis**:
+    ```bash title="Show secret ACL"
+    openstack acl get <secret-href>
+    ```
+
+    **Resolution**: If your user is not listed and project access is disabled, request
+    ACL modification from the secret owner or an administrator.
+
+    ```bash title="Get your user ID for ACL comparison"
+    openstack token issue -c user_id -f value
+    ```
+  </Accordion>
+
+  <Accordion title="Load Balancer rejects the TLS container" icon="shield-alert">
+    **Cause**: The certificate container is missing the private key reference, the
+    certificate is expired, or the certificate does not match the private key.
+
+    **Diagnosis**:
+    ```bash title="Verify container contents"
+    openstack secret container show <container-href>
+    ```
+    Confirm both `certificate` and `private_key` references are present.
+
+    ```bash title="Check certificate expiry"
+    openstack secret get <cert-href> --payload | \
+      openssl x509 -noout -dates
+    ```
+
+    ```bash title="Verify cert/key pair match"
+    diff <(openstack secret get <cert-href> --payload | openssl x509 -noout -modulus | md5sum) \
+         <(openstack secret get <key-href> --payload | openssl rsa -noout -modulus | md5sum)
+    ```
+
+    **Resolution**:
+    - If the container is missing the private key, delete and recreate it with both secrets
+    - If the certificate is expired, store a renewed certificate and create a new container
+    - If the cert/key pair do not match, verify you are using the correct private key file
+  </Accordion>
+
+  <Accordion title="Secret expired — access returns 404" icon="clock">
+    **Cause**: The secret was created with an expiration date that has passed. Expired
+    secrets are deleted automatically.
+
+    **Resolution**: Create a new secret with the updated payload. If the secret is
+    referenced by containers or services (e.g., Load Balancer), update each reference
+    to point to the new secret or container.
+
+    <Tip>
+      Set calendar reminders for certificate and key expiration dates. Xloud Key Manager
+      does not send expiration notifications — lifecycle management is the owner's responsibility.
+    </Tip>
+  </Accordion>
+
+  <Accordion title="Order returns error — certificate issuance failed" icon="badge-x">
+    **Cause**: The CA plugin is unreachable, the subject DN contains invalid fields, or
+    the requested algorithm is not supported by the configured CA.
+
+    **Diagnosis**:
+    ```bash title="Show order error detail"
+    openstack secret order show <order-href>
+    ```
+    Review the `error_status_code` and `error_reason` fields.
+
+    **Resolution**: Contact your platform administrator to verify CA plugin configuration
+    and network connectivity. See the [Admin Troubleshooting](/services/key-manager/admin-troubleshooting)
+    guide for CA plugin diagnostics.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Diagnostic Commands
+
+<CodeGroup>
+```bash title="List all secrets in the project"
+openstack secret list
+```
+```bash title="Show secret metadata"
+openstack secret show <secret-href>
+```
+```bash title="Check ACL on a secret"
+openstack acl get <secret-href>
+```
+```bash title="List certificate orders"
+openstack secret order list
+```
+```bash title="List containers"
+openstack secret container list
+```
+</CodeGroup>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Admin Troubleshooting" href="/services/key-manager/admin-troubleshooting" color="#197560">
+    Platform-level issues — backend failures, CA plugin errors, ACL propagation
+  </Card>
+  <Card title="ACL" href="/services/key-manager/acl" color="#197560">
+    Review and update access control lists on secrets
+  </Card>
+  <Card title="Certificates" href="/services/key-manager/certificates" color="#197560">
+    Renew and replace expired certificates
+  </Card>
+  <Card title="Store Secrets" href="/services/key-manager/store-secrets" color="#197560">
+    Create replacement secrets after expiration
+  </Card>
+</CardGroup>

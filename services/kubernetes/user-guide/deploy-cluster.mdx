@@ -1,0 +1,166 @@
+---
+title: "Deploy a Kubernetes Cluster"
+description: "Provision a production-grade Kubernetes cluster on Xloud infrastructure — select a template, configure master and worker node counts, and monitor."
+sidebarTitle: "Deploy Cluster"
+---
+
+## Overview
+
+Deploying a Kubernetes cluster on Xloud K8SaaS provisions the full control plane and
+worker node infrastructure from a cluster template. The process creates virtual machine
+instances for master and worker nodes, configures the Kubernetes API server, installs
+the selected CNI plugin, and allocates a load balancer VIP for master access. A cluster
+deployment typically completes in 5–10 minutes depending on node count.
+
+<Note>
+  **Prerequisites**
+  - A cluster template created in your project (see [Cluster Templates](/services/kubernetes/user-guide/cluster-templates))
+  - Compute quota to provision master + worker nodes
+  - A project network with external connectivity
+  - A keypair available in your project
+</Note>
+
+---
+
+## Deploy a Cluster
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Navigate to Clusters" icon="compass">
+        Navigate to
+        **Container > Clusters**.
+      </Step>
+      <Step title="Create a cluster" icon="plus">
+        Click **Create Cluster** and complete the form:
+
+        | Field | Description | Recommended |
+        |-------|-------------|-------------|
+        | **Cluster Name** | Unique name for this cluster | `prod-cluster-01` |
+        | **Cluster Template** | Select a template from your project | `k8s-1.29-prod` |
+        | **Master Count** | Number of control plane nodes | `1` (dev) or `3` (HA) |
+        | **Node Count** | Initial number of worker nodes | `3` |
+        | **Keypair** | SSH key for node access | Your project keypair |
+        | **Availability Zone** | Fault domain for node placement | `nova` |
+      </Step>
+      <Step title="Launch the cluster" icon="rocket">
+        Click **Create Cluster**. The status transitions through:
+
+        `CREATE_IN_PROGRESS` → `CREATE_COMPLETE`
+
+        Provisioning typically takes 5–10 minutes. Refresh the cluster list to track progress.
+
+        <Tip>
+          For production clusters, use 3 master nodes and ensure the cluster template
+          has **Master LB Enabled** set to `True` for control plane high availability.
+        </Tip>
+      </Step>
+      <Step title="Verify completion" icon="circle-check">
+        The cluster shows `Status: CREATE_COMPLETE` and `Health Status: HEALTHY` when ready.
+
+        <Check>Cluster is deployed and all nodes are healthy.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    <Steps titleSize="h3">
+      <Step title="Authenticate" icon="key">
+        ```bash title="Load credentials"
+        source openrc.sh
+        ```
+      </Step>
+      <Step title="Create the cluster" icon="plus">
+        ```bash title="Deploy Kubernetes cluster"
+        openstack coe cluster create prod-cluster-01 \
+          --cluster-template k8s-1.29-prod \
+          --master-count 3 \
+          --node-count 3 \
+          --keypair my-keypair
+        ```
+
+        The command returns the cluster UUID immediately. Provisioning continues
+        asynchronously.
+      </Step>
+      <Step title="Monitor progress" icon="clock">
+        ```bash title="Check cluster status"
+        openstack coe cluster show prod-cluster-01 \
+          -f value -c status -c status_reason
+        ```
+
+        Poll until `status` is `CREATE_COMPLETE`. If status shows `CREATE_FAILED`,
+        check `status_reason` for the error message.
+      </Step>
+      <Step title="Verify" icon="circle-check">
+        ```bash title="List all clusters"
+        openstack coe cluster list
+        ```
+
+        ```bash title="Show cluster health"
+        openstack coe cluster show prod-cluster-01 \
+          -f value -c health_status -c master_count -c node_count
+        ```
+
+        <Check>Status is `CREATE_COMPLETE` and `health_status` is `HEALTHY`.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+</Tabs>
+
+---
+
+## Cluster Sizing Reference
+
+| Cluster Type | Master Count | Worker Count | Use Case |
+|-------------|-------------|-------------|----------|
+| Development | `1` | `2–3` | Single developer or CI/CD pipelines |
+| Staging | `1` | `3–5` | Pre-production testing |
+| Production HA | `3` | `5+` | Customer-facing workloads |
+
+<Warning>
+  A single master node is a single point of failure. For production workloads, always
+  deploy 3 master nodes with the master load balancer enabled in the cluster template.
+</Warning>
+
+---
+
+## Monitor Deployment Progress
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    Navigate to **Container > Clusters**. The `Status` column updates in
+    real time. Click the cluster name to view node-level detail.
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Watch cluster status in a loop"
+    watch -n 10 "openstack coe cluster show prod-cluster-01 \
+      -f value -c status -c status_reason"
+    ```
+
+    If a failure occurs, the `status_reason` field contains the error from the
+    underlying Orchestration stack:
+
+    ```bash title="Show failure details"
+    openstack coe cluster show prod-cluster-01 \
+      -f value -c status_reason
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Access Cluster" href="/services/kubernetes/user-guide/access-cluster" color="#197560">
+    Download kubeconfig and verify kubectl connectivity to your new cluster.
+  </Card>
+  <Card title="Scale Cluster" href="/services/kubernetes/user-guide/scale-cluster" color="#197560">
+    Add or remove worker nodes from the cluster default node group.
+  </Card>
+  <Card title="Node Groups" href="/services/kubernetes/user-guide/node-groups" color="#197560">
+    Create specialized node pools with different flavors and configurations.
+  </Card>
+  <Card title="Troubleshooting" href="/services/kubernetes/user-guide/troubleshooting" color="#197560">
+    Resolve deployment failures and cluster health issues.
+  </Card>
+</CardGroup>

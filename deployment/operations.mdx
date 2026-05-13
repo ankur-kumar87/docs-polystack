@@ -1,0 +1,234 @@
+---
+title: "Operations"
+description: "Deploy, upgrade, reconfigure, and manage your cloud infrastructure with guided playbooks"
+icon: "play"
+sidebarTitle: "Operations"
+---
+
+Operations is the command center for your cloud deployment. Every infrastructure action — bootstrap, prechecks, deploy, reconfigure, upgrade, stop, and destroy — runs through this tool. It wraps all deployment playbooks into a visual wizard with a live terminal, real-time progress tracking, and searchable task history.
+
+<Note>
+  **Prerequisites**
+  - [Bootstrap](/deployment/bootstrap) completed with all dependency groups passing
+  - [Hosts](/deployment/hosts) configured with SSH connectivity to all target nodes
+  - [Configuration](/deployment/configuration) saved with networking, storage, and service settings
+  - [Images](/deployment/images) loaded and available in the local registry
+</Note>
+
+---
+
+## Deployment Wizard
+
+The Operations wizard guides you through four steps to execute any deployment action. Each step validates input before allowing you to proceed.
+
+<Steps titleSize="h3">
+  <Step title="Select Action" icon="list">
+    Select the deployment action to execute from the available categories: Deploy, Manage, Backend, or Advanced. Each action is described with its purpose and expected duration.
+  </Step>
+  <Step title="Select Target Hosts" icon="server">
+    Select which servers to target:
+    - **All Hosts** — execute across the entire cluster
+    - **Specific Hosts** — select individual servers via a checklist
+    - **Host Patterns** — target groups such as all compute nodes or all storage nodes
+
+    <Tip>For initial deployment, select All Hosts. For targeted maintenance or upgrades, select specific hosts to minimize disruption.</Tip>
+  </Step>
+  <Step title="Select Services (Optional)" icon="layers">
+    Narrow the scope to specific cloud services or deploy all enabled services. Selecting individual services is useful for targeted reconfiguration or troubleshooting without affecting the rest of the cluster.
+  </Step>
+  <Step title="Run Deployment" icon="play">
+    Review the action summary and click **Run** to execute. Destructive actions (Stop, Destroy) require explicit confirmation before execution begins.
+
+    <Warning>Once a deployment action starts, interrupting it mid-execution can leave services in an inconsistent state. Allow the action to complete fully before taking further steps.</Warning>
+  </Step>
+</Steps>
+
+---
+
+## Available Actions
+
+<Tabs>
+  <Tab title="Deploy" icon="rocket">
+    Actions for initial deployment and readiness validation.
+
+    | Action | Purpose | Typical Duration |
+    |--------|---------|-----------------|
+    | **Bootstrap Servers** | Prepare target servers — install Docker, configure networking, set up prerequisites | 5-15 min |
+    | **Prechecks** | Validate that everything is ready — ports, services, configurations, and connectivity | 2-5 min |
+    | **Deploy** | Deploy all enabled cloud services as Docker containers across the cluster | 30-90 min |
+    | **Post-Deploy** | Create the admin user, default networks, base flavors, and initial project configuration | 5-10 min |
+
+    <Note>
+      Additional deploy actions are available via the command selector: **Deploy Bifrost**
+      (bare-metal provisioning service) and **Deploy Servers** (provision bare-metal servers
+      through Bifrost). These are not shown as wizard cards but can be selected from the
+      action dropdown.
+    </Note>
+
+    <Warning>Always run Prechecks before Deploy. It catches configuration issues, port conflicts, and missing dependencies that would otherwise cause failures 30+ minutes into deployment.</Warning>
+  </Tab>
+  <Tab title="Manage" icon="settings">
+    Actions for ongoing lifecycle management after initial deployment.
+
+    | Action | Purpose |
+    |--------|---------|
+    | **Pull Images** | Pre-pull container images to all nodes before an upgrade or redeployment |
+    | **Reconfigure** | Apply configuration changes to running services without a full redeployment |
+    | **Upgrade** | Rolling upgrade to a new release version with minimal downtime |
+
+    <Note>
+      Additional manage actions are available via the command selector: **Upgrade Bifrost**
+      (upgrade the bare-metal provisioning service).
+    </Note>
+
+    | **Stop** | Stop all containers across the cluster (causes full downtime, requires confirmation) |
+    | **Destroy** | Remove all containers, configurations, and data completely (requires confirmation) |
+
+    <Danger>Destroy is irreversible. It removes all containers, configuration files, and data from every target node. This action cannot be undone. Ensure you have verified backups before executing.</Danger>
+  </Tab>
+  <Tab title="Backend" icon="database">
+    Database and message queue maintenance operations.
+
+    | Action | Purpose |
+    |--------|---------|
+    | **MariaDB Backup** | Create a full database backup of the Galera cluster for disaster recovery |
+    | **MariaDB Recovery** | Recover a broken or corrupted database from a previous backup |
+    | **RabbitMQ Reset** | Reset message queue state when queues are stuck or consumers are stalled |
+    | **RabbitMQ Upgrade** | Upgrade the RabbitMQ version to match a new release |
+
+    <Warning>MariaDB Recovery overwrites the current database state with backup data. Any changes made after the backup was taken are lost.</Warning>
+  </Tab>
+  <Tab title="Advanced" icon="sliders">
+    Infrastructure-level and diagnostic operations.
+
+    | Action | Purpose |
+    |--------|---------|
+    | **Deploy Containers** | Deploy only the container infrastructure layer without configuring services |
+    | **Octavia Certificates** | Generate or renew TLS certificates for the Xloud Load Balancer service |
+    | **Generate Config** | Generate all service configuration files without deploying — useful for pre-review |
+    | **Validate Config** | Check configuration files for syntax errors and missing required values |
+    | **Gather Facts** | Collect system information (hardware, network, OS) from all target hosts |
+    | **Nova Libvirt Cleanup** | Clean up stale libvirt resources — orphaned domains, volumes, and network filters on compute nodes |
+
+    <Info>Generate Config and Validate Config are non-destructive — they do not modify any running services. Use them freely for pre-deployment review.</Info>
+  </Tab>
+</Tabs>
+
+---
+
+## Command Modifiers
+
+Actions in the Operations wizard support optional modifiers that control execution behavior.
+
+| Modifier | Description | Applicable Actions |
+|----------|-------------|-------------------|
+| **Dry-run mode** | Simulate the action without making changes. Shows what tasks would execute and which hosts would be affected. | All deployment and management actions |
+| **Backup mode** | Create a backup before executing. Supports **full** (complete state snapshot) and **incremental** (changes since last backup) modes. | MariaDB Backup |
+| **Offline mode** | Execute without internet access, using pre-staged packages and images. | Bootstrap Servers |
+| **Verbose logging** | Increase Ansible output verbosity from level 0 (default) through level 4 (maximum debug output). Higher levels include connection debugging, module arguments, and full task execution details. | All actions |
+
+<Tip>
+  Use **dry-run mode** before any production change. It validates the action plan without modifying the cluster, letting you catch configuration issues before they affect running services.
+</Tip>
+
+---
+
+## Live Terminal
+
+Every action execution streams full terminal output in real time, providing complete visibility into each playbook task as it runs.
+
+<CardGroup cols={2}>
+  <Card title="Real-Time Metrics" icon="activity" color="#197560">
+    Live counters for task success, warnings, failures, and overall completion percentage update as each task finishes.
+  </Card>
+  <Card title="Searchable History" icon="search" color="#197560">
+    All task output is archived and searchable. Filter by task name, host, or status to quickly locate specific events across long deployment runs.
+  </Card>
+</CardGroup>
+
+<AccordionGroup>
+  <Accordion title="Understanding Terminal Output" icon="terminal">
+    Each line in the terminal represents an Ansible task. Tasks display their target host, task name, and result status:
+    - **ok** — Task completed successfully, no changes needed
+    - **changed** — Task completed successfully and modified the system
+    - **failed** — Task encountered an error (deployment may continue or stop depending on the task)
+    - **skipped** — Task was not applicable to the current configuration
+  </Accordion>
+  <Accordion title="Quick Guide" icon="info">
+    The Operations tool includes a Quick Guide button that opens a recommended workflow tutorial. This guide walks through the standard deployment sequence and explains when to use each action.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Recommended Workflow
+
+Follow this sequence for a successful first deployment. Each step must complete without errors before proceeding to the next.
+
+<Steps titleSize="h3">
+  <Step title="Run Prechecks" icon="shield-check">
+    Execute Prechecks against all target hosts. This validates port availability, service connectivity, configuration consistency, and Docker readiness across the cluster.
+  </Step>
+  <Step title="Fix Reported Issues" icon="wrench">
+    Review any failures or warnings from the Prechecks output. Common issues include missing Docker configuration, incorrect NIC assignments, and port conflicts. Resolve every failure before continuing.
+  </Step>
+  <Step title="Run Deploy" icon="play">
+    Execute the Deploy action against all hosts. This provisions every enabled cloud service as Docker containers, configures HAProxy load balancing, and starts all services.
+
+    <Info>Deployment duration scales with cluster size and network speed. A 3-node cluster typically completes in 30-45 minutes. Larger clusters with 10+ nodes may take up to 90 minutes.</Info>
+  </Step>
+  <Step title="Run Post-Deploy" icon="flag">
+    Execute Post-Deploy to create the admin user account, default tenant networks, base compute flavors, and initial project structure. This step finalizes the environment for production use.
+  </Step>
+  <Step title="Verify via Dashboard and CLI" icon="circle-check">
+    Log in to the **Xloud Dashboard** (`https://connect.<your-domain>`) with the admin credentials created during Post-Deploy. Verify that all services are listed and operational.
+
+    ```bash title="Verify service endpoints"
+    source openrc.sh
+    openstack service list
+    openstack compute service list
+    openstack network agent list
+    ```
+
+    <Check>All services report status **up** — the deployment is complete and operational.</Check>
+  </Step>
+</Steps>
+
+<Tip>
+  For configuration changes after initial deployment, use **Reconfigure** instead of a full redeployment. Reconfigure applies changes incrementally to running services without downtime, completing in minutes instead of 30-90 minutes.
+</Tip>
+
+---
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Prechecks report port conflicts" icon="alert-triangle">
+    **Cause**: Another service or previous deployment remnant is using a port required by a cloud service.
+
+    **Resolution**: Identify the conflicting process using `ss -tlnp | grep <port>` on the affected host. Stop or remove the conflicting service. If a previous deployment was not fully destroyed, run Destroy before redeploying.
+  </Accordion>
+  <Accordion title="Deploy fails with image pull errors" icon="alert-triangle">
+    **Cause**: Container images are not available in the local registry, or Docker cannot reach the registry.
+
+    **Resolution**: Return to the [Images](/deployment/images) tool and verify that all required images are loaded and pushed to the local registry. Confirm that `docker-registry:4000` is listed as an insecure registry in the Docker daemon configuration on every node.
+  </Accordion>
+  <Accordion title="Post-Deploy fails to create admin user" icon="alert-triangle">
+    **Cause**: The Xloud Identity service is not yet fully initialized when Post-Deploy runs.
+
+    **Resolution**: Wait 30-60 seconds after Deploy completes before running Post-Deploy. The identity service needs time to complete database migrations and start accepting requests. Re-run Post-Deploy after the brief delay.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Management" icon="users" href="/deployment/management" color="#197560">
+    Create users, projects, quotas, and credentials for your deployed cloud
+  </Card>
+  <Card title="Cloud Fleet" icon="globe" href="/deployment/cloud-fleet" color="#197560">
+    View the interactive topology map of your deployed infrastructure
+  </Card>
+</CardGroup>

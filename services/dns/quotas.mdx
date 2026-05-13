@@ -1,0 +1,102 @@
+---
+title: "DNS Quotas"
+description: "Manage per-project DNS resource limits in Xloud DNS — view, set, and reset quotas for zones, record sets, records, and PTR records."
+sidebarTitle: "Quotas"
+---
+
+import AdminWarning from '/snippets/admin-warning.mdx';
+
+## Overview
+
+DNS quotas prevent individual projects from consuming excessive DNS resources. Default
+values are set platform-wide; administrators override them per project. Quota enforcement
+is automatic — operations that would exceed a limit return a `413` or `429` error.
+
+<AdminWarning />
+
+---
+
+## Default Quota Reference
+
+| Resource | Default Limit | Description |
+|----------|--------------|-------------|
+| `zones` | 10 | DNS zones per project |
+| `zone_records` | 500 | Total records across all zones in a project |
+| `zone_recordsets` | 500 | Total record sets across all zones |
+| `recordset_records` | 20 | Records within a single record set |
+| `ptr_records` | 30 | PTR records per project |
+
+---
+
+## View Quotas
+
+<Tabs>
+  <Tab title="Current project" icon="eye">
+    ```bash title="Show quotas for the current project"
+    openstack quota show --dns
+    ```
+  </Tab>
+  <Tab title="Specific project (admin)" icon="shield">
+    ```bash title="Show quotas for a specific project"
+    openstack quota show <project-id> --dns
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Set Quotas
+
+```bash title="Set DNS quotas for a project"
+openstack quota set \
+  --dns-zones 50 \
+  --dns-zone-records 2000 \
+  --dns-zone-recordsets 2000 \
+  --dns-recordset-records 50 \
+  <project-id>
+```
+
+```bash title="Reset to platform defaults"
+openstack quota delete <project-id> --dns
+```
+
+<Tip>
+  Large projects with automated DNS management (e.g., service-discovery-heavy
+  environments) may need `zone_recordsets` quotas in the thousands. Review usage
+  regularly and right-size allocations based on actual consumption.
+</Tip>
+
+---
+
+## Monitor Quota Usage
+
+Check current usage against limits before planning quota changes:
+
+```bash title="Show zone count for a project"
+openstack zone list --project <project-id> -c name | wc -l
+```
+
+```bash title="Count total record sets across all zones"
+for zone in $(openstack zone list --project <project-id> -f value -c name); do
+  openstack recordset list "$zone" -f value -c name
+done | wc -l
+```
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Pool Management" href="/services/dns/pool-management" color="#197560">
+    Manage nameserver infrastructure that processes zone data
+  </Card>
+  <Card title="Security" href="/services/dns/security" color="#197560">
+    Apply DNS security hardening policies
+  </Card>
+  <Card title="Admin Troubleshooting" href="/services/dns/admin-troubleshooting" color="#197560">
+    Diagnose quota-related errors and service issues
+  </Card>
+  <Card title="DNS User Guide" href="/services/dns/user-guide" color="#197560">
+    User-facing zone and record management
+  </Card>
+</CardGroup>

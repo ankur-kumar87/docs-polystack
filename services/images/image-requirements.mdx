@@ -1,0 +1,267 @@
+---
+title: "Image Requirements"
+description: "Requirements and compatibility checklist for virtual machine images to work correctly with Xloud Compute."
+sidebarTitle: "Requirements"
+---
+
+import PrerequisitesAuth from '/snippets/prerequisites-auth.mdx';
+
+## Overview
+
+Xloud Compute relies on image-side configuration to inject SSH keys, assign hostnames,
+configure network interfaces, and deliver user data at instance launch. Images that do
+not meet these requirements will fail to boot correctly, be unreachable over SSH, or
+require manual reconfiguration after launch.
+
+<PrerequisitesAuth />
+
+<Tip>
+  Test compatibility using a CirrOS image first. CirrOS meets all requirements and
+  launches in seconds, making it ideal for validating your environment before importing
+  production images.
+</Tip>
+
+---
+
+## Required Components
+
+| Component | Purpose | Notes |
+|---|---|---|
+| **cloud-init** | Injects SSH keys, sets hostname, runs user-data scripts | Version 22.4 or later recommended |
+| **SSH server** | Enables key-based remote access | `openssh-server`; password auth should be disabled |
+| **VirtIO drivers** | Paravirtualized disk and network drivers for optimal performance | Built into Linux 2.6.25+; Windows requires separate installation |
+| **Serial console** | Enables emergency console access via the Dashboard | Kernel parameter `console=ttyS0` |
+| **DHCP client** | Assigns IP address on first boot | Must use DHCP — static IPs break multi-project networking |
+| **Growroot / cloud-growpart** | Expands root partition to fill allocated disk on launch | Required when flavor disk is larger than image base size |
+
+<Warning>
+  Images missing cloud-init will not receive SSH keys at launch. The instance boots
+  but remains inaccessible unless a password was baked into the image.
+</Warning>
+
+---
+
+## Cloud-Init Configuration
+
+Cloud-init runs during the first boot of every new instance and handles:
+- SSH public key injection from the keypair selected at launch
+- Hostname assignment and `/etc/hosts` update
+- User-data script execution (shell scripts, Ansible, etc.)
+- Network interface configuration via DHCP
+
+### Install cloud-init
+
+<Tabs>
+  <Tab title="Ubuntu / Debian" icon="server">
+    <Steps titleSize="h3">
+      <Step title="Install cloud-init and cloud-utils" icon="download">
+        ```bash title="Install on Ubuntu or Debian"
+        apt-get update && apt-get install -y cloud-init cloud-utils cloud-initramfs-growroot
+        ```
+      </Step>
+      <Step title="Clean the cloud-init state" icon="trash-2">
+        Remove any cached instance data before capturing the image:
+        ```bash title="Reset cloud-init state"
+        cloud-init clean --logs --seed
+        ```
+        <Check>The instance data directory `/var/lib/cloud/` is cleared and ready for re-initialization.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CentOS / AlmaLinux / Rocky Linux" icon="server">
+    <Steps titleSize="h3">
+      <Step title="Install cloud-init" icon="download">
+        ```bash title="Install on RHEL-compatible distributions"
+        dnf install -y cloud-init cloud-utils-growpart gdisk
+        ```
+      </Step>
+      <Step title="Enable cloud-init services" icon="zap">
+        ```bash title="Enable required systemd services"
+        systemctl enable cloud-init-local cloud-init cloud-config cloud-final
+        ```
+      </Step>
+      <Step title="Clean the cloud-init state" icon="trash-2">
+        ```bash title="Reset cloud-init state"
+        cloud-init clean --logs --seed
+        ```
+        <Check>Cloud-init services enabled and state cleared.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+</Tabs>
+
+---
+
+## SSH Access
+
+Xloud injects the selected keypair's public key into the instance's authorized keys file
+via cloud-init. Ensure the image is configured correctly for key-based authentication.
+
+<Steps titleSize="h3">
+  <Step title="Disable password authentication" icon="lock">
+    Edit `/etc/ssh/sshd_config` and set:
+    ```text title="/etc/ssh/sshd_config"
+    PasswordAuthentication no
+    PubkeyAuthentication yes
+    ```
+    This prevents brute-force attacks on instances with public IP addresses.
+  </Step>
+  <Step title="Remove pre-seeded SSH host keys" icon="key">
+    Host keys are regenerated on first boot by cloud-init. Remove existing keys so
+    every instance gets unique host keys:
+    ```bash title="Remove SSH host keys"
+    rm -f /etc/ssh/ssh_host_*
+    ```
+  </Step>
+  <Step title="Verify cloud-init SSH module is enabled" icon="circle-check">
+    Confirm `ssh` is listed in the `cc_ssh` cloud-init module:
+    ```bash title="Check cloud-init configuration"
+    grep -A 5 'cc_ssh' /etc/cloud/cloud.cfg
+    ```
+    <Check>SSH host keys are regenerated and the instance keypair is injected on first boot.</Check>
+  </Step>
+</Steps>
+
+---
+
+## Disk Partitioning
+
+<AccordionGroup>
+  <Accordion title="Use a single root partition" icon="hard-drive" defaultOpen>
+    Xloud Compute resizes the root disk to the flavor's allocated size at launch. A single
+    root partition (`/`) is the simplest layout and works reliably with cloud-growpart.
+
+    Avoid:
+    - LVM (Logical Volume Manager) — growpart does not automatically extend LVM logical volumes
+    - Separate `/boot` partitions unless required by the OS
+    - Swap partitions — use swap files instead, which cloud-init can create dynamically
+  </Accordion>
+  <Accordion title="GPT vs MBR partition table" icon="table">
+    Both GPT and MBR partition tables are supported. GPT is recommended for disks over
+    2 TB. When using GPT, ensure a BIOS boot partition is present for GRUB compatibility
+    with non-UEFI instances.
+  </Accordion>
+  <Accordion title="Filesystem recommendations" icon="folder">
+    | Filesystem | Recommendation |
+    |---|---|
+    | `ext4` | Recommended for all Linux images — reliable growroot support |
+    | `xfs` | Supported — requires `xfs_growfs` (included in `cloud-utils-growpart`) |
+    | `btrfs` | Not recommended — growroot support varies across distributions |
+    | `ntfs` | Required for Windows — use Cloudbase-Init for Windows images |
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Network Configuration
+
+<Note>
+  Images must be configured to obtain IP addresses via DHCP. Xloud assigns instance IP
+  addresses through its DHCP service. Static IP configuration in the image causes network
+  conflicts and prevents proper instance addressing.
+</Note>
+
+<Steps titleSize="h3">
+  <Step title="Configure DHCP on all interfaces" icon="network">
+    Ensure the primary network interface is set to DHCP. For cloud-init-managed images,
+    `cloud-init` handles network configuration automatically via the metadata service.
+
+    Remove any persistent interface rules that bind MAC addresses to interface names:
+    ```bash title="Remove persistent network rules (Debian/Ubuntu)"
+    rm -f /etc/udev/rules.d/70-persistent-net.rules
+    ```
+  </Step>
+  <Step title="Disable network manager caching" icon="wifi">
+    On images using NetworkManager, clear cached connection profiles:
+    ```bash title="Remove NetworkManager connection cache"
+    rm -f /etc/NetworkManager/system-connections/*
+    ```
+  </Step>
+</Steps>
+
+---
+
+## Console Logging
+
+Serial console output enables troubleshooting when SSH is unavailable. Enable it by
+adding the serial console to the kernel command line.
+
+<Tabs>
+  <Tab title="GRUB 2 (most Linux distributions)" icon="terminal">
+    <Steps titleSize="h3">
+      <Step title="Edit GRUB default configuration" icon="edit">
+        Edit `/etc/default/grub` and add the serial console parameters:
+        ```text title="/etc/default/grub"
+        GRUB_CMDLINE_LINUX="console=tty0 console=ttyS0,115200n8"
+        ```
+      </Step>
+      <Step title="Regenerate GRUB configuration" icon="refresh-cw">
+        ```bash title="Regenerate GRUB (Debian/Ubuntu)"
+        update-grub
+        ```
+        ```bash title="Regenerate GRUB (RHEL-compatible)"
+        grub2-mkconfig -o /boot/grub2/grub.cfg
+        ```
+        <Check>Console output streams to both the local display and the serial port.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+</Tabs>
+
+---
+
+## Validation
+
+Verify your image meets all requirements before uploading to Xloud.
+
+<AccordionGroup>
+  <Accordion title="Pre-upload checklist" icon="list-checks" defaultOpen>
+    Run this checklist on the image before capturing or uploading:
+
+    - [ ] `cloud-init --version` returns version 22.4 or later
+    - [ ] `cloud-init clean` has been run to clear cached state
+    - [ ] SSH host keys removed from `/etc/ssh/ssh_host_*`
+    - [ ] `PasswordAuthentication no` set in sshd_config
+    - [ ] Root partition uses `ext4` or `xfs`
+    - [ ] Serial console enabled in GRUB
+    - [ ] Network interface configured for DHCP
+    - [ ] No static IP addresses in network configuration files
+    - [ ] Persistent network interface rules removed
+  </Accordion>
+  <Accordion title="Post-launch validation" icon="circle-check">
+    After launching an instance from the image, verify:
+
+    ```bash title="Check cloud-init completed successfully"
+    cloud-init status --long
+    ```
+
+    Expected output:
+    ```text title="Expected result"
+    status: done
+    ```
+
+    Also confirm SSH key injection:
+    ```bash title="Check injected SSH keys"
+    cat ~/.ssh/authorized_keys
+    ```
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Get Cloud Images" href="/services/images/get-images" color="#197560">
+    Download pre-built images for Ubuntu, AlmaLinux, Rocky Linux, and more.
+  </Card>
+  <Card title="Modify Images" href="/services/images/modify-images" color="#197560">
+    Customize existing images using virt-customize and guestfish.
+  </Card>
+  <Card title="Convert Formats" href="/services/images/convert-formats" color="#197560">
+    Convert VMDK, VHD, or RAW images to the recommended QCOW2 format.
+  </Card>
+  <Card title="Upload an Image" href="/services/images/upload-image" color="#197560">
+    Upload a compatible image to the Xloud Image Service.
+  </Card>
+</CardGroup>

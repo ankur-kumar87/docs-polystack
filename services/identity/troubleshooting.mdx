@@ -1,0 +1,217 @@
+---
+title: "Identity Troubleshooting"
+description: "Diagnose and resolve authentication failures, permission errors, token scope issues, and application credential problems in Xloud Identity."
+sidebarTitle: "Troubleshooting"
+---
+
+## Overview
+
+This guide covers the most common issues encountered when working with Xloud Identity —
+including authentication failures, permission errors, token scope mismatches, and
+application credential rejections. Each section provides diagnostic steps and resolution
+commands you can run immediately.
+
+<Note>
+  For platform-level issues such as LDAP connectivity failures or Fernet key sync errors,
+  refer to the [Identity Admin Guide — Troubleshooting](/services/identity/admin-troubleshooting).
+</Note>
+
+---
+
+## Authentication Failures
+
+<AccordionGroup>
+  <Accordion title="Authentication failed — invalid credentials" icon="lock" defaultOpen>
+    **Cause**: Incorrect password, disabled user account, or expired token.
+
+    **Diagnose**:
+    ```bash title="Verify user status"
+    openstack user show alice
+    ```
+    Confirm `enabled: True`. If the account is disabled, contact your administrator to
+    re-enable it.
+
+    **Resolution**:
+    - For an expired token, re-authenticate by sourcing your credentials file:
+      ```bash title="Re-authenticate"
+      source openrc.sh
+      openstack token issue
+      ```
+    - For a forgotten password, ask your administrator to reset it:
+      ```bash title="Admin: reset user password"
+      openstack user set --password-prompt alice
+      ```
+  </Accordion>
+
+  <Accordion title="MFA code rejected" icon="smartphone">
+    **Cause**: TOTP code has expired (codes are valid for 30 seconds), or the device
+    clock is not synchronized.
+
+    **Resolution**:
+    - Wait for the next code to appear in your authenticator app (new code every 30 seconds)
+    - Ensure your device clock is set to the correct UTC time (time drift causes TOTP failures)
+    - If codes consistently fail, re-enroll your MFA device under
+      MFA re-enrollment via CLI (`openstack credential delete` then re-create)
+  </Accordion>
+
+  <Accordion title="Application credential rejected" icon="terminal">
+    **Cause**: The credential may have expired, the owning user may be disabled, or the
+    credential was deleted.
+
+    **Diagnose**:
+    ```bash title="List active credentials"
+    openstack application credential list
+    ```
+
+    Verify the credential exists and check its expiration date:
+    ```bash title="Show credential details"
+    openstack application credential show ci-pipeline-prod
+    ```
+
+    **Resolution**: If expired, create a new credential and update your pipeline
+    configuration. If the owning user is disabled, re-enable the user or create a
+    new credential under an active service user account.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Permission Errors
+
+<AccordionGroup>
+  <Accordion title="Permission denied on resource operation" icon="shield-off">
+    **Cause**: The current user lacks the required role in the target project.
+
+    **Diagnose**:
+    ```bash title="Check role assignments for user in project"
+    openstack role assignment list \
+      --user alice \
+      --project backend-prod \
+      --names
+    ```
+
+    **Resolution**: If no assignment exists, request the appropriate role from your
+    project administrator:
+    ```bash title="Admin: grant member role"
+    openstack role add \
+      --project backend-prod \
+      --user alice \
+      member
+    ```
+  </Accordion>
+
+  <Accordion title="403 Forbidden on administrative operations" icon="lock">
+    **Cause**: The user has the `admin` role in a project but not at the system or domain
+    scope required for platform-level administrative operations.
+
+    **Diagnose**: Check if the operation requires system-scope admin access.
+    API operations on domains, users across domains, and service configurations typically
+    require system-scope admin.
+
+    **Resolution**: Grant system-scope admin access (requires an existing system admin):
+    ```bash title="Grant system admin role"
+    openstack role add \
+      --user alice \
+      --system all \
+      admin
+    ```
+
+    <Warning>
+      System-scope admin grants full control over all domains and projects. Reserve this
+      assignment for platform administrators only. Use project-scoped admin for day-to-day
+      project management.
+    </Warning>
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Token Scope Issues
+
+<AccordionGroup>
+  <Accordion title="Token scope error — resource not visible" icon="eye-off">
+    **Cause**: The token was issued against a different project than where the resource lives.
+
+    **Diagnose**:
+    ```bash title="Inspect current token scope"
+    openstack token issue -f json
+    ```
+    Check the `project` field. If it does not match the project containing your resource,
+    re-authenticate with the correct project scope.
+
+    **Resolution**:
+    ```bash title="Re-authenticate with correct project scope"
+    export OS_PROJECT_NAME=backend-prod
+    source openrc.sh
+    openstack server list
+    ```
+  </Accordion>
+
+  <Accordion title="Token expired mid-session" icon="clock">
+    **Cause**: Default token lifetime is 1 hour. Long-running CLI sessions or scripts
+    may encounter expired tokens.
+
+    **Resolution**: Re-authenticate before executing long operations:
+    ```bash title="Refresh token"
+    source openrc.sh
+    ```
+    For automation scripts, use [application credentials](/services/identity/application-credentials)
+    which auto-renew through the `v3applicationcredential` auth type.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Account Management Issues
+
+<AccordionGroup>
+  <Accordion title="User cannot log in — account not visible" icon="user-x">
+    **Cause**: The user may belong to a different domain, or the account is disabled.
+
+    **Diagnose**:
+    ```bash title="Search user across all domains"
+    openstack user list --long | grep alice
+    ```
+    ```bash title="Show user status"
+    openstack user show --domain Default alice
+    ```
+
+    **Resolution**: Ensure the user is in the correct domain. If disabled, re-enable:
+    ```bash title="Re-enable user"
+    openstack user set --enable alice
+    ```
+  </Accordion>
+
+  <Accordion title="Project quota exceeded" icon="gauge">
+    **Cause**: The project has reached its resource quota limit for the requested
+    resource type (instances, volumes, networks, etc.).
+
+    **Diagnose**:
+    ```bash title="Check quota usage"
+    openstack quota show --usage backend-prod
+    ```
+    Look for fields where `used` equals or exceeds `limit`.
+
+    **Resolution**: Contact your platform administrator to increase the quota, or delete
+    unused resources to free space within the existing quota.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Identity Admin Guide — Troubleshooting" href="/services/identity/admin-troubleshooting" color="#197560">
+    Platform-level diagnostics — LDAP connectivity, Fernet key sync, and service catalog issues.
+  </Card>
+  <Card title="Application Credentials" href="/services/identity/application-credentials" color="#197560">
+    Create robust non-interactive credentials for automation that avoid session expiry issues.
+  </Card>
+  <Card title="Users" href="/services/identity/users" color="#197560">
+    Manage user accounts, passwords, and role assignments.
+  </Card>
+  <Card title="Multi-Factor Authentication" href="/services/identity/multi-factor-auth" color="#197560">
+    Resolve MFA enrollment and TOTP code validation issues.
+  </Card>
+</CardGroup>

@@ -1,0 +1,155 @@
+---
+title: "Orchestration Service Architecture"
+description: "Understand the Xloud Orchestration service components — API, Engine, and resource plugins — and how they process templates to provision cloud infrastructure."
+sidebarTitle: "Architecture"
+---
+
+import AdminWarning from '/snippets/admin-warning.mdx';
+
+## Overview
+
+Xloud Orchestration is built on a three-tier architecture: an API tier that accepts
+template submissions, an engine tier that resolves dependencies and drives resource
+provisioning, and a plugin layer that delegates individual resource operations to the
+appropriate cloud service API. The engine is stateless — all stack state is persisted
+in a relational database, enabling horizontal engine scaling.
+
+<AdminWarning />
+
+---
+
+## Service Topology
+
+```mermaid
+graph TD
+    U([User / Dashboard]) -->|Submit template| API[Orchestration API<br/>:8004]
+    API -->|Parse template| ENG[Orchestration Engine]
+    ENG -->|Store state| DB[(Database)]
+    ENG -->|Resolve graph| GRAPH[Dependency Resolver]
+    GRAPH -->|Provision resource| COMPUTE[Xloud Compute API<br/>:8774]
+    GRAPH -->|Provision resource| NET[Xloud Networking API<br/>:9696]
+    GRAPH -->|Provision resource| STORE[Xloud Block Storage API<br/>:8776]
+    GRAPH -->|Provision resource| ID[Xloud Identity API<br/>:5000]
+    COMPUTE & NET & STORE & ID -->|Resource status| ENG
+    ENG -->|Stack status + outputs| API
+    API -->|Response| U
+    style API fill:#197560,color:#fff
+    style ENG fill:#197560,color:#fff
+    style GRAPH fill:#3F8F7E,color:#fff
+    style DB fill:#3F8F7E,color:#fff
+```
+
+---
+
+## Service Components
+
+| Component | Port | Runs On | Description |
+|-----------|------|---------|-------------|
+| **Orchestration API** | 8004 | Controller nodes | REST API endpoint — accepts template submissions, parameter updates, and stack lifecycle commands |
+| **Orchestration Engine** | Internal | Controller nodes | Core processing service — parses templates, builds dependency graphs, drives resource provisioning, and tracks stack state |
+| **CloudWatch-Compatible API** | 8000 | Controller nodes | Alarm and metric compatibility endpoint used by `WaitCondition` signal handling and scaling policy webhooks |
+| **Resource Plugins** | N/A | Engine process | In-process plugins that translate resource type operations into calls to the underlying service APIs |
+
+<Note>
+  The Orchestration API and CloudWatch-compatible API are separate processes. Both must
+  be running for auto-scaling and `WaitCondition` resources to function correctly.
+  Port 8000 must be accessible from instances that use `WaitCondition` signal URLs.
+</Note>
+
+---
+
+## How the Engine Processes a Template
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant API as Orchestration API
+    participant Engine as Orchestration Engine
+    participant DB as Database
+    participant Plugin as Resource Plugin
+    participant Cloud as Cloud Service API
+
+    User->>API: POST /v1/stacks (template + params)
+    API->>Engine: Dispatch create request
+    Engine->>DB: Store stack record (CREATE_IN_PROGRESS)
+    Engine->>Engine: Parse template, resolve parameters
+    Engine->>Engine: Build dependency graph
+    loop For each resource (in dependency order)
+        Engine->>Plugin: create(resource_type, properties)
+        Plugin->>Cloud: API call (e.g., POST /servers)
+        Cloud-->>Plugin: Resource ID + initial state
+        Plugin-->>Engine: Resource created
+        Engine->>DB: Update resource status
+    end
+    Engine->>DB: Update stack status (CREATE_COMPLETE)
+    Engine-->>API: Stack ready
+    API-->>User: 201 Created + stack ID
+```
+
+---
+
+## Request Flow Details
+
+### Template Parsing
+
+The engine parses the YAML template and evaluates all `parameters` sections, applying
+default values where the caller did not provide overrides. Intrinsic functions are
+not evaluated at parse time — they are resolved lazily when a resource is being
+provisioned and its dependencies are known.
+
+### Dependency Graph Resolution
+
+The engine constructs a directed acyclic graph (DAG) from:
+- Explicit `depends_on` declarations in resource definitions
+- Implicit dependencies detected from `get_resource` and `get_attr` references in
+  resource properties
+
+Resources without dependencies are provisioned in parallel. Resources with dependencies
+are queued until all prerequisite resources reach `CREATE_COMPLETE`.
+
+### Resource Plugin Architecture
+
+Each resource type (`Xloud::Compute::Server`, `Xloud::Networking::Net`, etc.) is
+handled by a dedicated plugin that implements a standard interface:
+
+| Plugin Method | Trigger | Description |
+|---------------|---------|-------------|
+| `create()` | Stack create | Calls the service API to provision the resource |
+| `update()` | Stack update | Applies property changes — either in-place or via replacement |
+| `delete()` | Stack delete | Removes the resource from the cloud service |
+| `get_reference()` | `get_resource` call | Returns the resource's primary ID |
+| `get_live_state()` | Stack drift check | Polls the service API for the current resource state |
+
+---
+
+## Database Schema Overview
+
+The Orchestration service persists all state in a dedicated database schema:
+
+| Table | Contents |
+|-------|----------|
+| `stack` | Stack metadata, status, template, and owner |
+| `resource` | Individual resource records with type, properties, and status |
+| `resource_data` | Per-resource key-value metadata (e.g., resource IDs, attributes) |
+| `event` | Ordered log of all stack and resource state transitions |
+| `software_config` | Configuration objects for software deployment resources |
+| `stack_tag` | Tag associations for stacks |
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Configuration" href="/services/orchestration/configuration" color="#197560">
+    Configure the Orchestration service, quotas, and stack domain
+  </Card>
+  <Card title="Scaling the Service" href="/services/orchestration/scaling" color="#197560">
+    Deploy multiple engine workers for high-throughput deployments
+  </Card>
+  <Card title="Security" href="/services/orchestration/security" color="#197560">
+    Stack domain users, trust authorization, and policy configuration
+  </Card>
+  <Card title="Admin Troubleshooting" href="/services/orchestration/admin-troubleshooting" color="#197560">
+    Diagnose engine failures and service-level issues
+  </Card>
+</CardGroup>

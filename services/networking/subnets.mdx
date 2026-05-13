@@ -1,0 +1,180 @@
+---
+title: "Create and Manage Subnets"
+description: "Add, configure, and manage subnets within Xloud tenant networks. Control DHCP, allocation pools, DNS, and host routes from the Dashboard or CLI."
+sidebarTitle: "Subnets"
+---
+
+import CliAuth from '/snippets/cli-auth.mdx';
+
+## Overview
+
+Subnets define the IP address space within a network. Each subnet specifies a CIDR block,
+optional DHCP assignment, a gateway IP, and DNS resolvers that are pushed to instances at
+boot. A single network can host multiple subnets — e.g., one IPv4 and one IPv6
+range — or separate subnets for different application tiers.
+
+<Note>
+  **Prerequisites**
+  - An existing Xloud tenant network (see [Create a Network](/services/networking/create-network))
+  - Dashboard access or CLI configured with valid credentials
+</Note>
+
+---
+
+## Add a Subnet to an Existing Network
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Open the network" icon="compass">
+        Navigate to **Network > Networks** and click the network name to open it.
+      </Step>
+      <Step title="Add a subnet" icon="plus">
+        Click the **Subnets** tab, then click **Create Subnet**.
+      </Step>
+      <Step title="Configure CIDR and gateway" icon="settings">
+        | Field | Description |
+        |-------|-------------|
+        | **Subnet Name** | Descriptive name, e.g., `db-subnet` |
+        | **CIDR** | CIDR block, e.g., `10.0.2.0/24` |
+        | **IP Version** | IPv4 or IPv6 |
+        | **Gateway IP** | Optional — leave blank for auto-assign or enter `0.0.0.0` to disable |
+      </Step>
+      <Step title="Configure DHCP and allocation options" icon="sliders">
+        | Option | Description |
+        |--------|-------------|
+        | **Enable DHCP** | Provide automatic IP assignment for instances on this subnet |
+        | **Allocation Pools** | Restrict the DHCP-assigned range, e.g., `10.0.2.10,10.0.2.200` |
+        | **DNS** | Comma-separated list of resolvers |
+        | **Host Routes** | Static routes injected via DHCP in `destination,nexthop` format |
+
+        <Tip>
+          Use allocation pools to reserve address ranges for manually configured hosts
+          such as database nodes or network appliances with static IPs.
+        </Tip>
+      </Step>
+      <Step title="Create the subnet" icon="circle-check">
+        Click **Create** to save the subnet.
+
+        <Check>The subnet appears in the network's Subnets tab with status **Active**.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    <Steps titleSize="h3">
+      <Step title="Authenticate" icon="key">
+        <CliAuth />
+      </Step>
+      <Step title="Add subnet with DHCP" icon="plus">
+        ```bash title="Create subnet with allocation pool"
+        openstack subnet create db-subnet \
+          --network app-network \
+          --subnet-range 10.0.2.0/24 \
+          --gateway 10.0.2.1 \
+          --allocation-pool start=10.0.2.10,end=10.0.2.200 \
+          --dns-nameserver 8.8.8.8
+        ```
+      </Step>
+      <Step title="Add subnet without DHCP (static IPs)" icon="minus">
+        ```bash title="Create subnet with DHCP disabled"
+        openstack subnet create db-subnet-static \
+          --network app-network \
+          --subnet-range 10.0.2.0/24 \
+          --no-dhcp
+        ```
+
+        Use `--no-dhcp` for subnets where IP assignments are managed manually — e.g.,
+        database tiers where each node is pre-configured with a fixed address.
+      </Step>
+      <Step title="Verify" icon="circle-check">
+        ```bash title="Show subnet details"
+        openstack subnet show db-subnet
+        ```
+
+        <Check>Confirm the CIDR, gateway, and DHCP settings match the intended configuration.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+</Tabs>
+
+---
+
+## Subnet Management Operations
+
+### Update DNS Resolvers
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    Navigate to **Network > Networks**, open the subnet row, and click **Edit Subnet**.
+    Update the **DNS** field in the **Advanced Options**.
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Update DNS on a subnet"
+    openstack subnet set app-subnet \
+      --dns-nameserver 10.0.0.53 \
+      --dns-nameserver 8.8.8.8
+    ```
+
+    Existing instances pick up the new resolvers on their next DHCP renewal. To apply
+    immediately inside the guest OS, run `dhclient -r && dhclient` on the instance.
+  </Tab>
+</Tabs>
+
+### Add Host Routes
+
+Host routes are injected via DHCP and add static routing entries on the guest OS. Use
+them to direct traffic for specific CIDRs through a dedicated gateway.
+
+```bash title="Add host route to subnet"
+openstack subnet set app-subnet \
+  --host-route destination=172.16.0.0/12,gateway=192.168.10.254
+```
+
+### Disable or Enable DHCP
+
+```bash title="Disable DHCP on a subnet"
+openstack subnet set app-subnet --no-dhcp
+```
+
+```bash title="Re-enable DHCP on a subnet"
+openstack subnet set app-subnet --dhcp
+```
+
+<Warning>
+  Disabling DHCP on a subnet that has instances running will cause those instances to
+  fail IP renewal on the next lease expiry. Ensure all instances on the subnet are
+  configured with static IPs before disabling DHCP.
+</Warning>
+
+---
+
+## Subnet Configuration Reference
+
+| Parameter | CLI Flag | Description |
+|-----------|----------|-------------|
+| CIDR | `--subnet-range` | IP address range in CIDR notation |
+| Gateway | `--gateway` | Default gateway IP for DHCP clients |
+| DHCP | `--dhcp` / `--no-dhcp` | Enable or disable automatic IP assignment |
+| Allocation Pool | `--allocation-pool` | Start/end range for DHCP-assigned addresses |
+| DNS Servers | `--dns-nameserver` | Resolvers pushed to instances (repeat for multiple) |
+| Host Routes | `--host-route` | Static routes injected via DHCP |
+| IP Version | `--ip-version` | `4` for IPv4, `6` for IPv6 |
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Routers and Gateways" href="/services/networking/routers" color="#197560">
+    Attach subnets to a router to enable inter-subnet routing and internet access
+  </Card>
+  <Card title="DNS Configuration" href="/services/networking/dns-config" color="#197560">
+    Configure DNS name servers and hostname resolution for your subnets
+  </Card>
+  <Card title="Create a Network" href="/services/networking/create-network" color="#197560">
+    Create the network that hosts your subnets
+  </Card>
+  <Card title="Network Troubleshooting" href="/services/networking/troubleshooting" color="#197560">
+    Diagnose and resolve subnet connectivity and DHCP issues
+  </Card>
+</CardGroup>

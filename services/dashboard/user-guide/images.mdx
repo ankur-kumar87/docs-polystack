@@ -1,0 +1,69 @@
+---
+title: "Manage Images"
+description: "Upload OS images, manage instance snapshots, and share images between projects through the Xloud Dashboard."
+sidebarTitle: "Images"
+---
+
+## Overview
+
+Navigate to **Compute > Images** in the sidebar. Images are organized in tabs:
+**Current Project Images**, **Public Images**, **Shared Images**, and **All Images**
+(admin role required).
+
+---
+
+## Create an Image
+
+Click **Create Image** to open the full-page form:
+
+| Field | Description |
+|-------|-------------|
+| **Name** | Image display name (required) |
+| **Upload Type** | Upload File or File URL |
+| **Disk Format** | RAW, QCOW2, ISO (admin: + AKI, ARI, AMI, VDI, VHD, VMDK) |
+| **Container Format** | Bare or Docker (shown when multiple formats available) |
+| **OS / OS Version / OS Admin** | OS metadata (shown for Bare container format) |
+| **Min System Disk / Min Memory** | Resource requirements (0-500 GiB) |
+| **Visibility** | Public/Private/Shared (admin only) |
+| **Usage Type** | Common Server, Bare Metal (admin: + Load Balancer, Database, Container, Application Template) |
+| **Advanced Options** | qemu_guest_agent, CPU Policy, CPU Thread Policy |
+
+<Note>
+  For the complete field reference, see [Upload an Image](/services/images/upload-image).
+</Note>
+
+---
+
+## Image Actions
+
+**Edit** is the first row action. Other actions under **More**:
+
+**User view**: Create Instance, Create Ironic Instance, Create Volume, Delete
+
+**Admin view**: Delete, Manage Access (requires Shared visibility), Manage Metadata
+
+---
+
+## Instance Snapshots
+
+Navigate to **Compute > Instance Snapshots** for snapshots captured from running
+instances. Actions: Edit, Create Instance, Create Volume, Delete.
+
+---
+
+## Detailed Guides
+
+<CardGroup cols={2}>
+  <Card title="Upload an Image" href="/services/images/upload-image" color="#197560">
+    Full create form with all fields
+  </Card>
+  <Card title="Image Properties" href="/services/images/image-properties" color="#197560">
+    Edit properties and manage metadata
+  </Card>
+  <Card title="Share Images" href="/services/images/share-images" color="#197560">
+    Share images across projects via Manage Access
+  </Card>
+  <Card title="Instance Snapshots" href="/services/compute/snapshots" color="#197560">
+    Create snapshots from running instances
+  </Card>
+</CardGroup>

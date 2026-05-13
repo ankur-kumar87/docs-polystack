@@ -1,0 +1,80 @@
+---
+title: "Instance HA User Guide"
+description: "Protect instances from compute host failures using Xloud Instance HA — configure protection policies, monitor recovery status, and validate failover workflows."
+sidebarTitle: "User Guide"
+mode: "wide"
+---
+
+<p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Overview</p>
+
+Xloud Instance HA monitors compute hosts and automatically recovers protected instances
+when a host becomes unreachable. As a project member, you configure which instances are
+protected and track recovery events through the Dashboard or CLI.
+
+This guide covers protection concepts, assigning policies to instances, and monitoring
+ongoing recovery workflows.
+
+<Note>
+  Instance HA protection requires your administrator to have configured at least one
+  failover segment and host monitor. Contact your administrator if protection policies
+  are unavailable in your project. Your administrator can configure this through [XDeploy](/deployment).
+</Note>
+
+---
+
+<p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>In This Guide</p>
+
+<CardGroup cols={4}>
+  <Card title="How It Works" icon="circle-info" href="/services/instance-ha/user-guide/how-it-works" color="#197560">
+    Understand the failover detection and recovery sequence from host failure to instance
+    restoration.
+  </Card>
+  <Card title="Protection Segments" icon="shield-check" href="/services/instance-ha/user-guide/protection-segments" color="#197560">
+    Learn what failover segments are and how to view the segments your instances belong to.
+  </Card>
+  <Card title="Recovery Workflows" icon="rotate" href="/services/instance-ha/user-guide/recovery-workflows" color="#197560">
+    Understand the recovery process and the steps involved when an instance is recovered.
+  </Card>
+  <Card title="Monitoring Status" icon="gauge" href="/services/instance-ha/user-guide/monitoring-status" color="#197560">
+    Track notification events, view recovery history, and verify instance protection status.
+  </Card>
+  <Card title="Troubleshooting" icon="wrench" href="/services/instance-ha/user-guide/troubleshooting" color="#197560">
+    Diagnose protection assignment issues, failed recoveries, and notification errors.
+  </Card>
+</CardGroup>
+
+---
+
+<p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Key Concepts</p>
+
+<CardGroup cols={4}>
+  <Card title="Failover Segment" icon="shield-check" color="#197560">
+    A group of compute hosts monitored together as a unit. When a host in a segment
+    fails, all protected instances on that host are recovered.
+  </Card>
+  <Card title="Protection Policy" icon="file-shield" color="#197560">
+    Attached to an instance to define its recovery behavior — whether to recover
+    automatically and how quickly to begin.
+  </Card>
+  <Card title="Host Monitor" icon="heart-pulse" color="#197560">
+    An agent that continuously checks host availability and triggers the recovery
+    engine when a host becomes unreachable.
+  </Card>
+  <Card title="Recovery Notification" icon="bell" color="#197560">
+    An event emitted by the host monitor that initiates the recovery workflow for
+    all protected instances on the failed host.
+  </Card>
+</CardGroup>
+
+---
+
+<p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Next Steps</p>
+
+<CardGroup cols={4}>
+  <Card title="Instance HA Admin Guide" icon="shield-check" href="/services/instance-ha/admin-guide" color="#197560">
+    Configure failover segments, host monitors, and recovery policies platform-wide.
+  </Card>
+  <Card title="Instance HA Overview" icon="layers" href="/services/instance-ha/index" color="#197560">
+    Service overview, feature summary, and getting started with Instance HA.
+  </Card>
+</CardGroup>

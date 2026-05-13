@@ -1,0 +1,147 @@
+---
+title: "Network Ports"
+description: "Network paths and ports that must be reachable between XMS, source environments, Xloud services, and target guests."
+sidebarTitle: "Network Ports"
+---
+
+## Overview
+
+XMS speaks to a source hypervisor API, the platform storage and compute
+APIs, and the running target instance at different phases of a migration.
+Each conversation uses a specific port and needs a network path that can
+sustain the traffic. This page lists the ports and paths operators need to
+open.
+
+---
+
+## Quick Reference
+
+| Source | Destination | Port | Purpose | Direction |
+|--------|------------|------|---------|-----------|
+| XMS | vCenter or ESXi | 443 | vSphere API and disk transport negotiation | Egress |
+| XMS | ESXi host | 902 | Disk transport data stream | Egress |
+| XMS | Xloud Identity | 5000 | Token validation | Egress |
+| XMS | Xloud Block Storage | 8776 | Volume create and write | Egress |
+| XMS | Xloud Compute | 8774 | Instance create and attach | Egress |
+| XMS | Xloud Networking | 9696 | Network mapping validation | Egress |
+| Dashboard / CLI | XMS API | 443 | User-facing API | Egress |
+
+<Note>
+  Port numbers shown are the defaults. Your deployment may publish XMS and
+  the platform services behind a virtual IP or a TLS-terminating load
+  balancer — adjust accordingly.
+</Note>
+
+---
+
+## XMS ↔ Source
+
+### vSphere API (port 443)
+
+XMS opens a vSphere API session against the vCenter or ESXi endpoint to:
+
+- Authenticate the stored credential
+- Walk the inventory during discovery
+- Read VM configuration, disk metadata, and CBT state during preflight
+- Negotiate a disk transport session before each read
+
+This is a TCP-over-TLS conversation and can go through an HTTPS-aware
+firewall or proxy.
+
+### Disk Transport Data Stream (port 902)
+
+After negotiation, the actual disk data is streamed between XMS and the ESXi
+host that owns the source VM's datastore. This connection is NFC
+(Network File Copy) on port 902 by default.
+
+<Warning>
+  For a vCenter-managed source, open port 902 to every ESXi host that may
+  own the source VM — not just to the vCenter. VMs can move between hosts,
+  so the transport session may hit any host in the cluster.
+</Warning>
+
+### Bandwidth and Latency
+
+- The disk transport session is bandwidth-bound — a full sync of a large VM
+  will saturate the available path during the export phase
+- Incremental warm syncs read only dirty blocks, so the steady-state
+  bandwidth cost is proportional to source churn, not total disk size
+- Round-trip latency over 50 ms noticeably slows the full sync phase — keep
+  XMS and the source on the same LAN or metro link where possible
+
+---
+
+## XMS ↔ Xloud Services
+
+XMS acts as an Xloud tenant on behalf of every migration. It makes standard
+API calls against:
+
+- **Identity** for token validation on every inbound and outbound request
+- **Block Storage** to create target volumes and write disk data into them
+- **Compute** to create the target instance and attach the volume
+- **Networking** to validate the network mapping chosen at submit time
+
+These calls happen over the platform's internal service network. Operators
+who run XMS alongside the rest of the Xloud platform typically do not need
+to make any new firewall changes for this path.
+
+---
+
+## Operator Access
+
+Operators reach the XMS API through the platform's public endpoint — the
+same endpoint used for the rest of the Xloud Dashboard and CLI. The
+Migration panel is served by the existing Dashboard web service, and the
+`xms` CLI calls the XMS API over the public endpoint.
+
+---
+
+## Egress From the Target Instance
+
+After a migration completes, the target Xloud instance is a normal compute
+instance. XMS does not inject any agent or open any extra port on the target
+guest — standard Xloud network security group rules apply for egress,
+ingress, and management access.
+
+---
+
+## Firewall Change Checklist
+
+<Steps titleSize="h3">
+  <Step title="Open egress to vSphere API" icon="plug">
+    Allow TCP/443 from XMS to the vCenter or ESXi endpoint.
+  </Step>
+  <Step title="Open egress to ESXi hosts for disk transport" icon="hard-drive">
+    Allow TCP/902 from XMS to every ESXi host that may own source VM storage.
+  </Step>
+  <Step title="Verify internal Xloud service traffic" icon="check">
+    No change required — XMS communicates with Identity, Block Storage,
+    Compute, and Networking over the existing platform service network.
+  </Step>
+  <Step title="Verify target instance traffic" icon="shield">
+    No change required — standard Xloud security group rules apply to the
+    migrated instance.
+  </Step>
+</Steps>
+
+<Tip>
+  For vCenter-managed sources, ask the vSphere admin which ESXi hosts currently
+  own the source VM's datastores. Open port 902 to all of them — VMs can
+  vMotion between hosts, so the transport session may target any host.
+</Tip>
+
+---
+
+## Next Steps
+
+<CardGroup cols={3}>
+  <Card title="Prerequisites" href="/services/migration/admin-guide/prerequisites" color="#197560">
+    Platform and project prerequisites for a new source
+  </Card>
+  <Card title="Source Credentials" href="/services/migration/admin-guide/source-credentials" color="#197560">
+    Build the service account and role
+  </Card>
+  <Card title="Capacity Planning" href="/services/migration/admin-guide/capacity-planning" color="#197560">
+    Size XMS for concurrent migrations and multi-wave campaigns
+  </Card>
+</CardGroup>

@@ -1,0 +1,194 @@
+---
+title: "Compute Integration"
+description: "Configure Xloud Compute for Optimization compatibility — verify shared storage, live migration capability, and host state for optimization action execution."
+sidebarTitle: "Compute Integration"
+---
+
+## Overview
+
+The Optimization relies on Xloud Compute for both cluster state collection and
+migration execution. All optimization actions that produce live migrations require
+compute hosts to support live migration — which in turn requires shared storage for
+instance disks. This page covers the compute requirements, verification steps, and
+configuration adjustments needed before enabling optimization in production.
+
+<Note>
+  **Prerequisites**
+  - Administrator privileges
+  - Xloud Compute deployed and operational
+  - Xloud Distributed Storage or equivalent shared storage for instance volumes
+</Note>
+
+---
+
+## Shared Storage Requirement
+
+<Warning>
+  Live migration requires that instance disks are backed by shared storage (Xloud
+  Distributed Storage or equivalent). Instances with local ephemeral disks cannot
+  be live-migrated. Such instances will cause actions to fail during plan execution.
+</Warning>
+
+Verify that the instances targeted by optimization are using shared storage:
+
+```bash title="Check instance storage backend"
+openstack server show <instance-id> \
+  -f value -c "os-extended-volumes:volumes_attached"
+```
+
+Instances with no attached volumes (or with ephemeral disk only) cannot be live-migrated.
+Work with project owners to migrate critical ephemeral-disk instances to volume-backed
+equivalents before enabling optimization strategies that include those instances.
+
+---
+
+## Verify Compute Host Availability
+
+Optimization actions only target compute hosts that are up, enabled, and not in
+maintenance state.
+
+```bash title="Check all compute services"
+openstack compute service list --service nova-compute
+```
+
+| Column | Required Value |
+|--------|---------------|
+| **State** | `up` |
+| **Status** | `enabled` |
+
+Hosts with `state: down` or `status: disabled` are automatically excluded from
+optimization targets. Disabled hosts do not receive live-migrated instances.
+
+---
+
+## Verify Live Migration Capability
+
+```bash title="Check migration capability per host"
+openstack hypervisor show <hostname> \
+  -f value -c hypervisor_hostname -c state -c status
+```
+
+Perform a test live migration between two hosts in the optimization segment:
+
+```bash title="Test live migration between hosts"
+openstack server migrate <test-instance-id> \
+  --live-migration \
+  --host <destination-host>
+
+openstack server show <test-instance-id> \
+  -f value -c status
+```
+
+Expected: instance returns to `ACTIVE` status on the destination host.
+
+---
+
+## CPU Compatibility for Live Migration
+
+Live migration between hosts with different CPU architectures or feature sets can fail.
+Configure a common CPU baseline in the Compute service to ensure compatibility across
+all hosts in the optimization segment.
+
+<Tabs>
+  <Tab title="XDeploy" icon="browser">
+    <Steps titleSize="h3">
+      <Step title="Open Advanced Configuration" icon="settings">
+        Open **XDeploy** and navigate to **Advanced Configuration**. In the **Service Tree**
+        (left panel), select **nova**.
+      </Step>
+      <Step title="Edit the Compute Configuration" icon="file-pen">
+        Click **New File** or select an existing `nova.conf` from the **File Browser**
+        (right panel). Add the following in the **Code Editor** (center panel):
+
+        ```ini title="/etc/xavs/config/nova/nova.conf"
+        [libvirt]
+        cpu_mode = custom
+        cpu_model = Cascadelake-Server-noTSX
+        ```
+      </Step>
+      <Step title="Save and Apply" icon="circle-check">
+        Click **Save Current File**. Return to **Operations** and run **reconfigure** to
+        apply the CPU compatibility settings across all compute hosts.
+
+        <Check>CPU compatibility baseline configured and applied via XDeploy.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    Edit the configuration file directly:
+
+    ```ini title="nova.conf -- CPU compatibility"
+    [libvirt]
+    cpu_mode = custom
+    cpu_model = Cascadelake-Server-noTSX
+    ```
+  </Tab>
+</Tabs>
+
+<Tip>
+  Use `cpu_mode = custom` with a CPU model that represents the lowest common denominator
+  across all compute hosts in the optimization segment. This is especially important in
+  clusters with heterogeneous hardware generations.
+</Tip>
+
+---
+
+## Host Aggregates for Optimization Scope
+
+Use host aggregates to define which hosts are eligible for optimization. Assign all
+hosts intended for consolidation to a single aggregate, then scope your audits to
+that aggregate:
+
+```bash title="Create optimization aggregate"
+openstack aggregate create optimization-zone
+openstack aggregate add host optimization-zone compute-01
+openstack aggregate add host optimization-zone compute-02
+openstack aggregate add host optimization-zone compute-03
+```
+
+---
+
+## Validation
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    Navigate to **Compute > Hypervisors** (admin view). Verify:
+    - All compute hosts show `State: Up` and `Status: Enabled`
+    - No hosts are in maintenance or down state
+
+    <Check>All compute hosts are up and enabled, ready to serve as migration targets.</Check>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Verify all hosts are available"
+    openstack compute service list \
+      --service nova-compute \
+      -f table -c Host -c State -c Status
+    ```
+
+    ```bash title="Check per-host utilization"
+    openstack hypervisor list --long \
+      -f table -c Hostname -c "Running VMs" -c "vCPUs Used" -c "Memory MB Used"
+    ```
+
+    <Check>All hosts show `State: up`, `Status: enabled`, and capacity is visible for optimization planning.</Check>
+  </Tab>
+</Tabs>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Action Policies" href="/services/optimization/admin-guide/action-policies" color="#197560">
+    Configure manual approval vs automatic execution for optimization plans.
+  </Card>
+  <Card title="Security" href="/services/optimization/admin-guide/security" color="#197560">
+    Secure the service account used by the Applier to call the Compute API.
+  </Card>
+  <Card title="Troubleshooting" href="/services/optimization/admin-guide/troubleshooting" color="#197560">
+    Diagnose live migration failures during plan execution.
+  </Card>
+  <Card title="Compute Admin Guide" href="/services/compute/admin-guide" color="#197560">
+    Configure compute hosts, shared storage, and live migration settings.
+  </Card>
+</CardGroup>

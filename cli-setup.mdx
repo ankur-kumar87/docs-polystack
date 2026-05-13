@@ -1,0 +1,363 @@
+---
+title: "CLI Setup"
+description: "Install and configure the command-line interface for managing Xloud Cloud Platform resources."
+icon: "terminal"
+sidebarTitle: "CLI Setup"
+---
+
+## Overview
+
+The Xloud command-line interface gives you full control over every platform service directly from your terminal. With a single authenticated session you can provision instances, manage volumes, configure networks, and automate infrastructure workflows — without opening a browser. The CLI is compatible with all major operating systems and integrates cleanly into CI/CD pipelines and shell scripts.
+
+<Note>
+  **Prerequisites**
+  - An active Xloud account with project access
+  - Python 3.8 or later installed on your workstation
+  - Network access to your Xloud API endpoint
+</Note>
+
+---
+
+## Installation
+
+Install the Xloud CLI using the package manager for your operating system.
+
+<Tabs>
+  <Tab title="Ubuntu / Debian" icon="server">
+    ```bash title="Install on Ubuntu / Debian"
+    sudo apt update
+    sudo apt install -y python3-pip python3-venv
+    pip3 install python-openstackclient
+    ```
+
+    <Tip>
+      Install into a virtual environment to avoid conflicts with system Python packages:
+      `python3 -m venv ~/.xloud-cli && source ~/.xloud-cli/bin/activate && pip install python-openstackclient`
+    </Tip>
+  </Tab>
+  <Tab title="CentOS / RHEL" icon="server">
+    ```bash title="Install on CentOS / RHEL"
+    sudo dnf install -y python3-pip
+    pip3 install --user python-openstackclient
+    ```
+
+    Add the user bin directory to your PATH if it is not already present:
+
+    ```bash title="Update PATH"
+    echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
+    source ~/.bashrc
+    ```
+  </Tab>
+  <Tab title="macOS" icon="monitor">
+    ```bash title="Install on macOS (Homebrew)"
+    brew install python@3
+    pip3 install python-openstackclient
+    ```
+
+    Alternatively, use `pipx` for an isolated installation:
+
+    ```bash title="Install with pipx"
+    brew install pipx
+    pipx install python-openstackclient
+    ```
+  </Tab>
+  <Tab title="pip (any OS)" icon="package">
+    ```bash title="Install via pip"
+    pip install python-openstackclient
+    ```
+
+    <Warning>
+      Python 3.8 or later is required. Verify with `python3 --version` before installing.
+    </Warning>
+  </Tab>
+</Tabs>
+
+Confirm the installation completed successfully:
+
+```bash title="Verify installation"
+openstack --version
+```
+
+<Check>The command prints the installed version, e.g., `openstack 6.x.x`.</Check>
+
+---
+
+## Authentication
+
+The CLI authenticates using an RC (credentials) file that sets environment variables for your session. Your administrator provides this file, or you can create it manually.
+
+<Steps titleSize="h3">
+  <Step title="Obtain your RC file">
+    Your administrator provides the RC (credentials) file for your project. This file
+    contains the authentication endpoint, project name, and your username.
+
+    Alternatively, create the file manually with the following content:
+
+    ```bash title="openrc.sh"
+    export OS_AUTH_URL=https://api.<your-domain>:5000/v3
+    export OS_PROJECT_NAME=<your-project>
+    export OS_PROJECT_DOMAIN_NAME=Default
+    export OS_USERNAME=<your-username>
+    export OS_USER_DOMAIN_NAME=Default
+    export OS_REGION_NAME=RegionOne
+    export OS_IDENTITY_API_VERSION=3
+    echo "Please enter your Xloud password for project $OS_PROJECT_NAME as user $OS_USERNAME:"
+    read -sr OS_PASSWORD_INPUT
+    export OS_PASSWORD=$OS_PASSWORD_INPUT
+    ```
+
+    <Tip>
+      Each project has its own RC file. Ask your administrator for the correct
+      `OS_AUTH_URL` and `OS_PROJECT_NAME` values for your environment.
+    </Tip>
+  </Step>
+  <Step title="Source the credentials file">
+    Open a terminal and source the file to load your credentials into the
+    current shell session:
+
+    ```bash title="Load credentials"
+    source openrc.sh
+    ```
+
+    Enter your Xloud account password when prompted.
+  </Step>
+  <Step title="Verify authentication" icon="circle-check">
+    Confirm the CLI can authenticate successfully:
+
+    ```bash title="Verify token"
+    openstack token issue
+    ```
+
+    A valid response displays a token ID, expiry, and your project details.
+
+    <Check>Authentication is working. Your session is valid for 1 hour by default.</Check>
+  </Step>
+</Steps>
+
+<Info>
+  The RC file exports the following environment variables to configure the CLI client.
+  You can also set these manually or store them in a `clouds.yaml` file for multi-cloud management.
+
+  | Variable | Purpose |
+  |----------|---------|
+  | `OS_AUTH_URL` | Xloud Identity service endpoint |
+  | `OS_PROJECT_NAME` | Target project for all operations |
+  | `OS_PROJECT_DOMAIN_NAME` | Project domain (typically `Default`) |
+  | `OS_USERNAME` | Your Xloud account username |
+  | `OS_USER_DOMAIN_NAME` | User domain (typically `Default`) |
+  | `OS_REGION_NAME` | Target region for API calls |
+  | `OS_IDENTITY_API_VERSION` | Identity API version (`3`) |
+</Info>
+
+---
+
+## Command Structure
+
+Every CLI command follows the same pattern: resource type, action, and optional flags.
+
+```
+openstack <resource> <action> [options] [arguments]
+```
+
+<CodeGroup>
+  ```bash title="List resources"
+  # Pattern: openstack <resource> list [--filter value]
+  openstack server list --status ACTIVE
+  openstack volume list --status available
+  openstack network list --internal
+  ```
+
+  ```bash title="Create resources"
+  # Pattern: openstack <resource> create --option value <name>
+  openstack server create \
+    --flavor m1.medium \
+    --image ubuntu-24.04 \
+    --network private \
+    --key-name my-keypair \
+    web-server-01
+  ```
+
+  ```bash title="Show / delete resources"
+  # Pattern: openstack <resource> show <name-or-id>
+  openstack server show web-server-01
+  openstack server show --format json web-server-01
+
+  # Pattern: openstack <resource> delete <name-or-id>
+  openstack server delete web-server-01
+  ```
+</CodeGroup>
+
+<Tip>
+  Most commands accept either the resource **name** or **UUID** as the final argument.
+  Use UUIDs in scripts to avoid ambiguity when multiple resources share the same name.
+</Tip>
+
+---
+
+## Output Formats
+
+The CLI supports multiple output formats controlled by the `--format` flag.
+
+| Flag | Output Type | Best Used For |
+|------|-------------|---------------|
+| `--format table` | Human-readable table (default) | Interactive use, quick inspection |
+| `--format json` | JSON object or array | Scripts, parsing, API-like output |
+| `--format yaml` | YAML document | Configuration files, readable serialization |
+| `--format csv` | Comma-separated values | Spreadsheet import, bulk reporting |
+| `--format value` | Plain values, one per line | Shell variable assignment, `grep` pipelines |
+
+<CodeGroup>
+  ```bash title="JSON output"
+  openstack server show my-vm --format json
+  ```
+
+  ```bash title="Extract a single field"
+  # Use --format value with -c to extract one column
+  openstack server show my-vm --format value -c status
+  ```
+
+  ```bash title="CSV for reporting"
+  openstack server list --format csv --quote all
+  ```
+</CodeGroup>
+
+---
+
+## Tips and Tricks
+
+<AccordionGroup>
+  <Accordion title="Set up shell aliases for common commands" icon="zap">
+    Add aliases to your shell profile (`~/.bashrc` or `~/.zshrc`) to speed up repetitive tasks:
+
+    ```bash title="Recommended aliases (~/.bashrc)"
+    alias osl='openstack server list'
+    alias ovl='openstack volume list'
+    alias onl='openstack network list'
+    alias oil='openstack image list'
+    alias oss='openstack server show'
+    alias osrc='source ~/openrc.sh'
+    ```
+
+    Reload your shell after adding aliases:
+
+    ```bash title="Reload shell config"
+    source ~/.bashrc
+    ```
+  </Accordion>
+  <Accordion title="Enable bash completion" icon="check-check">
+    The CLI ships with a completion script that enables tab-completion for commands,
+    resource names, and flags.
+
+    ```bash title="Enable bash completion"
+    # Add to ~/.bashrc
+    eval "$(openstack complete)"
+    ```
+
+    ```zsh title="Enable zsh completion"
+    # Add to ~/.zshrc
+    eval "$(openstack complete)"
+    ```
+
+    After reloading your shell, press **Tab** after any partial command to see available
+    completions.
+  </Accordion>
+  <Accordion title="Enable debug mode for troubleshooting" icon="bug">
+    Pass `--debug` to any command to print the full HTTP request and response, including
+    headers and token details. This is useful for diagnosing authentication errors or
+    unexpected API responses.
+
+    ```bash title="Debug a failing command"
+    openstack server list --debug 2>&1 | less
+    ```
+
+    <Warning>
+      Debug output includes your authentication token. Avoid sharing or storing this
+      output in logs or tickets.
+    </Warning>
+  </Accordion>
+  <Accordion title="Manage multiple clouds with clouds.yaml" icon="cloud">
+    Instead of sourcing separate RC files, define all your environments in a single
+    `clouds.yaml` file stored at `~/.config/openstack/clouds.yaml`:
+
+    ```yaml title="~/.config/openstack/clouds.yaml"
+    clouds:
+      xloud-prod:
+        auth:
+          auth_url: https://api.<your-domain>:5000/v3
+          project_name: production
+          username: your-username
+          password: your-password
+          user_domain_name: Default
+          project_domain_name: Default
+        region_name: RegionOne
+        identity_api_version: 3
+      xloud-dev:
+        auth:
+          auth_url: https://api-dev.<your-domain>:5000/v3
+          project_name: development
+          username: your-username
+          password: your-password
+          user_domain_name: Default
+          project_domain_name: Default
+        region_name: RegionOne
+        identity_api_version: 3
+    ```
+
+    Switch between environments using `--os-cloud`:
+
+    ```bash title="Use a named cloud profile"
+    openstack --os-cloud xloud-prod server list
+    openstack --os-cloud xloud-dev server list
+    ```
+
+    <Tip>
+      Set `OS_CLOUD=xloud-prod` in your shell to make a profile the default for all
+      commands in that session.
+    </Tip>
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Service CLI References
+
+Each service has a dedicated CLI reference with complete command syntax, options, and examples.
+
+<CardGroup cols={3}>
+  <Card title="Compute CLI" icon="server" href="/services/compute/cli-reference" color="#197560">
+    Instances, flavors, keypairs, server groups, console, and live migration commands.
+  </Card>
+  <Card title="Block Storage CLI" icon="hard-drive" href="/services/storage/cli-reference" color="#197560">
+    Volumes, snapshots, backups, volume types, and cross-project transfers.
+  </Card>
+  <Card title="Networking CLI" icon="network" href="/services/networking/cli-reference" color="#197560">
+    Networks, subnets, routers, floating IPs, security groups, and ports.
+  </Card>
+  <Card title="Images CLI" icon="image" href="/services/images/cli-reference" color="#197560">
+    Upload, download, share, and manage virtual machine images.
+  </Card>
+  <Card title="Orchestration CLI" icon="layers" href="/services/orchestration/cli-reference" color="#197560">
+    Heat stacks, resources, events, outputs, and template validation.
+  </Card>
+  <Card title="Identity CLI" icon="fingerprint" href="/services/identity/cli-reference" color="#197560">
+    Projects, users, roles, groups, and application credentials.
+  </Card>
+  <Card title="Load Balancer CLI" icon="combine" href="/services/load-balancer/cli-reference" color="#197560">
+    Load balancers, listeners, pools, members, and health monitors.
+  </Card>
+  <Card title="DNS CLI" icon="globe" href="/services/dns/cli-reference" color="#197560">
+    Zones, record sets, PTR records, and zone transfers.
+  </Card>
+  <Card title="Key Manager CLI" icon="key" href="/services/key-manager/cli-reference" color="#197560">
+    Secrets, containers, orders, and access control lists.
+  </Card>
+  <Card title="Object Storage CLI" icon="box" href="/services/object-storage/cli-reference" color="#197560">
+    Containers, objects, large object uploads, and temporary URLs.
+  </Card>
+  <Card title="Kubernetes CLI" icon="container" href="/services/kubernetes/cli-reference" color="#197560">
+    Cluster templates, clusters, and node group management.
+  </Card>
+  <Card title="SDS CLI" icon="database" href="/services/sds/cli-reference" color="#197560">
+    Ceph cluster health, pools, OSDs, RBD images, and RGW buckets.
+  </Card>
+</CardGroup>

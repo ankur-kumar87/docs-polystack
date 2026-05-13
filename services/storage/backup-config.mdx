@@ -1,0 +1,486 @@
+---
+title: "Backup Configuration"
+description: "Configure the block storage backup service with Ceph, Swift, NFS, or S3 targets. Enable and validate backups for production."
+sidebarTitle: "Backup Configuration"
+---
+
+import AdminWarning from '/snippets/admin-warning.mdx';
+import CliAuth from '/snippets/cli-auth.mdx';
+
+## Overview
+
+The `cinder-backup` service writes volume data to a configurable backup target that is completely independent of the primary volume storage backend. Backups from any primary backend (Ceph, LVM, NetApp) can go to any backup target. For production deployments, a separate object storage target (Ceph, Swift, or S3) provides the isolation needed for backups to survive a primary storage failure.
+
+<AdminWarning />
+
+<Note>
+  **Prerequisites**
+  - Administrator credentials with the `admin` role
+  - Access to XDeploy for infrastructure-level configuration changes
+  - A configured backup target reachable from all backup service nodes
+  - Credentials and endpoint URL for the chosen backup target
+</Note>
+
+---
+
+## Supported Backup Backends
+
+| Backend | Driver | Best For | Incremental | HA |
+|---------|--------|---------|-------------|-----|
+| **Ceph RBD** | `ceph.CephBackupDriver` | XAVS deployments — fast, native, incremental | Yes | Yes |
+| **Swift** | `swift.SwiftBackupDriver` | Built-in Xloud Object Storage | Yes | Yes |
+| **S3-compatible** | `s3.S3BackupDriver` | AWS S3, Ceph RGW, MinIO, Wasabi, Dell ECS | Yes | Yes |
+| **NFS** | `nfs.NFSBackupDriver` | Existing NAS/NFS infrastructure | Yes | Depends |
+| **Google Cloud Storage** | `gcs.GoogleBackupDriver` | Off-site cloud backup to GCS | Yes | Yes |
+| **GlusterFS** | `glusterfs.GlusterfsBackupDriver` | Existing GlusterFS clusters | Yes | Yes |
+| **POSIX (local path)** | `posix.PosixBackupDriver` | Dev/test — single node only | Yes | No |
+
+<Warning>
+  Only one backup backend is active at a time. All settings go in the `[DEFAULT]` section of `cinder.conf`. Apply changes through XDeploy — do not edit `cinder.conf` directly on production nodes.
+</Warning>
+
+---
+
+## Backup Configuration
+
+<Tabs>
+  <Tab title="Ceph RBD" icon="database">
+    The Ceph backup driver is the **recommended backend for XAVS deployments**. It stores backups as RBD images in a dedicated Ceph pool and supports differential (incremental) backups — only changed blocks transfer after the first full backup. When both the volume backend and backup backend are Ceph, data is copied server-side without passing through the backup service node, dramatically reducing backup time and network load.
+
+    ```ini title="cinder.conf — Ceph RBD backup backend"
+    [DEFAULT]
+    backup_driver = cinder.backup.drivers.ceph.CephBackupDriver
+    backup_ceph_pool = backups
+    backup_ceph_user = cinder-backup
+    backup_ceph_conf = /etc/ceph/ceph.conf
+    backup_ceph_chunk_size = 134217728
+    backup_ceph_stripe_unit = 0
+    backup_ceph_stripe_count = 0
+    backup_ceph_max_snapshots = 0
+    backup_ceph_image_journals = false
+    restore_discard_excess_bytes = true
+    ```
+
+    **Configuration options:**
+
+    | Option | Default | Description |
+    |--------|---------|-------------|
+    | `backup_ceph_pool` | `backups` | Ceph pool where backup images are stored |
+    | `backup_ceph_user` | `cinder` | Ceph user to connect with |
+    | `backup_ceph_conf` | `/etc/ceph/ceph.conf` | Path to Ceph configuration file |
+    | `backup_ceph_chunk_size` | `134217728` (128 MiB) | Chunk size in bytes for transfer to Ceph |
+    | `backup_ceph_stripe_unit` | `0` | RBD stripe unit (0 = use pool default) |
+    | `backup_ceph_stripe_count` | `0` | RBD stripe count (0 = use pool default) |
+    | `backup_ceph_max_snapshots` | `0` | Max snapshots to retain per backup volume (0 = unlimited) |
+    | `backup_ceph_image_journals` | `False` | Enable JOURNALING and EXCLUSIVE_LOCK features for RBD mirroring |
+    | `restore_discard_excess_bytes` | `True` | Pad restored volumes with zeroes to exact size |
+
+    <Tip>
+      Set `backup_ceph_max_snapshots` to a non-zero value (e.g., `5`) to automatically prune old incremental snapshots and reclaim Ceph pool space. Manually deleting incremental backups outside this mechanism forces the next backup to be a full copy.
+    </Tip>
+
+    **Create the backup pool and user:**
+    ```bash title="Ceph — create backup pool and cephx user"
+    ceph osd pool create backups 32
+    ceph auth get-or-create client.cinder-backup \
+      mon 'profile rbd' \
+      osd 'profile rbd pool=backups' \
+      -o /etc/ceph/ceph.client.cinder-backup.keyring
+    ```
+  </Tab>
+
+  <Tab title="Swift" icon="box">
+    The Swift backup driver stores volume backup data as objects in an Xloud Object Storage container. Each backup is split into chunks stored as individual objects. Swift's built-in replication provides durability. Supports auth versions 1, 2, and 3.
+
+    ```ini title="cinder.conf — Swift backup backend"
+    [DEFAULT]
+    backup_driver = cinder.backup.drivers.swift.SwiftBackupDriver
+    backup_swift_url = http://10.0.1.70:8080/v1/AUTH_
+    backup_swift_auth = per_user
+    backup_swift_auth_version = 3
+    backup_swift_user = cinder
+    backup_swift_user_domain = Default
+    backup_swift_key = <swift-password>
+    backup_swift_project = service
+    backup_swift_project_domain = Default
+    backup_swift_container = volumebackups
+    backup_swift_object_size = 52428800
+    backup_swift_block_size = 32768
+    backup_swift_retry_attempts = 3
+    backup_swift_retry_backoff = 2
+    backup_compression_algorithm = zlib
+    ```
+
+    **Configuration options:**
+
+    | Option | Default | Description |
+    |--------|---------|-------------|
+    | `backup_swift_url` | `None` | Swift endpoint URL |
+    | `backup_swift_auth` | `per_user` | Auth mechanism: `per_user` or `single_user` |
+    | `backup_swift_auth_version` | `1` | Auth version: `1`, `2`, or `3` |
+    | `backup_swift_auth_url` | `None` | Keystone endpoint URL (when `auth = single_user`) |
+    | `backup_swift_user` | `None` | Swift username |
+    | `backup_swift_user_domain` | `None` | Swift user domain (auth v3) |
+    | `backup_swift_key` | `None` | Swift password / API key |
+    | `backup_swift_tenant` | `None` | Swift tenant name (auth v2) |
+    | `backup_swift_project` | `None` | Swift project name (auth v3) |
+    | `backup_swift_project_domain` | `None` | Swift project domain (auth v3) |
+    | `backup_swift_container` | `volumebackups` | Container for backup objects |
+    | `backup_swift_object_size` | `52428800` (50 MiB) | Size of each backup chunk object |
+    | `backup_swift_block_size` | `32768` (32 KiB) | Block size for incremental change tracking |
+    | `backup_swift_retry_attempts` | `3` | Retry count for Swift operations |
+    | `backup_swift_retry_backoff` | `2` | Backoff in seconds between retries |
+    | `backup_swift_region_name` | `None` | Swift region name |
+    | `backup_swift_create_storage_policy` | `None` | Storage policy when creating the container |
+    | `backup_swift_auth_insecure` | `False` | Skip SSL certificate verification |
+    | `backup_swift_ca_cert_file` | `None` | CA bundle file for SSL verification |
+    | `backup_compression_algorithm` | `zlib` | Compression: `zlib`, `bz2`, or `none` |
+
+    <Info>
+      `backup_swift_object_size` must be a multiple of `backup_swift_block_size`.
+    </Info>
+  </Tab>
+
+  <Tab title="S3-Compatible" icon="cloud">
+    The S3 backup driver works with AWS S3 and any S3-compatible endpoint: Ceph RADOS Gateway, MinIO, Wasabi, Dell ECS, and others. Set `backup_s3_endpoint_url` for non-AWS endpoints; omit it for native AWS S3.
+
+    ```ini title="cinder.conf — S3 / Ceph RGW backup backend"
+    [DEFAULT]
+    backup_driver = cinder.backup.drivers.s3.S3BackupDriver
+    backup_s3_endpoint_url = https://rgw.example.com
+    backup_s3_store_access_key = <access-key>
+    backup_s3_store_secret_key = <secret-key>
+    backup_s3_store_bucket = cinder-backups
+    backup_s3_object_size = 52428800
+    backup_s3_block_size = 32768
+    backup_s3_retry_max_attempts = 4
+    backup_s3_retry_mode = standard
+    backup_compression_algorithm = zlib
+    backup_s3_verify_ssl = true
+    ```
+
+    ```ini title="cinder.conf — Native AWS S3"
+    [DEFAULT]
+    backup_driver = cinder.backup.drivers.s3.S3BackupDriver
+    backup_s3_store_access_key = <aws-access-key>
+    backup_s3_store_secret_key = <aws-secret-key>
+    backup_s3_store_bucket = my-cinder-backups
+    backup_compression_algorithm = zlib
+    ```
+
+    **Configuration options:**
+
+    | Option | Default | Description |
+    |--------|---------|-------------|
+    | `backup_s3_endpoint_url` | `None` | S3-compatible endpoint URL (omit for native AWS) |
+    | `backup_s3_store_access_key` | `None` | S3 access key |
+    | `backup_s3_store_secret_key` | `None` | S3 secret key |
+    | `backup_s3_store_bucket` | `volumebackups` | S3 bucket for backup data |
+    | `backup_s3_object_size` | `52428800` (50 MiB) | Size of each backup chunk |
+    | `backup_s3_block_size` | `32768` (32 KiB) | Block size for incremental change tracking |
+    | `backup_s3_retry_max_attempts` | `4` | Max retry attempts per request |
+    | `backup_s3_retry_mode` | `legacy` | Retry mode: `legacy`, `standard`, or `adaptive` |
+    | `backup_s3_max_pool_connections` | `10` | Max connections in the connection pool |
+    | `backup_s3_timeout` | `60` | Request timeout in seconds |
+    | `backup_s3_verify_ssl` | `True` | Enable SSL certificate verification |
+    | `backup_s3_ca_cert_file` | `None` | CA bundle file path |
+    | `backup_s3_http_proxy` | `""` | HTTP proxy address |
+    | `backup_s3_https_proxy` | `""` | HTTPS proxy address |
+    | `backup_s3_md5_validation` | `True` | Validate MD5 checksums |
+    | `backup_s3_sse_customer_algorithm` | `None` | SSE-C algorithm (e.g., `AES256`) |
+    | `backup_s3_sse_customer_key` | `None` | SSE-C encryption key |
+    | `backup_compression_algorithm` | `zlib` | Compression: `zlib`, `bz2`, or `none` |
+
+    <Info>
+      `backup_s3_object_size` must be a multiple of `backup_s3_block_size`.
+    </Info>
+  </Tab>
+
+  <Tab title="NFS" icon="hard-drive">
+    The NFS backup driver mounts a remote NFS share and writes backup files to the mount point. Suitable for environments with existing NAS infrastructure.
+
+    ```ini title="cinder.conf — NFS backup backend"
+    [DEFAULT]
+    backup_driver = cinder.backup.drivers.nfs.NFSBackupDriver
+    backup_share = 10.0.10.100:/export/cinder-backup
+    backup_mount_point_base = /var/lib/cinder/backup_nfs
+    backup_mount_options = rw,sync,hard,intr
+    backup_mount_attempts = 3
+    backup_file_size = 1999994880
+    backup_sha_block_size_bytes = 32768
+    backup_enable_progress_timer = true
+    ```
+
+    **Configuration options:**
+
+    | Option | Default | Description |
+    |--------|---------|-------------|
+    | `backup_share` | `None` | NFS share: `hostname:/path`, `ipv4addr:/path`, or `[ipv6addr]:/path` |
+    | `backup_mount_point_base` | `$state_path/backup_mount` | Base directory for the NFS mount point |
+    | `backup_mount_options` | `None` | NFS mount options (see `man nfs`) |
+    | `backup_mount_attempts` | `3` | Mount retry attempts before raising an error |
+    | `backup_file_size` | `1999994880` (~1.86 GiB) | Max backup file size in bytes — volumes larger than this are split across multiple files. Must be a multiple of `backup_sha_block_size_bytes` |
+    | `backup_sha_block_size_bytes` | `32768` (32 KiB) | Block size for incremental change tracking |
+    | `backup_container` | `None` | Custom subdirectory within the NFS share |
+    | `backup_enable_progress_timer` | `True` | Send periodic progress events to Ceilometer |
+
+    <Info>
+      `backup_file_size` also determines the internal buffer size — scale it based on available RAM and the number of concurrent backup workers.
+    </Info>
+
+    **NFS server setup:**
+    ```bash title="/etc/exports on the NFS server"
+    /export/cinder-backup  10.0.0.0/8(rw,sync,no_subtree_check,no_root_squash)
+    ```
+    ```bash title="Apply exports"
+    exportfs -ra
+    ```
+  </Tab>
+
+  <Tab title="Google Cloud Storage" icon="cloud">
+    The GCS backup driver stores backups in a Google Cloud Storage bucket. Authentication uses a GCS service account credential JSON file.
+
+    ```ini title="cinder.conf — Google Cloud Storage backup backend"
+    [DEFAULT]
+    backup_driver = cinder.backup.drivers.gcs.GoogleBackupDriver
+    backup_gcs_bucket = my-cinder-backups
+    backup_gcs_project_id = my-gcp-project
+    backup_gcs_credential_file = /etc/cinder/gcs-credentials.json
+    backup_gcs_object_size = 52428800
+    backup_gcs_block_size = 32768
+    backup_gcs_reader_chunk_size = 2097152
+    backup_gcs_writer_chunk_size = 2097152
+    backup_gcs_num_retries = 3
+    backup_gcs_bucket_location = US
+    backup_gcs_storage_class = NEARLINE
+    backup_compression_algorithm = zlib
+    ```
+
+    **Configuration options:**
+
+    | Option | Default | Description |
+    |--------|---------|-------------|
+    | `backup_gcs_bucket` | `None` | GCS bucket name |
+    | `backup_gcs_project_id` | `None` | GCP project ID that owns the bucket |
+    | `backup_gcs_credential_file` | `None` | Absolute path to GCS service account JSON key file |
+    | `backup_gcs_object_size` | `52428800` (50 MiB) | Size of each backup chunk object |
+    | `backup_gcs_block_size` | `32768` (32 KiB) | Block size for incremental change tracking |
+    | `backup_gcs_reader_chunk_size` | `2097152` (2 MiB) | Download chunk size; `-1` = single download |
+    | `backup_gcs_writer_chunk_size` | `2097152` (2 MiB) | Upload chunk size; `-1` = single upload |
+    | `backup_gcs_num_retries` | `3` | Number of retry attempts |
+    | `backup_gcs_retry_error_codes` | `[429]` | HTTP error codes that trigger a retry |
+    | `backup_gcs_bucket_location` | `US` | Bucket location (e.g., `US`, `EU`, `ASIA`, `us-central1`) |
+    | `backup_gcs_storage_class` | `NEARLINE` | GCS storage class: `STANDARD`, `NEARLINE`, `COLDLINE`, `ARCHIVE` |
+    | `backup_gcs_proxy_url` | `None` | HTTP proxy URL |
+    | `backup_gcs_user_agent` | `gcscinder` | HTTP user-agent string |
+    | `backup_gcs_enable_progress_timer` | `True` | Send progress events to Ceilometer |
+    | `backup_compression_algorithm` | `zlib` | Compression: `zlib`, `bz2`, or `none` |
+
+    <Info>
+      `backup_gcs_object_size` must be a multiple of `backup_gcs_block_size`.
+    </Info>
+
+    **Required GCS service account permissions:**
+
+    | Permission | Purpose |
+    |-----------|---------|
+    | `storage.buckets.get` | Read bucket metadata |
+    | `storage.objects.create` | Write backup objects |
+    | `storage.objects.get` | Read backup objects for restore |
+    | `storage.objects.delete` | Delete backup objects |
+  </Tab>
+
+  <Tab title="GlusterFS" icon="network">
+    The GlusterFS backup driver mounts a GlusterFS volume and writes backup files to it. Suitable for environments already running GlusterFS distributed storage.
+
+    ```ini title="cinder.conf — GlusterFS backup backend"
+    [DEFAULT]
+    backup_driver = cinder.backup.drivers.glusterfs.GlusterfsBackupDriver
+    glusterfs_backup_share = 10.0.10.100:backup_vol
+    glusterfs_backup_mount_point = /var/lib/cinder/backup_glusterfs
+    ```
+
+    **Configuration options:**
+
+    | Option | Default | Description |
+    |--------|---------|-------------|
+    | `glusterfs_backup_share` | `None` | GlusterFS volume in `hostname:vol_name` or `ipv4addr:vol_name` or `[ipv6addr]:vol_name` format. Example: `10.0.10.100:backup_vol` |
+    | `glusterfs_backup_mount_point` | `$state_path/backup_mount` | Base directory for the GlusterFS mount point |
+
+    <Note>
+      The GlusterFS client (`glusterfs-fuse`) must be installed on all nodes running the backup service. The backup service account must have read/write access to the GlusterFS volume.
+    </Note>
+  </Tab>
+
+  <Tab title="POSIX (local path)" icon="folder">
+    The POSIX backup driver writes backups to a local filesystem path on the backup service node. It requires no external services and is straightforward to configure, but provides **no redundancy** — if the node fails, backups are lost.
+
+    ```ini title="cinder.conf — POSIX local backup"
+    [DEFAULT]
+    backup_driver = cinder.backup.drivers.posix.PosixBackupDriver
+    backup_posix_path = /var/lib/cinder/backup
+    backup_file_size = 1999994880
+    backup_sha_block_size_bytes = 32768
+    backup_enable_progress_timer = true
+    ```
+
+    **Configuration options:**
+
+    | Option | Default | Description |
+    |--------|---------|-------------|
+    | `backup_posix_path` | `$state_path/backup` | Local filesystem path where backups are stored |
+    | `backup_file_size` | `1999994880` (~1.86 GiB) | Max backup file size; volumes larger than this are split. Must be a multiple of `backup_sha_block_size_bytes` |
+    | `backup_sha_block_size_bytes` | `32768` (32 KiB) | Block size for incremental change tracking |
+    | `backup_container` | `None` | Custom subdirectory within `backup_posix_path` |
+    | `backup_enable_progress_timer` | `True` | Send progress events to Ceilometer |
+
+    <Warning>
+      POSIX local backup provides **no redundancy**. A node failure loses both primary volumes and their backups simultaneously. Use this only for development or test environments. For any production workload, use Ceph, Swift, S3, or NFS.
+    </Warning>
+  </Tab>
+</Tabs>
+
+---
+
+## Apply Backup Backend Configuration
+
+In XAVS deployments, backup backend settings are configured through XDeploy and applied via Ansible. Do not edit `cinder.conf` directly on production nodes.
+
+```bash title="Apply backup configuration changes"
+xavs-ansible deploy --tags cinder
+```
+
+After deployment, verify the backup service is running:
+
+```bash title="Check backup service status"
+openstack volume service list --service cinder-backup
+```
+
+---
+
+## Validate the Backup Backend
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Create a test backup" icon="plus">
+        Navigate to **Storage > Volumes**, select a volume, and click the **More** dropdown and select **Data Protection > Create Backup**. Set a name and leave the snapshot field empty for a full backup.
+      </Step>
+      <Step title="Monitor backup status" icon="activity">
+        Navigate to **Storage > Volume Backups**. The backup transitions through `creating` → `available`.
+      </Step>
+      <Step title="Restore the backup" icon="rotate-ccw">
+        Click the **More** dropdown and select **Restore** to restore to a new volume. Confirm the restored volume matches the original in size and status.
+
+        <Check>Backup created and restored successfully — backend is operational.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    <CliAuth />
+
+    ```bash title="Create a test backup"
+    openstack volume backup create \
+      --name config-validation-backup \
+      <volume-id>
+    ```
+
+    ```bash title="Monitor backup status"
+    openstack volume backup show config-validation-backup -c status -c size
+    ```
+
+    ```bash title="Restore to a new volume"
+    openstack volume backup restore \
+      --name restored-vol \
+      config-validation-backup
+    ```
+
+    ```bash title="Verify and clean up"
+    openstack volume show restored-vol -c status -c size
+    openstack volume backup delete config-validation-backup
+    openstack volume delete restored-vol
+    ```
+
+    <Check>Backup service is operational and writing to the configured target.</Check>
+  </Tab>
+</Tabs>
+
+---
+
+## Backup Storage Sizing
+
+| Workload Profile | Recommended Backend | Storage Sizing |
+|-----------------|--------------------|----------------|
+| Development / test | POSIX or NFS | 2× total volume capacity |
+| Small production (< 10 TiB) | NFS or Swift | 3× total volume capacity |
+| Large production (> 10 TiB) | Ceph or S3 | 5× total volume capacity (with incremental) |
+| Off-site DR | GCS or S3 | Same as large production |
+
+<Tip>
+  With a weekly full + daily incremental strategy, effective backup storage is typically **1.2–1.5×** total volume capacity for a 30-day retention window. Ceph incremental backups are the most space-efficient — only changed blocks are stored after the first full backup.
+</Tip>
+
+---
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Backup service is 'down'" icon="circle-xmark">
+    **Symptom**: `openstack volume service list | grep backup` shows state `down`.
+
+    **Common causes and fixes**:
+    - **Authentication failure** — verify credentials (Swift/S3/GCS) are correct and the service user has access to the bucket/container
+    - **NFS/GlusterFS mount failure** — verify the share is reachable and exported with write permission: `mount -t nfs <server>:<share> /mnt/test`
+    - **Ceph connectivity** — verify the keyring and ceph.conf are correct: `ceph --user cinder-backup -s`
+    - **Container not started** — restart the backup service: `xavs-ansible deploy --tags cinder`
+  </Accordion>
+  <Accordion title="Backup stuck in 'creating' status" icon="clock">
+    **Cause**: Backup target is unreachable, slow, or the service is under load.
+
+    Check backup service logs:
+    ```bash title="Check cinder-backup logs"
+    docker logs cinder_backup | tail -50
+    ```
+
+    For large volumes (> 1 TiB), allow up to 60 minutes. If the backup stays in `creating` beyond that, check target connectivity and available space.
+  </Accordion>
+  <Accordion title="Incremental backup becomes a full backup unexpectedly" icon="database">
+    **Cause** (Ceph): Manually deleting a Ceph incremental snapshot breaks the backup chain. The next backup must start a new full backup.
+
+    **Cause** (Swift/S3/NFS): The base backup or a required incremental in the chain was deleted.
+
+    **Fix**: Only delete backups through the Cinder API (`openstack volume backup delete`), never by directly removing objects from the storage backend. After a chain break, the next backup will automatically create a new full backup.
+  </Accordion>
+  <Accordion title="GCS authentication errors" icon="key">
+    **Cause**: The service account credential file is missing, incorrect, or the service account lacks required permissions.
+
+    **Fix**: Verify the credential file path in `cinder.conf` and test authentication:
+    ```bash title="Test GCS credentials"
+    docker exec cinder_backup python3 -c "
+    from google.oauth2 import service_account
+    creds = service_account.Credentials.from_service_account_file('/etc/cinder/gcs-credentials.json')
+    print('Credentials valid:', creds.valid)
+    "
+    ```
+    Ensure the service account has `storage.objects.create`, `storage.objects.get`, and `storage.objects.delete` on the target bucket.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Backup Backends" href="/services/storage/backup-backends" color="#197560">
+    Comparison of all backup backends with use-case guidance
+  </Card>
+  <Card title="Volume Backups (User)" href="/services/storage/backups" color="#197560">
+    User guide for creating, managing, and restoring volume backups
+  </Card>
+  <Card title="Storage Backends" href="/services/storage/storage-backends" color="#197560">
+    Configure the primary volume storage backends
+  </Card>
+  <Card title="Quotas" href="/services/storage/quotas" color="#197560">
+    Configure backup quota limits per project
+  </Card>
+</CardGroup>

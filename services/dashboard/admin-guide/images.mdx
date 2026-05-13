@@ -1,0 +1,68 @@
+---
+title: "Manage Images (Admin)"
+description: "Admin operations for image management — set visibility, manage access, configure metadata, and control the platform image catalog."
+sidebarTitle: "Images (Admin)"
+---
+
+## Overview
+
+Navigate to **Compute > Images** in the admin sidebar. The admin view shows all
+images across all projects with additional columns (Project ID/Name) and admin-only
+actions.
+
+---
+
+## Admin Actions
+
+| Action | Location | Description |
+|--------|----------|-------------|
+| **Edit** | First row action | Edit name, OS details, visibility (Public checkbox), protection, advanced options |
+| **Delete** | More dropdown | Delete the image |
+| **Manage Access** | More dropdown | Share with specific projects (requires Shared visibility) |
+| **Manage Metadata** | More dropdown | Edit custom key-value metadata and system metadata definitions |
+
+<Note>
+  Admin actions are a completely different set from user actions. The admin More dropdown
+  does NOT contain Create Instance or Create Volume — those are user-only actions.
+</Note>
+
+---
+
+## Image Visibility
+
+| Visibility | Who Can See | How to Set |
+|------------|-------------|------------|
+| **Private** | Owner project only | Default for non-admin uploads |
+| **Public** | All projects | Admin: Edit image > check "Public" |
+| **Shared** | Owner + explicitly shared projects | Admin: set via CLI, then use Manage Access |
+
+---
+
+## Metadata Management
+
+Navigate to **Global Setting > Metadata Definitions** (admin view) to manage system-wide
+metadata schemas that define available properties for images, flavors, and other resources.
+
+<Note>
+  For the complete image management reference, see [Upload an Image](/services/images/upload-image)
+  and [Image Properties](/services/images/image-properties).
+</Note>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Upload an Image" href="/services/images/upload-image" color="#197560">
+    Full image creation form reference
+  </Card>
+  <Card title="Image Properties" href="/services/images/image-properties" color="#197560">
+    Edit properties and manage metadata
+  </Card>
+  <Card title="Share Images" href="/services/images/share-images" color="#197560">
+    Share images across projects
+  </Card>
+  <Card title="Image Templates" href="/services/images/image-templates" color="#197560">
+    Manage the platform image catalog
+  </Card>
+</CardGroup>

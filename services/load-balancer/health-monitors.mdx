@@ -1,0 +1,199 @@
+---
+title: "Health Monitors"
+description: "Configure TCP, HTTP, and HTTPS health checks to automatically remove unhealthy backend members from Xloud Load Balancer pools."
+sidebarTitle: "Health Monitors"
+---
+
+import PrerequisitesAuth from '/snippets/prerequisites-auth.mdx';
+
+## Overview
+
+Health monitors continuously probe pool members and automatically remove unhealthy
+instances from rotation. When a member fails the configured number of consecutive probes,
+it is marked `OFFLINE` and receives no traffic until it recovers. This guide covers all
+supported monitor types, their configuration parameters, and best practices for different
+application types.
+
+<PrerequisitesAuth />
+
+---
+
+## Supported Monitor Types
+
+| Type | Protocol | Use Case |
+|------|----------|----------|
+| `TCP` | Layer 4 connection check | Any TCP service — databases, custom protocols |
+| `HTTP` | GET request + response code check | Web applications and REST APIs |
+| `HTTPS` | Encrypted GET request check | HTTPS backends requiring secure probes |
+| `PING` | ICMP echo | Basic host reachability test |
+| `UDP-CONNECT` | UDP connection check | UDP-based services |
+| `TLS-HELLO` | TLS handshake check | Verify TLS is functional without full HTTPS probe |
+
+---
+
+## Configuration Parameters
+
+| Parameter | Description | Recommended |
+|-----------|-------------|-------------|
+| **Delay** | Seconds between consecutive probes | `5–10` |
+| **Timeout** | Seconds to wait for probe response before counting as failed | `3–5` |
+| **Max Retries** | Consecutive failures before marking member DOWN | `3` |
+| **Max Retries Down** | Consecutive successes before restoring a DOWN member to ONLINE | `3` |
+| **URL Path** | Path for HTTP/HTTPS monitors (must return expected code) | `/health` |
+| **Expected Codes** | Comma-separated HTTP status codes accepted as healthy | `200` |
+
+<Tip>
+  Set **Delay** to at least twice the **Timeout** value to prevent overlapping probes
+  during slow response periods. For example: Delay=10, Timeout=5.
+</Tip>
+
+---
+
+## Create a Health Monitor
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Navigate to pool health monitor" icon="heart-pulse">
+        Open your load balancer, select the **Pools** tab, and click the pool name.
+        Select the **Health Monitor** sub-tab. Click **Create Health Monitor**.
+      </Step>
+      <Step title="Select monitor type" icon="settings">
+        Select the type that matches your backend service. HTTP is appropriate for web
+        applications; TCP is appropriate for databases and custom protocols.
+      </Step>
+      <Step title="Set timing parameters" icon="clock">
+        | Field | Recommended Value |
+        |-------|-------------------|
+        | **Delay** | `10` |
+        | **Timeout** | `5` |
+        | **Max Retries** | `3` |
+        For HTTP monitors, set **URL Path** to a dedicated health endpoint (e.g., `/health`)
+        that returns HTTP 200 only when the application is fully ready.
+      </Step>
+      <Step title="Confirm creation" icon="circle-check">
+        <Check>Health monitor is ACTIVE. View member operating status to verify probes are running.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Create HTTP health monitor"
+    openstack loadbalancer healthmonitor create \
+      --name hm-http \
+      --delay 10 \
+      --timeout 5 \
+      --max-retries 3 \
+      --type HTTP \
+      --url-path /health \
+      --expected-codes 200 \
+      pool-http
+    ```
+
+    ```bash title="Create TCP health monitor"
+    openstack loadbalancer healthmonitor create \
+      --name hm-tcp \
+      --delay 10 \
+      --timeout 5 \
+      --max-retries 3 \
+      --type TCP \
+      pool-db
+    ```
+
+    ```bash title="Create HTTPS health monitor"
+    openstack loadbalancer healthmonitor create \
+      --name hm-https \
+      --delay 10 \
+      --timeout 5 \
+      --max-retries 3 \
+      --type HTTPS \
+      --url-path /health \
+      --expected-codes 200 \
+      pool-secure
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## View Member Health Status
+
+After creating a health monitor, verify members are being probed and showing the correct
+operating status:
+
+```bash title="List member operating status"
+openstack loadbalancer member list pool-http \
+  -c name -c address -c operating_status
+```
+
+Expected healthy output:
+```
++--------+-------------+------------------+
+| name   | address     | operating_status |
++--------+-------------+------------------+
+| web-01 | 192.168.1.5 | ONLINE           |
+| web-02 | 192.168.1.6 | ONLINE           |
++--------+-------------+------------------+
+```
+
+<Check>All members show `ONLINE` operating status — they are healthy and receiving traffic.</Check>
+
+---
+
+## Manage Health Monitors
+
+<CodeGroup>
+```bash title="Show health monitor details"
+openstack loadbalancer healthmonitor show hm-http
+```
+```bash title="Update probe interval"
+openstack loadbalancer healthmonitor set hm-http \
+  --delay 5 \
+  --timeout 3
+```
+```bash title="Delete health monitor"
+openstack loadbalancer healthmonitor delete hm-http
+```
+</CodeGroup>
+
+---
+
+## Health Check Endpoint Design
+
+For HTTP health monitors, implement a dedicated `/health` endpoint in your application:
+
+<AccordionGroup>
+  <Accordion title="What a health endpoint should check" icon="heart-pulse" defaultOpen>
+    A good health endpoint verifies that all critical dependencies are available:
+    - Database connection is alive
+    - Cache layer (Redis, Memcached) is reachable
+    - Required configuration is loaded
+    - Application can accept requests (not in restart/initialization state)
+
+    Return HTTP 200 only when all checks pass. Return HTTP 503 when any dependency is unavailable.
+  </Accordion>
+  <Accordion title="What a health endpoint should NOT do" icon="circle-x">
+    - Do NOT make the health endpoint expensive (no full DB queries)
+    - Do NOT require authentication (health probes run without credentials)
+    - Do NOT check external dependencies not under your control (external APIs, third-party services)
+    - Do NOT return 200 during graceful shutdown — return 503 to drain traffic before stopping
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Pools" href="/services/load-balancer/pools" color="#197560">
+    Manage the pools that health monitors are attached to.
+  </Card>
+  <Card title="Troubleshooting" href="/services/load-balancer/troubleshooting" color="#197560">
+    Resolve OFFLINE member status and health probe failures.
+  </Card>
+  <Card title="Create Load Balancer" href="/services/load-balancer/create-lb" color="#197560">
+    Create a complete load balancer setup with health monitoring from scratch.
+  </Card>
+  <Card title="Listeners" href="/services/load-balancer/listeners" color="#197560">
+    Configure the protocol and ports that route traffic to your pools.
+  </Card>
+</CardGroup>

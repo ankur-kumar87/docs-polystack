@@ -1,0 +1,160 @@
+---
+title: "Xloud Dashboard"
+description: "Browser-based management console for all Xloud cloud services — powered by Skyline with integrated monitoring, RBAC, and resource management."
+icon: "gauge"
+sidebarTitle: "Dashboard"
+mode: "wide"
+---
+
+The Xloud Dashboard is a browser-based interface for centralized management of all cloud
+resources across Compute, Storage, Networking, Identity, and more. Powered by the Skyline
+platform, it provides a modern, high-performance UI with integrated monitoring, role-based
+access control, and real-time resource management.
+
+<Note>
+  The Dashboard is included in all Xloud products: [XAVS](/products/xavs), [XPCI](/products/xpci),
+  and [XHCI](/products/xhci). Access it at `https://connect.<your-domain>` after deployment.
+</Note>
+
+---
+
+<p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Guides</p>
+
+<CardGroup cols={2}>
+  <Card title="User Guide" icon="book-open" href="/services/dashboard/user-guide" color="#197560">
+    Navigate the Dashboard, manage resources, and understand the console and admin views.
+  </Card>
+  <Card title="Admin Guide" icon="shield" href="/services/dashboard/admin-guide" color="#197560">
+    Configure the Dashboard, manage projects and users, and administer platform resources.
+  </Card>
+</CardGroup>
+
+---
+
+<p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Dashboard Layout</p>
+
+The Dashboard is organized into two views — **Console** (project-scoped) and **Admin**
+(platform-wide) — accessible via a toggle in the header.
+
+<Tabs>
+  <Tab title="Console View (User)" icon="gauge">
+    The Console view shows project-scoped resources. Sidebar sections:
+
+    | Section | Pages |
+    |---------|-------|
+    | **Compute** | Instances, Instance Snapshots, Flavors, Server Groups, Images, Key Pairs |
+    | **Storage** | Volumes, Volume Backups, Volume Snapshots, Object Storage |
+    | **Network** | Networks, Ports, QoS Policies, Routers, Floating IPs, Topology, Load Balancers, Certificates, VPNs, Security Groups, Firewalls, DNS Zones, DNS Reverse |
+    | **Orchestration** | Stacks |
+    | **Share File Storage** | Shares, Share Networks, Share Groups |
+    | **Key Manager** | Secrets, Containers |
+    | **Identity** | Projects, Users, User Groups, Roles |
+  </Tab>
+  <Tab title="Admin View" icon="shield">
+    The Admin view shows platform-wide resources. Additional sections:
+
+    | Section | Pages |
+    |---------|-------|
+    | **Compute** | + Hypervisors, Host Aggregates, Bare Metal Nodes |
+    | **Storage** | + Volume Types, Storage Backends |
+    | **Network** | + RBAC Policies |
+    | **Identity** | + Domains, RBAC Management |
+    | **Monitor Center** | Overview, Physical Nodes, Storage Clusters, Services, Monitoring, Logging, Activity Log, Cluster Health |
+    | **Optimization** | Goals, Strategies, Audit Templates, Audits, Action Plans, Actions |
+    | **Instance-HA** | Segments, Hosts, Notifications, VM Moves |
+    | **Global Setting** | System Info, System Config, Metadata Definitions |
+  </Tab>
+</Tabs>
+
+---
+
+<p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Key Capabilities</p>
+
+<CardGroup cols={3}>
+  <Card title="Instance Management" icon="server" href="/services/compute/launch-instance" color="#197560">
+    4-step creation wizard with real-time quota tracking
+  </Card>
+  <Card title="Storage Control" icon="hard-drive" href="/services/storage/create-volume" color="#197560">
+    Volume creation with storage tier selection
+  </Card>
+  <Card title="Network Topology" icon="network" href="/services/networking/create-network" color="#197560">
+    Visual topology map and full SDN configuration
+  </Card>
+  <Card title="Image Library" icon="disc" href="/services/images/upload-image" color="#197560">
+    Upload images with OS metadata and format support
+  </Card>
+  <Card title="Identity & Access" icon="fingerprint" href="/services/identity/user-guide" color="#197560">
+    Project and user management with RBAC
+  </Card>
+  <Card title="Monitoring" icon="activity" href="/services/monitoring/user-guide" color="#197560">
+    Integrated monitoring, logging, and health dashboards
+  </Card>
+</CardGroup>
+
+---
+
+<p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Xloud-Developed Features</p>
+
+<Info>
+  **Xloud-Developed** — These capabilities are developed by Xloud and ship with XAVS / XPCI.
+</Info>
+
+<CardGroup cols={2}>
+  <Card title="Live vCPU/RAM Scaling" icon="sliders" href="/services/compute/live-resize" color="#197560">
+    Adjust instance CPU and memory via slider controls — no reboot required
+  </Card>
+  <Card title="Instance HA" icon="heart-pulse" href="/services/instance-ha/user-guide/how-it-works" color="#197560">
+    Failover segments, host monitoring, real-time VM evacuation tracking
+  </Card>
+  <Card title="Resource Optimizer" icon="chart-bar" href="/services/optimization/user-guide" color="#197560">
+    Automated workload placement and resource consolidation
+  </Card>
+  <Card title="Cluster Health" icon="activity" color="#197560">
+    Service health with RabbitMQ, MariaDB/Galera, and service monitoring
+  </Card>
+</CardGroup>
+
+---
+
+<p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Architecture</p>
+
+```mermaid
+graph LR
+    Browser["Browser (HTTPS)"] --> Skyline["Skyline Console\n(Nginx + React)"]
+    Skyline --> SkyAPI["Skyline API Server\n(FastAPI)"]
+    SkyAPI --> Keystone["Identity Service"]
+    SkyAPI --> Nova["Compute API"]
+    SkyAPI --> Cinder["Block Storage"]
+    SkyAPI --> Neutron["Networking"]
+    SkyAPI --> Glance["Image Service"]
+    SkyAPI --> Swift["Object Storage"]
+    SkyAPI --> Heat["Orchestration"]
+    style Skyline fill:#197560,color:#fff
+    style SkyAPI fill:#3F8F7E,color:#fff
+```
+
+The Dashboard communicates through the Skyline API server, which proxies requests to
+service APIs. All actions enforce the same RBAC rules as CLI and direct API calls.
+
+| Component | Description |
+|-----------|-------------|
+| **Skyline Console** | React-based single-page application served by Nginx |
+| **Skyline API Server** | FastAPI backend handling authentication, RBAC, and API proxying |
+| **Session Management** | JWT-based session cookies with configurable expiration |
+| **RBAC Engine** | Per-endpoint role-based access control with 30-second cache |
+
+---
+
+<p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Related Services</p>
+
+<CardGroup cols={3}>
+  <Card title="Identity & Access" icon="fingerprint" href="/services/identity/index" color="#197560">
+    Authentication and RBAC for Dashboard login
+  </Card>
+  <Card title="Compute" icon="server" href="/services/compute" color="#197560">
+    Instance lifecycle management
+  </Card>
+  <Card title="Deployment" icon="play" href="/deployment/index" color="#197560">
+    Deploy and configure the Dashboard via XDeploy
+  </Card>
+</CardGroup>

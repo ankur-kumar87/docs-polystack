@@ -1,0 +1,222 @@
+---
+title: "Convert Image Formats"
+description: "Convert virtual machine images between QCOW2, RAW, VMDK, VHD, and VDI formats using qemu-img before uploading to Xloud."
+sidebarTitle: "Convert Formats"
+---
+
+## Overview
+
+Images obtained from VMware, VirtualBox, Hyper-V, or other virtualization platforms use
+formats that differ from what Xloud Compute expects. The `qemu-img` tool converts between
+all major disk image formats quickly and without data loss. QCOW2 is the recommended
+format for Xloud — it provides compression, snapshot support, and efficient sparse storage.
+
+<Note>
+  **Prerequisites**
+  - A Linux workstation with `qemu-utils` installed
+  - The source image file in its original format
+  - Free disk space: RAW conversions require space equal to the full virtual disk size
+</Note>
+
+---
+
+## Supported Formats
+
+| Format | Extension | Description | Use Case |
+|---|---|---|---|
+| **QCOW2** | `.qcow2` | Compressed, sparse, copy-on-write | Recommended for Xloud — best balance of size and performance |
+| **RAW** | `.img`, `.raw` | Uncompressed, full disk image | Maximum I/O performance; large file size |
+| **VMDK** | `.vmdk` | VMware native format | Import from VMware ESXi or Workstation |
+| **VHD / VHDX** | `.vhd`, `.vhdx` | Hyper-V / Azure native format | Import from Hyper-V or Microsoft Azure |
+| **VDI** | `.vdi` | VirtualBox native format | Import from Oracle VirtualBox |
+
+<Warning>
+  Converting to RAW format creates a file equal to the full virtual disk size, not just
+  the used space. A 50 GB virtual disk produces a 50 GB RAW file even if only 5 GB is
+  used. Ensure sufficient disk space before converting.
+</Warning>
+
+---
+
+## Install qemu-img
+
+<Tabs>
+  <Tab title="Ubuntu / Debian" icon="server">
+    ```bash title="Install qemu-utils"
+    apt-get update && apt-get install -y qemu-utils
+    ```
+  </Tab>
+  <Tab title="CentOS / AlmaLinux / Rocky Linux" icon="server">
+    ```bash title="Install qemu-img"
+    dnf install -y qemu-img
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Check Image Information
+
+Before converting, inspect the source image to confirm its format, virtual size, and
+backing chain:
+
+```bash title="Inspect image metadata"
+qemu-img info source-image.vmdk
+```
+
+Expected output:
+```text title="Example qemu-img info output"
+image: source-image.vmdk
+file format: vmdk
+virtual size: 20 GiB (21474836480 bytes)
+disk size: 4.2 GiB
+cluster_size: 65536
+```
+
+<Tip>
+  The `disk size` shows actual data written; `virtual size` shows the size instances
+  see. QCOW2 preserves this sparse allocation — RAW expands to the full virtual size.
+</Tip>
+
+---
+
+## Common Conversions
+
+<Tabs>
+  <Tab title="VMDK to QCOW2" icon="terminal">
+    Convert a VMware disk image to QCOW2:
+
+    <Steps titleSize="h3">
+      <Step title="Convert the image" icon="repeat">
+        ```bash title="Convert VMDK to QCOW2"
+        qemu-img convert \
+          -f vmdk \
+          -O qcow2 \
+          source-image.vmdk \
+          output-image.qcow2
+        ```
+        The `-f` flag specifies the source format; `-O` specifies the output format.
+      </Step>
+      <Step title="Verify the output" icon="circle-check">
+        ```bash title="Verify converted image"
+        qemu-img info output-image.qcow2
+        ```
+        <Check>Output shows `file format: qcow2` and virtual size matches the source.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="VHD to QCOW2" icon="terminal">
+    Convert a Hyper-V or Azure VHD image to QCOW2:
+
+    <Steps titleSize="h3">
+      <Step title="Convert the image" icon="repeat">
+        ```bash title="Convert VHD to QCOW2"
+        qemu-img convert \
+          -f vpc \
+          -O qcow2 \
+          source-image.vhd \
+          output-image.qcow2
+        ```
+        <Note>VHD uses the `vpc` format identifier in `qemu-img`. VHDX uses `vhdx`.</Note>
+      </Step>
+      <Step title="Verify the output" icon="circle-check">
+        ```bash title="Verify converted image"
+        qemu-img info output-image.qcow2
+        ```
+        <Check>Output shows `file format: qcow2`.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="RAW to QCOW2" icon="terminal">
+    Compress a RAW image into QCOW2 to reduce storage footprint:
+
+    <Steps titleSize="h3">
+      <Step title="Convert with compression" icon="repeat">
+        ```bash title="Convert RAW to QCOW2 with compression"
+        qemu-img convert \
+          -f raw \
+          -O qcow2 \
+          -c \
+          source-image.raw \
+          output-image.qcow2
+        ```
+        The `-c` flag enables compression. Compressed QCOW2 images can be significantly
+        smaller than their RAW equivalents.
+      </Step>
+      <Step title="Compare sizes" icon="chart-bar">
+        ```bash title="Compare source and output sizes"
+        ls -lh source-image.raw output-image.qcow2
+        ```
+        <Check>QCOW2 output is typically 30–70% smaller than the RAW source for OS images.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="QCOW2 to RAW" icon="terminal">
+    Convert to RAW for maximum I/O performance or compatibility testing:
+
+    <Steps titleSize="h3">
+      <Step title="Check available disk space first" icon="hard-drive">
+        ```bash title="Check free space vs. virtual image size"
+        df -h .
+        qemu-img info source-image.qcow2 | grep "virtual size"
+        ```
+        Ensure free space exceeds the virtual size of the image.
+      </Step>
+      <Step title="Convert to RAW" icon="repeat">
+        ```bash title="Convert QCOW2 to RAW"
+        qemu-img convert \
+          -f qcow2 \
+          -O raw \
+          source-image.qcow2 \
+          output-image.raw
+        ```
+      </Step>
+      <Step title="Verify the output" icon="circle-check">
+        ```bash title="Verify the RAW image"
+        qemu-img info output-image.raw
+        ```
+        <Check>Output shows `file format: raw` and file size equals the virtual disk size.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+</Tabs>
+
+---
+
+## Validation
+
+After conversion, perform a consistency check before uploading to Xloud:
+
+```bash title="Check image integrity"
+qemu-img check output-image.qcow2
+```
+
+Expected output:
+```text title="Clean image output"
+No errors were found on the image.
+```
+
+<Warning>
+  If `qemu-img check` reports errors, the conversion may have encountered a corrupt
+  source image. Re-obtain the source and retry the conversion. Do not upload a
+  corrupted image — instances launched from it will fail unpredictably.
+</Warning>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Upload an Image" href="/services/images/upload-image" color="#197560">
+    Upload the converted QCOW2 image to the Xloud Image Service.
+  </Card>
+  <Card title="Image Requirements" href="/services/images/image-requirements" color="#197560">
+    Verify the image meets all Xloud Compute compatibility requirements.
+  </Card>
+  <Card title="Modify Images" href="/services/images/modify-images" color="#197560">
+    Customize images with additional packages and configuration before uploading.
+  </Card>
+  <Card title="Image Formats" href="/services/images/image-formats" color="#197560">
+    Compare all supported image formats and choose the right one for your workload.
+  </Card>
+</CardGroup>

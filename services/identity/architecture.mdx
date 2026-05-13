@@ -1,0 +1,145 @@
+---
+title: "Identity Service Architecture"
+description: "Understand the Xloud Identity service topology, component roles, and the authentication data flow across a distributed deployment."
+sidebarTitle: "Architecture"
+---
+
+import AdminWarning from '/snippets/admin-warning.mdx';
+
+## Overview
+
+Xloud Identity runs as a distributed service with API endpoints fronted by HAProxy. The
+token validation path is on every service's critical path — all Xloud services call the
+Identity API to validate incoming requests. Understanding the architecture is essential
+for sizing, high availability planning, and troubleshooting.
+
+<AdminWarning />
+
+---
+
+## Service Topology
+
+```mermaid
+graph TD
+    U([User / Dashboard / CLI]) --> HAP[HAProxy<br/>:5000]
+    HAP --> I1[Identity API<br/>Node 1]
+    HAP --> I2[Identity API<br/>Node 2]
+    I1 --> DB[(MariaDB<br/>Identity DB)]
+    I2 --> DB
+    I1 --> LDAP[LDAP / AD<br/>optional]
+    I1 --> FED[SAML / OIDC<br/>Federation optional]
+    I1 --> FER[Fernet Key<br/>Repository]
+    NOVA[Compute API] --> HAP
+    CINDER[Storage API] --> HAP
+    IMG[Image API] --> HAP
+    style HAP fill:#197560,color:#fff
+    style I1 fill:#3F8F7E,color:#fff
+    style I2 fill:#3F8F7E,color:#fff
+    style DB fill:#145C4C,color:#fff
+```
+
+---
+
+## Component Reference
+
+| Component | Port | Description |
+|-----------|------|-------------|
+| Identity API (v3) | 5000 | Authentication, token issuance, and service catalog |
+| HAProxy | 5000 | Load balances API requests across all Identity API nodes |
+| MariaDB | 3306 | Persistent storage for users, projects, roles, domains, and catalog |
+| Fernet Key Repository | — | Symmetric keys for stateless token signing and encryption |
+| LDAP (optional) | 389/636 | External user directory for enterprise AD/LDAP integration |
+| Federation (optional) | — | SAML 2.0 or OIDC IdP integration |
+
+---
+
+## Authentication Flow
+
+```mermaid
+sequenceDiagram
+    participant U as User / CLI
+    participant H as HAProxy :5000
+    participant I as Identity API
+    participant DB as MariaDB
+    participant F as Fernet Keys
+    U->>H: POST /v3/auth/tokens (credentials + scope)
+    H->>I: Forward request
+    I->>DB: Validate user + role assignments
+    DB-->>I: User record + assignments
+    I->>F: Encrypt token with active key
+    F-->>I: Encrypted Fernet token
+    I-->>H: X-Subject-Token + service catalog
+    H-->>U: Token response
+    U->>+Other Service: API Request + X-Auth-Token
+    Other Service->>I: GET /v3/auth/tokens (validate)
+    I->>F: Decrypt token
+    F-->>I: Token payload
+    I-->>Other Service: Valid + roles
+    Other Service-->>U: API Response
+```
+
+---
+
+## High Availability Considerations
+
+<AccordionGroup>
+  <Accordion title="Stateless token validation" icon="key" defaultOpen>
+    Fernet tokens are stateless — no database lookup is needed to validate them. The
+    Identity API decrypts the token locally using the Fernet key repository. This means
+    token validation scales horizontally without database pressure, and any Identity
+    API node can validate any token as long as all nodes share the same Fernet key set.
+  </Accordion>
+  <Accordion title="Fernet key synchronization" icon="rotate-cw">
+    All Identity API nodes must have identical Fernet key sets. XDeploy manages
+    key distribution automatically during rotation. If nodes become out of sync,
+    tokens signed by one node cannot be validated by another.
+
+    Verify key consistency:
+    ```bash title="Check key file count on all nodes"
+    ls -1 /var/lib/kolla/config_files/fernet-keys/ | wc -l
+    ```
+    All nodes must report the same count and file timestamps.
+  </Accordion>
+  <Accordion title="Database redundancy" icon="database">
+    The Identity database is a MariaDB Galera cluster in a multi-node deployment.
+    Identity writes (user creation, role assignments) are replicated synchronously
+    across all MariaDB nodes. HAProxy in front of MariaDB distributes read operations.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Deployment Footprint
+
+<Tree>
+  <Tree.Folder name="Identity API container" defaultOpen>
+    <Tree.Folder name="/etc/keystone" defaultOpen>
+      <Tree.File name="keystone.conf" />
+      <Tree.File name="policy.yaml" />
+    </Tree.Folder>
+    <Tree.Folder name="/etc/keystone/fernet-keys">
+      <Tree.File name="0 (staged key)" />
+      <Tree.File name="1 (primary key)" />
+      <Tree.File name="2 (secondary key)" />
+    </Tree.Folder>
+  </Tree.Folder>
+</Tree>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Authentication Backends" href="/services/identity/auth-backends" color="#197560">
+    Configure SQL, LDAP, and federation authentication drivers.
+  </Card>
+  <Card title="Token Configuration" href="/services/identity/token-config" color="#197560">
+    Set Fernet key rotation schedules and token lifetime policies.
+  </Card>
+  <Card title="Security Hardening" href="/services/identity/security" color="#197560">
+    Enforce MFA, audit assignments, and apply hardening best practices.
+  </Card>
+  <Card title="Admin Troubleshooting" href="/services/identity/admin-troubleshooting" color="#197560">
+    Diagnose token validation failures and service communication issues.
+  </Card>
+</CardGroup>

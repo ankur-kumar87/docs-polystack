@@ -1,0 +1,263 @@
+---
+title: "Image Storage Backends"
+description: "Configure Xloud Distributed Storage (RBD), file store, Swift, S3, VMware datastore, Cinder, or HTTP as the Xloud Image Service backend."
+sidebarTitle: "Storage Backends"
+---
+
+import AdminWarning from '/snippets/admin-warning.mdx';
+
+## Overview
+
+The Xloud Image Service stores image data in a pluggable storage backend. The selection of backend affects availability, performance, and instance launch times. Multiple backends can be registered simultaneously — administrators select which backend stores each image at upload time. This guide covers configuration of all supported backends via XDeploy globals.
+
+<AdminWarning />
+
+---
+
+## Supported Backends
+
+| Backend | Use Case | HA | Notes |
+|---------|----------|----|-------|
+| **Distributed Storage (RBD)** | Production — fast clones, no single point of failure | Yes | Recommended for all multi-node deployments |
+| **File Store** | Single-node or development deployments | No | Default backend; not HA |
+| **Xloud Object Storage (Swift)** | Scalable distributed image storage | Yes | Suitable when Swift is already deployed |
+| **S3-Compatible** | AWS S3 or S3-compatible object stores | Yes | Works with AWS, Ceph RGW, MinIO, Dell ECS |
+| **VMware Datastore** | VMware vSphere integration environments | Yes | Stores images directly in vSphere datastores |
+| **Cinder (Block Storage)** | Block storage as image store | Yes | Volumes used as image backing devices |
+| **HTTP (read-only)** | Remote image sources without upload | N/A | Read-only; images fetched from external URLs |
+
+---
+
+## Xloud Distributed Storage (RBD) — Recommended
+
+RBD (RADOS Block Device) is the recommended backend for high-availability multi-node deployments. Images are stored as RBD objects in the Xloud Distributed Storage cluster, providing built-in redundancy and copy-on-write clones for fast instance launches.
+
+<Steps titleSize="h3">
+  <Step title="Configure RBD backend in XDeploy globals" icon="settings">
+    ```yaml title="RBD storage backend configuration"
+    glance_backend_ceph: "yes"
+    glance_backend_file: "no"
+    ceph_glance_keyring: ceph.client.glance.keyring
+    ceph_glance_pool_name: images
+    ```
+  </Step>
+  <Step title="Deploy the configuration" icon="upload">
+    ```bash title="Apply glance configuration"
+    xavs-ansible deploy --tags glance
+    ```
+  </Step>
+  <Step title="Verify the images pool exists" icon="circle-check">
+    ```bash title="Verify RBD pool"
+    ceph osd pool ls | grep images
+    ```
+    <Check>The `images` pool appears in the Ceph pool list.</Check>
+  </Step>
+</Steps>
+
+<Tip>
+  When using RBD as the image backend and RBD as the volume backend, instance launches
+  perform a zero-copy RBD clone from the image pool into the volume pool — resulting in
+  near-instantaneous boot times regardless of image size.
+</Tip>
+
+---
+
+## File Store
+
+The file store writes image data to a local or NFS-mounted directory. It is the default backend and suitable for single-node deployments.
+
+```yaml title="File store configuration"
+glance_backend_file: "yes"
+glance_file_datadir_volume: glance
+```
+
+The image directory is mounted as a Docker named volume (`glance`) accessible at `/var/lib/glance/images/` inside the Image API container.
+
+To store images in a custom directory (e.g., on a dedicated volume):
+
+```ini title="glance-api.conf — custom directory"
+[glance_store]
+default_backend = file
+filesystem_store_datadir = /mnt/glance_images/
+```
+
+Prepare the host path with the correct ownership:
+
+```bash title="Prepare custom image directory"
+mkdir -p /mnt/glance_images/
+chown 42424:42424 /mnt/glance_images/
+```
+
+Apply the configuration:
+
+```bash title="Apply glance configuration"
+xavs-ansible reconfigure --tags glance
+```
+
+<Warning>
+  The file store is not highly available. If the node running the Image API fails,
+  images stored locally are unavailable until the node recovers. Use RBD for
+  production HA deployments.
+</Warning>
+
+---
+
+## Xloud Object Storage (Swift)
+
+Images can be stored in Xloud Object Storage (Swift) containers. This backend is suitable when Object Storage is already deployed and disk-to-disk copy overhead is acceptable.
+
+```yaml title="Swift storage backend configuration"
+glance_backend_swift: "yes"
+glance_backend_file: "no"
+glance_swift_store_container: glance
+glance_swift_store_create_container_on_put: "true"
+```
+
+The full `glance-api.conf` parameters for Swift:
+
+```ini title="glance-api.conf — Swift backend"
+[glance_store]
+default_backend = swift
+swift_store_auth_address = http://10.0.1.71:5000/v3
+swift_store_user = service:glance
+swift_store_key = <glance-service-password>
+swift_store_container = glance
+swift_store_create_container_on_put = true
+swift_store_multi_tenant = false
+```
+
+---
+
+## S3-Compatible Object Storage
+
+The S3 backend driver supports any S3-compatible endpoint including AWS S3, Ceph RADOS Gateway, MinIO, and Dell ECS. This enables off-site or cloud-based image storage.
+
+```ini title="glance-api.conf — S3 backend"
+[glance_store]
+default_backend = s3
+s3_store_host = https://s3.example.com
+s3_store_access_key = <access-key>
+s3_store_secret_key = <secret-key>
+s3_store_bucket = glance-images
+s3_store_create_bucket_on_put = true
+s3_store_large_object_size = 100
+s3_store_large_object_chunk_size = 10
+```
+
+Apply via XDeploy globals:
+
+```yaml title="XDeploy globals — S3 backend"
+glance_backend_s3: "yes"
+glance_backend_file: "no"
+glance_s3_store_host: "https://s3.example.com"
+glance_s3_store_access_key: "<access-key>"
+glance_s3_store_secret_key: "<secret-key>"
+glance_s3_store_bucket: "glance-images"
+```
+
+---
+
+## VMware Datastore
+
+The VMware datastore backend stores images in vSphere datastores. This is required when the compute layer uses the VMware vSphere driver and images must reside on vCenter-managed datastores.
+
+```ini title="glance-api.conf — VMware datastore backend"
+[glance_store]
+default_backend = vsphere
+vmware_server_host = 10.0.10.20
+vmware_server_username = administrator@vsphere.local
+vmware_server_password = <password>
+vmware_datastores = DatacenterName:DatastoreName:100
+vmware_store_image_dir = /openstack_glance
+vmware_api_insecure = false
+vmware_task_poll_interval = 5
+```
+
+<Note>
+  The `vmware_datastores` value follows the format `DatacenterName:DatastoreName:Weight`. Multiple datastores can be listed to distribute images across datastores.
+</Note>
+
+---
+
+## Cinder (Block Storage as Image Store)
+
+The Cinder backend stores images as Cinder volumes. Each image is backed by a block volume in the configured Cinder pool. This backend is useful when block storage is the primary shared storage medium.
+
+```ini title="glance-api.conf — Cinder backend"
+[glance_store]
+default_backend = cinder
+cinder_catalog_info = volumev3::internalURL
+cinder_volume_type = image-store
+cinder_store_user_name = glance
+cinder_store_auth_address = http://10.0.1.71:5000/v3
+cinder_store_project_name = service
+```
+
+The Cinder volume type (`image-store`) must exist and map to a backend with sufficient capacity.
+
+---
+
+## HTTP (Read-Only Remote)
+
+The HTTP backend allows the Image Service to serve images stored at external URLs without downloading or storing them locally. This backend is read-only — images cannot be uploaded through the HTTP backend.
+
+```ini title="glance-api.conf — HTTP backend"
+[glance_store]
+default_backend = http
+```
+
+To add an image from a remote URL:
+
+```bash title="Register an image from an HTTP URL"
+openstack image create \
+  --disk-format qcow2 \
+  --container-format bare \
+  --location http://example.com/images/ubuntu-24.04.qcow2 \
+  ubuntu-24.04-remote
+```
+
+<Warning>
+  Images registered with the HTTP backend depend on the availability of the remote URL. If the URL becomes unreachable, image-backed instances cannot be launched. Use this backend only for read-only catalog images or testing.
+</Warning>
+
+---
+
+## Verify Backend Configuration
+
+After deployment, confirm the Image API is using the expected backend:
+
+```bash title="Check Image API configuration"
+docker exec glance_api grep -A 5 "\[glance_store\]" /etc/glance/glance-api.conf
+```
+
+```bash title="Upload a test image and verify storage"
+openstack image create \
+  --disk-format qcow2 \
+  --container-format bare \
+  --file /dev/zero \
+  --min-disk 1 \
+  test-backend-check
+```
+
+```bash title="Check RBD pool contents (if using RBD)"
+rbd ls images
+```
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Architecture" href="/services/images/architecture" color="#197560">
+    Understand how the storage backend fits into the overall Image Service topology.
+  </Card>
+  <Card title="Image Templates" href="/services/images/image-templates" color="#197560">
+    Use images as templates, manage catalogs, and export images.
+  </Card>
+  <Card title="Image Cache" href="/services/images/image-cache" color="#197560">
+    Layer a local cache over your storage backend to reduce launch times.
+  </Card>
+  <Card title="Admin Troubleshooting" href="/services/images/admin-troubleshooting" color="#197560">
+    Diagnose storage connectivity and upload failure issues.
+  </Card>
+</CardGroup>

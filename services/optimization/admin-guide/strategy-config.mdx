@@ -1,0 +1,188 @@
+---
+title: "Strategy Configuration"
+description: "Configure Xloud Optimization strategy plugins — tune thresholds, periods, and metrics for each optimization strategy to match your cluster topology."
+sidebarTitle: "Strategy Configuration"
+---
+
+## Overview
+
+Strategies are the algorithm plugins used by the Decision Engine to analyze the cluster
+and generate migration recommendations. Each strategy is tied to one or more optimization
+goals and accepts tuning parameters that control sensitivity thresholds, look-back periods,
+and metric selection. This page documents all available strategies and their configuration
+parameters.
+
+---
+
+## Available Strategies
+
+| Strategy | Goal | Algorithm | Data Source Required |
+|----------|------|-----------|---------------------|
+| `server_consolidation` | Server Consolidation | Bin-packing — fill hosts before activating new ones | Compute API |
+| `outlet_temperature` | Thermal Optimization | Heatmap — migrate from hot racks based on inlet temperature | Prometheus (temperature) |
+| `workload_stabilization` | Workload Stabilization | Statistical variance analysis per instance | Telemetry time-series |
+| `saving_energy` | Energy Savings | Consolidate + flag empty hosts for power-off | Compute API |
+| `zone_migration` | Zone Rebalancing | Even distribution across availability zones | Compute API |
+| `noisy_neighbor` | Noisy Neighbor | CPU steal contention detection between co-located instances | Telemetry |
+| `basic_consolidation` | Consolidation (basic) | Threshold-based: migrate from hosts below utilization threshold | Compute API only |
+
+---
+
+## Configure Strategy Parameters
+
+### Per-Audit Parameters
+
+Override defaults at audit creation time without changing the service configuration:
+
+```bash title="Create audit with custom parameters"
+openstack watcher audit create \
+  --goal server_consolidation \
+  --parameter threshold=0.15 \
+  --parameter period=7200 \
+  --name custom-threshold-audit
+```
+
+### Service-Wide Defaults
+
+Set platform defaults that apply to all audits which do not override specific parameters.
+
+<Tabs>
+  <Tab title="XDeploy" icon="browser">
+    <Steps titleSize="h3">
+      <Step title="Enable Dynamic Cluster Optimization" icon="toggle-left">
+        Open **XDeploy** and navigate to **Configuration**. Select the **Advance Features** tab
+        and toggle **Enable Dynamic Cluster Optimization** to **Yes**. Click **Save Configuration**.
+      </Step>
+      <Step title="Configure Strategy Defaults" icon="settings">
+        Navigate to **Advanced Configuration**. In the **Service Tree** (left panel), select
+        **watcher**. Click **New File** or select an existing `watcher.conf` from the
+        **File Browser** (right panel).
+
+        Add the following in the **Code Editor** (center panel):
+
+        ```ini title="/etc/xavs/config/watcher/watcher.conf"
+        [watcher_strategies.server_consolidation]
+        threshold = 0.2
+        period = 3600
+
+        [watcher_strategies.workload_stabilization]
+        metric = cpu_util
+        granularity = 300
+        period = 7200
+
+        [watcher_strategies.outlet_temperature]
+        threshold = 35.0
+        period = 3600
+        ```
+      </Step>
+      <Step title="Save and Apply" icon="circle-check">
+        Click **Save Current File**. Return to **Operations** and run **reconfigure** to
+        apply the strategy defaults to the Decision Engine.
+
+        <Check>Strategy defaults configured and applied via XDeploy.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    Edit the configuration file directly:
+
+    ```ini title="/etc/xavs/watcher/watcher.conf"
+    [watcher_strategies.server_consolidation]
+    threshold = 0.2
+    period = 3600
+
+    [watcher_strategies.workload_stabilization]
+    metric = cpu_util
+    granularity = 300
+    period = 7200
+
+    [watcher_strategies.outlet_temperature]
+    threshold = 35.0
+    period = 3600
+    ```
+
+    Restart the Decision Engine after configuration changes:
+
+    ```bash title="Restart Decision Engine"
+    docker restart watcher_decision_engine
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Parameter Reference
+
+| Parameter | Strategy | Default | Description |
+|-----------|----------|---------|-------------|
+| `threshold` | `server_consolidation`, `basic_consolidation` | `0.2` | Fraction below which a host is underutilized |
+| `period` | All | `3600` | Look-back window in seconds for metric aggregation |
+| `granularity` | Telemetry-backed | `300` | Metric sample granularity in seconds |
+| `metric` | `workload_stabilization` | `cpu_util` | Metric used for stability scoring |
+| `threshold` | `outlet_temperature` | `35.0` | Inlet temperature (°C) above which to evacuate racks |
+
+---
+
+## Verify Strategy Loading
+
+```bash title="Verify strategy plugins are loaded"
+docker exec watcher_decision_engine python3 -c "
+from stevedore import driver
+drv = driver.DriverManager(
+    namespace='watcher_strategies',
+    name='server_consolidation',
+    invoke_on_load=False
+)
+print('Strategy loaded:', drv.driver)
+"
+```
+
+```bash title="List all registered strategies"
+openstack watcher strategy list
+```
+
+---
+
+## Xloud Production Enhancements
+
+<Info>**Xloud-Developed** — These enhancements ship with XAVS and are active on all Optimization strategies.</Info>
+
+### Server Group Awareness
+
+All 14 strategies automatically respect server group affinity and anti-affinity constraints during automated migrations. Hard policies (affinity, anti-affinity) block invalid migrations. Soft policies adjust destination scoring weights.
+
+See [Server Groups](/services/compute/server-groups) for configuration.
+
+### DRS Safety Checks
+
+The workload balancing strategy includes production safety guardrails:
+
+| Check | Description |
+|-------|-------------|
+| **Max iterations** | Configurable limit on migrations per audit cycle |
+| **Capacity validation** | Pre-migration check ensures destination has sufficient resources |
+| **Concurrent migration limit** | Prevents overloading the cluster with simultaneous migrations |
+| **Server group weight** | Destination scoring adjusts based on soft-affinity/anti-affinity group membership |
+
+### Automated Storage Tiering
+
+The storage tier balance strategy automatically moves volumes between NVMe, SSD, and HDD pools based on IOPS activity and volume age. Configurable promotion and demotion thresholds. See [Storage Tiers](/services/storage/storage-tiers).
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Data Sources" href="/services/optimization/admin-guide/data-sources" color="#197560">
+    Connect the data sources required by each strategy.
+  </Card>
+  <Card title="Custom Strategies" href="/services/optimization/admin-guide/custom-strategies" color="#197560">
+    Implement and deploy custom optimization strategy plugins.
+  </Card>
+  <Card title="Scheduling" href="/services/optimization/admin-guide/scheduling" color="#197560">
+    Schedule recurring audits using the configured strategies.
+  </Card>
+  <Card title="Architecture" href="/services/optimization/admin-guide/architecture" color="#197560">
+    Review how strategies fit into the Decision Engine pipeline.
+  </Card>
+</CardGroup>

@@ -1,0 +1,222 @@
+---
+title: "Temporary URLs"
+description: "Generate time-limited, cryptographically signed URLs for sharing Xloud Object Storage objects without granting permanent access."
+sidebarTitle: "Temporary URLs"
+---
+
+## Overview
+
+Temporary URLs (TempURLs) let you share individual objects from Xloud Object Storage with anyone — no Xloud account required — for a limited time window. The URL is cryptographically signed with an HMAC-SHA256 digest, so it cannot be guessed or extended. When the expiry time passes, the URL stops working automatically.
+
+Common use cases: pre-signed download links for customers, time-limited file sharing with external partners, secure upload URLs for untrusted clients, and CI/CD artifact distribution.
+
+<Note>
+  **Prerequisites**
+  - Object Storage access with at least project member role
+  - The `python-swiftclient` package installed (`pip install python-swiftclient`) or the `openstack` CLI
+  - A Temporary URL key set on your account
+</Note>
+
+---
+
+## Set a Temporary URL Key
+
+Before generating TempURLs, set a secret key on your account. This key signs all TempURLs — keep it confidential.
+
+<Tabs>
+  <Tab title="CLI (swift)" icon="terminal">
+    ```bash title="Set account-level TempURL key"
+    swift post -m "Temp-URL-Key: $(openssl rand -hex 32)"
+    ```
+
+    ```bash title="Verify the key is set"
+    swift stat | grep Temp-URL-Key
+    ```
+
+    <Tip>
+      You can set a second key (`Temp-URL-Key-2`) to enable key rotation without invalidating existing URLs.
+    </Tip>
+  </Tab>
+  <Tab title="CLI (openstack)" icon="terminal">
+    ```bash title="Set TempURL key via object store account"
+    openstack object store account set \
+      --property "Temp-URL-Key=$(openssl rand -hex 32)"
+    ```
+
+    ```bash title="Verify"
+    openstack object store account show | grep Temp-URL
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Generate a Temporary URL
+
+<Tabs>
+  <Tab title="CLI (swift-temp-url)" icon="terminal">
+    The `swift-temp-url` command generates signed URLs directly:
+
+    ```bash title="Generate a 24-hour download URL"
+    swift-temp-url GET 86400 \
+      /v1/AUTH_<project-id>/my-container/my-file.zip \
+      <your-tempurl-key>
+    ```
+
+    This outputs a path like:
+    ```
+    /v1/AUTH_abc123/my-container/my-file.zip?temp_url_sig=abc...&temp_url_expires=1742000000
+    ```
+
+    Prepend your Swift endpoint to get the full URL:
+    ```bash title="Full shareable URL"
+    echo "https://object.<your-domain>$(swift-temp-url GET 86400 /v1/AUTH_<project-id>/my-container/my-file.zip <key>)"
+    ```
+  </Tab>
+  <Tab title="Python" icon="code">
+    ```python title="Generate TempURL in Python"
+    import hmac
+    import hashlib
+    import time
+
+    def generate_temp_url(method, expires_in, path, key):
+        expires = int(time.time()) + expires_in
+        hmac_body = f"{method}\n{expires}\n{path}"
+        sig = hmac.new(
+            key.encode('utf-8'),
+            hmac_body.encode('utf-8'),
+            hashlib.sha256
+        ).hexdigest()
+        return f"{path}?temp_url_sig={sig}&temp_url_expires={expires}"
+
+    key = "your-tempurl-key"
+    path = "/v1/AUTH_<project-id>/my-container/report.pdf"
+
+    url = generate_temp_url("GET", 3600, path, key)
+    print(f"https://object.<your-domain>{url}")
+    ```
+  </Tab>
+  <Tab title="Bash" icon="terminal">
+    ```bash title="Pure bash TempURL generator"
+    #!/bin/bash
+    METHOD="GET"
+    EXPIRES=$(($(date +%s) + 86400))   # 24 hours
+    PATH_STR="/v1/AUTH_<project-id>/my-container/my-file.zip"
+    KEY="your-tempurl-key"
+    ENDPOINT="https://object.<your-domain>"
+
+    HMAC_BODY="${METHOD}\n${EXPIRES}\n${PATH_STR}"
+    SIG=$(printf "${HMAC_BODY}" | openssl dgst -sha256 -hmac "${KEY}" -hex | awk '{print $2}')
+
+    echo "${ENDPOINT}${PATH_STR}?temp_url_sig=${SIG}&temp_url_expires=${EXPIRES}"
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Upload-Only Temporary URLs
+
+Generate a PUT TempURL to allow a client to upload a file to a specific object path without any read access:
+
+```bash title="Generate a 1-hour upload URL"
+swift-temp-url PUT 3600 \
+  /v1/AUTH_<project-id>/uploads/submission.zip \
+  <your-tempurl-key>
+```
+
+The client uploads with:
+```bash title="Client-side upload with TempURL"
+curl -X PUT \
+  "https://object.<your-domain>/v1/AUTH_.../uploads/submission.zip?temp_url_sig=...&temp_url_expires=..." \
+  --upload-file /local/path/submission.zip
+```
+
+<Warning>
+  PUT TempURLs allow anyone with the URL to overwrite the target object. Scope them to a unique object path and keep expiry windows short (minutes, not hours) for uploads.
+</Warning>
+
+---
+
+## URL Parameters Reference
+
+| Parameter | Description |
+|-----------|-------------|
+| `temp_url_sig` | HMAC-SHA256 signature over method, expiry, and path |
+| `temp_url_expires` | Unix timestamp after which the URL is invalid |
+| `temp_url_prefix` | (Optional) Restrict the URL to a path prefix instead of a single object |
+| `temp_url_ip_range` | (Optional) Restrict URL use to a specific IP or CIDR range |
+| `filename` | (Optional) Override the `Content-Disposition` filename in the browser download |
+
+```bash title="Force a browser download filename"
+# Append &filename=report-q1.pdf to the TempURL
+"https://object.<your-domain>/...?temp_url_sig=...&temp_url_expires=...&filename=report-q1.pdf"
+```
+
+---
+
+## Key Rotation
+
+Rotate TempURL keys without immediately breaking existing URLs by using both key slots:
+
+<Steps titleSize="h3">
+  <Step title="Set new key in slot 2" icon="key">
+    ```bash title="Add new key to slot 2"
+    swift post -m "Temp-URL-Key-2: $(openssl rand -hex 32)"
+    ```
+    Existing URLs signed with key 1 remain valid.
+  </Step>
+  <Step title="Migrate to new key" icon="rotate-cw">
+    Update all URL generation processes to use the new key value from slot 2.
+  </Step>
+  <Step title="Replace old key" icon="check">
+    Once all old URLs have expired, move the new key to slot 1 and clear slot 2:
+    ```bash title="Promote new key to slot 1"
+    NEW_KEY="your-new-key"
+    swift post -m "Temp-URL-Key: ${NEW_KEY}"
+    swift post -m "Temp-URL-Key-2:"
+    ```
+  </Step>
+</Steps>
+
+---
+
+## Security Considerations
+
+<AccordionGroup>
+  <Accordion title="Keep expiry windows short" icon="clock">
+    Set the minimum expiry needed for the use case. Downloads that should complete in minutes should not have 24-hour URLs. An attacker who intercepts a URL has access until expiry.
+  </Accordion>
+  <Accordion title="Use IP range restrictions for sensitive data" icon="shield">
+    The `temp_url_ip_range` parameter restricts URL use to a specific source IP or CIDR:
+
+    ```bash title="Restrict to a single IP"
+    # Add to the signed path parameters before generating
+    swift-temp-url GET 3600 \
+      "/v1/AUTH_.../sensitive.zip?temp_url_ip_range=203.0.113.5" \
+      <key>
+    ```
+  </Accordion>
+  <Accordion title="Never expose your TempURL key" icon="lock">
+    The TempURL key signs all URLs for your account. Treat it like a password. Do not embed it in client-side code, public repositories, or logs. Rotate it if exposure is suspected.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Access Control" href="/services/object-storage/access-control" color="#197560">
+    Container ACLs and account-level access policies for permanent access grants
+  </Card>
+  <Card title="Object Versioning" href="/services/object-storage/versioning" color="#197560">
+    Retain previous versions of objects to recover from accidental overwrites
+  </Card>
+  <Card title="Large Objects" href="/services/object-storage/large-objects" color="#197560">
+    Upload objects larger than 5 GB using multi-part Static or Dynamic Large Objects
+  </Card>
+  <Card title="Object Storage Security" href="/services/object-storage/security" color="#197560">
+    Server-side encryption, TLS, and hardening guidance for object storage
+  </Card>
+</CardGroup>

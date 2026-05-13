@@ -1,0 +1,272 @@
+---
+title: "Compute API Reference"
+description: "Xloud Compute API (Nova) overview, key endpoints, request/response examples, and common operations for managing virtual machine instances programmatically."
+sidebarTitle: "Compute API"
+---
+
+## Overview
+
+The Xloud Compute API provides programmatic control over virtual machine instances, flavors, keypairs, availability zones, server groups, and hypervisor resources. The API follows RESTful conventions with JSON request and response bodies.
+
+<Note>
+  **Prerequisites**
+  - A valid project-scoped token from the [Identity API](/api-reference/authentication)
+  - Base URL: `https://api.<your-domain>/compute/v2.1`
+  - Minimum API microversion: `2.1`
+</Note>
+
+---
+
+## API Versioning (Microversions)
+
+The Compute API uses microversions to add new capabilities without breaking existing clients. Specify the desired microversion in the `X-OpenStack-Nova-Microversion` header:
+
+```bash title="Request with specific microversion"
+curl -X GET https://api.<your-domain>/compute/v2.1/servers \
+  -H "X-Auth-Token: $OS_TOKEN" \
+  -H "X-OpenStack-Nova-Microversion: 2.79"
+```
+
+```bash title="Query supported microversions"
+curl -X GET https://api.<your-domain>/compute \
+  -H "X-Auth-Token: $OS_TOKEN"
+```
+
+---
+
+## Key Endpoints
+
+| Resource | Method | Endpoint | Description |
+|----------|--------|----------|-------------|
+| List instances | GET | `/servers` | List all instances in the project |
+| Instance detail | GET | `/servers/detail` | List instances with full details |
+| Get instance | GET | `/servers/{id}` | Get a specific instance |
+| Create instance | POST | `/servers` | Launch a new instance |
+| Delete instance | DELETE | `/servers/{id}` | Delete an instance |
+| Instance action | POST | `/servers/{id}/action` | Perform an action (reboot, resize, etc.) |
+| List flavors | GET | `/flavors/detail` | List all available instance sizes |
+| List images | GET | `/images` | List available images |
+| List keypairs | GET | `/os-keypairs` | List SSH keypairs |
+| Create keypair | POST | `/os-keypairs` | Register or generate an SSH keypair |
+| List AZs | GET | `/os-availability-zone` | List availability zones |
+| Server groups | GET | `/os-server-groups` | List server groups (affinity/anti-affinity) |
+| Hypervisors | GET | `/os-hypervisors/detail` | List hypervisors (admin) |
+| Quotas | GET | `/os-quota-sets/{project_id}` | Show project compute quotas |
+
+---
+
+## Create an Instance
+
+<ParamField body="name" type="string" required>
+  Display name for the instance.
+</ParamField>
+
+<ParamField body="flavorRef" type="string" required>
+  Flavor ID or URL. Determines vCPU, RAM, and disk allocation.
+</ParamField>
+
+<ParamField body="imageRef" type="string" required>
+  Image ID or URL to boot from. Omit when booting from volume.
+</ParamField>
+
+<ParamField body="networks" type="array" required>
+  List of network objects. Each must include `uuid` (network ID) or `port` (port ID).
+</ParamField>
+
+<ParamField body="key_name" type="string">
+  SSH keypair name to inject into the instance for key-based authentication.
+</ParamField>
+
+<ParamField body="security_groups" type="array">
+  List of security group name objects. Defaults to the `default` group.
+</ParamField>
+
+<ParamField body="user_data" type="string">
+  Base64-encoded cloud-init user data script executed at first boot.
+</ParamField>
+
+<ParamField body="availability_zone" type="string">
+  Target availability zone. Omit to let the scheduler choose.
+</ParamField>
+
+<RequestExample>
+```bash title="cURL"
+curl -X POST https://api.<your-domain>/compute/v2.1/servers \
+  -H "X-Auth-Token: $OS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "server": {
+      "name": "web-server-01",
+      "flavorRef": "m1.medium",
+      "imageRef": "ubuntu-22.04-amd64",
+      "networks": [{ "uuid": "a1b2c3d4-e5f6-..." }],
+      "key_name": "my-keypair",
+      "security_groups": [{ "name": "web-servers" }]
+    }
+  }'
+```
+```python title="Python"
+import requests
+
+token = "your-token"
+server = {
+    "server": {
+        "name": "web-server-01",
+        "flavorRef": "m1.medium",
+        "imageRef": "ubuntu-22.04-amd64",
+        "networks": [{"uuid": "a1b2c3d4-e5f6-..."}],
+        "key_name": "my-keypair",
+        "security_groups": [{"name": "web-servers"}]
+    }
+}
+resp = requests.post(
+    "https://api.<your-domain>/compute/v2.1/servers",
+    json=server,
+    headers={"X-Auth-Token": token, "Content-Type": "application/json"}
+)
+print(resp.json()["server"]["id"])
+```
+</RequestExample>
+
+<ResponseExample>
+```json title="202 Accepted"
+{
+  "server": {
+    "id": "b1c2d3e4-f5a6-7890-b1c2-d3e4f5a67890",
+    "name": "web-server-01",
+    "status": "BUILD",
+    "links": [
+      { "href": "https://api.<your-domain>/compute/v2.1/servers/b1c2d3e4...", "rel": "self" }
+    ],
+    "adminPass": "auto-generated-password",
+    "OS-DCF:diskConfig": "MANUAL"
+  }
+}
+```
+</ResponseExample>
+
+---
+
+## Instance Actions
+
+Perform operations on a running instance via the `/action` endpoint:
+
+<Tabs>
+  <Tab title="Reboot" icon="refresh-cw">
+    ```bash title="Soft reboot (graceful OS restart)"
+    curl -X POST https://api.<your-domain>/compute/v2.1/servers/{id}/action \
+      -H "X-Auth-Token: $OS_TOKEN" \
+      -H "Content-Type: application/json" \
+      -d '{ "reboot": { "type": "SOFT" } }'
+    ```
+
+    ```bash title="Hard reboot (power cycle)"
+    curl -X POST https://api.<your-domain>/compute/v2.1/servers/{id}/action \
+      -H "X-Auth-Token: $OS_TOKEN" \
+      -H "Content-Type: application/json" \
+      -d '{ "reboot": { "type": "HARD" } }'
+    ```
+  </Tab>
+  <Tab title="Stop / Start" icon="power">
+    ```bash title="Stop instance (power off)"
+    curl -X POST https://api.<your-domain>/compute/v2.1/servers/{id}/action \
+      -H "X-Auth-Token: $OS_TOKEN" \
+      -H "Content-Type: application/json" \
+      -d '{ "os-stop": null }'
+    ```
+
+    ```bash title="Start stopped instance"
+    curl -X POST https://api.<your-domain>/compute/v2.1/servers/{id}/action \
+      -H "X-Auth-Token: $OS_TOKEN" \
+      -H "Content-Type: application/json" \
+      -d '{ "os-start": null }'
+    ```
+  </Tab>
+  <Tab title="Resize" icon="expand">
+    ```bash title="Resize to a larger flavor"
+    curl -X POST https://api.<your-domain>/compute/v2.1/servers/{id}/action \
+      -H "X-Auth-Token: $OS_TOKEN" \
+      -H "Content-Type: application/json" \
+      -d '{ "resize": { "flavorRef": "m1.large" } }'
+    ```
+
+    ```bash title="Confirm the resize"
+    curl -X POST https://api.<your-domain>/compute/v2.1/servers/{id}/action \
+      -H "X-Auth-Token: $OS_TOKEN" \
+      -H "Content-Type: application/json" \
+      -d '{ "confirmResize": null }'
+    ```
+  </Tab>
+  <Tab title="Snapshot" icon="camera">
+    ```bash title="Create instance snapshot (image)"
+    curl -X POST https://api.<your-domain>/compute/v2.1/servers/{id}/action \
+      -H "X-Auth-Token: $OS_TOKEN" \
+      -H "Content-Type: application/json" \
+      -d '{ "createImage": { "name": "web-server-01-snapshot", "metadata": {} } }'
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## List Instances with Filtering
+
+```bash title="List all running instances"
+curl -X GET "https://api.<your-domain>/compute/v2.1/servers?status=ACTIVE" \
+  -H "X-Auth-Token: $OS_TOKEN"
+```
+
+```bash title="List instances with full details"
+curl -X GET https://api.<your-domain>/compute/v2.1/servers/detail \
+  -H "X-Auth-Token: $OS_TOKEN"
+```
+
+```bash title="List instances across all projects (admin)"
+curl -X GET "https://api.<your-domain>/compute/v2.1/servers/detail?all_tenants=1" \
+  -H "X-Auth-Token: $OS_TOKEN"
+```
+
+Common filter parameters:
+
+| Parameter | Description |
+|-----------|-------------|
+| `status` | Filter by instance status: `ACTIVE`, `SHUTOFF`, `BUILD`, `ERROR` |
+| `name` | Filter by instance name (supports regex) |
+| `flavor` | Filter by flavor ID |
+| `image` | Filter by image ID |
+| `all_tenants` | `1` to list across all projects (admin only) |
+| `limit` | Maximum number of results per page |
+| `marker` | Pagination cursor — last instance ID from previous page |
+
+---
+
+## Error Reference
+
+| HTTP Status | Error Code | Description |
+|-------------|-----------|-------------|
+| `400` | `badRequest` | Invalid request body or parameter |
+| `401` | `unauthorized` | Token missing, invalid, or expired |
+| `403` | `forbidden` | Insufficient permissions for this operation |
+| `404` | `itemNotFound` | Instance or resource not found |
+| `409` | `conflictingRequest` | Operation not valid in current instance state |
+| `413` | `entityTooLarge` | Request exceeds quota limits |
+| `429` | `overLimit` | Rate limit exceeded |
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Storage API" href="/api-reference/storage-api" color="#197560">
+    Attach volumes and manage snapshots via the Storage API
+  </Card>
+  <Card title="Networking API" href="/api-reference/networking-api" color="#197560">
+    Create networks and assign floating IPs for your instances
+  </Card>
+  <Card title="Authentication" href="/api-reference/authentication" color="#197560">
+    Manage tokens and application credentials
+  </Card>
+  <Card title="Automation" href="/integrations/index" color="#197560">
+    Automate instance lifecycle with scripts and SDKs
+  </Card>
+</CardGroup>

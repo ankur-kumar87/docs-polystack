@@ -1,0 +1,135 @@
+---
+title: "Troubleshooting"
+description: "Diagnose common XDR user-facing issues — replication lag exceeding RPO targets, failover stuck states, and DR test instance access problems."
+sidebarTitle: "Troubleshooting"
+---
+
+## Overview
+
+This page covers the most common issues encountered when using XDR — from replication
+lag that threatens RPO targets, to failover operations stuck on specific resources,
+to DR test instances that cannot be reached for validation.
+
+<Note>
+  **Prerequisites**
+  - An active Xloud account with project access and XDR plan access
+  - For site connectivity and replication configuration issues, contact your administrator. Your administrator can configure this through [XDeploy](/deployment).
+</Note>
+
+---
+
+## Common Issues
+
+<AccordionGroup>
+  <Accordion title="Replication lag exceeding RPO target" icon="clock">
+    **Cause**: Network bandwidth between sites is insufficient for the current change
+    rate, or the source workload is writing data faster than replication can transfer it.
+
+    **Diagnosis**: Navigate to **Disaster Recovery → Protection Plans → [Plan]** and
+    review the replication lag and throughput metrics displayed in the plan status panel.
+
+    **Resolution**:
+    - Increase network bandwidth allocation for replication traffic (contact your administrator). Your administrator can configure this through [XDeploy](/deployment).
+    - Switch to a larger replication window that permits more transfer time
+    - Review the change rate of protected workloads — peak write periods may cause
+      temporary lag spikes that resolve during quieter periods
+
+    <Warning>
+      If replication lag consistently exceeds the RPO target, data loss beyond the
+      target threshold is possible in a failover scenario. Escalate to your storage
+      administrator immediately — do not wait for an actual disaster event.
+    </Warning>
+  </Accordion>
+
+  <Accordion title="Failover stuck on a specific resource" icon="server">
+    **Cause**: A dependency is not yet recovered, a pre/post script failed, or the
+    DR site lacks sufficient capacity for the recovering instance.
+
+    **Diagnosis**: Navigate to **Disaster Recovery → Failover Status** and expand
+    the stuck resource entry. Review the event log for error messages and timestamps.
+
+    **Common causes and resolutions**:
+
+    | Cause | Resolution |
+    |-------|-----------|
+    | Pre-recovery script returned non-zero exit code | Review script output in the log; fix the script |
+    | Insufficient quota on DR project | Check with administrator to increase quota |
+    | Dependency resource not yet recovered | Wait for the dependency to complete; check priority ordering |
+    | DR site capacity insufficient | Contact administrator to add capacity |
+  </Accordion>
+
+  <Accordion title="DR test instances not accessible" icon="network">
+    **Cause**: The isolated test network has no route to the validation host, or security
+    group rules block the required ports in the test environment.
+
+    **Resolution**:
+    1. Use console access to reach test instances without network:
+       Navigate to **Disaster Recovery → Test Sessions → Console**
+    2. Verify the test security groups match production configuration within the isolation
+       boundary by reviewing the security group assignments in **Disaster Recovery → Test Sessions → [Instance] → Security Groups**
+    3. Confirm the test network allows communication between test instances by reviewing
+       the network topology in **Disaster Recovery → Test Sessions → Network**
+  </Accordion>
+
+  <Accordion title="Failback synchronization not completing" icon="refresh-cw">
+    **Cause**: The reverse replication sync is stalled due to network issues between
+    the DR and primary sites, or a large amount of data was written to the DR site
+    during the failover period.
+
+    **Diagnosis**: Navigate to **Disaster Recovery → Protection Plans → [Plan]** and
+    review the reverse sync progress and replication lag metrics. Check the replication
+    link statistics in **Disaster Recovery → Sites → Replication Links → [Link]**.
+
+    **Resolution**:
+    - Verify network connectivity between DR and primary sites
+    - Check that firewall rules permit replication traffic in both directions
+    - If sync is making progress but slowly, allow more time — large datasets take
+      proportionally longer
+    - If throughput is near-zero, check for network path issues or firewall changes
+      that occurred during the failover period
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Diagnostics Reference
+
+All diagnostic operations are performed through the XDR Dashboard:
+
+| Issue | Dashboard Location |
+|-------|-------------------|
+| Replication lag | **Disaster Recovery → Protection Plans → [Plan]** — replication lag panel |
+| Failover stuck | **Disaster Recovery → Failover Status → [Resource]** — event log |
+| Site connectivity | **Disaster Recovery → Sites → [Site]** — Test Connectivity button |
+| Test resources | **Disaster Recovery → Test Sessions → [Instance]** — IP and status |
+| Link throughput | **Disaster Recovery → Sites → Replication Links → [Link]** — throughput statistics |
+
+---
+
+## When to Contact Your Administrator
+
+Contact your DR administrator or [support@xloud.tech](mailto:support@xloud.tech) if any of the following persist. Your administrator can configure this through [XDeploy](/deployment).
+
+- Replication lag has exceeded the RPO target for more than 30 minutes
+- Failover is stuck and the event log shows an unresolvable error
+- Site connectivity tests fail consistently
+- Failback synchronization shows zero throughput for more than 10 minutes
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="XDR Admin — Troubleshooting" href="/services/disaster-recovery/admin-guide/troubleshooting" color="#197560">
+    Administrator-level DR diagnostics — site registration, replication links
+  </Card>
+  <Card title="Protection Plans" href="/services/disaster-recovery/user-guide/protection-plans" color="#197560">
+    Review and adjust plan configuration based on troubleshooting findings
+  </Card>
+  <Card title="DR Testing" href="/services/disaster-recovery/user-guide/test-dr" color="#197560">
+    Run DR tests after resolving issues to validate recovery still works
+  </Card>
+  <Card title="Support" href="mailto:support@xloud.tech" color="#197560">
+    Contact Xloud support for issues requiring platform-level investigation
+  </Card>
+</CardGroup>

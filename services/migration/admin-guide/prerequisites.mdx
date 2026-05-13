@@ -1,0 +1,144 @@
+---
+title: "Prerequisites"
+description: "Platform, identity, project, quota, and source-side prerequisites operators must satisfy before onboarding a VMware source to XMS."
+sidebarTitle: "Prerequisites"
+---
+
+## Overview
+
+Before a new source can be registered or a new migration can run, the
+operator must satisfy a small number of platform-side, project-side, and
+source-side prerequisites. This page lists them in the order you should check
+them.
+
+---
+
+## Platform Prerequisites
+
+<Steps titleSize="h3">
+  <Step title="XMS is enabled on the Xloud platform" icon="check">
+    The Migration panel must be visible in the Xloud Dashboard and the `xms`
+    CLI subcommand must be installed on operator workstations. If neither is
+    available, XMS is not enabled on the deployment — contact Xloud support.
+  </Step>
+  <Step title="Identity service is healthy" icon="key">
+    XMS validates every API call against the platform identity service. If
+    identity is unhealthy, source registration and job submission will fail.
+    Confirm the platform health dashboard reports identity as reachable.
+  </Step>
+  <Step title="Block Storage and Compute are healthy" icon="database">
+    XMS writes migrated data through block storage and launches target
+    instances through compute. Both must be healthy before any migration can
+    run.
+  </Step>
+</Steps>
+
+---
+
+## Project Prerequisites
+
+Each target Xloud project that will receive migrated workloads needs:
+
+| Requirement | Why |
+|-------------|-----|
+| **Project exists and is active** | XMS writes volumes and instances into an existing project — it does not create new projects |
+| **Quota for compute, memory, and volume footprint** | Quota is checked at submit time against the flavor and volume type selected |
+| **Volume type that matches the chosen storage tier** | The operator must publish at least one volume type in the project; users pick one per migration |
+| **Target networks and subnets** | Every source NIC must map to a target network — the target networks must already exist in the project |
+| **User role with migration permission** | Users submitting migrations need a role that allows them to use the Migration panel in that project |
+
+<Tip>
+  For multi-wave campaigns, create a dedicated target project per wave. This
+  keeps quota accounting simple and isolates waves from each other.
+</Tip>
+
+---
+
+## Source Environment Prerequisites
+
+### VMware vCenter
+
+| Requirement | Detail |
+|-------------|--------|
+| **Supported vSphere version** | vSphere 6.x, 7.x, or 8.x. Newer versions are supported as the transport library is refreshed |
+| **Reachable endpoint** | XMS must be able to reach the vCenter endpoint on the configured port (default 443) |
+| **Service account** | A dedicated vSphere account for XMS — see [Source Credentials](/services/migration/admin-guide/source-credentials) |
+| **Dedicated role at datacenter scope** | Create a vSphere role with the permissions listed in Source Credentials and assign it to the service account at the datacenter level |
+
+### Standalone ESXi
+
+Standalone ESXi is supported for lab, edge, and small-site migrations. The
+same transport library and pipeline apply — the only differences are:
+
+- Endpoint is the host address instead of a vCenter
+- Username is typically `root` or a local ESXi user
+- Datacenter is auto-detected as `ha-datacenter`
+
+### Guest-Side Requirements
+
+| Requirement | Why |
+|-------------|-----|
+| **VMware Tools installed (recommended)** | Exposes guest OS, hostname, and IP to discovery. Not a migration blocker when absent |
+| **Supported guest OS** | Guest must be in the Xloud guest catalog — see [Preflight Assessment](/services/migration/user-guide/preflight) |
+| **Clean boot loader** | XMS repairs drivers and the boot loader for platform-specific changes, but it does not fix a pre-existing broken boot loader |
+| **CBT enabled (warm only)** | Warm migration requires Changed Block Tracking on the source |
+
+---
+
+## Operator Access
+
+The operator installing or maintaining XMS typically needs:
+
+- Administrative role on the Xloud platform (for installing, updating, and
+  scaling XMS)
+- Read or admin role on every target project that will receive migrations
+- Credentials to register source environments (either shared service
+  accounts or per-source accounts)
+- Access to platform monitoring to track XMS health
+
+---
+
+## Pre-Onboarding Checklist
+
+Use this checklist before onboarding a new source:
+
+<AccordionGroup>
+  <Accordion title="Platform health" icon="activity">
+    - [ ] Identity service reachable and healthy
+    - [ ] Block storage reachable and healthy
+    - [ ] Compute reachable and healthy
+    - [ ] XMS visible in the Xloud Dashboard
+    - [ ] `xms` CLI installed and authenticated
+  </Accordion>
+  <Accordion title="Target project" icon="folder">
+    - [ ] Target project exists in the correct domain
+    - [ ] Compute quota covers the expected wave footprint
+    - [ ] Volume quota covers the expected wave footprint (+20% buffer)
+    - [ ] Volume type published for the intended storage tier
+    - [ ] Target networks and subnets exist
+    - [ ] Users who will submit migrations have the right role
+  </Accordion>
+  <Accordion title="Source environment" icon="server">
+    - [ ] vSphere endpoint reachable from XMS
+    - [ ] Service account created with the recommended role
+    - [ ] Role assigned at the datacenter scope
+    - [ ] TLS fingerprint or CA chain available if TLS verification is required
+    - [ ] CBT enabled on every VM in the warm migration wave
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Next Steps
+
+<CardGroup cols={3}>
+  <Card title="Source Credentials" href="/services/migration/admin-guide/source-credentials" color="#197560">
+    Build the service account and role for XMS
+  </Card>
+  <Card title="Network Ports" href="/services/migration/admin-guide/network-ports" color="#197560">
+    Open the right ports between XMS, source, and target
+  </Card>
+  <Card title="Register Source" href="/services/migration/user-guide/register-source" color="#197560">
+    Add the source to XMS once prerequisites are met
+  </Card>
+</CardGroup>

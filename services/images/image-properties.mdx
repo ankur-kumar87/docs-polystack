@@ -1,0 +1,270 @@
+---
+title: "Image Properties"
+description: "Set hardware requirements, OS metadata, and scheduler hints on Xloud images to control instance launch behavior."
+sidebarTitle: "Image Properties"
+---
+
+import PrerequisitesAuth from '/snippets/prerequisites-auth.mdx';
+import CliAuth from '/snippets/cli-auth.mdx';
+
+## Overview
+
+Image properties are key-value metadata attached to images that influence how the compute
+service launches instances from that image. Properties communicate the OS type to the
+hypervisor, set minimum hardware requirements, configure boot firmware, and define the
+virtual hardware model. Well-configured properties improve compatibility and prevent
+launch failures from under-resourced flavors.
+
+<PrerequisitesAuth />
+
+---
+
+## Essential Properties Reference
+
+| Property Key | Example Value | Purpose |
+|-------------|--------------|---------|
+| `os_type` | `linux` | Informs the hypervisor of the guest OS family |
+| `os_distro` | `ubuntu` | OS distribution for XAVS Guest Agent configuration |
+| `os_version` | `24.04` | OS version string |
+| `hw_machine_type` | `q35` | Sets the emulated chipset (q35 for UEFI, i440fx for legacy BIOS) |
+| `hw_firmware_type` | `uefi` | Boot firmware — `uefi` or `bios` |
+| `hw_disk_bus` | `virtio` | Disk controller — `virtio` (best performance) or `ide` |
+| `hw_scsi_model` | `virtio-scsi` | SCSI controller model when `hw_disk_bus=scsi` |
+| `hw_vif_model` | `virtio` | Network interface model |
+| `hw_tpm_model` | `tpm-crb` | Enable virtual TPM device (requires platform support) |
+
+---
+
+## Set Properties
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Open image details" icon="disc">
+        Navigate to **Compute > Images** and click the image name.
+      </Step>
+      <Step title="Edit basic properties">
+        Click **Edit** (the first row action) to open the Edit Image dialog. You can
+        modify:
+
+        | Field | Type | Description |
+        |-------|------|-------------|
+        | **Name** | Text | Image display name |
+        | **OS** | Dropdown | Operating system distribution |
+        | **OS Version** | Text | Version string |
+        | **OS Admin** | Text | Default admin username |
+        | **Min System Disk (GiB)** | Number | Minimum root disk (if block storage enabled) |
+        | **Min Memory (GiB)** | Number | Minimum RAM |
+        | **Public** | Checkbox (admin only) | Toggle public visibility |
+        | **Protected** | Checkbox | Prevent accidental deletion |
+        | **Description** | Text area | Optional notes |
+
+        Click **Advanced Options** to edit qemu_guest_agent, CPU Policy, and CPU
+        Thread Policy.
+
+        Click **Confirm** to save.
+
+        <Note>
+          The Edit form does NOT include metadata key-value editing. To manage
+          custom metadata properties, administrators use the **Manage Metadata**
+          action from the More dropdown (admin view only).
+        </Note>
+      </Step>
+      <Step title="Manage custom metadata (admin only)">
+        In the admin view, click the **More** dropdown on the image row and select
+        **Manage Metadata**. This opens a dialog where you can add, edit, or remove
+        custom key-value metadata properties and system metadata definitions.
+
+        <Check>Properties are saved and immediately active for new instance launches.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    <Steps titleSize="h3">
+      <Step title="Authenticate" icon="key">
+        <CliAuth />
+      </Step>
+      <Step title="Set multiple properties at once" icon="tag">
+        ```bash title="Set OS and hardware properties"
+        openstack image set \
+          --property os_type=linux \
+          --property os_distro=ubuntu \
+          --property os_version=24.04 \
+          --property hw_firmware_type=uefi \
+          --property hw_machine_type=q35 \
+          --property hw_disk_bus=virtio \
+          ubuntu-24.04-lts
+        ```
+      </Step>
+      <Step title="Verify properties were applied" icon="search">
+        ```bash title="Show image properties"
+        openstack image show ubuntu-24.04-lts -c properties
+        ```
+        <Check>All configured properties appear in the output.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+</Tabs>
+
+---
+
+## Hardware Configuration Examples
+
+<AccordionGroup>
+  <Accordion title="Modern Linux with UEFI boot" icon="settings" defaultOpen>
+    ```bash title="Ubuntu 24.04 / RHEL 9 UEFI configuration"
+    openstack image set \
+      --property hw_firmware_type=uefi \
+      --property hw_machine_type=q35 \
+      --property hw_disk_bus=virtio \
+      --property hw_vif_model=virtio \
+      --property os_type=linux \
+      ubuntu-24.04-lts
+    ```
+  </Accordion>
+  <Accordion title="Windows Server with VirtIO drivers" icon="app-window">
+    ```bash title="Windows Server 2022 configuration"
+    openstack image set \
+      --property hw_firmware_type=uefi \
+      --property hw_machine_type=q35 \
+      --property hw_disk_bus=virtio \
+      --property hw_vif_model=virtio \
+      --property os_type=windows \
+      --property os_distro=windows \
+      --property os_version=2022 \
+      windows-server-2022
+    ```
+    <Tip>
+      Windows instances require VirtIO drivers installed in the guest before setting
+      `hw_disk_bus=virtio`. Without drivers, Windows will fail to boot from a VirtIO disk.
+    </Tip>
+  </Accordion>
+  <Accordion title="Legacy BIOS compatibility" icon="microchip">
+    ```bash title="Legacy BIOS configuration for older OS images"
+    openstack image set \
+      --property hw_firmware_type=bios \
+      --property hw_machine_type=i440fx \
+      --property hw_disk_bus=ide \
+      legacy-centos7
+    ```
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Image Metadata & Tags
+
+Beyond hardware properties, images support two additional metadata mechanisms: **arbitrary key-value properties** for any custom annotation, and **tags** — simple string labels for filtering and searching across the image catalog.
+
+### Arbitrary Properties
+
+Any `--property key=value` pair is valid. Properties not recognized by the hypervisor are stored and returned but have no behavioral effect. Use them for operational metadata:
+
+```bash title="Set operational metadata properties"
+openstack image set \
+  --property os_lifecycle=lts \
+  --property os_support_until=2029-04-30 \
+  --property xloud_base_image=true \
+  --property os_security_patch_date=2026-03-01 \
+  --property data_classification=public \
+  --property compliance=pci-dss \
+  ubuntu-24.04-lts
+```
+
+| Custom Property Key | Example Value | Purpose |
+|--------------------|--------------|---------|
+| `os_lifecycle` | `lts`, `standard`, `eol` | OS support status |
+| `os_support_until` | `2029-04-30` | End-of-support date for filtering |
+| `xloud_base_image` | `true` | Marks Xloud-maintained base images |
+| `os_security_patch_date` | `2026-03-01` | Last security patch applied |
+| `data_classification` | `public`, `confidential` | Data handling tag |
+| `compliance` | `pci-dss`, `hipaa`, `iso27001` | Regulatory compliance designation |
+| `build_version` | `20260301-001` | CI/CD build identifier |
+| `min_kernel_version` | `5.15` | Minimum kernel required by the OS |
+
+### Image Tags
+
+Tags are plain string labels — no key, just a value. They enable fast catalog filtering in the Dashboard and CLI without requiring exact property key lookups.
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Edit the image" icon="tag">
+        Navigate to **Compute > Images**, click **Edit** (the first row action).
+      </Step>
+      <Step title="Add tags" icon="plus">
+        In the **Edit Image** dialog, locate the **Tags** field. Type a tag and press **Enter** to add it. Add multiple tags.
+
+        Useful tags: `ubuntu`, `lts`, `production-ready`, `gpu-compatible`, `windows`, `pci-dss`, `baseline-2026`, `no-cloud-init`
+      </Step>
+      <Step title="Save" icon="circle-check">
+        Click **Confirm**. Tags are immediately searchable in the image list.
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Add tags to an image"
+    openstack image set \
+      --tag ubuntu \
+      --tag lts \
+      --tag production-ready \
+      ubuntu-24.04-lts
+    ```
+
+    ```bash title="Remove a tag"
+    openstack image unset \
+      --tag production-ready \
+      ubuntu-24.04-lts
+    ```
+
+    ```bash title="List all images with a specific tag"
+    openstack image list --tag lts
+    ```
+
+    ```bash title="Filter by multiple tags"
+    openstack image list --tag lts --tag production-ready
+    ```
+
+    ```bash title="Show all tags on an image"
+    openstack image show ubuntu-24.04-lts -c tags
+    ```
+  </Tab>
+</Tabs>
+
+### Tags vs Properties
+
+| Feature | Tags | Properties |
+|---------|------|------------|
+| **Format** | Simple strings (no key) | Key-value pairs |
+| **Use for** | Catalog filtering, search, grouping | Hypervisor hints, operational metadata |
+| **Filtering** | `openstack image list --tag <tag>` | `openstack image list --property key=value` |
+| **Hypervisor-aware** | Never | Some keys are (`hw_*`, `os_*`) |
+
+---
+
+## Remove Properties
+
+```bash title="Remove a specific property"
+openstack image unset \
+  --property hw_tpm_model \
+  ubuntu-24.04-lts
+```
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Image Formats" href="/services/images/image-formats" color="#197560">
+    Choose the right disk format to match your property configuration.
+  </Card>
+  <Card title="Upload an Image" href="/services/images/upload-image" color="#197560">
+    Upload images and set properties at upload time using CLI flags.
+  </Card>
+  <Card title="Image Admin Guide — Metadata" href="/services/images/metadata" color="#197560">
+    Define structured metadata namespaces for consistent property schemas.
+  </Card>
+  <Card title="Troubleshooting" href="/services/images/troubleshooting" color="#197560">
+    Resolve launch failures caused by incorrect image property values.
+  </Card>
+</CardGroup>

@@ -1,0 +1,63 @@
+---
+title: "XDR User Guide"
+description: "Create protection plans, perform failover and failback, test disaster recovery, and manage recovery points using Xloud Disaster Recovery (XDR)."
+sidebarTitle: "User Guide"
+mode: "wide"
+---
+
+import PrerequisitesAuth from '/snippets/prerequisites-auth.mdx';
+
+<p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Overview</p>
+
+Xloud Disaster Recovery (XDR) protects workloads from unplanned outages through
+continuous replication, automated failover, and orchestrated recovery. This guide
+covers creating protection plans, executing failover and failback procedures, running
+DR tests to validate recovery objectives, and troubleshooting common issues.
+
+<PrerequisitesAuth />
+
+---
+
+<p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Topics</p>
+
+<CardGroup cols={4}>
+  <Card title="Protection Plans" icon="shield" href="/services/disaster-recovery/user-guide/protection-plans" color="#197560">
+    Create and activate protection plans that define which workloads are protected,
+    replication mode, and RPO/RTO targets.
+  </Card>
+  <Card title="Failover" icon="zap" href="/services/disaster-recovery/user-guide/failover" color="#197560">
+    Initiate failover when a primary site failure is confirmed — step-by-step
+    procedure for both Dashboard and CLI.
+  </Card>
+  <Card title="Failback" icon="rotate-ccw" href="/services/disaster-recovery/user-guide/failback" color="#197560">
+    Return workloads to the primary site after it has been restored — reverse
+    replication, synchronize, and execute failback.
+  </Card>
+  <Card title="DR Testing" icon="flask-conical" href="/services/disaster-recovery/user-guide/test-dr" color="#197560">
+    Validate protection plans without impacting production — isolated DR tests
+    that measure actual RTO and confirm recovery runbooks.
+  </Card>
+  <Card title="Troubleshooting" icon="wrench" href="/services/disaster-recovery/user-guide/troubleshooting" color="#197560">
+    Diagnose replication lag, stuck failover operations, and DR test access
+    issues.
+  </Card>
+</CardGroup>
+
+---
+
+<p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Next Steps</p>
+
+<CardGroup cols={4}>
+  <Card title="XDR Admin Guide" icon="settings" href="/services/disaster-recovery/admin-guide" color="#197560">
+    Configure replication topology, DR site connectivity, and recovery plan automation
+  </Card>
+  <Card title="Infrastructure Monitoring" icon="activity" href="/services/monitoring/user-guide" color="#197560">
+    Monitor replication health and set up alerts for RPO/RTO threshold breaches
+  </Card>
+  <Card title="Software-Defined Storage" icon="database" href="/services/sds/user-guide" color="#197560">
+    Understand the XSDS storage layer that powers XDR replication and recovery points
+  </Card>
+  <Card title="Xloud Compute" icon="server" href="/services/compute/user-guide" color="#197560">
+    Manage the virtual machine instances protected by your XDR protection plans
+  </Card>
+</CardGroup>

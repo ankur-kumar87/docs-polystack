@@ -1,0 +1,83 @@
+---
+title: "Optimization Admin Guide"
+description: "Configure Xloud Optimization — deploy the Decision Engine, tune strategies, connect data sources, schedule audits, and manage action plan policies across."
+sidebarTitle: "Admin Guide"
+mode: "wide"
+---
+
+<p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Overview</p>
+
+Xloud Optimization administrators configure the platform-level components that
+enable intelligent workload placement across the compute cluster. This guide covers
+the service architecture, strategy configuration, data source integration, custom
+strategy deployment, audit scheduling, action plan policies, security, compute
+service integration requirements, and troubleshooting.
+
+<Warning>
+  Changes to strategy configuration and data source settings affect all ongoing and
+  future audits across the platform. Review changes carefully before applying them
+  in production.
+</Warning>
+
+<Tip>
+  **XDeploy GUI** — Dynamic cluster optimization can be enabled through the [XDeploy Configuration](/deployment/configuration) interface under the **Advance Features** tab by toggling **Enable Dynamic Cluster Optimization**. No manual file editing required.
+</Tip>
+
+---
+
+<p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>In This Guide</p>
+
+<CardGroup cols={4}>
+  <Card title="Architecture" icon="layers" href="/services/optimization/admin-guide/architecture" color="#197560">
+    Decision Engine, Planner, Applier components and the audit-to-execution data flow.
+  </Card>
+  <Card title="Strategy Configuration" icon="sliders" href="/services/optimization/admin-guide/strategy-config" color="#197560">
+    Configure and tune the built-in optimization strategy plugins.
+  </Card>
+  <Card title="Data Sources" icon="database" href="/services/optimization/admin-guide/data-sources" color="#197560">
+    Connect Prometheus, Telemetry, and Compute API data sources to the Decision Engine.
+  </Card>
+  <Card title="Custom Strategies" icon="code" href="/services/optimization/admin-guide/custom-strategies" color="#197560">
+    Implement and deploy custom optimization strategy plugins for specialized topologies.
+  </Card>
+  <Card title="Scheduling" icon="calendar" href="/services/optimization/admin-guide/scheduling" color="#197560">
+    Automate recurring audits with audit templates and cron-based schedules.
+  </Card>
+  <Card title="Action Policies" icon="shield-check" href="/services/optimization/admin-guide/action-policies" color="#197560">
+    Configure manual approval vs automatic execution policies for action plans.
+  </Card>
+  <Card title="Compute Integration" icon="server" href="/services/optimization/admin-guide/compute-integration" color="#197560">
+    Verify shared storage, live migration capability, and compute host state.
+  </Card>
+  <Card title="Security" icon="lock" href="/services/optimization/admin-guide/security" color="#197560">
+    Harden the service account, restrict RBAC execution policies, and enable audit logging.
+  </Card>
+  <Card title="Troubleshooting" icon="wrench" href="/services/optimization/admin-guide/troubleshooting" color="#197560">
+    Diagnose audit failures, execution errors, data source issues, and authentication problems.
+  </Card>
+</CardGroup>
+
+---
+
+<p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Architecture Summary</p>
+
+The Optimization is composed of three collaborating services:
+
+| Service | Container | Role |
+|---------|-----------|------|
+| **API** | `watcher_api` | REST API for audits, action plans, and goals |
+| **Decision Engine** | `watcher_decision_engine` | Collects metrics, applies strategy, generates action plan |
+| **Applier** | `watcher_applier` | Executes approved plans via the Compute API |
+
+---
+
+<p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Next Steps</p>
+
+<CardGroup cols={4}>
+  <Card title="Optimization User Guide" icon="book-open" href="/services/optimization/user-guide" color="#197560">
+    Run audits, review action plans, and execute optimization from an operator perspective.
+  </Card>
+  <Card title="Optimization Overview" icon="layers" href="/services/optimization/index" color="#197560">
+    Service overview and getting started with the Optimization.
+  </Card>
+</CardGroup>

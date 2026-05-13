@@ -1,0 +1,114 @@
+---
+title: "DNS Backend Configuration"
+description: "Configure the Xloud DNS backend driver and nameserver pool targets through XDeploy. View current pool configuration, manage zone assignments, and update."
+sidebarTitle: "Backend Configuration"
+---
+
+import AdminWarning from '/snippets/admin-warning.mdx';
+
+## Overview
+
+The DNS service backend driver determines which DNS server software is used to serve
+zone data. The backend is configured through XDeploy and the `xavs-ansible` deployment
+tool. This page covers viewing and managing current pool configuration and assigning
+zones to specific pools.
+
+<AdminWarning />
+
+<Note>
+  **Prerequisites**
+  - Administrator credentials sourced via `openrc.sh`
+  - Access to XDeploy for DNS service configuration changes
+</Note>
+
+---
+
+## View Current Configuration
+
+<Tabs>
+  <Tab title="List DNS pools" icon="list">
+    ```bash title="List DNS pools"
+    openstack zone pool list
+    ```
+
+    ```bash title="Show pool detail"
+    openstack zone pool show <pool-id>
+    ```
+
+    Pool detail fields:
+
+    | Field | Description |
+    |-------|-------------|
+    | `name` | Pool identifier used when assigning zones |
+    | `description` | Administrative description |
+    | `nameservers` | List of authoritative nameserver hostnames for this pool |
+    | `targets` | Backend server endpoints the worker pushes zone data to |
+    | `also_notifies` | Additional servers notified of zone changes (for AXFR) |
+    | `attributes` | Key-value tags used to match zones to pools via scheduling policies |
+  </Tab>
+  <Tab title="Verify pool health" icon="heart-pulse">
+    Verify that the pool's nameservers are authoritatively answering queries:
+
+    ```bash title="Check zone on each nameserver"
+    dig @<nameserver-ip> example.com. SOA +norecurse
+    ```
+
+    A healthy pool nameserver returns the SOA record with `AUTHORITY: 1`. If the
+    nameserver returns `SERVFAIL`, the zone has not synchronized to that nameserver.
+  </Tab>
+</Tabs>
+
+---
+
+## Assign a Zone to a Pool
+
+By default, new zones are assigned to the default pool based on scheduling policies.
+You can override pool assignment:
+
+```bash title="Show zone's current pool assignment"
+openstack zone show <zone-name> -c masters -c attributes
+```
+
+```bash title="Assign a zone to a specific pool"
+openstack zone set <zone-name> --attributes pool_id:<pool-id>
+```
+
+<Warning>
+  Reassigning a zone to a different pool triggers a full zone synchronization to the
+  new pool's nameservers. During synchronization, queries may return stale data from
+  the old pool if resolver caches have not expired.
+</Warning>
+
+---
+
+## Pool Configuration Reference
+
+Pool configuration is managed through XDeploy service configuration files and applied
+via `xavs-ansible deploy`. The following fields control backend behavior:
+
+| Parameter | Description | Example |
+|-----------|-------------|---------|
+| `backend` | DNS server backend type | `bind9`, `pdns4` |
+| `targets` | Backend RNDC/API endpoints for zone push | `<host>:<port>` |
+| `nameservers` | Public-facing nameserver FQDNs | `ns1.example.com.` |
+| `also_notifies` | Hosts to NOTIFY after zone changes | Secondary server IPs |
+| `attributes` | Scheduling attributes | `service_tier: premium` |
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Pool Management" href="/services/dns/pool-management" color="#197560">
+    Add nameservers, configure attributes, and manage pool health
+  </Card>
+  <Card title="Zone Transfers" href="/services/dns/zone-transfers" color="#197560">
+    Configure AXFR/IXFR zone transfer policies
+  </Card>
+  <Card title="Architecture" href="/services/dns/architecture" color="#197560">
+    Understand the DNS service topology and component roles
+  </Card>
+  <Card title="Admin Troubleshooting" href="/services/dns/admin-troubleshooting" color="#197560">
+    Diagnose backend connectivity and synchronization failures
+  </Card>
+</CardGroup>

@@ -1,0 +1,133 @@
+---
+title: "Secret Access Control (ACL)"
+description: "Configure ACLs on secrets and containers in Xloud Key Manager to grant per-user and per-project access without sharing credentials."
+sidebarTitle: "ACL"
+---
+
+import PrerequisitesAuth from '/snippets/prerequisites-auth.mdx';
+
+## Overview
+
+By default, secrets and containers are private to the project that created them. ACLs
+grant specific users read access to secrets and containers across project boundaries,
+enabling secure credential sharing without exposing the payload itself.
+
+<PrerequisitesAuth />
+
+---
+
+## ACL Concepts
+
+| Concept | Description |
+|---------|-------------|
+| **read** | Allows the grantee to retrieve the secret payload or container contents |
+| **per-user ACL** | Grants access to specific user IDs — most restrictive and recommended for sensitive secrets |
+| **project-access** | Grants all users in the secret's own project read access — use only for non-sensitive shared config |
+
+---
+
+## View Current ACL
+
+```bash title="Show ACL on a secret"
+openstack acl get <secret-href>
+```
+
+```bash title="Show ACL on a container"
+openstack acl get <container-href>
+```
+
+---
+
+## Grant Access
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    Navigate to **Key Manager > Secrets**, select a secret, and click the
+    **Access Control** tab. Click **Add ACL** to grant access to a specific user.
+
+    | Field | Description |
+    |-------|-------------|
+    | **Operation** | `read` — allows the user to retrieve the secret payload |
+    | **Users** | Xloud user IDs to grant the permission |
+    | **Project Access** | Toggle to grant all users in the secret's project read access |
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Grant read access to a specific user"
+    openstack acl submit \
+      --user <user-id> \
+      --operation read \
+      <secret-href>
+    ```
+
+    ```bash title="Grant project-wide read access"
+    openstack acl submit \
+      --project-access \
+      <secret-href>
+    ```
+
+    ```bash title="Grant access to multiple users"
+    openstack acl submit \
+      --user <user-id-1> \
+      --user <user-id-2> \
+      --operation read \
+      <secret-href>
+    ```
+
+    <Warning>
+      Granting `--project-access` makes the secret readable by all users in the project.
+      Reserve this setting for non-sensitive shared configuration. Use per-user ACLs for
+      credentials, private keys, and certificates.
+    </Warning>
+  </Tab>
+</Tabs>
+
+---
+
+## Revoke Access
+
+```bash title="Revoke all ACL entries on a secret"
+openstack acl delete <secret-href>
+```
+
+```bash title="Update ACL to remove a specific user"
+openstack acl submit \
+  --user <remaining-user-id> \
+  --operation read \
+  <secret-href>
+```
+
+<Note>
+  `openstack acl submit` replaces the entire ACL. To remove one user, resubmit the ACL
+  with only the users that should retain access. There is no append/remove operation.
+</Note>
+
+---
+
+## Find Your User ID
+
+```bash title="Get the current user's ID"
+openstack token issue -c user_id -f value
+```
+
+```bash title="Look up another user's ID (admin)"
+openstack user show <username> -c id -f value
+```
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Store Secrets" href="/services/key-manager/store-secrets" color="#197560">
+    Create secrets before configuring ACL access
+  </Card>
+  <Card title="Containers" href="/services/key-manager/containers" color="#197560">
+    Apply ACLs at the container level for grouped secret access
+  </Card>
+  <Card title="Troubleshooting" href="/services/key-manager/troubleshooting" color="#197560">
+    Resolve 403 errors and ACL propagation issues
+  </Card>
+  <Card title="Key Manager Admin Guide" href="/services/key-manager/admin-guide" color="#197560">
+    Configure platform-wide access policies and quotas
+  </Card>
+</CardGroup>

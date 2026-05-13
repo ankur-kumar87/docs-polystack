@@ -1,0 +1,280 @@
+---
+title: "Attach and Detach Volumes"
+description: "Connect block storage volumes to compute instances, mount filesystems, and safely detach volumes. Includes formatting, mounting, and fstab persistence guidance."
+sidebarTitle: "Attach / Detach"
+---
+
+import CliAuth from '/snippets/cli-auth.mdx';
+
+## Overview
+
+Attaching a volume connects a persistent block device to a running compute instance, making it accessible as a disk inside the guest operating system. A volume with status **Available** can be attached to any instance in the same availability zone. After attachment, the volume appears as a new block device (e.g., `/dev/vdb`) inside the instance — you must format and mount it before use if it is a new blank volume.
+
+<Note>
+  **Prerequisites**
+  - A volume with status **Available**
+  - A running compute instance in the same availability zone as the volume
+  - SSH access to the instance for filesystem preparation
+</Note>
+
+---
+
+## Attach a Volume
+
+<Warning>
+  Attaching a newly created blank volume does not create a filesystem. After attaching,
+  format the device inside the instance before mounting. Attaching to a running instance
+  does not require a reboot.
+</Warning>
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Open the Volumes list" icon="compass">
+        Navigate to
+        **Storage > Volumes**.
+      </Step>
+      <Step title="Attach to instance">
+        Locate the volume with status **Available**. Click the **More** dropdown on the
+        volume row, then select **Attach** under the **Instance Related** group.
+
+        In the dialog, select the target instance from the instance table. The table
+        shows available instances with their name, status, and attached volumes.
+        Instances that are incompatible or already have this volume attached are disabled.
+
+        Click **Confirm** to attach.
+      </Step>
+      <Step title="Confirm attachment" icon="circle-check">
+        The volume status changes to **In-use** and the instance name appears in the
+        **Attached To** column.
+
+        <Check>Volume attached — status shows **In-use**.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    <Steps titleSize="h3">
+      <Step title="Authenticate" icon="key">
+        <CliAuth />
+      </Step>
+      <Step title="Identify the instance and volume" icon="search">
+        ```bash title="List instances"
+        openstack server list --column ID --column Name
+        ```
+        ```bash title="List available volumes"
+        openstack volume list --column ID --column Name --column Status
+        ```
+      </Step>
+      <Step title="Attach the volume" icon="link">
+        ```bash title="Attach volume to instance"
+        openstack server add volume <instance-name-or-id> <volume-name-or-id>
+        ```
+
+        Confirm the device path assigned:
+        ```bash title="Show attachment details"
+        openstack volume show <volume-name-or-id> -c attachments
+        ```
+      </Step>
+      <Step title="Verify" icon="circle-check">
+        ```bash title="Confirm volume is in-use"
+        openstack volume show <volume-name-or-id> -c status
+        ```
+
+        Expected: `status = in-use`
+
+        <Check>Volume attached to the instance successfully.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+</Tabs>
+
+---
+
+## Format and Mount (First Use)
+
+After attaching a new blank volume, prepare the filesystem inside the instance:
+
+<Steps titleSize="h3">
+  <Step title="Identify the new device" icon="search">
+    SSH into the instance and list block devices:
+    ```bash title="List block devices"
+    lsblk
+    ```
+    The new volume appears as an unformatted disk — typically `/dev/vdb` or the next
+    available device letter.
+  </Step>
+  <Step title="Format the volume" icon="hard-drive">
+    ```bash title="Format with ext4"
+    sudo mkfs.ext4 /dev/vdb
+    ```
+
+    For XFS (preferred for databases and large files):
+    ```bash title="Format with XFS"
+    sudo mkfs.xfs /dev/vdb
+    ```
+
+    <Warning>
+      Only run `mkfs` on a **new, blank volume**. Running it on a volume that already
+      contains data will permanently erase that data.
+    </Warning>
+  </Step>
+  <Step title="Mount the volume" icon="folder-open">
+    ```bash title="Create mount point and mount"
+    sudo mkdir -p /mnt/data
+    sudo mount /dev/vdb /mnt/data
+    ```
+  </Step>
+  <Step title="Persist the mount across reboots" icon="save">
+    Add the mount to `/etc/fstab` so it survives instance reboots:
+    ```bash title="Add to /etc/fstab"
+    echo '/dev/vdb /mnt/data ext4 defaults 0 2' | sudo tee -a /etc/fstab
+    ```
+
+    <Tip>
+      Use the volume UUID instead of the device path for more reliable fstab entries —
+      device names can change after reboot on some configurations:
+      ```bash title="Find volume UUID"
+      sudo blkid /dev/vdb
+      ```
+      Then use: `UUID=<uuid> /mnt/data ext4 defaults 0 2`
+    </Tip>
+  </Step>
+  <Step title="Verify" icon="circle-check">
+    ```bash title="Confirm mount"
+    df -h /mnt/data
+    ```
+
+    <Check>Device mounted and accessible — filesystem capacity matches the volume size.</Check>
+  </Step>
+</Steps>
+
+---
+
+## Detach a Volume
+
+<Warning>
+  Always unmount the volume inside the instance **before** detaching. Detaching a
+  mounted volume without unmounting first can cause filesystem corruption and data loss.
+</Warning>
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Unmount inside the instance" icon="terminal">
+        SSH into the instance and unmount the volume:
+        ```bash title="Unmount the volume"
+        sudo umount /mnt/data
+        ```
+        Remove or comment out the corresponding line in `/etc/fstab` to prevent boot
+        errors after detachment.
+      </Step>
+      <Step title="Detach from the Dashboard">
+        Navigate to **Storage > Volumes**. Click the **More** dropdown on the volume
+        row, then select **Detach** under the **Instance Related** group.
+
+        In the dialog, select the instance to detach from and click **Confirm**.
+      </Step>
+      <Step title="Confirm detachment" icon="circle-check">
+        The volume status returns to **Available**.
+
+        <Check>Volume detached — status shows **Available** and ready for reattachment.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    <Steps titleSize="h3">
+      <Step title="Unmount inside the instance" icon="terminal">
+        ```bash title="Unmount the volume"
+        sudo umount /mnt/data
+        ```
+      </Step>
+      <Step title="Detach the volume" icon="unlink">
+        ```bash title="Detach volume from instance"
+        openstack server remove volume <instance-name-or-id> <volume-name-or-id>
+        ```
+      </Step>
+      <Step title="Verify" icon="circle-check">
+        ```bash title="Confirm volume is available"
+        openstack volume show <volume-name-or-id> -c status
+        ```
+
+        Expected: `status = available`
+
+        <Check>Volume detached and available for reattachment or deletion.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+</Tabs>
+
+---
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Volume fails to attach — availability zone mismatch" icon="triangle-alert">
+    **Cause**: The volume and instance are in different availability zones. Volumes can
+    only be attached to instances in the same zone.
+
+    **Resolution**:
+    ```bash title="Check volume availability zone"
+    openstack volume show <volume-id> -c availability_zone
+    ```
+    ```bash title="Check instance availability zone"
+    openstack server show <instance-id> -c OS-EXT-AZ:availability_zone
+    ```
+
+    If the zones do not match, create a new volume in the correct availability zone,
+    or migrate the instance.
+  </Accordion>
+
+  <Accordion title="Device not visible inside instance after attach" icon="hard-drive">
+    **Cause**: The guest OS did not detect the hot-plug event, or the virtio driver
+    is not loaded.
+
+    **Resolution**:
+    ```bash title="Rescan SCSI bus inside instance"
+    sudo echo "- - -" | sudo tee /sys/class/scsi_host/host*/scan
+    ```
+
+    If the device still does not appear, verify that the instance's kernel supports
+    virtio block devices. Modern Linux kernels include this by default.
+  </Accordion>
+
+  <Accordion title="Cannot unmount — device is busy" icon="lock">
+    **Cause**: A process inside the instance still has files open on the mounted volume.
+
+    **Resolution**:
+    ```bash title="Find processes using the mount"
+    sudo lsof /mnt/data
+    ```
+    Stop or kill the listed processes, then retry `umount`. Alternatively:
+    ```bash title="Force unmount (use with caution)"
+    sudo umount -l /mnt/data
+    ```
+
+    <Warning>
+      Lazy unmount (`-l`) detaches the filesystem immediately but keeps references open
+      until all processes close their file handles. Only use this when the process
+      cannot be stopped gracefully.
+    </Warning>
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Extend a Volume" href="/services/storage/extend-volume" color="#197560">
+    Increase volume capacity online without detaching or stopping the instance
+  </Card>
+  <Card title="Volume Snapshots" href="/services/storage/snapshots" color="#197560">
+    Create point-in-time snapshots for fast recovery and volume cloning
+  </Card>
+  <Card title="Create a Volume" href="/services/storage/create-volume" color="#197560">
+    Provision a new volume with the appropriate size and storage tier
+  </Card>
+  <Card title="Volume Backups" href="/services/storage/backups" color="#197560">
+    Create full and incremental backups for long-term data retention
+  </Card>
+</CardGroup>

@@ -1,0 +1,299 @@
+---
+title: "Networking API Reference"
+description: "Xloud Networking API (Neutron) overview, key endpoints, and examples for managing networks, subnets, routers, security groups, and floating IPs."
+sidebarTitle: "Networking API"
+---
+
+## Overview
+
+The Xloud Networking API provides full programmatic control over virtual network resources — networks, subnets, routers, ports, security groups, floating IPs, and QoS policies. The API uses a RESTful design with JSON bodies and project-scoped resource isolation.
+
+<Note>
+  **Prerequisites**
+  - A valid project-scoped token from the [Identity API](/api-reference/authentication)
+  - Base URL: `https://api.<your-domain>/networking/v2.0`
+  - Network resources are project-isolated by default — shared resources are admin-managed
+</Note>
+
+---
+
+## Key Endpoints
+
+| Resource | Method | Endpoint | Description |
+|----------|--------|----------|-------------|
+| List networks | GET | `/networks` | List networks visible to the project |
+| Create network | POST | `/networks` | Create a new tenant network |
+| Get network | GET | `/networks/{id}` | Get network details |
+| Delete network | DELETE | `/networks/{id}` | Delete a network |
+| List subnets | GET | `/subnets` | List subnets in the project |
+| Create subnet | POST | `/subnets` | Create a subnet on a network |
+| List routers | GET | `/routers` | List routers in the project |
+| Create router | POST | `/routers` | Create a new router |
+| Add interface | PUT | `/routers/{id}/add_router_interface` | Attach subnet to router |
+| Remove interface | PUT | `/routers/{id}/remove_router_interface` | Detach subnet from router |
+| List ports | GET | `/ports` | List all ports |
+| Create port | POST | `/ports` | Create a network port |
+| List security groups | GET | `/security-groups` | List security groups |
+| Create security group | POST | `/security-groups` | Create a security group |
+| Add SG rule | POST | `/security-group-rules` | Add a rule to a security group |
+| List floating IPs | GET | `/floatingips` | List floating IP allocations |
+| Create floating IP | POST | `/floatingips` | Allocate a floating IP |
+| Associate floating IP | PUT | `/floatingips/{id}` | Associate with a port |
+| List QoS policies | GET | `/qos/policies` | List QoS policies (admin) |
+| Create QoS policy | POST | `/qos/policies` | Create a QoS policy (admin) |
+
+---
+
+## Create a Network and Subnet
+
+<RequestExample>
+```bash title="Create network"
+curl -X POST https://api.<your-domain>/networking/v2.0/networks \
+  -H "X-Auth-Token: $OS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "network": {
+      "name": "app-network",
+      "admin_state_up": true
+    }
+  }'
+```
+```bash title="Create subnet on the network"
+curl -X POST https://api.<your-domain>/networking/v2.0/subnets \
+  -H "X-Auth-Token: $OS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "subnet": {
+      "name": "app-subnet",
+      "network_id": "<network-id>",
+      "ip_version": 4,
+      "cidr": "192.168.10.0/24",
+      "enable_dhcp": true,
+      "dns_nameservers": ["8.8.8.8", "8.8.4.4"],
+      "allocation_pools": [
+        { "start": "192.168.10.10", "end": "192.168.10.200" }
+      ]
+    }
+  }'
+```
+</RequestExample>
+
+<ResponseExample>
+```json title="201 Created — Network"
+{
+  "network": {
+    "id": "d4e5f6a7-b8c9-0123-d4e5-f6a7b8c90123",
+    "name": "app-network",
+    "status": "ACTIVE",
+    "admin_state_up": true,
+    "subnets": [],
+    "shared": false,
+    "tenant_id": "abc123"
+  }
+}
+```
+</ResponseExample>
+
+---
+
+## Routers
+
+<Tabs>
+  <Tab title="Create Router" icon="route">
+    ```bash title="Create a router with external gateway"
+    curl -X POST https://api.<your-domain>/networking/v2.0/routers \
+      -H "X-Auth-Token: $OS_TOKEN" \
+      -H "Content-Type: application/json" \
+      -d '{
+        "router": {
+          "name": "app-router",
+          "admin_state_up": true,
+          "external_gateway_info": {
+            "network_id": "<external-network-id>"
+          }
+        }
+      }'
+    ```
+  </Tab>
+  <Tab title="Attach Subnet" icon="link">
+    ```bash title="Attach subnet to router"
+    curl -X PUT \
+      "https://api.<your-domain>/networking/v2.0/routers/{router_id}/add_router_interface" \
+      -H "X-Auth-Token: $OS_TOKEN" \
+      -H "Content-Type: application/json" \
+      -d '{ "subnet_id": "<subnet-id>" }'
+    ```
+  </Tab>
+  <Tab title="Remove Subnet" icon="unlink">
+    ```bash title="Remove subnet from router"
+    curl -X PUT \
+      "https://api.<your-domain>/networking/v2.0/routers/{router_id}/remove_router_interface" \
+      -H "X-Auth-Token: $OS_TOKEN" \
+      -H "Content-Type: application/json" \
+      -d '{ "subnet_id": "<subnet-id>" }'
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Security Groups
+
+```bash title="Create a security group"
+curl -X POST https://api.<your-domain>/networking/v2.0/security-groups \
+  -H "X-Auth-Token: $OS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "security_group": {
+      "name": "web-servers",
+      "description": "Allow HTTP/HTTPS and SSH inbound"
+    }
+  }'
+```
+
+```bash title="Allow SSH inbound (TCP 22)"
+curl -X POST https://api.<your-domain>/networking/v2.0/security-group-rules \
+  -H "X-Auth-Token: $OS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "security_group_rule": {
+      "security_group_id": "<sg-id>",
+      "direction": "ingress",
+      "protocol": "tcp",
+      "port_range_min": 22,
+      "port_range_max": 22,
+      "remote_ip_prefix": "0.0.0.0/0"
+    }
+  }'
+```
+
+```bash title="Allow HTTPS inbound (TCP 443)"
+curl -X POST https://api.<your-domain>/networking/v2.0/security-group-rules \
+  -H "X-Auth-Token: $OS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "security_group_rule": {
+      "security_group_id": "<sg-id>",
+      "direction": "ingress",
+      "protocol": "tcp",
+      "port_range_min": 443,
+      "port_range_max": 443,
+      "remote_ip_prefix": "0.0.0.0/0"
+    }
+  }'
+```
+
+Security group rule parameters:
+
+| Parameter | Values | Description |
+|-----------|--------|-------------|
+| `direction` | `ingress`, `egress` | Traffic direction |
+| `protocol` | `tcp`, `udp`, `icmp`, `null` | IP protocol |
+| `port_range_min` | `1`–`65535` | Start of port range |
+| `port_range_max` | `1`–`65535` | End of port range |
+| `remote_ip_prefix` | CIDR e.g. `10.0.0.0/8` | Source or destination IP range |
+| `remote_group_id` | Security group ID | Allow traffic from another group |
+
+---
+
+## Floating IPs
+
+```bash title="Allocate a floating IP from external network"
+curl -X POST https://api.<your-domain>/networking/v2.0/floatingips \
+  -H "X-Auth-Token: $OS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "floatingip": {
+      "floating_network_id": "<external-network-id>"
+    }
+  }'
+```
+
+```bash title="Associate floating IP with a port"
+curl -X PUT https://api.<your-domain>/networking/v2.0/floatingips/{floatingip_id} \
+  -H "X-Auth-Token: $OS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "floatingip": {
+      "port_id": "<instance-port-id>"
+    }
+  }'
+```
+
+```bash title="Disassociate floating IP (keep allocated)"
+curl -X PUT https://api.<your-domain>/networking/v2.0/floatingips/{floatingip_id} \
+  -H "X-Auth-Token: $OS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{ "floatingip": { "port_id": null } }'
+```
+
+```bash title="Release floating IP back to the pool"
+curl -X DELETE https://api.<your-domain>/networking/v2.0/floatingips/{floatingip_id} \
+  -H "X-Auth-Token: $OS_TOKEN"
+```
+
+---
+
+## Ports
+
+<ParamField body="network_id" type="string" required>
+  Network ID to create the port on.
+</ParamField>
+
+<ParamField body="name" type="string">
+  Display name for the port.
+</ParamField>
+
+<ParamField body="fixed_ips" type="array">
+  List of objects specifying `subnet_id` and optionally a specific `ip_address`.
+</ParamField>
+
+<ParamField body="security_groups" type="array">
+  List of security group IDs to apply to this port.
+</ParamField>
+
+```bash title="Create a port with specific IP"
+curl -X POST https://api.<your-domain>/networking/v2.0/ports \
+  -H "X-Auth-Token: $OS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "port": {
+      "network_id": "<network-id>",
+      "name": "db-port",
+      "fixed_ips": [
+        { "subnet_id": "<subnet-id>", "ip_address": "192.168.10.50" }
+      ],
+      "security_groups": ["<sg-id>"]
+    }
+  }'
+```
+
+---
+
+## Network Resource Status
+
+| Status | Meaning |
+|--------|---------|
+| `ACTIVE` | Resource is operational |
+| `DOWN` | Resource exists but is not passing traffic |
+| `BUILD` | Resource is being provisioned |
+| `ERROR` | Provisioning or operation failed |
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Compute API" href="/api-reference/compute-api" color="#197560">
+    Launch instances connected to the networks you create
+  </Card>
+  <Card title="Network QoS" href="/services/networking/qos" color="#197560">
+    Apply bandwidth limits and DSCP marking via the QoS API
+  </Card>
+  <Card title="Identity API" href="/services/identity/index" color="#197560">
+    Manage project membership and resource access
+  </Card>
+  <Card title="Automation" href="/integrations/index" color="#197560">
+    Script full network topology provisioning end-to-end
+  </Card>
+</CardGroup>

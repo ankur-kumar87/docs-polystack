@@ -1,0 +1,144 @@
+---
+title: "Protection Plans"
+description: "Create and activate XDR protection plans that define which workloads are replicated, the replication mode, and your RPO and RTO targets."
+sidebarTitle: "Protection Plans"
+---
+
+## Overview
+
+A protection plan defines which workloads are protected, how they are replicated to
+the DR site, and in what order they recover during a failover. Creating a well-structured
+plan is the foundation of an effective DR strategy.
+
+<Note>
+  **Prerequisites**
+  - An active Xloud account with project access
+  - At least one DR site registered and connected (contact your administrator if no DR site is configured). Your administrator can configure this through [XDeploy](/deployment).
+  - Instances and volumes you want to protect must exist in the project
+
+  **Key Concepts**
+
+  | Term | Definition |
+  |------|-----------|
+  | **RPO** | Recovery Point Objective — maximum acceptable data loss measured in time |
+  | **RTO** | Recovery Time Objective — maximum acceptable recovery time |
+  | **Replication Mode** | `Asynchronous` (lower overhead) or `Synchronous` (zero data loss, higher latency) |
+  | **Consistency Group** | Resources that must recover together atomically |
+</Note>
+
+---
+
+## Creating a Protection Plan
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Navigate to Protection Plans" icon="shield">
+        Log in to the **Xloud Dashboard** (`https://connect.<your-domain>`) and navigate to
+        **Project → Disaster Recovery → Protection Plans**. Click **Create Plan**.
+      </Step>
+      <Step title="Define plan settings" icon="settings">
+        | Field | Description |
+        |-------|-------------|
+        | **Plan Name** | Descriptive label (e.g., `prod-web-tier-dr`) |
+        | **RPO Target** | Maximum data loss tolerance (e.g., `15 minutes`) |
+        | **RTO Target** | Maximum acceptable recovery time (e.g., `1 hour`) |
+        | **Replication Mode** | `Asynchronous` or `Synchronous` |
+        | **DR Site** | Target site where workloads recover |
+
+        <Tip>
+          Synchronous replication guarantees zero data loss (RPO = 0) but adds write
+          latency proportional to the round-trip time between sites. Use asynchronous
+          mode for sites separated by more than 10ms RTT.
+        </Tip>
+      </Step>
+      <Step title="Add protected resources" icon="plus">
+        Click **Add Resource** and select the instances, volumes, or application groups
+        to include. For each resource, configure:
+
+        - **Recovery Priority** — order in which this resource starts during failover
+        - **Consistency Group** — group resources that must recover together atomically
+        - **Pre/Post Scripts** — optional automation hooks for application quiesce and validation
+      </Step>
+      <Step title="Review and activate" icon="circle-check">
+        Review the plan summary and click **Activate**. XDR begins replicating all
+        protected resources to the DR site immediately. Initial sync time depends on
+        data volume.
+
+        <Check>Plan status shows **Active** and initial replication sync begins.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    <Info>
+      XDR disaster recovery operations are managed exclusively through the XDR Dashboard.
+      CLI access is not available for DR operations. Use the **Dashboard** tab above to
+      create and activate protection plans.
+    </Info>
+  </Tab>
+</Tabs>
+
+---
+
+## Managing Existing Plans
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    Navigate to **Project → Disaster Recovery → Protection Plans** to see all plans
+    with their current status and replication lag.
+
+    Available actions per plan:
+    - **Edit** — update RPO/RTO targets or add resources
+    - **Deactivate** — pause replication without deleting the plan
+    - **Delete** — permanently remove the plan (stops replication)
+    - **Failover** — initiate failover (see [Failover](/services/disaster-recovery/user-guide/failover))
+    - **Test Failover** — run a DR test (see [DR Testing](/services/disaster-recovery/user-guide/test-dr))
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    <Info>
+      XDR disaster recovery operations are managed exclusively through the XDR Dashboard.
+      CLI access is not available for DR operations. Use the **Dashboard** tab above to
+      manage existing protection plans.
+    </Info>
+  </Tab>
+</Tabs>
+
+---
+
+## Replication Health
+
+Monitor replication health to ensure your RPO targets are achievable before an actual
+disaster event:
+
+| Metric | Healthy | Warning | Action |
+|--------|---------|---------|--------|
+| Replication lag | < RPO target | Approaching RPO target | Investigate network bandwidth |
+| Plan status | `ACTIVE` | `DEGRADED` | Review event log for errors |
+| Last recovery point | < RPO ago | > RPO ago | Check connectivity to DR site |
+
+Monitor replication lag for all plans from the **Disaster Recovery → Protection Plans** list
+view, which displays current lag alongside each plan.
+
+<Warning>
+  If replication lag consistently exceeds your RPO target, actual data loss on failover
+  will exceed the configured target. Escalate to your storage administrator immediately.
+</Warning>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Failover" href="/services/disaster-recovery/user-guide/failover" color="#197560">
+    Execute failover when a primary site failure is confirmed
+  </Card>
+  <Card title="DR Testing" href="/services/disaster-recovery/user-guide/test-dr" color="#197560">
+    Validate your protection plan without impacting production
+  </Card>
+  <Card title="XDR Admin — Recovery Plans" href="/services/disaster-recovery/admin-guide/recovery-plans" color="#197560">
+    Define ordered resource groups and automation hooks (administrator)
+  </Card>
+  <Card title="Troubleshooting" href="/services/disaster-recovery/user-guide/troubleshooting" color="#197560">
+    Diagnose replication lag and plan activation issues
+  </Card>
+</CardGroup>

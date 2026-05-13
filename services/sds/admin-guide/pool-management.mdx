@@ -1,0 +1,187 @@
+---
+title: "Pool Management"
+description: "Create and configure replicated and erasure-coded storage pools, set application types, and manage pool settings in XSDS."
+sidebarTitle: "Pool Management"
+---
+
+import AdminWarning from '/snippets/admin-warning.mdx';
+
+## Overview
+
+Pools are the logical containers for stored data. Each pool has a defined data protection
+policy (replication or erasure coding), a device class mapping, and a PG count. Creating
+pools correctly at the outset avoids disruptive reconfiguration later.
+
+<AdminWarning />
+
+<Note>
+  **Prerequisites**
+  - Administrator credentials with the `admin` role
+  - SSH access to a cluster management node
+  - CRUSH map configured with appropriate device class rules (see [CRUSH Maps](/services/sds/admin-guide/crush-maps))
+</Note>
+
+---
+
+## Creating Pools
+
+<Tabs>
+  <Tab title="Replicated Pool" icon="copy">
+    <Steps titleSize="h3">
+      <Step title="Create the pool" icon="plus">
+        ```bash title="Create a replicated pool"
+        ceph osd pool create <POOL_NAME> <PG_COUNT> <PG_COUNT> replicated
+        ```
+
+        For most pools, set PG count to `128` initially — the PG autoscaler will
+        adjust automatically as data volume grows.
+      </Step>
+      <Step title="Set replication factor" icon="copy">
+        ```bash title="Set replication size (factor)"
+        ceph osd pool set <POOL_NAME> size 3
+        ceph osd pool set <POOL_NAME> min_size 2
+        ```
+
+        `size` is the total number of copies. `min_size` is the minimum needed to
+        serve I/O (allows degraded operation with 2 copies during OSD failure recovery).
+      </Step>
+      <Step title="Assign a CRUSH rule" icon="map">
+        Associate the pool with a CRUSH rule that targets the correct device class:
+        ```bash title="Set CRUSH rule on pool"
+        ceph osd pool set <POOL_NAME> crush_rule replicated_rule_ssd
+        ```
+
+        Use `ceph osd crush rule ls` to list available rules.
+      </Step>
+      <Step title="Enable pool application" icon="check">
+        Tag the pool with its application type so the cluster knows how to manage it:
+        ```bash title="Enable RBD (block storage) on pool"
+        ceph osd pool application enable <POOL_NAME> rbd
+        ```
+
+        Valid application types: `rbd` (block), `rgw` (object), `cephfs` (file).
+
+        <Check>Pool appears in `ceph osd pool ls detail` with correct application and replication settings.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="Erasure-Coded Pool" icon="code">
+    <Steps titleSize="h3">
+      <Step title="Create an erasure code profile" icon="settings">
+        ```bash title="Create erasure code profile (4+2 on HDD)"
+        ceph osd erasure-code-profile set ec-4-2 \
+          k=4 m=2 crush-device-class=hdd
+        ```
+
+        ```bash title="Create erasure code profile (8+3 for large archives)"
+        ceph osd erasure-code-profile set ec-8-3 \
+          k=8 m=3 crush-device-class=hdd
+        ```
+      </Step>
+      <Step title="Create the pool using the profile" icon="plus">
+        ```bash title="Create erasure-coded pool"
+        ceph osd pool create <POOL_NAME> erasure ec-4-2
+        ```
+      </Step>
+      <Step title="Enable pool application" icon="check">
+        ```bash title="Enable RGW (object storage) on EC pool"
+        ceph osd pool application enable <POOL_NAME> rgw
+        ```
+
+        <Note>
+          Erasure-coded pools cannot be used directly for block storage (RBD) without
+          a replicated overlay pool. Use erasure coding primarily for object storage
+          and large object archives.
+        </Note>
+
+        <Check>Pool appears in `ceph osd pool ls detail` with erasure code profile listed.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+</Tabs>
+
+---
+
+## Managing Existing Pools
+
+<Tabs>
+  <Tab title="Inspect Pools" icon="search">
+    ```bash title="List all pools with details"
+    ceph osd pool ls detail
+    ```
+
+    ```bash title="Show pool statistics"
+    ceph df detail
+    ```
+
+    ```bash title="Show specific pool configuration"
+    ceph osd pool get <POOL_NAME> all
+    ```
+  </Tab>
+  <Tab title="Modify Pools" icon="settings">
+    ```bash title="Enable PG autoscaling on a pool"
+    ceph osd pool set <POOL_NAME> pg_autoscale_mode on
+    ```
+
+    ```bash title="Set compression on a pool"
+    ceph osd pool set <POOL_NAME> compression_mode aggressive
+    ceph osd pool set <POOL_NAME> compression_algorithm lz4
+    ```
+
+    ```bash title="Rename a pool"
+    ceph osd pool rename <OLD_NAME> <NEW_NAME>
+    ```
+  </Tab>
+  <Tab title="Delete a Pool" icon="trash">
+    <Danger>
+      Pool deletion is irreversible and permanently destroys all data stored in the
+      pool. Confirm with the requesting team that all data has been migrated or is
+      no longer needed before proceeding.
+    </Danger>
+
+    ```bash title="Enable pool deletion (required safety flag)"
+    ceph config set mon mon_allow_pool_delete true
+    ```
+
+    ```bash title="Delete pool (requires double confirmation)"
+    ceph osd pool delete <POOL_NAME> <POOL_NAME> \
+      --yes-i-really-really-mean-it
+    ```
+
+    ```bash title="Re-disable pool deletion after use"
+    ceph config set mon mon_allow_pool_delete false
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Pool Configuration Reference
+
+| Parameter | Command | Notes |
+|-----------|---------|-------|
+| Replication size | `ceph osd pool set <pool> size <n>` | Number of copies |
+| Minimum size | `ceph osd pool set <pool> min_size <n>` | Min copies for I/O |
+| CRUSH rule | `ceph osd pool set <pool> crush_rule <rule>` | Device class routing |
+| PG autoscale | `ceph osd pool set <pool> pg_autoscale_mode on` | Automatic PG sizing |
+| Compression | `ceph osd pool set <pool> compression_mode aggressive` | Inline compression |
+| Quotas | `ceph osd pool set-quota <pool> max_bytes <bytes>` | Capacity limit |
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="CRUSH Maps" href="/services/sds/admin-guide/crush-maps" color="#197560">
+    Configure failure domains and device class rules for pool placement
+  </Card>
+  <Card title="Storage Tiers" href="/services/sds/admin-guide/storage-tiers" color="#197560">
+    Map pools to Cinder volume types for multi-tier storage
+  </Card>
+  <Card title="Capacity Planning" href="/services/sds/admin-guide/capacity-planning" color="#197560">
+    Monitor pool utilization and plan expansion
+  </Card>
+  <Card title="Troubleshooting" href="/services/sds/admin-guide/troubleshooting" color="#197560">
+    Diagnose pool-related issues — PG warnings, capacity alerts
+  </Card>
+</CardGroup>

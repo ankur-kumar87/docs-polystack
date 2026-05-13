@@ -1,0 +1,215 @@
+---
+title: "Global Search"
+description: "Find any instance, volume, network, image, or other Xloud resource from a single search bar in the Dashboard — fuzzy match, keyboard-driven, with recent searches and quick actions."
+sidebarTitle: "Global Search"
+---
+
+## Overview
+
+The Xloud Dashboard ships a **global search bar** that finds resources across
+the entire cluster — instances, volumes, networks, images, security groups,
+routers, floating IPs, key pairs, flavors, projects, and users — from a single
+input. Results show the resource type, name, status, and a direct link to the
+detail page. The search is fuzzy, debounced, and keyboard-driven.
+
+<Info>
+  Global Search is part of the standard Xloud Dashboard. It is available to any
+  signed-in user — results are automatically scoped to projects the user can
+  see, and admins see results across every project they have access to.
+</Info>
+
+---
+
+## Open Global Search
+
+| Method | Action |
+|--------|--------|
+| **Keyboard** | Press **Ctrl + K** (Linux / Windows) or **⌘ + K** (macOS) from any page |
+| **Header bar** | Click the search icon in the top header of the Dashboard |
+
+Press **Escape** to close. Both shortcuts toggle — pressing **Ctrl + K** when
+the search is already open closes it.
+
+---
+
+## What Global Search Finds
+
+The search hits a single backend endpoint that aggregates results across every
+resource type the Dashboard exposes. Results are returned grouped by type:
+
+| Resource type | Examples of what matches |
+|---------------|--------------------------|
+| **Instances** | Name, ID, IP address fragments |
+| **Volumes** | Name, ID |
+| **Networks** | Name, ID |
+| **Images** | Name, ID |
+| **Security Groups** | Name, ID |
+| **Routers** | Name, ID |
+| **Floating IPs** | IP address, ID |
+| **Key Pairs** | Name |
+| **Flavors** | Name, ID |
+| **Projects** | Name, ID (admin view) |
+| **Users** | Name, ID (admin view) |
+
+Matching is **fuzzy** — a query of `web` matches `web-01`, `web-prod-server`,
+and even names where the letters appear in order with gaps. A minimum of
+**2 characters** is required before search runs.
+
+<Tip>
+  Searches are **debounced by 300 milliseconds**, so the Dashboard waits a
+  fraction of a second after you stop typing before firing the query. This
+  avoids hammering the backend with a request on every keystroke.
+</Tip>
+
+---
+
+## Use Global Search
+
+<Steps titleSize="h3">
+  <Step title="Open the search panel" icon="search">
+    Press **Ctrl + K** (⌘ + K on macOS) anywhere in the Dashboard.
+  </Step>
+  <Step title="Type at least 2 characters" icon="keyboard">
+    The Dashboard waits a moment after you stop typing, then queries the backend
+    and groups results by resource type. While the query is running, a spinner
+    appears next to the input.
+  </Step>
+  <Step title="Navigate with the keyboard or mouse" icon="arrow-down">
+    Use **↑** and **↓** to move the selection through the result list. The
+    currently selected row is highlighted. Press **Enter** to open the resource
+    detail page, or click any row directly.
+
+    <Check>The Dashboard navigates to the resource's detail page. The selection is also recorded as a recent search.</Check>
+  </Step>
+  <Step title="Close the panel" icon="x">
+    Press **Escape** or **Ctrl + K** again to close the search.
+  </Step>
+</Steps>
+
+---
+
+## Result Cards — What's on Each Row
+
+Each result row shows three pieces of context so you can tell the right item
+apart from same-named neighbors at a glance:
+
+| Element | What it tells you |
+|---------|-------------------|
+| **Resource icon** | Quick visual cue of the type (server, database, cloud, image, etc.) |
+| **Name** | The display name of the resource |
+| **Status tag** | Colored badge — **green** for active / available / in-use / enabled, **red** for error, **grey** for shutoff / down / disabled, **yellow** for transitional states (creating, deleting, migrating) |
+| **Right arrow** | Indicates the row is clickable and will navigate to the detail page |
+
+---
+
+## Recent Searches
+
+The Dashboard keeps your **last 5 selected results** as recent items.
+
+- When the search panel is open and the query is empty, recent items appear
+  at the top.
+- Click a recent item to jump straight to that resource — no need to retype
+  the query.
+- Recent searches are stored in your browser's local storage, so they survive
+  reloads but are local to that browser and device.
+
+---
+
+## Quick Actions
+
+Below the recent searches (when the query is empty), the search panel also
+surfaces a set of **quick actions** — the most common Dashboard operations,
+one click away:
+
+| Quick action | What it opens |
+|--------------|---------------|
+| **Launch Instance** | Compute → Instances → Create Instance wizard |
+| **Create Volume** | Storage → Volumes → Create Volume |
+| **Create Network** | Networking → Networks → Create Network |
+| **Manage Flavors** | Compute → Flavors (admin) |
+| **Manage Images** | Compute → Images |
+| **Key Pairs** | Compute → Key Pairs |
+| **Security Groups** | Networking → Security Groups |
+| **XAVS Health** | Monitor Center → XAVS Health (admin) |
+
+<Tip>
+  Quick actions are a faster path than navigating the sidebar — open
+  **Ctrl + K**, click the action, done. The keyboard shortcut + click is
+  usually two clicks faster than the full sidebar path.
+</Tip>
+
+---
+
+## Keyboard Shortcut Reference
+
+| Shortcut | Action |
+|----------|--------|
+| **Ctrl + K** or **⌘ + K** | Open or close the search panel |
+| **Escape** | Close the search panel |
+| **↑** / **↓** | Move selection up / down through results |
+| **Enter** | Open the selected result |
+
+---
+
+## Common Tasks
+
+<AccordionGroup>
+  <Accordion title="Find an instance by partial name" icon="server">
+    Press **Ctrl + K** and type any substring of the name. Fuzzy matching
+    means `web` finds `web-01`, `prod-web-server`, and `web-tier-1` together.
+    Use the status tag to spot the active one.
+  </Accordion>
+  <Accordion title="Find a volume by its UUID prefix" icon="hard-drive">
+    Type the first 6–8 characters of the UUID. The result row shows the
+    full name plus the status tag so you can tell attached volumes apart
+    from available ones at a glance.
+  </Accordion>
+  <Accordion title="Find a floating IP by address" icon="globe">
+    Type any segment of the IP — `103.240` returns every floating IP
+    starting with that prefix. Click the row to jump to the floating-IP
+    detail and its associations.
+  </Accordion>
+  <Accordion title="Jump straight to a Create action" icon="plus">
+    Open **Ctrl + K** with no query — the Quick Actions panel shows
+    Launch Instance, Create Volume, Create Network, and more. Click one
+    to open the matching create wizard directly.
+  </Accordion>
+  <Accordion title="Revisit something you opened earlier" icon="clock">
+    Open **Ctrl + K** with no query — your last 5 selected results appear
+    at the top under Recent. One click jumps you back to the detail
+    page.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Limitations and Tips
+
+- **Minimum 2 characters** — single-character queries are ignored to avoid
+  flooding the backend with overly broad matches.
+- **Scope** — Global Search returns resources you are authorised to see.
+  Project-scoped users see only their projects; admin-view users see
+  everything.
+- **Status tag colors** are derived from the resource's reported state at
+  query time. A row that says `creating` will switch to `active` (or
+  `error`) once the resource is fully provisioned — re-run the search to
+  refresh.
+- **Recent searches** are per-browser. Signing in from a new browser or
+  clearing local storage resets the list.
+
+---
+
+## Related Topics
+
+<CardGroup cols={3}>
+  <Card title="Manage Instances" href="/services/dashboard/user-guide/instances" color="#197560">
+    Every row action on the Instances list — start, stop, console, resize,
+    snapshot, delete
+  </Card>
+  <Card title="User Center" href="/services/dashboard/user-guide/user-center" color="#197560">
+    Manage your profile, change your password, and enable 2FA
+  </Card>
+  <Card title="Activity Log" href="/services/monitoring/user-guide/activity-log" color="#197560">
+    Audit every action taken across the Xloud Platform — admin view
+  </Card>
+</CardGroup>

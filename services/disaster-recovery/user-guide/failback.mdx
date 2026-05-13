@@ -1,0 +1,130 @@
+---
+title: "Failback"
+description: "Return XDR-protected workloads to the primary site after it has been restored — reverse replication, synchronize changed data, and execute failback."
+sidebarTitle: "Failback"
+---
+
+## Overview
+
+Failback returns workloads to the primary site after it has been restored following
+a failover event. Before initiating failback, confirm the primary site is fully
+operational and any data created on the DR site during the failover period has been
+synchronized back.
+
+<Note>
+  Failback reverses the replication direction — data flows from the DR site back to
+  the primary site. The time required depends on the amount of changed data accumulated
+  during the failover period. Allow replication to fully synchronize before cutting over.
+</Note>
+
+<Note>
+  **Prerequisites**
+  - Primary site confirmed healthy — all services operational, storage accessible
+  - Network connectivity between primary and DR sites restored
+  - No active production traffic changes needed until failback is complete
+</Note>
+
+---
+
+## Failback Procedure
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Verify primary site is available" icon="server">
+        Navigate to **Disaster Recovery → Sites** and confirm the primary site status
+        returns to **Healthy**. Run a connectivity test from the DR site if available
+        by clicking **Test Connectivity** on the site entry.
+      </Step>
+      <Step title="Reverse replication" icon="refresh-cw">
+        Select the protection plan and click **Reverse Replication**. XDR syncs
+        changed data from the DR site back to the primary site.
+
+        Monitor sync progress in the plan status panel. The `replication_lag` field
+        shows how much data remains to be transferred.
+
+        <Tip>
+          Allow replication to fully synchronize before initiating failback. The
+          sync duration depends on how much data changed during the failover period.
+          For active production workloads, this may take hours.
+        </Tip>
+      </Step>
+      <Step title="Schedule the failback window" icon="clock">
+        Coordinate with application owners and stakeholders to schedule a maintenance
+        window for the actual failback cutover. During the cutover:
+        - Application connections to the DR site are briefly interrupted
+        - Instances stop on the DR site and restart on the primary site
+
+        Typical failback cutover time is 10–30 minutes depending on the number of
+        instances and the recovery runbook complexity.
+      </Step>
+      <Step title="Execute failback" icon="rotate-ccw">
+        Once sync is complete and the maintenance window begins, click **Failback**.
+        The runbook executes in reverse priority order:
+        1. Services stop on the DR site
+        2. Final delta sync to primary site
+        3. Instances start on the primary site
+        4. Health checks validate service availability
+      </Step>
+      <Step title="Verify and re-protect" icon="circle-check">
+        Confirm workloads are running on the primary site. Navigate to **Protection
+        Plans** and verify the plan is back in **Active** replication status, now
+        protecting the primary site from the DR site.
+
+        <Check>Plan shows primary site as source and replication lag is within RPO target.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    <Info>
+      XDR disaster recovery operations are managed exclusively through the XDR Dashboard.
+      CLI access is not available for DR operations. Use the **Dashboard** tab above for
+      the complete failback procedure.
+    </Info>
+  </Tab>
+</Tabs>
+
+---
+
+## Post-Failback Checklist
+
+After failback completes, restore normal operations:
+
+<Steps titleSize="h3">
+  <Step title="Update DNS and load balancers" icon="globe">
+    Revert DNS records and load balancer configurations back to primary site IP
+    addresses. Verify traffic is flowing to the primary site.
+  </Step>
+  <Step title="Validate application services" icon="circle-check">
+    Run application-level health checks against the primary site endpoints. Confirm
+    data integrity and service connectivity.
+  </Step>
+  <Step title="Verify DR protection is active" icon="shield">
+    Confirm the protection plan is replicating from the primary site back to the DR site.
+    The plan should return to normal `ACTIVE` status with lag within RPO target.
+  </Step>
+  <Step title="Document the incident" icon="file-text">
+    Record the failover and failback timeline, data loss (if any), actual RTO achieved,
+    and any issues encountered during the recovery. Update the DR runbook if procedures
+    need to be adjusted.
+  </Step>
+</Steps>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="DR Testing" href="/services/disaster-recovery/user-guide/test-dr" color="#197560">
+    Run quarterly DR tests to keep failback procedures current and validated
+  </Card>
+  <Card title="Protection Plans" href="/services/disaster-recovery/user-guide/protection-plans" color="#197560">
+    Review and update protection plans based on incident learnings
+  </Card>
+  <Card title="Troubleshooting" href="/services/disaster-recovery/user-guide/troubleshooting" color="#197560">
+    Diagnose failback synchronization issues
+  </Card>
+  <Card title="XDR Admin — Compliance" href="/services/disaster-recovery/admin-guide/compliance" color="#197560">
+    Generate post-incident RPO/RTO compliance reports (administrator)
+  </Card>
+</CardGroup>

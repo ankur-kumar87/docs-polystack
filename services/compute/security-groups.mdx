@@ -1,0 +1,135 @@
+---
+title: "Security Groups"
+description: "Manage security groups on Xloud Compute instances. Add or remove security groups per network interface using the Dashboard or CLI."
+sidebarTitle: "Security Groups"
+---
+
+## Overview
+
+Security groups act as virtual firewalls that control inbound and outbound network
+traffic for instances. Each instance port can have one or more security groups
+assigned. Security group rules apply to all traffic on that port.
+
+<Note>
+  **Prerequisites**
+  - An active instance with at least one network interface
+  - Existing security groups with configured rules
+  - For creating security groups, see [Network Security Groups](/services/networking/security-groups)
+</Note>
+
+---
+
+## Manage Security Groups on an Instance
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Open the Manage Security Group dialog">
+        Navigate to **Compute > Instances**. Click the **More** dropdown on the
+        instance row, then select **Manage Security Group** under the
+        **Related Resources** group.
+
+        <Note>
+          This action is always available regardless of instance status. No lock
+          check is required.
+        </Note>
+      </Step>
+      <Step title="Select a port">
+        The dialog shows:
+
+        | Field | Description |
+        |-------|-------------|
+        | **Instance** | Current instance name (read-only) |
+        | **Port** | Select the network interface to configure (required) |
+
+        The port table shows all instance interfaces with:
+
+        | Column | Description |
+        |--------|-------------|
+        | **ID** | Port identifier |
+        | **Network Name** | Network the port belongs to |
+        | **IPv4 Address** | Assigned IPv4 address |
+        | **IPv6 Address** | Assigned IPv6 address |
+        | **MAC Address** | Hardware address |
+        | **Status** | Port status |
+
+        <Warning>
+          Ports with **port security disabled** cannot have security groups
+          assigned. These ports are shown as disabled in the selection table.
+        </Warning>
+      </Step>
+      <Step title="Select security groups">
+        After selecting a port, the **Security Group** table loads with the port's
+        current security groups pre-selected.
+
+        Add or remove security groups by toggling the checkboxes. Multiple
+        security groups can be assigned to a single port.
+
+        Click **Confirm** to apply the changes.
+
+        <Check>Security group assignment updated for the selected port.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Source credentials"
+    source openrc.sh
+    ```
+
+    <CodeGroup>
+    ```bash title="Add a security group to an instance"
+    openstack server add security group <INSTANCE_ID> <SECURITY_GROUP>
+    ```
+    ```bash title="Remove a security group from an instance"
+    openstack server remove security group <INSTANCE_ID> <SECURITY_GROUP>
+    ```
+    ```bash title="List security groups on an instance"
+    openstack server show <INSTANCE_ID> -c security_groups
+    ```
+    </CodeGroup>
+
+    <Note>
+      CLI commands apply security groups to all ports on the instance. For
+      per-port security group management, use the `openstack port set` command:
+
+      ```bash title="Set security groups on a specific port"
+      openstack port set --security-group <SG_ID> <PORT_ID>
+      ```
+    </Note>
+  </Tab>
+</Tabs>
+
+---
+
+## View Instance Security Groups
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    Navigate to **Compute > Instances** and click the instance name. Go to the
+    **Security Groups** tab to view all security groups assigned to each interface.
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="List security groups on an instance"
+    openstack server show <INSTANCE_ID> -c security_groups
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Network Security Groups" href="/services/networking/security-groups" color="#197560">
+    Create security groups and configure inbound/outbound rules
+  </Card>
+  <Card title="Manage IP Addresses" href="/services/compute/manage-ips" color="#197560">
+    Associate floating IPs to make instances reachable externally
+  </Card>
+  <Card title="Launch an Instance" href="/services/compute/launch-instance" color="#197560">
+    Assign security groups during instance creation
+  </Card>
+  <Card title="Troubleshooting" href="/services/compute/troubleshooting" color="#197560">
+    Resolve connectivity issues related to security group rules
+  </Card>
+</CardGroup>

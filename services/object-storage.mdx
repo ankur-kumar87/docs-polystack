@@ -1,0 +1,108 @@
+---
+title: "Object Storage"
+description: "Scalable, durable object storage for Xloud private cloud — store and retrieve data at any scale with container-based organization, ACL controls, and large."
+icon: "box"
+sidebarTitle: "Object Storage"
+mode: "wide"
+---
+
+Massively scalable object storage for your private cloud — organize data in containers, control access with ACLs, and store objects of any size.
+
+<Card title="Xloud Object Storage — Scale-Out Storage" icon="box" href="https://xloud.tech/xavs" color="#197560" horizontal>
+  Product details and datasheet on xloud.tech
+</Card>
+
+---
+
+<p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Xloud Object Storage</p>
+
+<CardGroup cols={2}>
+  <Card title="User Guide" icon="book-open" href="/services/object-storage/user-guide" color="#197560">
+    Create containers, upload objects, manage ACLs, enable versioning, and work with large objects using the Xloud Dashboard or CLI.
+  </Card>
+  <Card title="Admin Guide" icon="shield-check" href="/services/object-storage/admin-guide" color="#197560">
+    Configure storage policies, manage rings, control replication, enforce quotas, and maintain the object storage cluster as a platform administrator.
+  </Card>
+  <Card title="CLI Reference" icon="terminal" href="/services/object-storage/cli-reference" color="#197560">
+    `openstack object` and `openstack container` commands for managing object storage resources from the command line.
+  </Card>
+  <Card title="Access Control" icon="lock" color="#197560">
+    Container-level and account-level ACLs control which users and services can read or write object data across your project boundaries.
+  </Card>
+</CardGroup>
+
+---
+
+<p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Key Features</p>
+
+<CardGroup cols={2}>
+  <Card title="Unlimited Scale" icon="infinity" href="/services/object-storage/architecture" color="#197560">
+    Store billions of objects across petabytes of capacity. The distributed ring architecture scales horizontally — add storage nodes without downtime.
+  </Card>
+  <Card title="Built-In Redundancy" icon="shield-check" href="/services/object-storage/replication" color="#197560">
+    Configurable replication factors ensure multiple copies of every object are maintained across different zones and drives, protecting against hardware failure.
+  </Card>
+  <Card title="Object Versioning" icon="history" href="/services/object-storage/versioning" color="#197560">
+    Enable versioning on containers to retain all previous versions of every object. Recover from accidental overwrites or deletions without external backup tools.
+  </Card>
+  <Card title="Large Object Support" icon="file-archive" href="/services/object-storage/large-objects" color="#197560">
+    Store objects larger than 5 GB using Static Large Objects (SLO) or Dynamic Large Objects (DLO). Assemble multi-part uploads into a single addressable object.
+  </Card>
+  <Card title="Temporary URLs" icon="link" href="/services/object-storage/temp-urls" color="#197560">
+    Generate time-limited, cryptographically signed URLs for sharing objects without granting permanent access — ideal for file distribution and download links.
+  </Card>
+  <Card title="Server-Side Encryption" icon="lock" href="/services/object-storage/security" color="#197560">
+    Encrypt object data at rest using keys managed through Xloud Key Manager. Per-container or per-object encryption policies protect sensitive data automatically.
+  </Card>
+</CardGroup>
+
+---
+
+<p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Object Storage Components</p>
+
+| Component | Description |
+|-----------|-------------|
+| Account | Top-level namespace for a project's object storage. Holds containers and account-level metadata |
+| Container | A logical bucket within an account. Holds objects and defines access policies and storage configuration |
+| Object | An individual data item stored in a container. Includes the payload and user-defined metadata |
+| Metadata | Key-value pairs attached to accounts, containers, or objects for organization and workflow integration |
+| Storage Policy | A named configuration specifying replication factor, placement rules, and erasure coding for containers |
+| Ring | The consistent hash ring mapping objects to physical storage locations across the cluster |
+
+---
+
+<p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Related Services</p>
+
+<CardGroup cols={3}>
+  <Card title="Xloud Key Manager" icon="lock" href="/services/key-manager" color="#197560">
+    Manage encryption keys for server-side object encryption
+  </Card>
+  <Card title="Xloud Identity" icon="fingerprint" href="/cli-setup" color="#197560">
+    Authentication tokens and RBAC governing container access
+  </Card>
+  <Card title="Xloud Compute" icon="server" href="/services/compute" color="#197560">
+    Instance backup storage, disk image exports, and application data archiving
+  </Card>
+  <Card title="Xloud Image Service" icon="layers" href="/services/compute" color="#197560">
+    Store virtual machine images backed by object storage containers
+  </Card>
+  <Card title="Xloud DNS" icon="globe" href="/services/dns" color="#197560">
+    Map custom domain names to object storage container endpoints
+  </Card>
+  <Card title="Xloud Load Balancer" icon="combine" href="/services/load-balancer" color="#197560">
+    Distribute object storage API requests across multiple proxy nodes
+  </Card>
+</CardGroup>
+
+---
+
+<p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Getting Started</p>
+
+<CardGroup cols={2}>
+  <Card title="Authentication" icon="key" href="/cli-setup" color="#197560">
+    Configure Dashboard access and CLI credentials before working with Object Storage
+  </Card>
+  <Card title="User Guide" icon="book-open" href="/services/object-storage/user-guide" color="#197560">
+    Step-by-step instructions for creating your first container and uploading objects
+  </Card>
+</CardGroup>

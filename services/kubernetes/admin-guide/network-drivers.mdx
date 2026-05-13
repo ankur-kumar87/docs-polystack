@@ -1,0 +1,142 @@
+---
+title: "Network Drivers"
+description: "Configure Xloud K8SaaS network drivers (CNI plugins) — choose between Calico and Flannel, understand NetworkPolicy support, and plan for production."
+sidebarTitle: "Network Drivers"
+---
+
+## Overview
+
+The network driver (CNI plugin) determines how Pod-to-Pod and Pod-to-Service networking
+works within Kubernetes clusters. The driver is selected in the cluster template and
+cannot be changed after cluster deployment. Xloud K8SaaS supports two drivers: Calico
+for production workloads requiring NetworkPolicy enforcement, and Flannel for simplified
+development environments.
+
+---
+
+## Driver Comparison
+
+| Driver | NetworkPolicy | Performance | Encryption | Recommended For |
+|--------|--------------|-------------|------------|----------------|
+| `calico` | Full Kubernetes NetworkPolicy | BGP (native routing) | Optional WireGuard | Production clusters requiring pod-level isolation |
+| `flannel` | None | VXLAN overlay (simple) | None | Development / test environments |
+
+<Tip>
+  Use `calico` for all production templates. Flannel is appropriate only for isolated
+  development environments where NetworkPolicy is not required.
+</Tip>
+
+---
+
+## Calico Configuration
+
+Calico is the recommended CNI for production Xloud K8SaaS clusters. It supports
+Kubernetes NetworkPolicy resources and provides BGP-based native routing for optimal
+performance in datacenter environments.
+
+### Create Template with Calico
+
+```bash title="Create production template with Calico"
+openstack coe cluster template create k8s-1.29-prod \
+  --coe kubernetes \
+  --network-driver calico \
+  ...
+```
+
+### Verify Calico is Running
+
+After cluster deployment, confirm Calico components are healthy:
+
+```bash title="Check Calico pods"
+kubectl get pods -n kube-system \
+  | grep -E "calico|bird"
+```
+
+Expected: `calico-node` pods on every node, all `Running`.
+
+```bash title="Check Calico node status"
+kubectl exec -n kube-system \
+  $(kubectl get pod -n kube-system -l k8s-app=calico-node -o name | head -1) \
+  -- calicoctl node status
+```
+
+---
+
+## Flannel Configuration
+
+Flannel provides a simple VXLAN overlay network. No NetworkPolicy support — all pods can
+communicate with all other pods across the cluster.
+
+```bash title="Create development template with Flannel"
+openstack coe cluster template create k8s-dev \
+  --coe kubernetes \
+  --network-driver flannel \
+  ...
+```
+
+### Verify Flannel is Running
+
+```bash title="Check Flannel pods"
+kubectl get pods -n kube-system \
+  | grep flannel
+```
+
+Expected: `kube-flannel` DaemonSet pods on every node, all `Running`.
+
+---
+
+## Applying NetworkPolicy (Calico clusters only)
+
+After deploying a Calico cluster, you can apply Kubernetes NetworkPolicy resources to
+restrict Pod communication. Example policy to allow only intra-namespace traffic:
+
+```yaml title="Default deny-all ingress policy"
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-ingress
+  namespace: production
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+```
+
+```bash title="Apply the policy"
+kubectl apply -f default-deny-ingress.yaml
+```
+
+---
+
+## Network Driver Immutability
+
+The CNI driver is set at cluster template creation and **cannot be changed** after a
+cluster is deployed. To switch CNI plugins:
+
+1. Deploy a new cluster from a template with the desired driver
+2. Migrate workloads to the new cluster
+3. Delete the old cluster
+
+<Warning>
+  There is no in-place CNI migration path. Plan your driver selection carefully
+  before deploying production clusters.
+</Warning>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Container Runtime" href="/services/kubernetes/admin-guide/container-runtime" color="#197560">
+    Configure the container runtime alongside the network driver in templates.
+  </Card>
+  <Card title="Security" href="/services/kubernetes/admin-guide/security" color="#197560">
+    Apply node security groups and restrict Kubernetes API server access.
+  </Card>
+  <Card title="Template Management" href="/services/kubernetes/admin-guide/template-management" color="#197560">
+    Publish templates with the correct network driver for project teams.
+  </Card>
+  <Card title="Troubleshooting" href="/services/kubernetes/admin-guide/troubleshooting" color="#197560">
+    Diagnose CNI-related node NotReady issues and network failures.
+  </Card>
+</CardGroup>

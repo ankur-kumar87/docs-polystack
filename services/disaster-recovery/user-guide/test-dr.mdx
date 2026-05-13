@@ -1,0 +1,135 @@
+---
+title: "DR Testing"
+description: "Validate XDR protection plans with isolated DR tests — confirm recovery procedures and measure actual RTO without impacting production workloads."
+sidebarTitle: "DR Testing"
+---
+
+## Overview
+
+DR tests validate your protection plan without impacting production. Test instances
+are brought up in an isolated network environment on the DR site, allowing you to
+confirm recovery procedures and measure actual RTO. Xloud recommends running DR tests
+at least quarterly.
+
+<Tip>
+  Regular DR tests are the only way to verify that your RPO and RTO targets are
+  achievable and that recovery runbooks remain accurate as workloads evolve. A
+  DR plan that has never been tested is not a reliable DR plan.
+</Tip>
+
+<Note>
+  **Prerequisites**
+  - An active protection plan with replication in `ACTIVE` status
+  - DR site is healthy and has sufficient capacity for the test instances
+  - Notify the operations team before starting a test — test traffic will appear in monitoring
+</Note>
+
+---
+
+## Running a DR Test
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Start a DR test" icon="flask-conical">
+        Navigate to **Disaster Recovery → Protection Plans**, select the plan, and click
+        **Test Failover**. The test brings up recovered instances in an isolated network
+        segment — production traffic is not affected.
+
+        | Option | Description |
+        |--------|-------------|
+        | **Recovery Point** | Which snapshot to use for the test — usually `latest` |
+        | **Test Network** | Isolated network segment for test instances |
+        | **Test Duration** | Maximum time before auto-cleanup |
+      </Step>
+      <Step title="Validate recovered workloads" icon="circle-check">
+        Access the test instances through the isolated DR test network. Run your
+        application validation scripts to confirm the service is operational and
+        data is intact.
+
+        | Validation Check | What to Verify |
+        |-----------------|----------------|
+        | Instance status | All instances show `ACTIVE` on DR site |
+        | Data integrity | Application-level health checks pass |
+        | Service connectivity | Intra-app communication works in isolated network |
+        | Recovery time | Actual RTO measured against configured target |
+
+        <Note>
+          Test instances run in an isolated network — they cannot reach production
+          services or external systems. This isolation is intentional and prevents
+          DR test instances from interfering with production.
+        </Note>
+      </Step>
+      <Step title="End the test" icon="x-circle">
+        Click **End Test** to terminate the test instances and release the isolated
+        environment. No changes are made to production — the protection plan remains
+        active throughout.
+
+        <Check>DR test report generated with measured RTO and pass/fail for each validation check.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    <Info>
+      XDR disaster recovery operations are managed exclusively through the XDR Dashboard.
+      CLI access is not available for DR operations. Use the **Dashboard** tab above to
+      run DR tests and review test results.
+    </Info>
+  </Tab>
+</Tabs>
+
+---
+
+## Test Report
+
+After each DR test, XDR generates a report including:
+
+| Report Field | Description |
+|-------------|-------------|
+| **Test Date** | When the test was executed |
+| **Recovery Point Used** | Age of data at test time |
+| **Measured RTO** | Actual time from test start to all resources validated |
+| **Target RTO** | Configured target for comparison |
+| **Pass/Fail** | Whether measured RTO met the configured target |
+| **Resource Status** | Per-resource recovery outcome |
+| **Script Results** | Output from pre/post recovery validation scripts |
+
+Export DR test reports from **Disaster Recovery → Reports** by selecting the test
+report type and choosing PDF or CSV format. See [Compliance](/services/disaster-recovery/admin-guide/compliance)
+for scheduled report delivery.
+
+---
+
+## DR Test Schedule
+
+| Frequency | Trigger | Scope |
+|-----------|---------|-------|
+| Quarterly | Calendar | Full protection plan test for all plans |
+| After major changes | Change event | Any plan whose workloads changed significantly |
+| After site changes | Infrastructure event | After DR site hardware or network changes |
+| After runbook updates | Policy change | When pre/post recovery scripts are modified |
+
+<Warning>
+  XIMP can alert when a DR test has not been run within the configured interval.
+  Navigate to **Monitoring → Alerting → Alert Rules** and create a rule sourcing
+  `xdr_last_test_age_days > 90` to ensure tests are not missed.
+</Warning>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Protection Plans" href="/services/disaster-recovery/user-guide/protection-plans" color="#197560">
+    Update protection plans based on test results
+  </Card>
+  <Card title="Failover" href="/services/disaster-recovery/user-guide/failover" color="#197560">
+    Full failover procedure when an actual disaster event occurs
+  </Card>
+  <Card title="XDR Admin — Compliance" href="/services/disaster-recovery/admin-guide/compliance" color="#197560">
+    Generate RPO/RTO compliance reports from DR test history (administrator)
+  </Card>
+  <Card title="Troubleshooting" href="/services/disaster-recovery/user-guide/troubleshooting" color="#197560">
+    Diagnose DR test failures and instance access issues
+  </Card>
+</CardGroup>

@@ -1,0 +1,271 @@
+---
+title: "IP Address Management (IPAM)"
+description: "Configure built-in and external IPAM drivers for automated IP allocation. Integrates with Infoblox, Bluecat, and NetBox."
+sidebarTitle: "IPAM"
+---
+
+import AdminWarning from '/snippets/admin-warning.mdx';
+import CliAuth from '/snippets/cli-auth.mdx';
+
+## Overview
+
+Xloud Networking manages IP address allocation through a pluggable IPAM (IP Address Management) driver. The default built-in driver handles IP allocation from subnets defined within the platform. For organizations with existing enterprise IPAM infrastructure — such as Infoblox, Bluecat, or NetBox — an external driver can delegate IP assignment and tracking to that system, ensuring consistency across the entire network environment.
+
+When an external IPAM driver is active, every Neutron port creation calls the IPAM API to reserve an IP before the port is assigned. On port deletion, the IP is released back to the external system. This integration is transparent to tenants — they create ports and subnets through the standard Dashboard or CLI interface.
+
+<AdminWarning />
+
+<Note>
+  **Prerequisites**
+  - Administrator credentials with the `admin` role
+  - Network connectivity from all Neutron agent nodes to the IPAM system management API
+  - Service account credentials and appropriate permissions on the IPAM system
+  - The IPAM driver package must be installed on all Neutron API and agent nodes
+</Note>
+
+---
+
+## Built-In IPAM vs External IPAM
+
+| Attribute | Built-In IPAM | External IPAM |
+|-----------|--------------|---------------|
+| **IP allocation source** | Neutron subnet pool | External IPAM database |
+| **Conflict prevention** | Within platform only | Across entire enterprise network |
+| **DNS integration** | Manual or via Designate | Automatic via IPAM system |
+| **Visibility** | Platform-only | Enterprise-wide IP tracking |
+| **Audit trail** | Neutron database | IPAM system audit logs |
+| **Configuration complexity** | None | Requires IPAM API integration |
+| **Recommended for** | Isolated or greenfield deployments | Enterprise with existing IPAM governance |
+
+---
+
+## Supported IPAM Drivers
+
+| Driver | Integration Type | Protocol | Notes |
+|--------|-----------------|----------|-------|
+| **Internal (built-in)** | Native Neutron allocation | Internal SQL | Default — no external system required |
+| **Infoblox** | WAPI REST API | HTTPS | DNS, DHCP, and IP reservation; enterprise standard |
+| **Bluecat Address Manager** | REST API | HTTPS | Supports IPAM, DNS, and DHCP workflows |
+| **NetBox** | REST API (via middleware) | HTTPS | Community-supported; requires adapter plugin |
+| **phpIPAM** | REST API (via middleware) | HTTPS | Open-source IPAM, adapter available |
+| **SolarWinds IPAM** | REST API (via middleware) | HTTPS | Enterprise monitoring + IPAM combined |
+
+---
+
+## Configure the IPAM Driver
+
+The IPAM driver is set in `neutron.conf`. All Neutron API nodes must use the same driver configuration to ensure consistent IP allocation.
+
+### Internal Driver (Default)
+
+```ini title="neutron.conf — built-in IPAM driver"
+[DEFAULT]
+ipam_driver = internal
+```
+
+No additional configuration is required. Neutron manages IP allocation from subnet allocation pools defined in the platform.
+
+### Infoblox Driver
+
+The Infoblox driver uses the Infoblox WAPI (Web API) to reserve and release IP addresses. It supports DNS host record creation and metadata synchronization alongside IP allocation.
+
+```ini title="neutron.conf — Infoblox IPAM driver"
+[DEFAULT]
+ipam_driver = infoblox
+
+[infoblox]
+cloud_data_center_id = 1
+ipam_agent_workers = 2
+wapi_url = https://10.0.10.7/wapi/v2.10
+wapi_username = neutron-svc
+wapi_password = <password>
+wapi_version = 2.10
+ssl_verify = true
+network_template = default
+admin_network_deletion = false
+wapi_max_results = 1000
+```
+
+**Required Infoblox configuration:**
+
+The service account (`neutron-svc`) must have IPAM Admin rights on the Infoblox Grid. Create a Network View in Infoblox to map to the Xloud environment, and configure member assignments as needed.
+
+### Bluecat Address Manager Driver
+
+Bluecat integration requires the `networking-bluecatnetworks` driver package. Contact Bluecat for the Neutron driver compatible with your BAM version.
+
+```ini title="neutron.conf — Bluecat IPAM driver"
+[DEFAULT]
+ipam_driver = bluecatnetworks
+
+[bluecatnetworks]
+bcn_bam_address = 10.0.10.8
+bcn_bam_user = neutron-api
+bcn_bam_password = <password>
+bcn_bam_configuration = default
+bcn_bam_ip_offset = 0
+bcn_dns_deploy_on_every_action = false
+bcn_bam_updatemodifyhost = true
+```
+
+### NetBox Driver (via Middleware)
+
+NetBox does not ship with a native Neutron IPAM driver. Integration is achieved through a middleware adapter that intercepts IPAM allocation calls and forwards them to the NetBox REST API.
+
+```ini title="neutron.conf — NetBox IPAM driver (adapter)"
+[DEFAULT]
+ipam_driver = netbox_neutron_driver
+
+[netbox]
+netbox_url = https://netbox.internal.example.com
+netbox_token = <api-token>
+netbox_vrf = default
+netbox_site = datacenter-1
+```
+
+<Note>
+  The NetBox adapter is a community-maintained plugin. Verify driver compatibility with your deployed Neutron version before deployment. Contact support@xloud.tech for guidance on driver selection.
+</Note>
+
+---
+
+## Apply the Configuration
+
+In XAVS deployments, the IPAM driver configuration is managed through XDeploy and Ansible:
+
+```bash title="Apply Neutron configuration changes"
+xavs-ansible deploy --tags neutron
+```
+
+After deployment, verify Neutron is running with the configured driver:
+
+```bash title="Check Neutron server configuration"
+docker exec neutron_server grep ipam_driver /etc/neutron/neutron.conf
+```
+
+---
+
+## Subnet Allocation with External IPAM
+
+When an external IPAM driver is active, subnet and port creation behaves differently from the built-in driver. The IPAM system must have the IP range pre-defined before Neutron subnets are created from it.
+
+<Tabs>
+  <Tab title="Dashboard" icon="monitor">
+    <Steps titleSize="h3">
+      <Step title="Pre-configure the network range in IPAM" icon="settings">
+        In your external IPAM system (Infoblox, Bluecat, etc.), create the network container
+        for the IP range you intend to use in Xloud (e.g., `10.50.0.0/24`).
+
+        Assign the range to the appropriate view or zone before creating the Neutron subnet.
+      </Step>
+      <Step title="Create the subnet in Xloud" icon="plus">
+        Navigate to **Network > Networks**, select the network, and click
+        **Create Subnet**.
+
+        Enter the CIDR range that matches the pre-configured range in your IPAM system.
+        The IPAM driver validates that the range is available before creating the subnet.
+      </Step>
+      <Step title="Verify IP reservation in IPAM" icon="circle-check">
+        After launching an instance or creating a port on this subnet, verify in your IPAM
+        dashboard that the IP appears as reserved with the correct hostname and metadata.
+
+        <Check>IP allocation confirmed — Neutron port creation is synchronized with the external IPAM system.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    <CliAuth />
+
+    ```bash title="Create a network"
+    openstack network create internal-production
+    ```
+
+    ```bash title="Create a subnet mapped to IPAM range"
+    openstack subnet create \
+      --network internal-production \
+      --subnet-range 10.50.0.0/24 \
+      --gateway 10.50.0.1 \
+      --dns-nameserver 10.0.10.7 \
+      production-subnet-01
+    ```
+
+    ```bash title="Create a port and verify IP assignment"
+    openstack port create \
+      --network internal-production \
+      --fixed-ip subnet=production-subnet-01 \
+      test-port-01
+
+    openstack port show test-port-01 -c fixed_ips
+    ```
+
+    Verify in your IPAM system that `10.50.0.x` shows as reserved with the port's MAC address and hostname.
+  </Tab>
+</Tabs>
+
+---
+
+## IP Release and Lifecycle
+
+IP addresses are released back to the IPAM system when ports are deleted. This happens automatically during instance termination, port deletion, or subnet removal.
+
+```bash title="Delete a port and release the IP"
+openstack port delete <port-id>
+```
+
+After deletion, verify in the IPAM system that the address is no longer reserved. If the IP is not released (network error during deletion), use the IPAM system's manual release procedure to reclaim the address.
+
+<Warning>
+  If the external IPAM system is unreachable during port creation, Neutron will fail the port creation request. Ensure the IPAM system has high availability or that a fallback configuration is in place before enabling external IPAM in production.
+</Warning>
+
+---
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Port creation fails with 'IPAM driver error'" icon="triangle-alert">
+    **Cause**: The IPAM system is unreachable or authentication failed.
+
+    **Resolution**:
+    - Test API connectivity: `curl -k -u neutron-svc:<password> https://10.0.10.7/wapi/v2.10`
+    - Verify credentials in `neutron.conf`
+    - Check Neutron server logs: `docker logs neutron_server | grep -i ipam`
+    - Confirm the IP range is defined in the external IPAM system before subnet creation
+  </Accordion>
+
+  <Accordion title="IP not released after port deletion" icon="x-circle">
+    **Cause**: Network error during the IPAM release call, or the IPAM system rejected the release.
+
+    **Resolution**:
+    - Check Neutron server logs for IPAM release errors
+    - Manually release the IP in the IPAM system UI
+    - Verify the service account has delete/release permissions in the IPAM system
+  </Accordion>
+
+  <Accordion title="Subnet creation rejected by IPAM driver" icon="ban">
+    **Cause**: The requested IP range is not pre-configured in the external IPAM system, or it conflicts with an existing reservation.
+
+    **Resolution**:
+    - Create the network container in the IPAM system before creating the Neutron subnet
+    - Verify the CIDR does not overlap with existing networks in the IPAM view
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Subnets" href="/services/networking/subnets" color="#197560">
+    Create and configure subnets, allocation pools, and DNS settings
+  </Card>
+  <Card title="DNS Configuration" href="/services/networking/dns-config" color="#197560">
+    Configure per-subnet DNS resolvers and domain assignments
+  </Card>
+  <Card title="External DNS Providers" href="/services/dns/external-providers" color="#197560">
+    Integrate Designate with Infoblox, BIND9, and other external DNS systems
+  </Card>
+  <Card title="Networking Architecture" href="/services/networking/architecture" color="#197560">
+    Understand the Networking service topology and plugin architecture
+  </Card>
+</CardGroup>

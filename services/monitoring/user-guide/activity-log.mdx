@@ -1,0 +1,195 @@
+---
+title: "Activity Log"
+description: "See every action taken across your Xloud Platform — who did what, when, and with what outcome — from a single searchable timeline in Monitor Center."
+sidebarTitle: "Activity Log"
+---
+
+## Overview
+
+Activity Log shows a live timeline of every action taken across your Xloud Platform. Each
+entry tells you **who** did it, **what** they did, **which resource** was affected, and
+**whether it succeeded** — so you can audit activity, investigate changes, and spot
+problems at a glance.
+
+<Warning>
+  Activity Log is available in the **administrator view only**, under
+  **Monitor Center → Activity Log**. If the page shows an empty state asking
+  you to enable Central Logging, ask your administrator to turn it on before
+  you can use this feature.
+</Warning>
+
+---
+
+## Video Walkthrough
+
+<iframe
+  className="w-full aspect-video rounded-xl"
+  src="https://www.youtube.com/embed/0wMYA0lKs80"
+  title="How to Audit Activity on Xloud"
+  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+  allowFullScreen
+></iframe>
+
+---
+
+## Opening Activity Log
+
+<Steps titleSize="h3">
+  <Step title="Switch to the admin view" icon="shield">
+    Sign in to the Xloud Dashboard with an administrator account.
+  </Step>
+  <Step title="Open Monitor Center → Activity Log" icon="clipboard-list">
+    From the left navigation, expand **Monitor Center** and click **Activity Log**.
+
+    <Check>The page loads with summary cards at the top, a filter bar below, and a live event table.</Check>
+  </Step>
+</Steps>
+
+---
+
+## What You See at the Top
+
+Four summary cards show a rolling count of events matching your current filters:
+
+| Card | Shows |
+|------|-------|
+| **Total Events** | Every event in the current view |
+| **Completed** | Actions that succeeded |
+| **Warnings (4xx)** | Actions that were rejected — for example, missing permission or a bad request |
+| **Failed (5xx)** | Actions that hit a server-side error |
+
+The counts update live as new events arrive.
+
+---
+
+## Filtering the Timeline
+
+Use the filter bar to narrow the timeline down to the events you need. Filters stack,
+so you can combine them freely.
+
+| Filter | What it does |
+|--------|--------------|
+| **Service** | Show only events from one service — Compute, Storage, Network, Identity, Image, DNS, Key Manager, and more |
+| **Action** | Show only a specific type of action — create, delete, update, reboot, migrate, snapshot, and so on |
+| **Resource Type** | Show only actions against a specific kind of resource (instance, volume, network, image, etc.) |
+| **Date Range** | Scope the timeline to a start and end date-time |
+| **Search URL / ID** | Text search across request URLs and resource IDs — press **Enter** to apply |
+
+<Tip>
+  To find out who deleted a specific resource, set **Action** to `delete` and paste the
+  resource ID into the **Search URL / ID** box.
+</Tip>
+
+---
+
+## Event Table
+
+Each row in the table is one action. At a glance you can see:
+
+| Column | What it tells you |
+|--------|------------------|
+| **Activity** | The service tag and a short description of the action |
+| **Target** | The resource that was affected (hover for the full ID) |
+| **Status** | Completed, Failed, Running, or Queued |
+| **Initiator** | Where the request came from — Dashboard, CLI, or API |
+| **User** | The person or service account that made the request |
+| **Project** | The project the action was scoped to |
+| **Started** | When the action happened — `4s ago`, `2m ago`, hover for exact time |
+| **Duration** | How long the action took |
+
+---
+
+## Live Mode
+
+A **Live** switch on the right side of the filter bar (paired with a spinning sync
+icon) controls auto-refresh. When it's on, the timeline updates every few seconds and
+new rows briefly highlight green as they arrive. Turn it off when you want a stable
+snapshot, or use the refresh icon next to it for a one-off update.
+
+<Info>
+  Live updates pause automatically when you switch to a different browser tab or open
+  the event details — so the page doesn't waste bandwidth in the background.
+</Info>
+
+---
+
+## Inspecting an Event
+
+Click any row to open the **Detail** panel on the right. It shows the full context for
+that action:
+
+- Activity name, service, and action type
+- User and project (names, with UUIDs visible on hover)
+- **Source IP** the request came from — useful for security reviews
+- Exact timestamp and duration
+- The request URL that was called
+- A unique Request ID you can share with support
+- If the action failed, an **Error Details** section with the exact error message
+
+---
+
+## Exporting Activity
+
+The **Export** button on the filter bar opens a dropdown with four choices, so you can
+pick exactly what you need:
+
+| Scope | Format | When to use |
+|-------|--------|-------------|
+| **Current page** | CSV or JSON | Quick export of just the rows visible right now |
+| **All filtered** | CSV or JSON | Export every event matching the current filters (up to 10,000 rows) |
+
+Use CSV for spreadsheets and ticket attachments, JSON for pipelines and log tools.
+
+<Tip>
+  Narrow the filters first — Service plus Action plus a tight Date Range usually gives
+  you a small, readable export. "All filtered" caps at 10,000 rows, so unfiltered wide
+  time ranges may be truncated.
+</Tip>
+
+---
+
+## Common Tasks
+
+<AccordionGroup>
+  <Accordion title="Find out who deleted a resource" icon="trash">
+    1. Set **Action** to `delete`
+    2. Paste the resource ID into **Search URL / ID** and press Enter
+
+    The matching row shows the user, project, and source IP behind the delete.
+  </Accordion>
+  <Accordion title="Track failed logins" icon="lock">
+    1. Set **Service** to Identity
+    2. Set **Action** to `authenticate`
+    3. Look at the **Warnings (4xx)** and **Failed (5xx)** summary cards for counts
+
+    Open any row for the source IP and the exact error message.
+  </Accordion>
+  <Accordion title="Watch activity in real time" icon="clock">
+    1. Set the **Date Range** to the last hour (or leave it empty)
+    2. Turn on the **Live** toggle
+
+    New rows highlight green as they arrive. Click any row to pause updates and inspect it.
+  </Accordion>
+  <Accordion title="Audit everything a project did today" icon="folder">
+    1. Paste the project ID into **Search URL / ID** and press Enter
+    2. Set **Date Range** to today
+
+    Use **Export → All filtered → CSV** to attach the result to a change record or ticket.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Next Steps
+
+<CardGroup cols={3}>
+  <Card title="Log Analytics" href="/services/monitoring/user-guide/log-analytics" color="#197560">
+    Search infrastructure log streams alongside activity events
+  </Card>
+  <Card title="Metrics & Alerts" href="/services/monitoring/user-guide/metrics-alerts" color="#197560">
+    Track infrastructure health with metric thresholds and notifications
+  </Card>
+  <Card title="Dashboards" href="/services/monitoring/user-guide/dashboards" color="#197560">
+    Visualize infrastructure health in the XIMP overview dashboard
+  </Card>
+</CardGroup>

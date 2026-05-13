@@ -1,0 +1,143 @@
+---
+title: "Object Storage Troubleshooting"
+description: "Resolve common Xloud Object Storage issues — 403 access errors, upload timeouts, versioning failures, and temporary URL authorization problems."
+sidebarTitle: "Troubleshooting"
+---
+
+## Overview
+
+This guide covers user-facing object storage issues. For platform-level issues such as
+storage node failures, ring inconsistencies, or proxy outages, see the
+[Admin Troubleshooting](/services/object-storage/admin-troubleshooting) guide.
+
+---
+
+## Common Issues
+
+<AccordionGroup>
+  <Accordion title="403 Forbidden when accessing a container" icon="lock" defaultOpen>
+    **Cause**: Your authentication token belongs to a project that does not have read
+    or write access to the container.
+
+    **Diagnosis**:
+    ```bash title="Check container ACL"
+    openstack container show <container-name> | grep -i "read\|write"
+    ```
+
+    **Resolution**:
+    - If the read ACL does not include your project or user ID, request the container
+      owner to add your identity to the ACL
+    - If the container is owned by your project and you still get 403, verify your role
+      assignment includes the `object-store:read` capability
+    - For public containers that return 403, verify the ACL contains `.r:*`
+  </Accordion>
+
+  <Accordion title="Object upload times out for large files" icon="clock">
+    **Cause**: The proxy server timeout is shorter than the time needed to upload the
+    file. Files over 5 GB must use the SLO or DLO large object mechanism.
+
+    **Resolution**: Use the large object upload procedure described in the
+    [Large Objects](/services/object-storage/large-objects) guide. Split files into
+    1 GB or smaller segments.
+
+    For files under 5 GB that still time out, check network bandwidth between your
+    client and the proxy endpoint.
+  </Accordion>
+
+  <Accordion title="Versioned object not recoverable" icon="history">
+    **Cause**: The archive container was deleted, or object versioning was disabled before
+    the overwrite occurred.
+
+    **Diagnosis**:
+    ```bash title="List archived versions"
+    openstack object list <archive-container>
+    ```
+
+    **Resolution**:
+    - If the archive container exists, list its contents and locate the version by
+      timestamp prefix
+    - If the archive container is missing, versions stored there are unrecoverable
+    - Versioning must be enabled before overwrites occur — it cannot be applied retroactively
+  </Accordion>
+
+  <Accordion title="Temporary URL returns 401 Unauthorized" icon="link">
+    **Cause**: The temporary URL has expired, or the signing key used to generate it
+    has been changed on the account.
+
+    **Diagnosis**:
+    ```bash title="Check temp URL key"
+    openstack object store account show | grep -i temp
+    ```
+
+    **Resolution**:
+    - If no key is configured, set one first:
+      ```bash title="Set temp URL key"
+      openstack object store account set \
+        --property Temp-URL-Key=<your-secret-key>
+      ```
+    - If the key was recently changed, regenerate the temporary URL using the new key
+    - Set `Temp-URL-Key-2` as a secondary key during rotation to avoid invalidating
+      in-flight URLs immediately
+  </Accordion>
+
+  <Accordion title="Object list returns empty when objects exist" icon="search">
+    **Cause**: Object listing uses a prefix filter that doesn't match, or the container
+    ACL does not include `.rlistings` for public access.
+
+    **Diagnosis**:
+    ```bash title="List without prefix filter"
+    openstack object list <container>
+    ```
+
+    **Resolution**:
+    - Remove any prefix filter to see all objects
+    - For public containers, add `.rlistings` to the read ACL if directory listing should
+      be accessible:
+      ```bash
+      openstack container set \
+        --property "X-Container-Read=.r:*,.rlistings" \
+        <container>
+      ```
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Diagnostic Commands
+
+<CodeGroup>
+```bash title="Check account status and usage"
+openstack object store account show
+```
+```bash title="Show container metadata and ACLs"
+openstack container show <container>
+```
+```bash title="List objects in a container"
+openstack object list <container>
+```
+```bash title="Show object metadata"
+openstack object show <container> <object>
+```
+```bash title="Check temp URL key configuration"
+openstack object store account show | grep -i temp
+```
+</CodeGroup>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Admin Troubleshooting" href="/services/object-storage/admin-troubleshooting" color="#197560">
+    Platform-level issues — 507 errors, ring inconsistencies, proxy latency
+  </Card>
+  <Card title="Access Control" href="/services/object-storage/access-control" color="#197560">
+    Review and update container ACL configuration
+  </Card>
+  <Card title="Versioning" href="/services/object-storage/versioning" color="#197560">
+    Enable versioning to prevent future data loss from overwrites
+  </Card>
+  <Card title="Large Objects" href="/services/object-storage/large-objects" color="#197560">
+    Resolve timeouts with proper large object upload procedures
+  </Card>
+</CardGroup>

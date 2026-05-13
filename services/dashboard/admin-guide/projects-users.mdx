@@ -1,0 +1,77 @@
+---
+title: "Manage Projects & Users"
+description: "Create and manage projects, users, groups, and role assignments through the Xloud Dashboard admin view."
+sidebarTitle: "Projects & Users"
+---
+
+## Overview
+
+Project and user management is under the **Identity** section in the admin sidebar.
+Pages include: **Domains**, **Projects**, **Users**, **User Groups**, **Roles**, and
+**RBAC Management**.
+
+<Note>
+  The Identity section is only visible in the **Admin** view. Regular Console users
+  see a limited Identity section with project and user listing only.
+</Note>
+
+---
+
+## Manage Projects
+
+Navigate to **Identity > Projects** (admin view).
+
+**Create a Project**: Click **Create Project**. The full-page form includes Name,
+Description, and project settings. After creation, assign users and set quotas.
+
+**Project actions**: Edit (first action), Manage Members, Enable/Disable, Modify
+Quotas, Delete (More dropdown).
+
+---
+
+## Manage Users
+
+Navigate to **Identity > Users** (admin view).
+
+**Create a User**: Click **Create User**. The full-page form includes Username,
+Email, Password, Project assignment, Role, and Domain.
+
+**User actions**: Edit (first action), Enable/Disable, Change Password, Delete
+(More dropdown).
+
+---
+
+## User Groups
+
+Navigate to **Identity > User Groups** (admin view).
+
+Create groups, add members, and assign roles at the group level for bulk access
+management.
+
+---
+
+## Domains
+
+Navigate to **Identity > Domains** (admin view).
+
+Domains partition the identity namespace. Most deployments use the `Default` domain.
+Multi-domain configurations are used for federated identity and organizational separation.
+
+---
+
+## Detailed Guides
+
+<CardGroup cols={2}>
+  <Card title="Identity User Guide" href="/services/identity/user-guide" color="#197560">
+    Complete identity management reference
+  </Card>
+  <Card title="Quotas" href="/services/dashboard/admin-guide/quotas" color="#197560">
+    Set per-project resource limits
+  </Card>
+  <Card title="Flavors" href="/services/dashboard/admin-guide/flavors" color="#197560">
+    Control which flavors projects can access
+  </Card>
+  <Card title="Dashboard Admin Guide" href="/services/dashboard/admin-guide" color="#197560">
+    Return to admin guide overview
+  </Card>
+</CardGroup>

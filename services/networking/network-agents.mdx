@@ -1,0 +1,155 @@
+---
+title: "Network Agent Management"
+description: "Monitor and manage Xloud SDN agents across your cluster. Check agent health, enable or disable agents for maintenance, and schedule networks to DHCP agents."
+sidebarTitle: "Network Agents"
+---
+
+import AdminWarning from '/snippets/admin-warning.mdx';
+import CliAuth from '/snippets/cli-auth.mdx';
+
+## Overview
+
+Xloud Networking distributes work across multiple agents running on compute and network
+nodes. Monitoring agent health is a core administrative responsibility — a downed agent
+can silently prevent new port bindings, DHCP assignments, or routing updates. This guide
+covers how to inspect, manage, and recover agents across your cluster.
+
+<AdminWarning />
+
+<Note>
+  **Prerequisites**
+  - Admin credentials sourced from `openrc.sh`
+  - `openstack` CLI installed and configured
+</Note>
+
+---
+
+## Inspect Agent Health
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Navigate to Network Agents" icon="compass">
+        Navigate to **Network > Network Agents** (admin view).
+      </Step>
+      <Step title="Review agent status" icon="activity">
+        Each row represents one agent instance. Review the following columns:
+
+        | Column | Healthy Value | Action If Unhealthy |
+        |--------|--------------|---------------------|
+        | **Alive** | Yes (green) | Restart the service on the affected host |
+        | **Admin State** | Up | Enable via CLI: `openstack network agent set --enable` |
+        | **Binary** | Agent process name | Check system service logs on the host |
+        | **Host** | Fully-qualified hostname | Confirm the host is reachable on the network |
+        | **Last Heartbeat** | Recent timestamp | Investigate if stale by more than 30 seconds |
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    <Steps titleSize="h3">
+      <Step title="Authenticate" icon="key">
+        <CliAuth />
+      </Step>
+      <Step title="List all agents" icon="list">
+        ```bash title="List all networking agents"
+        openstack network agent list
+        ```
+        All agents should show `Alive: True` and `Admin State: UP`.
+      </Step>
+      <Step title="Filter by agent type" icon="filter">
+        ```bash title="List DHCP agents"
+        openstack network agent list --agent-type dhcp
+        ```
+        ```bash title="List L3 agents"
+        openstack network agent list --agent-type l3
+        ```
+        ```bash title="List L2 agents on a specific host"
+        openstack network agent list --host compute-node-1
+        ```
+      </Step>
+      <Step title="Show detailed agent information" icon="info">
+        ```bash title="Show agent configuration details"
+        openstack network agent show <agent-id>
+        ```
+        The `configuration` field shows the agent's live settings including tunnel type
+        and local endpoint IP.
+      </Step>
+    </Steps>
+  </Tab>
+</Tabs>
+
+---
+
+## Enable and Disable Agents
+
+Disable an agent before performing maintenance on its host to prevent the scheduler
+from assigning new work to it. Re-enable after maintenance completes.
+
+<Tabs>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Disable agent for maintenance"
+    openstack network agent set <agent-id> --disable
+    ```
+    ```bash title="Re-enable agent after maintenance"
+    openstack network agent set <agent-id> --enable
+    ```
+  </Tab>
+</Tabs>
+
+<Warning>
+  Disabling an L3 or DHCP agent causes affected routers and subnets to lose that agent's
+  services. Ensure redundant agents are running before disabling any agent. Verify with
+  `openstack network agent list` that at least one healthy agent of the same type remains.
+</Warning>
+
+---
+
+## Agent Type Reference
+
+| Agent Binary | Type | Runs On | Responsibilities |
+|-------------|------|---------|-----------------|
+| `neutron-dhcp-agent` | DHCP | Network nodes | IP assignment, DNS, host routes via DHCP |
+| `neutron-l3-agent` | L3 | Network nodes | Router NAT, floating IPs, VRRP |
+| `neutron-openvswitch-agent` | L2 (SDN) | Compute nodes | SDN-based L2 switching and port bindings |
+| `neutron-linuxbridge-agent` | Linux bridge | Compute nodes | Linux bridge-based L2 switching |
+| `neutron-metadata-agent` | Metadata | Network nodes | Instance metadata proxy |
+| `neutron-metering-agent` | Metering | Network nodes | Traffic metering for billing |
+
+---
+
+## Restart an Agent
+
+When an agent shows `Alive: False`, restart the service on the affected host. Agents
+running inside Docker containers are managed by XDeploy:
+
+```bash title="Restart networking agents via XDeploy"
+xavs-ansible deploy --tags neutron
+```
+
+After restarting, allow up to 30 seconds for the agent to re-register and send a
+heartbeat. Verify recovery:
+
+```bash title="Confirm agent is alive"
+openstack network agent list --long | grep <host-name>
+```
+
+<Check>Agent shows `Alive: True` and a recent heartbeat timestamp.</Check>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="DHCP Configuration" href="/services/networking/dhcp" color="#197560">
+    Schedule networks to DHCP agents and configure HA for high availability
+  </Card>
+  <Card title="L3 Router Configuration" href="/services/networking/l3-routing" color="#197560">
+    Configure HA and distributed routing across L3 agents
+  </Card>
+  <Card title="Service Architecture" href="/services/networking/architecture" color="#197560">
+    Understand the distributed agent model and message bus communication
+  </Card>
+  <Card title="Admin Troubleshooting" href="/services/networking/admin-troubleshooting" color="#197560">
+    Diagnose and resolve agent failures and VXLAN connectivity issues
+  </Card>
+</CardGroup>

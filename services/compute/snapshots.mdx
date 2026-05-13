@@ -1,0 +1,137 @@
+---
+title: "Instance Snapshots"
+description: "Create instance snapshots to capture VM state. Use snapshots as templates to launch new instances or restore configurations."
+sidebarTitle: "Instance Snapshots"
+---
+
+## Overview
+
+An instance snapshot captures the current state of an instance's root disk as an image.
+Snapshots can be used to launch new instances with identical configurations, create
+backups before maintenance operations, or share instance states across projects.
+
+<Note>
+  **Prerequisites**
+  - An instance in `Active`, `Shutoff`, or `Suspended` status
+  - Sufficient image storage quota for the snapshot
+  - Bare metal instances do not support snapshots
+</Note>
+
+---
+
+## Create a Snapshot
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Open the Create Snapshot dialog">
+        Navigate to **Compute > Instances**. Click the **More** dropdown on the
+        instance row, then select **Create Snapshot** under the **Backups & Snapshots**
+        group.
+      </Step>
+      <Step title="Configure the snapshot">
+        | Field | Description |
+        |-------|-------------|
+        | **Instance** | Current instance name (read-only) |
+        | **Instance Snapshot Name** | Name for the snapshot image (required) |
+
+        For boot-from-volume instances, a read-only table of attached volumes is
+        displayed showing which volumes will be included in the snapshot.
+
+        <Note>
+          For boot-from-volume instances, the system checks snapshot quota. If
+          insufficient quota is available, the submit button is disabled.
+        </Note>
+      </Step>
+      <Step title="Create the snapshot">
+        Click **Confirm**. The snapshot appears in **Compute > Instance Snapshots**
+        with status `Saving`, transitioning to `Active` when complete.
+
+        <Check>Snapshot appears in the Instance Snapshots list with status `Active`.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Source credentials"
+    source openrc.sh
+    ```
+
+    ```bash title="Create an instance snapshot"
+    openstack server image create \
+      --name my-snapshot \
+      <INSTANCE_ID>
+    ```
+
+    ```bash title="Check snapshot status"
+    openstack image show my-snapshot -c status
+    ```
+
+    <Check>Snapshot status is `active`.</Check>
+  </Tab>
+</Tabs>
+
+---
+
+## Manage Instance Snapshots
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    Navigate to **Compute > Instance Snapshots** in the sidebar. The list shows:
+
+    | Column | Description |
+    |--------|-------------|
+    | **ID/Name** | Snapshot identifier (clickable to view details) |
+    | **Description** | Optional description |
+    | **Disk Format** | Image format (e.g., QCOW2, RAW) |
+    | **Status** | Active, Saving, or Error |
+    | **Created At** | Creation timestamp |
+
+    **Available actions**:
+
+    | Action | Location | Description |
+    |--------|----------|-------------|
+    | **Edit** | First row action | Edit snapshot name and description |
+    | **Create Instance** | More dropdown | Launch a new instance from this snapshot (must be `Active`) |
+    | **Create Volume** | More dropdown | Create a block storage volume from the snapshot |
+    | **Delete** | More dropdown / batch | Delete the snapshot image |
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    <CodeGroup>
+    ```bash title="List instance snapshots"
+    openstack image list --property image_type=snapshot
+    ```
+    ```bash title="Show snapshot details"
+    openstack image show <SNAPSHOT_ID>
+    ```
+    ```bash title="Launch instance from snapshot"
+    openstack server create \
+      --image <SNAPSHOT_ID> \
+      --flavor <FLAVOR> \
+      --network <NETWORK> \
+      my-restored-instance
+    ```
+    ```bash title="Delete a snapshot"
+    openstack image delete <SNAPSHOT_ID>
+    ```
+    </CodeGroup>
+  </Tab>
+</Tabs>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Launch an Instance" href="/services/compute/launch-instance" color="#197560">
+    Create a new instance from a snapshot
+  </Card>
+  <Card title="Resize an Instance" href="/services/compute/resize-instance" color="#197560">
+    Take a snapshot before resizing as a safety measure
+  </Card>
+  <Card title="Block Storage Snapshots" href="/services/storage/snapshots" color="#197560">
+    Create volume-level snapshots for persistent storage
+  </Card>
+  <Card title="Troubleshooting" href="/services/compute/troubleshooting" color="#197560">
+    Resolve snapshot creation failures
+  </Card>
+</CardGroup>

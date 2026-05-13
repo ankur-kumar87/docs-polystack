@@ -1,0 +1,106 @@
+---
+title: "Load Balancer Admin Guide"
+description: "Administer Xloud Load Balancer infrastructure — configure provider drivers, flavor profiles, project quotas, monitoring, and platform security."
+sidebarTitle: "Admin Guide"
+mode: "wide"
+---
+
+import AdminWarning from '/snippets/admin-warning.mdx';
+
+<p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Overview</p>
+
+This guide covers platform-level administration of the Xloud Load Balancer service.
+Administrators configure provider drivers, define flavor profiles that govern appliance
+capacity, enforce per-project quotas, and monitor the health of the underlying
+infrastructure.
+
+<AdminWarning />
+
+<Tabs>
+  <Tab title="XDeploy" icon="server">
+    The Load Balancer service is configured through the XDeploy Configuration panel:
+
+    <Steps titleSize="h3">
+      <Step title="Open Configuration" icon="settings">
+        Navigate to **XDeploy → Configuration** and select the **Load Balancer** tab.
+      </Step>
+      <Step title="Enable the Load Balancer service" icon="toggle-left">
+        Set **Enable Load Balancer** to **Yes**.
+      </Step>
+      <Step title="Configure service parameters" icon="sliders">
+        Set the following options as needed:
+
+        | Setting | Description |
+        |---------|-------------|
+        | **Controller Interface** | Management network interface for appliance communication |
+        | **Amphora Network** | Network and subnet used by load balancer appliances |
+        | **Flavor Sizing** | Appliance flavor (vCPU, RAM) for capacity tiers |
+        | **Topology** | Single or Active-Standby appliance topology |
+        | **TLS Certificates** | Certificate configuration for HTTPS termination |
+      </Step>
+      <Step title="Save and deploy" icon="rocket">
+        Click **Save Configuration**, then navigate to **XDeploy → Operations** and
+        run a **Deploy** or **Reconfigure** for the Load Balancer service.
+
+        <Check>Load Balancer service is deployed and operational.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    Configure the Load Balancer service by editing `octavia.conf` directly at
+    `/etc/xavs/config/octavia/octavia.conf`. See the individual topic guides below
+    for detailed parameters.
+  </Tab>
+</Tabs>
+
+---
+
+<CardGroup cols={4}>
+  <Card title="Architecture" icon="network" href="/services/load-balancer/lb-architecture" color="#197560">
+    Controller-appliance topology, data plane, and management plane components.
+  </Card>
+  <Card title="Provider Drivers" icon="cpu" href="/services/load-balancer/provider-drivers" color="#197560">
+    View and configure the load balancing provider drivers available in your deployment.
+  </Card>
+  <Card title="Flavor Profiles" icon="sliders" href="/services/load-balancer/flavor-profiles" color="#197560">
+    Create capacity tiers that users select at load balancer provisioning time.
+  </Card>
+  <Card title="Quotas" icon="gauge" href="/services/load-balancer/lb-quotas" color="#197560">
+    Enforce per-project resource limits for load balancers, listeners, pools, and members.
+  </Card>
+  <Card title="Monitoring" icon="activity" href="/services/load-balancer/lb-monitoring" color="#197560">
+    Monitor appliance health, connection statistics, and service component status.
+  </Card>
+  <Card title="Security" icon="shield" href="/services/load-balancer/lb-security" color="#197560">
+    Restrict management plane access, manage TLS certificate lifecycle, and audit quota usage.
+  </Card>
+  <Card title="Troubleshooting" icon="wrench" href="/services/load-balancer/lb-troubleshooting" color="#197560">
+    Resolve appliance provisioning failures, service outages, and high latency issues.
+  </Card>
+</CardGroup>
+
+---
+
+<p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Quick Reference</p>
+
+| Task | Command |
+|------|---------|
+| List all load balancers (admin) | `openstack loadbalancer list --all-projects` |
+| List all appliances | `openstack loadbalancer amphora list` |
+| Show service providers | `openstack loadbalancer provider list` |
+| Show default quotas | `openstack loadbalancer quota defaults show` |
+| Failover an appliance | `openstack loadbalancer amphora failover <id>` |
+| Check service containers | `docker ps --filter name=load-balancer` |
+
+---
+
+<p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Next Steps</p>
+
+<CardGroup cols={4}>
+  <Card title="Load Balancer User Guide" icon="book-open" href="/services/load-balancer/user-guide" color="#197560">
+    Day-to-day operations — creating load balancers, pools, and health monitors.
+  </Card>
+  <Card title="Identity Admin Guide" icon="fingerprint" href="/services/identity/admin-guide" color="#197560">
+    Manage RBAC policies controlling load balancer resource access.
+  </Card>
+</CardGroup>

@@ -1,0 +1,343 @@
+---
+title: "Protection Segments"
+description: "View and manage failover segments in Instance HA. Create segments, add hosts, and configure recovery methods."
+sidebarTitle: "Protection Segments"
+---
+
+## Overview
+
+Protection segments are logical groupings of compute hosts that share a recovery policy.
+When a host in a segment fails, Instance HA evacuates all protected instances to other
+healthy hosts within the same segment. Segments define the fault domain boundary —
+instances can only be recovered to hosts within the same segment.
+
+<Note>
+  **Prerequisites**
+  - An active Xloud account with administrator access
+  - Instance HA service enabled on the platform
+  - Compute hosts available to register in segments
+</Note>
+
+---
+
+## View Segments
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Navigate to Segments">
+        Navigate to
+        **Instance HA > Segments** in the sidebar.
+      </Step>
+      <Step title="Review the segment list">
+        The segment list displays all protection groups on the platform.
+
+        | Column | Description |
+        |--------|-------------|
+        | **Name** | Segment identifier (clickable to view details) |
+        | **UUID** | Unique segment identifier |
+        | **Recovery Method** | How instances are relocated after a host failure |
+        | **Service Type** | The type of service protected (e.g., `compute`) |
+        | **Description** | Optional note about the segment's purpose |
+
+        Use the search/filter bar to narrow the list:
+
+        | Filter | Type |
+        |--------|------|
+        | **Recovery Method** | Text search |
+        | **Service Type** | Text search |
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Source credentials"
+    source openrc.sh
+    ```
+
+    <CodeGroup>
+    ```bash title="List all segments"
+    openstack segment list
+    ```
+    ```bash title="Show segment details"
+    openstack segment show <segment-uuid>
+    ```
+    ```bash title="List hosts in a segment"
+    openstack segment host list <segment-uuid>
+    ```
+    </CodeGroup>
+  </Tab>
+</Tabs>
+
+---
+
+## Create a Segment
+
+The Dashboard provides a two-step wizard for creating a segment and adding hosts
+in a single workflow.
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Open the Create Segment wizard">
+        Navigate to **Instance HA > Segments** and click **Create Segment**.
+        The wizard opens with two steps.
+      </Step>
+      <Step title="Step 1 — Configure the segment">
+        Fill in the segment details:
+
+        | Field | Type | Required | Default | Description |
+        |-------|------|----------|---------|-------------|
+        | **Segment Name** | Text input | Yes | — | Human-readable name for the segment |
+        | **Recovery Method** | Dropdown | Yes | `auto` | Algorithm for selecting evacuation targets |
+        | **Service Type** | Text input | Yes | `compute` | Service type (fixed, not editable) |
+        | **Description** | Text area | No | — | Optional notes about the segment |
+
+        **Recovery Method options**:
+
+        | Value | Description |
+        |-------|-------------|
+        | `auto` | Evacuate to any healthy host in the segment |
+        | `auto_priority` | Evacuate using priority-based host selection |
+        | `reserved_host` | Evacuate only to pre-designated standby hosts |
+        | `rh_priority` | Prefer reserved hosts, fall back to any host |
+
+        Click **Next** to proceed. The segment is created at this step.
+      </Step>
+      <Step title="Step 2 — Add hosts to the segment">
+        A table of available compute hosts is displayed. Select one or more hosts
+        to add to the segment.
+
+        The host selection table shows:
+
+        | Column | Description | Editable |
+        |--------|-------------|----------|
+        | **Name** | Compute host name | No |
+        | **Zone** | Availability zone of the host | No |
+        | **Updated** | Last update timestamp | No |
+        | **Reserved** | Designate as standby host for failover | Yes (toggle switch) |
+        | **Type** | Host type identifier | Yes (text input) |
+        | **Control Attributes** | Monitoring attributes (e.g., SSH, IPMI) | Yes (text input) |
+        | **On Maintenance** | Whether the host is in maintenance mode | Yes (toggle switch) |
+
+        <Note>
+          Only compute hosts that are not already assigned to another segment
+          appear in the selection table. Each host can belong to only one segment.
+        </Note>
+
+        <Tip>
+          Set **Reserved** to `Yes` for hosts that should remain idle as standby
+          capacity. Reserved hosts are used by the `reserved_host` and `rh_priority`
+          recovery methods.
+        </Tip>
+
+        Select your hosts and click **Confirm** to complete the wizard.
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    <Steps titleSize="h3">
+      <Step title="Create the segment">
+        ```bash title="Create a failover segment"
+        openstack segment create \
+          --recovery-method auto \
+          --service-type compute \
+          --description "Production compute segment" \
+          prod-segment
+        ```
+      </Step>
+      <Step title="Add hosts to the segment">
+        ```bash title="Add a compute host"
+        openstack segment host create <segment-uuid> \
+          --name <compute-hostname> \
+          --type compute \
+          --control-attributes "SSH" \
+          --reserved false \
+          --on-maintenance false
+        ```
+
+        Repeat for each host in the segment.
+      </Step>
+    </Steps>
+  </Tab>
+</Tabs>
+
+---
+
+## View Segment Details
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    Click a segment name in the list to open the detail page. Two tabs are available:
+
+    **Detail tab** — Segment configuration:
+
+    | Field | Description |
+    |-------|-------------|
+    | **Recovery Method** | Current recovery algorithm |
+    | **Service Type** | Protected service type |
+    | **Enabled** | Whether the segment is active (Yes/No) |
+    | **Created At** | Creation timestamp |
+    | **Updated At** | Last modification timestamp |
+
+    **Hosts tab** — All hosts registered in this segment:
+
+    | Column | Description |
+    |--------|-------------|
+    | **Name** | Host name (clickable to view host details) |
+    | **UUID** | Unique host identifier |
+    | **Reserved** | Whether the host is a standby node (Yes/No) |
+    | **Type** | Host type identifier |
+    | **Control Attribute** | Monitoring attributes |
+    | **On Maintenance** | Whether the host is in maintenance mode (Yes/No) |
+    | **Failover Segment** | Link back to the parent segment |
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    <CodeGroup>
+    ```bash title="Show segment details"
+    openstack segment show <segment-uuid>
+    ```
+    ```bash title="List hosts in the segment"
+    openstack segment host list <segment-uuid>
+    ```
+    ```bash title="Show a specific host"
+    openstack segment host show <segment-uuid> <host-uuid>
+    ```
+    </CodeGroup>
+  </Tab>
+</Tabs>
+
+---
+
+## Edit a Segment
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Open the edit dialog">
+        Navigate to **Instance HA > Segments**. Click the **Update** action
+        (the first action button) on the segment row.
+      </Step>
+      <Step title="Update segment fields">
+        You can update:
+
+        | Field | Editable |
+        |-------|----------|
+        | **Segment Name** | Yes |
+        | **Recovery Method** | Yes (same 4 options as create) |
+        | **Description** | Yes |
+      </Step>
+      <Step title="Save changes">
+        Click **Confirm** to save the updated segment.
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Update segment recovery method"
+    openstack segment update <segment-uuid> \
+      --recovery-method reserved_host
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Add a Host to an Existing Segment
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Open the Add Host dialog">
+        Navigate to **Instance HA > Segments**. Click the **More** dropdown on a
+        segment row and select **Add Host**.
+      </Step>
+      <Step title="Configure the host">
+        | Field | Type | Required | Default | Description |
+        |-------|------|----------|---------|-------------|
+        | **Segment Name** | Text (disabled) | — | Current segment | Read-only reference |
+        | **Host Name** | Dropdown | Yes | — | Select from available compute hosts |
+        | **Reserved** | Toggle switch | No | Off | Standby host designation |
+        | **Type** | Text input | Yes | — | Host type identifier |
+        | **Control Attributes** | Text input | Yes | — | Monitoring attributes |
+        | **On Maintenance** | Toggle switch | No | Off | Maintenance mode flag |
+
+        <Note>
+          Only compute hosts not already assigned to any segment appear in the
+          Host Name dropdown.
+        </Note>
+      </Step>
+      <Step title="Add the host">
+        Click **Confirm**. The host appears in the segment's Hosts tab.
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Add host to segment"
+    openstack segment host create <segment-uuid> \
+      --name <compute-hostname> \
+      --type compute \
+      --control-attributes "SSH" \
+      --reserved false \
+      --on-maintenance false
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Delete a Segment
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    Navigate to **Instance HA > Segments**. Click the **More** dropdown on a
+    segment row and select **Delete**, or select multiple segments using
+    checkboxes and click **Delete** in the batch actions bar.
+
+    Confirm the deletion in the dialog.
+
+    <Danger>
+      Deleting a segment removes all host registrations within it. Instances
+      on those hosts will no longer be automatically recovered on host failure.
+    </Danger>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Delete a segment"
+    openstack segment delete <segment-uuid>
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Recovery Method Reference
+
+| Method | Evacuation Target | Capacity Guarantee | Use Case |
+|--------|-------------------|-------------------|----------|
+| `auto` | Any available host in the segment | None — depends on current load | General-purpose workloads |
+| `auto_priority` | Priority-based host selection | None — best-effort prioritization | Workloads with preferred targets |
+| `reserved_host` | Reserved standby hosts only | Guaranteed — reserved hosts are idle | SLA-critical workloads |
+| `rh_priority` | Reserved hosts first; any host if full | Best-effort with preference | Mixed critical and general workloads |
+
+<Tip>
+  For most deployments, `auto` is the recommended starting point. Use
+  `reserved_host` or `rh_priority` only when you have dedicated standby
+  capacity and strict recovery time requirements.
+</Tip>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Recovery Workflows" href="/services/instance-ha/user-guide/recovery-workflows" color="#197560">
+    Understand how the recovery engine executes failover and tracks progress
+  </Card>
+  <Card title="Monitoring Status" href="/services/instance-ha/user-guide/monitoring-status" color="#197560">
+    Track live and historical recovery events in the Dashboard
+  </Card>
+  <Card title="How It Works" href="/services/instance-ha/user-guide/how-it-works" color="#197560">
+    Understand the end-to-end detection and recovery architecture
+  </Card>
+  <Card title="Instance HA Admin Guide" href="/services/instance-ha/admin-guide" color="#197560">
+    Configure recovery policies, monitors, and engine settings
+  </Card>
+</CardGroup>

@@ -1,0 +1,182 @@
+---
+title: "Provider Networks"
+description: "Configure VLAN, flat, and VXLAN provider networks in Xloud. Map physical network interfaces to tenant segmentation types for data center integration."
+sidebarTitle: "Provider Networks"
+---
+
+import AdminWarning from '/snippets/admin-warning.mdx';
+import CliAuth from '/snippets/cli-auth.mdx';
+
+## Overview
+
+Provider networks connect tenant virtual networks directly to the physical underlay.
+Administrators define the physical interface mapping and segmentation type during
+deployment or reconfiguration. Tenants cannot modify provider network attributes —
+they select from the options an administrator has made available.
+
+<AdminWarning />
+
+<Note>
+  **Prerequisites**
+  - Admin credentials sourced from `openrc.sh`
+  - XDeploy access for cluster-level interface configuration
+  - Physical network interfaces identified and mapped in XDeploy
+</Note>
+
+---
+
+## Network Type Comparison
+
+| Type | Segmentation | Scale | Use Case |
+|------|-------------|-------|---------|
+| **Flat** | None | 1 per physical interface | Untagged management or public networks |
+| **VLAN** | 802.1Q VLAN ID (1–4094) | ~4000 per physical interface | Traditional data center integration |
+| **VXLAN** | VNI (1–16 million) | Virtually unlimited | Large-scale multi-tenant clouds |
+
+---
+
+## Configure Physical Interface Mappings
+
+Provider network parameters are set during initial cluster deployment or reconfiguration
+via XDeploy. These settings apply to all cluster nodes.
+
+<Tabs>
+  <Tab title="XDeploy" icon="rocket">
+    <Steps titleSize="h3">
+      <Step title="Open Networking configuration" icon="compass">
+        In XDeploy, navigate to **Configuration → Networking**.
+      </Step>
+      <Step title="Configure physical interface mapping" icon="settings">
+        Set the interface-to-bridge mapping for each network type:
+
+        | Parameter | Example Value | Description |
+        |-----------|--------------|-------------|
+        | `neutron_bridge_mappings` | `physnet1:br-ex` | Maps a physical network name to a bridge |
+        | `neutron_flat_networks` | `physnet1` | Networks carrying untagged (flat) traffic |
+        | `neutron_network_vlan_ranges` | `physnet1:100:200` | VLAN ID range allocated to tenants |
+        | `neutron_tunnel_types` | `vxlan` | Overlay type for tenant networks |
+      </Step>
+      <Step title="Apply the configuration" icon="play">
+        Click **Save and Deploy**. XDeploy applies the settings to all cluster nodes
+        via xavs-ansible.
+
+        <Warning>
+          Modifying bridge mappings on a running cluster briefly interrupts networking
+          on affected nodes. Schedule this change during a maintenance window and notify
+          tenants in advance.
+        </Warning>
+      </Step>
+    </Steps>
+  </Tab>
+</Tabs>
+
+---
+
+## Create Provider Networks
+
+<Tabs>
+  <Tab title="CLI" icon="terminal">
+    <Steps titleSize="h3">
+      <Step title="Authenticate as admin" icon="key">
+        <CliAuth />
+      </Step>
+      <Step title="Create a VLAN provider network" icon="layers">
+        ```bash title="Create VLAN provider network"
+        openstack network create provider-vlan100 \
+          --provider-network-type vlan \
+          --provider-physical-network physnet1 \
+          --provider-segment 100 \
+          --share
+        ```
+
+        | Option | Description |
+        |--------|-------------|
+        | `--provider-network-type` | `vlan`, `flat`, or `vxlan` |
+        | `--provider-physical-network` | Name matching `neutron_bridge_mappings` key |
+        | `--provider-segment` | VLAN ID (VLAN type) or VNI (VXLAN type) |
+        | `--share` | Makes the network accessible to all projects |
+      </Step>
+      <Step title="Create a flat provider network" icon="minus">
+        ```bash title="Create flat provider network"
+        openstack network create external-flat \
+          --provider-network-type flat \
+          --provider-physical-network physnet1 \
+          --external \
+          --share
+        ```
+        Use `--external` to mark the network as a valid target for router external gateways.
+      </Step>
+      <Step title="Create a VXLAN network" icon="layers">
+        ```bash title="Create VXLAN tenant network"
+        openstack network create overlay-vxlan \
+          --provider-network-type vxlan \
+          --provider-segment 10001
+        ```
+        VXLAN networks use a VNI as the segment identifier. Omit `--share` to scope
+        the network to a specific project.
+      </Step>
+    </Steps>
+  </Tab>
+</Tabs>
+
+---
+
+## Provider Network Administration
+
+### List Provider Networks
+
+```bash title="List all networks with provider attributes"
+openstack network list --long
+```
+
+### Update a Provider Network
+
+```bash title="Update provider network description"
+openstack network set provider-vlan100 --description "VLAN 100 for production tier"
+```
+
+### Delete a Provider Network
+
+```bash title="Delete provider network"
+openstack network delete provider-vlan100
+```
+
+<Warning>
+  Deleting a provider network disconnects all instances attached to it. Confirm that
+  no instances, routers, or floating IPs are using the network before deleting.
+</Warning>
+
+---
+
+## Segmentation Reference
+
+| Network Type | Segment Identifier | Range | Notes |
+|--------------|-------------------|-------|-------|
+| VLAN | VLAN ID | 1–4094 | Requires upstream switch trunk configuration |
+| VXLAN | VNI | 1–16,777,215 | Software overlay — no switch config required |
+| Flat | None | N/A — 1 per physical interface | Untagged — use only for management networks |
+
+<Info>
+  VXLAN tenant networks are the default type in Xloud deployments. They require no
+  switch configuration and scale to tens of thousands of isolated tenant networks.
+  VLAN is recommended when direct integration with physical data center switching is required.
+</Info>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Network Agent Management" href="/services/networking/network-agents" color="#197560">
+    Verify L2 agents are healthy on all compute nodes after changing bridge mappings
+  </Card>
+  <Card title="L3 Router Configuration" href="/services/networking/l3-routing" color="#197560">
+    Configure routers to use the provider networks you just created as external gateways
+  </Card>
+  <Card title="Service Architecture" href="/services/networking/architecture" color="#197560">
+    Understand how L2 agents program provider network attachments
+  </Card>
+  <Card title="Admin Troubleshooting" href="/services/networking/admin-troubleshooting" color="#197560">
+    Resolve VXLAN tunnel and provider network connectivity issues
+  </Card>
+</CardGroup>

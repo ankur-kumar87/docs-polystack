@@ -1,0 +1,217 @@
+---
+title: "Volume Migration"
+description: "Migrate block storage volumes between backends for capacity rebalancing, hardware retirement, or tier changes."
+sidebarTitle: "Volume Migration"
+---
+
+import AdminWarning from '/snippets/admin-warning.mdx';
+import CliAuth from '/snippets/cli-auth.mdx';
+
+## Overview
+
+Volume migration copies all volume data to a different backend while preserving volume identity, metadata, and attachment state. Migration is used to rebalance capacity across backends, retire storage hardware, or move volumes to a higher or lower performance tier. Xloud Block Storage supports two migration modes: backend-assisted migration (when backends share a storage layer) and host-copy migration (a full data copy between independent backends).
+
+<AdminWarning />
+
+<Note>
+  **Prerequisites**
+  - Administrator credentials with the `admin` role
+  - The destination backend must be registered and have sufficient free capacity
+  - Identify the destination host with `openstack volume service list`
+</Note>
+
+---
+
+## Migration Modes
+
+| Mode | When Used | Duration | Impact |
+|------|-----------|----------|--------|
+| **Backend-assisted** | Source and destination share the same storage cluster | Seconds to minutes (metadata only) | Minimal — no data copy |
+| **Host-copy** | Independent backends (different clusters) | Minutes to hours depending on volume size | I/O overhead during copy |
+
+<Warning>
+  Volume migration copies all data to the destination backend. Duration depends on
+  volume size and available network/storage bandwidth. Schedule large migrations during
+  off-peak hours to minimize impact on running workloads.
+</Warning>
+
+---
+
+## Migrate a Volume
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Locate the volume" icon="search">
+        Navigate to
+        **Storage > Volumes** (admin view). Use the search or filter to find the target volume.
+      </Step>
+      <Step title="Initiate migration" icon="move">
+        Click the **More** dropdown and select **Migrate**. Select the destination backend from the
+        **Destination Host** dropdown.
+
+        Enable **Force Host Copy** only if the backends do not share a storage layer
+        and backend-assisted migration is not possible.
+
+        Click **Confirm**.
+      </Step>
+      <Step title="Monitor progress" icon="activity">
+        The volume status changes to `migrating`. Refresh the volume list periodically
+        to track progress. On completion, status returns to `available` and the
+        **Hosted At** field updates to the destination backend.
+
+        <Check>Migration complete — volume is now on the destination backend.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    <Steps titleSize="h3">
+      <Step title="Authenticate" icon="key">
+        <CliAuth />
+      </Step>
+      <Step title="List available destination backends" icon="list">
+        ```bash title="List volume service backends"
+        openstack volume service list
+        ```
+
+        Note the host name in the format `<service>@<backend-name>#<pool>` from the
+        `Host` column — use this value for the `--host` parameter.
+      </Step>
+      <Step title="Check source volume location" icon="search">
+        ```bash title="Show current backend for volume"
+        openstack volume show <volume-id> -c os-vol-host-attr:host
+        ```
+      </Step>
+      <Step title="Initiate migration" icon="move">
+        ```bash title="Migrate volume to new backend"
+        openstack volume migrate \
+          --host <destination-host> \
+          <volume-id>
+        ```
+
+        To force a host-level data copy (bypassing backend-assisted migration):
+        ```bash title="Force host-copy migration"
+        openstack volume migrate \
+          --host <destination-host> \
+          --force-host-copy \
+          <volume-id>
+        ```
+      </Step>
+      <Step title="Monitor migration status" icon="activity">
+        ```bash title="Check migration progress"
+        openstack volume show <volume-id> -c migration_status -c status
+        ```
+
+        Expected final values: `migration_status = success`, `status = available`
+
+        <Check>Volume migrated successfully to the new backend.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+</Tabs>
+
+---
+
+## Migrate Multiple Volumes (Backend Retirement)
+
+To retire a backend, migrate all volumes off it before decommissioning:
+
+<Steps titleSize="h3">
+  <Step title="List volumes on the backend to retire" icon="list">
+    ```bash title="List volumes on a specific backend"
+    openstack volume list --all-projects \
+      --host <backend-host-to-retire>
+    ```
+  </Step>
+  <Step title="Disable the backend service" icon="ban">
+    Prevent new volumes from being scheduled to the retiring backend:
+    ```bash title="Disable backend service"
+    openstack volume service set \
+      --disable \
+      --disable-reason "Scheduled for retirement" \
+      <backend-host> \
+      cinder-volume
+    ```
+  </Step>
+  <Step title="Migrate all volumes" icon="move">
+    Run migration for each volume listed in Step 1:
+    ```bash title="Migrate each volume"
+    openstack volume migrate --host <destination-host> <volume-id>
+    ```
+
+    For large numbers of volumes, use a loop:
+    ```bash title="Batch migration"
+    for vid in $(openstack volume list --all-projects --host <old-host> -f value -c ID); do
+      openstack volume migrate --host <new-host> "$vid"
+    done
+    ```
+  </Step>
+  <Step title="Verify all migrations complete" icon="circle-check">
+    ```bash title="Check for remaining volumes on old backend"
+    openstack volume list --all-projects --host <old-host>
+    ```
+
+    <Check>No volumes remaining on the retired backend — safe to decommission.</Check>
+  </Step>
+</Steps>
+
+---
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Migration stuck in 'migrating' status" icon="clock">
+    **Symptom**: Volume status remains `migrating` for an extended period with no progress.
+
+    **Resolution**:
+    ```bash title="Check migration status and logs"
+    openstack volume show <volume-id> -c migration_status -c status
+    ```
+
+    Check volume service logs on the source and destination nodes via XDeploy for
+    migration-related errors.
+
+    If the migration is permanently stuck, reset the volume state:
+    ```bash title="Reset volume state (admin only)"
+    openstack volume set --state available <volume-id>
+    ```
+
+    <Warning>
+      Resetting the volume state does not undo a partial migration. Verify data integrity
+      on both the source and destination backends before resetting. In some cases,
+      partial data may exist on both backends.
+    </Warning>
+  </Accordion>
+
+  <Accordion title="Migration fails with 'destination backend has insufficient capacity'" icon="database">
+    **Cause**: The destination backend does not have enough free capacity to accommodate
+    the volume.
+
+    **Resolution**:
+    ```bash title="Check destination backend capacity"
+    openstack volume backend pool list --long
+    ```
+
+    Select a different destination with sufficient free capacity, or free up space on
+    the intended destination backend.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Storage Backends" href="/services/storage/storage-backends" color="#197560">
+    Configure and manage backend drivers and capacity
+  </Card>
+  <Card title="Storage Tiers" href="/services/storage/storage-tiers" color="#197560">
+    Configure multi-tier storage to give users tier selection at volume creation
+  </Card>
+  <Card title="Quotas" href="/services/storage/quotas" color="#197560">
+    Monitor and manage storage quota allocation across projects
+  </Card>
+  <Card title="Admin Guide" href="/services/storage/admin-guide" color="#197560">
+    Return to the Block Storage administration overview
+  </Card>
+</CardGroup>

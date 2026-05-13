@@ -1,0 +1,180 @@
+---
+title: "Replication Configuration"
+description: "Register primary and DR sites with the XDR controller, configure replication links, bandwidth policies, and verify cross-site connectivity."
+sidebarTitle: "Replication Configuration"
+---
+
+## Overview
+
+Before creating protection plans, register both the primary and DR sites with the
+XDR controller and configure the replication link between them. This establishes
+the trust relationship and network path that all replication traffic flows through.
+
+<Note>
+  **Prerequisites**
+  - XDR controller deployed and accessible from both sites
+  - Network connectivity open between primary and DR sites on TCP 7000–7002
+  - Administrator credentials on both sites
+  - XDR agent deployed on both sites via XDeploy
+</Note>
+
+---
+
+## Site Registration
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Register the primary site" icon="server">
+        Log in to **XDeploy** (`https://connect.<your-domain>`) and navigate to
+        **Disaster Recovery → Sites → Register Site**:
+
+        | Field | Description |
+        |-------|-------------|
+        | **Site Name** | Unique identifier (e.g., `primary-dc1`) |
+        | **Role** | `Primary` |
+        | **API Endpoint** | XDR agent API URL for this site (e.g., `https://10.10.0.1:7002`) |
+        | **Auth Token** | Site authentication token generated during XDR agent deployment |
+        | **Network CIDR** | IP range for this site's compute and storage network |
+        | **Description** | Optional free-text label (e.g., datacenter name, location) |
+      </Step>
+      <Step title="Register the DR site" icon="shield">
+        Repeat the registration process for the DR site, selecting role `DR`.
+        Provide the DR site's XDR agent endpoint and its authentication token.
+
+        <Check>Both sites appear in the Sites list with status `REGISTERED`.</Check>
+      </Step>
+      <Step title="Create replication link" icon="link">
+        Navigate to **Disaster Recovery → Sites → Replication Links → Create Link**
+        and select the primary site as source and DR site as destination.
+      </Step>
+      <Step title="Configure link settings" icon="settings">
+        | Setting | Recommendation |
+        |---------|---------------|
+        | **Compression** | Enable for WAN links — reduces bandwidth 30–60% for typical storage data |
+        | **Encryption** | Always enable — replication traffic crosses network boundaries |
+        | **Bandwidth Limit** | Set to 80% of available link capacity to avoid saturation |
+        | **MTU** | Match the replication network MTU to avoid fragmentation |
+        | **QoS Priority** | Set to high if sharing the link with other traffic types |
+      </Step>
+      <Step title="Verify connectivity" icon="circle-check">
+        Click **Test Connectivity** to verify the link is functional in both directions.
+
+        <Check>Connectivity test returns `CONNECTED` with round-trip latency displayed.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    <Info>
+      XDR disaster recovery operations are managed exclusively through the XDR Dashboard.
+      CLI access is not available for DR operations. Use the **Dashboard** tab above to
+      register sites and configure replication links.
+    </Info>
+  </Tab>
+</Tabs>
+
+---
+
+## Bandwidth Management
+
+Replication bandwidth directly affects how quickly the initial sync completes and
+how tightly the replication lag tracks the configured RPO. Configure bandwidth
+policies to balance replication performance against production workload impact.
+
+<AccordionGroup>
+  <Accordion title="Bandwidth limit policies" icon="gauge">
+    XDR supports per-link and per-plan bandwidth limits. Per-link limits cap total
+    replication throughput on the network connection; per-plan limits allocate
+    bandwidth among multiple plans sharing the same link.
+
+    Navigate to **Disaster Recovery → Sites → Replication Links → [Link] → Bandwidth**:
+
+    | Policy | Description |
+    |--------|-------------|
+    | **Hard cap** | Never exceed this throughput regardless of available capacity |
+    | **Peak hours throttle** | Reduce throughput during business hours (cron schedule) |
+    | **Burst allowance** | Allow brief bursts above the cap to clear backlog |
+
+    Configure these policies directly in the bandwidth settings panel for each replication link.
+  </Accordion>
+  <Accordion title="Initial sync sizing" icon="hard-drive">
+    The initial sync transfers all protected data to the DR site. Estimate
+    completion time before enabling a plan:
+
+    | Data Volume | 100 Mbps Link | 1 Gbps Link |
+    |-------------|--------------|-------------|
+    | 1 TB | ~22 hours | ~2.2 hours |
+    | 5 TB | ~4.5 days | ~11 hours |
+    | 10 TB | ~9 days | ~22 hours |
+
+    <Tip>
+      Schedule initial sync during off-peak hours or temporarily raise the
+      bandwidth cap to accelerate it. Once initial sync completes, only
+      incremental changes are replicated — bandwidth consumption drops
+      significantly.
+    </Tip>
+  </Accordion>
+  <Accordion title="WAN link health" icon="activity">
+    Monitor link statistics to detect degradation before it impacts RPO. Navigate to
+    **Disaster Recovery → Sites → Replication Links → [Link]** to view throughput
+    and error statistics over time.
+
+    Key indicators of a degraded link:
+    - Throughput consistently below configured limit without backlog
+    - Retransmit rate above 1% (network packet loss)
+    - Round-trip latency increasing over time (congestion)
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Replication Modes
+
+| Mode | RPO | Overhead | Use Case |
+|------|-----|----------|----------|
+| **Asynchronous** | Seconds to minutes | Low — primary writes complete without waiting for DR acknowledgment | Sites separated by >10ms RTT; most workloads |
+| **Synchronous** | Zero (RPO = 0) | High — primary write latency increases by replication RTT | Databases and financial systems where zero data loss is required; sites under 5ms RTT |
+
+<Warning>
+  Synchronous replication adds write latency equal to the round-trip time between
+  sites on every write operation. For sites separated by more than 5ms RTT,
+  synchronous replication will noticeably degrade application performance.
+  Measure your inter-site latency before enabling synchronous mode.
+</Warning>
+
+---
+
+## Site Token Management
+
+XDR agents authenticate between sites using site-specific tokens, not user credentials.
+
+Manage site tokens from **Disaster Recovery → Sites → [Site] → Token Management**:
+
+- **View token status**: The token expiry date and status are displayed for each registered site
+- **Rotate token**: Click **Rotate Token** to generate a new authentication token for the selected site
+- **Update peer**: After rotating a token, update the peer site with the new token in the peer's site configuration panel
+
+<Note>
+  Rotate site tokens at least annually or immediately if a token is suspected
+  compromised. Token rotation does not interrupt active replication — the old
+  token remains valid for 15 minutes after rotation to allow the update to propagate.
+</Note>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Recovery Plans" href="/services/disaster-recovery/admin-guide/recovery-plans" color="#197560">
+    Create ordered recovery groups and automation hooks
+  </Card>
+  <Card title="DR Automation" href="/services/disaster-recovery/admin-guide/dr-automation" color="#197560">
+    Configure automatic failover triggers and runbook scripts
+  </Card>
+  <Card title="Monitoring" href="/services/disaster-recovery/admin-guide/monitoring" color="#197560">
+    Alert on replication lag and link throughput degradation
+  </Card>
+  <Card title="Troubleshooting" href="/services/disaster-recovery/admin-guide/troubleshooting" color="#197560">
+    Diagnose initial sync failures and connectivity issues
+  </Card>
+</CardGroup>

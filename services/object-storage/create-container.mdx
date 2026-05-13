@@ -1,0 +1,128 @@
+---
+title: "Create an Object Storage Container"
+description: "Provision object storage containers in Xloud Object Storage using the Dashboard or CLI. Configure container name, access policy, and storage policy."
+sidebarTitle: "Create a Container"
+---
+
+import PrerequisitesAuth from '/snippets/prerequisites-auth.mdx';
+
+## Overview
+
+Containers (buckets) are the top-level namespaces within your object storage account.
+All objects must reside in a container. Container names must be unique within your
+account, and the storage policy assigned at creation time cannot be changed afterward.
+
+<PrerequisitesAuth />
+
+---
+
+## Create a Container
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Navigate to Object Storage">
+        Navigate to
+        **Storage > Object Storage**.
+
+        Click **Create Container** to open the creation dialog.
+      </Step>
+      <Step title="Configure container settings">
+        | Field | Description |
+        |-------|-------------|
+        | **Container Name** | Unique name within your account (e.g., `app-backups`) |
+        | **Container Access** | `Private` (default) or `Public` — public enables anonymous read |
+        | **Storage Policy** | Select the replication policy appropriate for the data tier |
+
+        <Warning>
+          Setting container access to **Public** makes all objects in the container
+          accessible to anyone with the storage endpoint URL — including external parties.
+          Use public access only for intentionally public assets such as static web content.
+        </Warning>
+      </Step>
+      <Step title="Create the container">
+        Click **Confirm**. The container appears in the list immediately.
+
+        <Check>Container appears in the Containers list and is ready for object uploads.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    <Steps titleSize="h3">
+      <Step title="Authenticate">
+        ```bash title="Load credentials"
+        source openrc.sh
+        ```
+      </Step>
+      <Step title="Create the container">
+        ```bash title="Create a private container"
+        openstack container create app-backups
+        ```
+
+        ```bash title="Create with a specific storage policy"
+        openstack container create \
+          --storage-policy <policy-name> \
+          app-backups
+        ```
+      </Step>
+      <Step title="Verify creation">
+        ```bash title="Show container metadata"
+        openstack container show app-backups
+        ```
+
+        <Check>Container shows `object_count: 0` and no error in metadata.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+</Tabs>
+
+---
+
+## Container Naming Rules
+
+| Rule | Detail |
+|------|--------|
+| **Uniqueness** | Must be unique within your account (project) |
+| **Length** | 1–256 characters |
+| **Characters** | Any UTF-8 character except `/` |
+| **Case** | Case-sensitive — `app-backups` and `App-Backups` are different containers |
+
+---
+
+## List and Manage Containers
+
+<CodeGroup>
+```bash title="List containers in your account"
+openstack container list
+```
+```bash title="Show container metadata"
+openstack container show app-backups
+```
+```bash title="Delete an empty container"
+openstack container delete app-backups
+```
+</CodeGroup>
+
+<Danger>
+  Containers with objects cannot be deleted until all objects are removed. Use
+  `openstack object list app-backups` to view contents before deletion.
+</Danger>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Upload Objects" href="/services/object-storage/upload-objects" color="#197560">
+    Upload files and manage objects within your container
+  </Card>
+  <Card title="Access Control" href="/services/object-storage/access-control" color="#197560">
+    Configure read and write ACLs for container access
+  </Card>
+  <Card title="Versioning" href="/services/object-storage/versioning" color="#197560">
+    Enable version retention on your container
+  </Card>
+  <Card title="Storage Policies" href="/services/object-storage/storage-policies" color="#197560">
+    Learn about storage policy options available on your platform
+  </Card>
+</CardGroup>

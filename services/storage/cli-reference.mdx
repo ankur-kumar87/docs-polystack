@@ -1,0 +1,208 @@
+---
+title: "Block Storage CLI Reference"
+description: "Complete openstack volume CLI commands for managing Xloud Block Storage — create, attach, extend, snapshot, backup, and manage volume types."
+sidebarTitle: "CLI Reference"
+---
+
+## Overview
+
+The `openstack volume` command group manages the full lifecycle of block storage volumes — creation, attachment, extension, snapshots, backups, and type management.
+
+<Note>
+  **Prerequisites**
+  - CLI installed and authenticated — see [CLI Setup](/cli-setup)
+  - Python cinderclient installed: `pip install python-cinderclient`
+</Note>
+
+---
+
+## Volumes
+
+### List and Inspect
+
+<CodeGroup>
+```bash title="List volumes"
+openstack volume list
+openstack volume list --status available
+openstack volume list --all-projects
+```
+
+```bash title="Show volume details"
+openstack volume show <volume>
+```
+</CodeGroup>
+
+### Create and Delete
+
+<CodeGroup>
+```bash title="Create empty volume"
+openstack volume create --size 50 my-volume
+```
+
+```bash title="Create from image"
+openstack volume create \
+  --size 50 \
+  --image Ubuntu-22.04 \
+  boot-volume
+```
+
+```bash title="Create from snapshot"
+openstack volume create \
+  --size 50 \
+  --snapshot <snapshot-id> \
+  restored-volume
+```
+
+```bash title="Create with volume type"
+openstack volume create \
+  --size 100 \
+  --type ssd \
+  fast-volume
+```
+
+```bash title="Delete volume"
+openstack volume delete <volume>
+```
+</CodeGroup>
+
+### Attach and Detach
+
+<CodeGroup>
+```bash title="Attach volume to instance"
+openstack server add volume <server> <volume>
+```
+
+```bash title="Attach at specific device path"
+openstack server add volume --device /dev/vdb <server> <volume>
+```
+
+```bash title="Detach volume"
+openstack server remove volume <server> <volume>
+```
+</CodeGroup>
+
+### Extend
+
+```bash title="Extend volume size"
+openstack volume set --size 100 <volume>
+```
+
+---
+
+## Snapshots
+
+<CodeGroup>
+```bash title="List snapshots"
+openstack volume snapshot list
+```
+
+```bash title="Create snapshot"
+openstack volume snapshot create --volume <volume> my-snapshot
+```
+
+```bash title="Show snapshot"
+openstack volume snapshot show <snapshot>
+```
+
+```bash title="Delete snapshot"
+openstack volume snapshot delete <snapshot>
+```
+</CodeGroup>
+
+---
+
+## Backups
+
+<CodeGroup>
+```bash title="List backups"
+openstack volume backup list
+```
+
+```bash title="Create backup"
+openstack volume backup create --name my-backup <volume>
+```
+
+```bash title="Create incremental backup"
+openstack volume backup create --incremental --name incr-backup <volume>
+```
+
+```bash title="Restore backup"
+openstack volume backup restore <backup> <volume>
+```
+
+```bash title="Delete backup"
+openstack volume backup delete <backup>
+```
+</CodeGroup>
+
+---
+
+## Volume Types (Admin)
+
+<CodeGroup>
+```bash title="List volume types"
+openstack volume type list
+```
+
+```bash title="Create volume type"
+openstack volume type create \
+  --property volume_backend_name=ceph \
+  ssd
+```
+
+```bash title="Show volume type"
+openstack volume type show ssd
+```
+
+```bash title="Set default volume type"
+openstack volume type set --default ssd
+```
+
+```bash title="Delete volume type"
+openstack volume type delete ssd
+```
+</CodeGroup>
+
+---
+
+## Transfers (Cross-Project)
+
+<CodeGroup>
+```bash title="Create transfer request"
+openstack volume transfer request create --name my-transfer <volume>
+```
+
+```bash title="Accept transfer (recipient)"
+openstack volume transfer request accept \
+  --auth-key <auth-key> \
+  <transfer-id>
+```
+
+```bash title="List pending transfers"
+openstack volume transfer request list
+```
+</CodeGroup>
+
+---
+
+## Common Options
+
+| Option | Description |
+|--------|-------------|
+| `--format json` | Output as JSON |
+| `--format value -c <col>` | Extract a single field |
+| `--all-projects` | Show resources across all projects (admin) |
+| `--status <status>` | Filter by status (available, in-use, error) |
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Volume User Guide" href="/services/storage/create-volume" color="#197560">
+    Step-by-step guide to creating and managing volumes
+  </Card>
+  <Card title="Compute CLI" href="/services/compute/cli-reference" color="#197560">
+    Server commands for attaching and managing instances
+  </Card>
+</CardGroup>

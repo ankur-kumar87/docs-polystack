@@ -1,0 +1,243 @@
+---
+title: "Bare Metal Provisioning"
+description: "Provision physical servers as cloud resources using the Dashboard's 3-step wizard or CLI. Register nodes and configure IPMI."
+sidebarTitle: "Bare Metal"
+---
+
+import AdminWarning from '/snippets/admin-warning.mdx';
+
+## Overview
+
+Xloud Bare Metal provisioning treats physical servers as first-class cloud resources.
+Administrators enroll nodes by registering their management interface credentials, then
+users can provision bare metal instances through the same workflow as virtual machines.
+
+<AdminWarning />
+
+<Note>
+  **Prerequisites**
+  - Administrator access to the Xloud Dashboard (admin view)
+  - Bare metal service (Ironic) enabled on the platform
+  - IPMI access to the physical servers
+  - Deploy kernel and ramdisk images uploaded to the image service
+</Note>
+
+---
+
+## View Bare Metal Nodes
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    Navigate to **Compute > Bare Metal Nodes** in the admin sidebar. This page
+    is only visible when the Ironic endpoint is enabled.
+
+    | Column | Description |
+    |--------|-------------|
+    | **Node ID/Name** | Node identifier (clickable to view details) |
+    | **Ironic Instance Name** | Name of the instance provisioned on this node |
+    | **Power State** | Power on, power off, or unknown |
+    | **Provision State** | Available, active, deploying, etc. |
+    | **Maintained** | Whether the node is in maintenance mode (with reason tooltip) |
+    | **Number of Ports** | Network ports registered for this node |
+    | **Driver** | Management driver (e.g., `ipmi`) |
+    | **Created At** | Registration timestamp |
+
+    Filter by **Name**, **Power State**, or **Provision State**.
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Source credentials"
+    source openrc.sh
+    ```
+
+    <CodeGroup>
+    ```bash title="List bare metal nodes"
+    openstack baremetal node list
+    ```
+    ```bash title="Show node details"
+    openstack baremetal node show <NODE_ID>
+    ```
+    </CodeGroup>
+  </Tab>
+</Tabs>
+
+---
+
+## Register a Bare Metal Node
+
+The Dashboard provides a 3-step wizard for node registration.
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Open the Create Node wizard">
+        Navigate to **Compute > Bare Metal Nodes**. Click **Create Node**.
+      </Step>
+      <Step title="Step 1 — Node Info">
+        | Field | Type | Required | Description |
+        |-------|------|----------|-------------|
+        | **Name** | Text | No | Optional node name |
+        | **Driver** | Dropdown | Yes | Management driver (`ipmi`) |
+        | **Properties** | Key-value pairs | Yes | Must include: `cpus`, `memory_mb`, `local_gb`, `cpu_arch` |
+        | **Extra** | Key-value pairs | No | Additional metadata |
+        | **Standard Traits** | Multi-select | No | Standard resource traits |
+        | **Custom Traits** | Dynamic list | No | Custom traits (must match `CUSTOM_[A-Z0-9_]{1,248}`) |
+        | **Resource Class** | Text | No | Node resource class |
+
+        <Tip>
+          Required property keys (`cpus`, `memory_mb`, `local_gb`, `cpu_arch`) can be
+          auto-detected using the **Inspect** action after registration.
+        </Tip>
+      </Step>
+      <Step title="Step 2 — Drive Info (Interfaces)">
+        Configure hardware interfaces:
+
+        | Field | Default | Options |
+        |-------|---------|---------|
+        | **Boot Interface** | pxe | pxe, ipxe, fake |
+        | **Console Interface** | no-console | no-console |
+        | **Network Interface** | noop | flat, noop |
+        | **RAID Interface** | no-raid | no-raid, agent |
+        | **Storage Interface** | noop | noop |
+        | **Vendor Interface** | ipmitool | ipmitool |
+      </Step>
+      <Step title="Step 3 — Driver Info (IPMI Credentials)">
+        | Field | Type | Required | Description |
+        |-------|------|----------|-------------|
+        | **Deploy Kernel** | Image select | Yes | Kernel image (AKI format) |
+        | **Deploy Ramdisk** | Image select | Yes | Ramdisk image (ARI format) |
+        | **IPMI Address** | IP input | Yes | BMC/IPMI management IP |
+        | **IPMI Port** | Number | No | IPMI port (max: 65535) |
+        | **IPMI Username** | Text | Yes | BMC login username |
+        | **IPMI Password** | Text | Yes | BMC login password |
+
+        **Advanced IPMI options** (click "More" to expand):
+
+        | Field | Default | Options |
+        |-------|---------|---------|
+        | **IPMI Bridge** | no | no |
+        | **IPMI Privilege Level** | ADMINISTRATOR | ADMINISTRATOR, USER |
+        | **IPMI Protocol Version** | 2.0 | 1.5, 2.0 |
+      </Step>
+      <Step title="Create the node">
+        Click **Confirm**. The node appears in the list with provision state
+        `Enroll`.
+
+        <Check>Node appears in Bare Metal Nodes list. Use **Inspect** to auto-detect hardware properties.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Register a bare metal node"
+    openstack baremetal node create \
+      --driver ipmi \
+      --name my-bare-metal \
+      --property cpus=32 \
+      --property memory_mb=131072 \
+      --property local_gb=1000 \
+      --property cpu_arch=x86_64 \
+      --driver-info ipmi_address=192.168.1.100 \
+      --driver-info ipmi_username=admin \
+      --driver-info ipmi_password=password \
+      --driver-info deploy_kernel=<KERNEL_IMAGE_ID> \
+      --driver-info deploy_ramdisk=<RAMDISK_IMAGE_ID>
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Node Management Actions
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    The following actions are available from the node row's **More** dropdown:
+
+    | Action | Description |
+    |--------|-------------|
+    | **Edit** | Update node properties, interfaces, and IPMI credentials |
+    | **Power On** | Power on the physical server |
+    | **Power Off** | Power off the physical server |
+    | **Inspect** | Auto-detect hardware properties from the BMC |
+    | **Set Maintenance** | Put the node in maintenance mode |
+    | **Clear Maintenance** | Remove the node from maintenance mode |
+    | **Set Boot Device** | Configure the next boot device |
+    | **Create Port** | Register a network port for the node |
+    | **Create Port Group** | Create a port group (bonded interfaces) |
+    | **Delete** | Remove the node from the platform |
+
+    The first row action is **Manage State** for provisioning lifecycle transitions.
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    <CodeGroup>
+    ```bash title="Power on"
+    openstack baremetal node power on <NODE_ID>
+    ```
+    ```bash title="Power off"
+    openstack baremetal node power off <NODE_ID>
+    ```
+    ```bash title="Inspect hardware"
+    openstack baremetal node inspect <NODE_ID>
+    ```
+    ```bash title="Set maintenance"
+    openstack baremetal node maintenance set <NODE_ID> --reason "Hardware upgrade"
+    ```
+    ```bash title="Clear maintenance"
+    openstack baremetal node maintenance unset <NODE_ID>
+    ```
+    </CodeGroup>
+  </Tab>
+</Tabs>
+
+---
+
+## Node Detail
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    Click a node name to open the detail page. Three tabs are available:
+
+    **Base Info tab**:
+    - Base Info: Chassis ID, Resource Class, Maintenance status and reason
+    - Driver: All driver info key-value pairs (IPMI credentials masked)
+    - Boot Device: Current boot device and persistence setting
+    - Properties: All node properties
+    - Traits: Standard and custom traits
+    - Interface Validation: Table showing each interface's validation status
+
+    **Ports tab** — Network ports registered for this node (with CRUD actions)
+
+    **Port Groups tab** — Bonded port groups (with CRUD actions)
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    <CodeGroup>
+    ```bash title="Show node detail"
+    openstack baremetal node show <NODE_ID>
+    ```
+    ```bash title="List node ports"
+    openstack baremetal port list --node <NODE_ID>
+    ```
+    ```bash title="Validate node interfaces"
+    openstack baremetal node validate <NODE_ID>
+    ```
+    </CodeGroup>
+  </Tab>
+</Tabs>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Launch an Instance" href="/services/compute/launch-instance" color="#197560">
+    Provision bare metal instances through the instance create wizard
+  </Card>
+  <Card title="Flavors" href="/services/compute/flavors" color="#197560">
+    Create bare metal flavors with resource class matching
+  </Card>
+  <Card title="Compute Hosts" href="/services/compute/compute-hosts" color="#197560">
+    Monitor bare metal hypervisor resources
+  </Card>
+  <Card title="Troubleshooting" href="/services/compute/troubleshooting" color="#197560">
+    Resolve bare metal provisioning failures
+  </Card>
+</CardGroup>

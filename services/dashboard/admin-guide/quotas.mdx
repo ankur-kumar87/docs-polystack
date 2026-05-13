@@ -1,0 +1,86 @@
+---
+title: "Manage Quotas"
+description: "Set and manage per-project resource quotas through the Xloud Dashboard — control instance, vCPU, RAM, storage, and network limits."
+sidebarTitle: "Quotas"
+---
+
+## Overview
+
+Quotas enforce per-project resource limits. They are visible to users during resource
+creation (real-time quota bars in instance and volume create forms) and managed by
+administrators.
+
+---
+
+## View Quota Usage
+
+Users see quota information in two places:
+
+- **Instance Create wizard** (Step 4: Confirm Config) — footer badge shows Instance,
+  CPU, Memory, Volume, and Volume Capacity quota usage in real-time
+- **Volume Create form** — capacity slider is limited by remaining volume quota
+
+---
+
+## Modify Quotas
+
+<Note>
+  The Dashboard does not provide a dedicated standalone quota management page. Quotas
+  are modified via the CLI or through [XDeploy](/deployment) configuration.
+</Note>
+
+<Tabs>
+  <Tab title="XDeploy" icon="settings">
+    <Steps titleSize="h3">
+      <Step title="Open Configuration">
+        Navigate to **XDeploy > Configuration > Advance Features** to adjust
+        default quota values.
+      </Step>
+      <Step title="Apply changes">
+        Save and run **Operations > Reconfigure**.
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Source credentials"
+    source openrc.sh
+    ```
+
+    <CodeGroup>
+    ```bash title="Show project quota"
+    openstack quota show <PROJECT_ID>
+    ```
+    ```bash title="Show current usage"
+    openstack quota show --usage <PROJECT_ID>
+    ```
+    ```bash title="Set instance quota"
+    openstack quota set --instances 50 <PROJECT_ID>
+    ```
+    ```bash title="Set vCPU quota"
+    openstack quota set --cores 100 <PROJECT_ID>
+    ```
+    ```bash title="Set RAM quota (MB)"
+    openstack quota set --ram 102400 <PROJECT_ID>
+    ```
+    </CodeGroup>
+  </Tab>
+</Tabs>
+
+---
+
+## Detailed Guides
+
+<CardGroup cols={2}>
+  <Card title="Compute Quotas" href="/services/compute/quotas" color="#197560">
+    Instance, vCPU, and RAM quota management
+  </Card>
+  <Card title="Storage Quotas" href="/services/storage/quotas" color="#197560">
+    Volume count and capacity quotas
+  </Card>
+  <Card title="Network Quotas" href="/services/networking/quotas" color="#197560">
+    Network, router, and floating IP quotas
+  </Card>
+  <Card title="Deployment" href="/deployment/configuration" color="#197560">
+    Configure default quotas through XDeploy
+  </Card>
+</CardGroup>

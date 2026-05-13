@@ -1,0 +1,204 @@
+---
+title: "Metadata Definitions"
+description: "Define structured metadata namespaces for consistent, validated image property schemas across your Xloud image catalog."
+sidebarTitle: "Metadata"
+---
+
+import AdminWarning from '/snippets/admin-warning.mdx';
+
+## Overview
+
+Metadata namespaces define structured, validated property schemas for images. When a
+namespace is defined, the Dashboard displays a guided property editor instead of a raw
+key-value form — ensuring consistent metadata across your image catalog. Namespaces
+can be public (visible to all projects) or private (visible only to the creating project).
+
+<AdminWarning />
+
+---
+
+## Concepts
+
+| Concept | Description |
+|---------|-------------|
+| **Namespace** | A named collection of property definitions for a resource type |
+| **Property** | A typed key-value field with validation rules (enum, string, boolean, integer) |
+| **Object** | A named group of properties within a namespace |
+| **Tag** | A simple string label associated with images — for filtering and grouping |
+| **Resource type** | The Xloud resource the namespace applies to — `OS::Image::Image` for images |
+
+---
+
+## Image Tags
+
+Tags are the simplest form of image metadata — plain strings with no key, attached directly to an image. Use them for fast catalog filtering, grouping by OS family, compliance designation, or release milestone.
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    Navigate to **Compute > Images** and click **Edit** (the first row action) on the image.
+
+    In the **Tags** field, type a tag and press **Enter** to add it. Add as many as needed, then click **Confirm**.
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Add tags to an image"
+    openstack image set \
+      --tag ubuntu \
+      --tag lts \
+      --tag production-ready \
+      ubuntu-24.04-lts
+    ```
+
+    ```bash title="Filter images by tag"
+    openstack image list --tag lts
+    ```
+
+    ```bash title="Filter by multiple tags (AND logic)"
+    openstack image list --tag lts --tag production-ready
+    ```
+
+    ```bash title="Remove a specific tag"
+    openstack image unset --tag production-ready ubuntu-24.04-lts
+    ```
+  </Tab>
+</Tabs>
+
+### Recommended Tag Taxonomy
+
+Use a consistent tagging convention across your image catalog:
+
+| Category | Example Tags |
+|----------|-------------|
+| **OS family** | `ubuntu`, `rhel`, `debian`, `windows`, `centos` |
+| **Support tier** | `lts`, `standard`, `eol`, `preview` |
+| **Status** | `production-ready`, `deprecated`, `testing`, `golden` |
+| **Compliance** | `pci-dss`, `hipaa`, `iso27001`, `fips` |
+| **Architecture** | `x86_64`, `aarch64` |
+| **Special config** | `no-cloud-init`, `virtio`, `uefi`, `gpu-compatible` |
+
+---
+
+## Create a Metadata Namespace
+
+<Steps titleSize="h3">
+  <Step title="Define the namespace schema" icon="file-code">
+    Create a JSON file defining the namespace properties:
+
+    ```json title="namespace-schema.json"
+    {
+      "namespace": "org.xloud.images",
+      "display_name": "Xloud Image Properties",
+      "description": "Standardized OS and hardware metadata for Xloud images",
+      "visibility": "public",
+      "protected": true,
+      "resource_type_associations": [
+        {
+          "name": "OS::Image::Image",
+          "prefix": ""
+        }
+      ],
+      "properties": {
+        "os_lifecycle": {
+          "title": "OS Lifecycle",
+          "description": "Support lifecycle status of the OS",
+          "type": "string",
+          "enum": ["lts", "standard", "eol"],
+          "operators": ["<or>"]
+        },
+        "xloud_base_image": {
+          "title": "Xloud Base Image",
+          "description": "Whether this is an Xloud-maintained base image",
+          "type": "boolean"
+        },
+        "os_security_patch_date": {
+          "title": "Last Security Patch Date",
+          "description": "Date of the most recent OS security patch applied",
+          "type": "string",
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+        }
+      }
+    }
+    ```
+  </Step>
+  <Step title="Register the namespace" icon="plus">
+    ```bash title="Create metadata namespace"
+    openstack metric namespace create \
+      --schema namespace-schema.json \
+      --resource-type OS::Image::Image \
+      org.xloud.images
+    ```
+  </Step>
+  <Step title="Verify namespace is active" icon="circle-check">
+    ```bash title="List registered namespaces"
+    openstack metric namespace list
+    ```
+    <Check>The `org.xloud.images` namespace appears in the list.</Check>
+  </Step>
+</Steps>
+
+---
+
+## Use Namespace Properties
+
+Once a namespace is registered, its properties appear in the Dashboard image editor
+as a structured form. Set them via CLI:
+
+```bash title="Set namespace-defined properties on an image"
+openstack image set \
+  --property os_lifecycle=lts \
+  --property xloud_base_image=true \
+  --property os_security_patch_date=2026-03-15 \
+  ubuntu-24.04-lts
+```
+
+---
+
+## Manage Namespaces
+
+<CodeGroup>
+```bash title="List all namespaces"
+openstack metric namespace list
+```
+```bash title="Show namespace details"
+openstack metric namespace show org.xloud.images
+```
+```bash title="Delete a namespace"
+openstack metric namespace delete org.xloud.images
+```
+</CodeGroup>
+
+<Warning>
+  Deleting a namespace removes the property schema definitions but does not remove
+  existing property values from images. Images retain their property values even after
+  the namespace is deleted.
+</Warning>
+
+---
+
+## Property Type Reference
+
+| Type | Description | Example |
+|------|-------------|---------|
+| `string` | Free-text string (with optional `enum` or `pattern`) | `"lts"`, `"standard"` |
+| `boolean` | True/false value | `true`, `false` |
+| `integer` | Whole number | `4`, `8096` |
+| `number` | Floating-point number | `3.14` |
+| `array` | List of values | `["tag1", "tag2"]` |
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Image Properties" href="/services/images/image-properties" color="#197560">
+    Set properties on individual images using the defined namespace schemas.
+  </Card>
+  <Card title="Security" href="/services/images/image-security" color="#197560">
+    Protect critical metadata properties from unauthorized modification.
+  </Card>
+  <Card title="Storage Backends" href="/services/images/storage-backends" color="#197560">
+    Configure the backend that stores the image data alongside its metadata.
+  </Card>
+  <Card title="Admin Troubleshooting" href="/services/images/admin-troubleshooting" color="#197560">
+    Resolve metadata namespace and property validation issues.
+  </Card>
+</CardGroup>

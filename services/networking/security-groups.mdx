@@ -1,0 +1,206 @@
+---
+title: "Network Security Groups"
+description: "Create and manage stateful firewall rules for Xloud instances. Control ingress and egress traffic by protocol, port, and CIDR with security groups."
+sidebarTitle: "Security Groups"
+---
+
+import CliAuth from '/snippets/cli-auth.mdx';
+
+## Overview
+
+Security groups are stateful, per-port firewall rulesets enforced at the hypervisor level.
+Every instance begins with a default security group that blocks all inbound traffic. Add
+rules to permit the specific protocols your workload requires — changes take effect
+immediately without a restart or interface bounce.
+
+<Note>
+  **Prerequisites**
+  - An active Xloud project with at least one running instance
+  - Dashboard access or CLI configured with valid credentials
+</Note>
+
+---
+
+## Create a Security Group
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Navigate to Security Groups" icon="compass">
+        Navigate to
+        **Network > Security Groups**. Click **Create Security Group**.
+      </Step>
+      <Step title="Name the group" icon="settings">
+        | Field | Description |
+        |-------|-------------|
+        | **Name** | Short, descriptive name, e.g., `web-sg` |
+        | **Description** | Optional — e.g., "HTTP/HTTPS for web tier" |
+
+        <Info>
+          Each new security group automatically includes two egress rules that allow all
+          outbound IPv4 and IPv6 traffic. Add ingress rules for the specific ports your
+          workload exposes.
+        </Info>
+      </Step>
+      <Step title="Add ingress rules">
+        Click the security group name to open the detail page, then click **Add Rule**.
+
+        The Add Rule form has these fields:
+
+        | Field | Type | Required | Options |
+        |-------|------|----------|---------|
+        | **Direction** | Radio | Yes | Ingress, Egress |
+        | **Ether Type** | Radio | Yes | IPv4, IPv6 |
+        | **Protocol** | Dropdown | Yes | TCP, UDP, ICMP, ANY |
+        | **Port Range Min** | Number | Conditional | Shown for TCP/UDP only |
+        | **Port Range Max** | Number | Conditional | Shown for TCP/UDP only |
+        | **Remote IP Prefix** | Text | No | CIDR notation (e.g., `0.0.0.0/0`) |
+        | **Description** | Text area | No | Rule description |
+
+        Common rules to add:
+
+        | Direction | Protocol | Port Range | Remote | Purpose |
+        |-----------|----------|------------|--------|---------|
+        | Ingress | TCP | 80 | 0.0.0.0/0 | HTTP |
+        | Ingress | TCP | 443 | 0.0.0.0/0 | HTTPS |
+        | Ingress | TCP | 22 | `<your-office-CIDR>` | SSH management |
+        | Ingress | ICMP | Any | 0.0.0.0/0 | Ping and diagnostics |
+
+        <Warning>
+          Avoid rules with remote `0.0.0.0/0` for SSH (port 22) in production.
+          Restrict to your management CIDR or route SSH through a bastion host.
+        </Warning>
+      </Step>
+      <Step title="Assign to an instance" icon="link">
+        Navigate to **Compute > Instances**, click the **More** dropdown on the instance
+        row, then select **Manage Security Group** under **Related Resources**. Select
+        a port and add `web-sg` to the assigned security groups.
+
+        <Check>The rule takes effect immediately — no restart required.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    <Steps titleSize="h3">
+      <Step title="Authenticate" icon="key">
+        <CliAuth />
+      </Step>
+      <Step title="Create the security group" icon="plus">
+        ```bash title="Create security group"
+        openstack security group create web-sg \
+          --description "HTTP/HTTPS for web tier"
+        ```
+      </Step>
+      <Step title="Add ingress rules" icon="shield">
+        ```bash title="Allow HTTP"
+        openstack security group rule create web-sg \
+          --protocol tcp --dst-port 80 --ingress --remote-ip 0.0.0.0/0
+        ```
+        ```bash title="Allow HTTPS"
+        openstack security group rule create web-sg \
+          --protocol tcp --dst-port 443 --ingress --remote-ip 0.0.0.0/0
+        ```
+        ```bash title="Allow SSH from management network"
+        openstack security group rule create web-sg \
+          --protocol tcp --dst-port 22 --ingress --remote-ip 10.0.0.0/8
+        ```
+        ```bash title="Allow ICMP"
+        openstack security group rule create web-sg \
+          --protocol icmp --ingress --remote-ip 0.0.0.0/0
+        ```
+      </Step>
+      <Step title="Assign to an instance" icon="link">
+        ```bash title="Add security group to instance"
+        openstack server add security group my-instance web-sg
+        ```
+        <Check>Rules apply immediately without a reboot or interface restart.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+</Tabs>
+
+---
+
+## Common Rules Reference
+
+| Use Case | Direction | Protocol | Port | Remote |
+|----------|-----------|----------|------|--------|
+| HTTP web traffic | Ingress | TCP | 80 | 0.0.0.0/0 |
+| HTTPS web traffic | Ingress | TCP | 443 | 0.0.0.0/0 |
+| SSH access | Ingress | TCP | 22 | Management CIDR |
+| ICMP ping | Ingress | ICMP | Any | 0.0.0.0/0 |
+| MySQL / MariaDB | Ingress | TCP | 3306 | App tier CIDR |
+| PostgreSQL | Ingress | TCP | 5432 | App tier CIDR |
+| Redis | Ingress | TCP | 6379 | App tier CIDR |
+| Custom UDP service | Ingress | UDP | 1194 | 0.0.0.0/0 |
+| All outbound | Egress | Any | Any | 0.0.0.0/0 |
+
+---
+
+## Source Security Group Rules
+
+Rules can reference another security group as the remote source instead of a CIDR.
+This allows traffic from any instance assigned the referenced group, regardless of IP.
+
+```bash title="Allow traffic from app tier security group"
+openstack security group rule create db-sg \
+  --protocol tcp \
+  --dst-port 5432 \
+  --ingress \
+  --remote-group app-sg
+```
+
+<Tip>
+  Security group references are more maintainable than CIDR-based rules in dynamic
+  environments — you add or remove instances from the source group rather than updating
+  IP ranges in rules.
+</Tip>
+
+---
+
+## Manage Rules and Groups
+
+### Remove a Rule
+
+```bash title="List rules in a group"
+openstack security group rule list web-sg
+```
+```bash title="Delete a specific rule"
+openstack security group rule delete <rule-id>
+```
+
+### Remove a Security Group from an Instance
+
+```bash title="Remove security group from instance"
+openstack server remove security group my-instance web-sg
+```
+
+### Delete a Security Group
+
+```bash title="Delete security group"
+openstack security group delete web-sg
+```
+
+<Warning>
+  Deleting a security group that is still assigned to instances will fail. Remove
+  all instance assignments before deleting the group.
+</Warning>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Floating IP Addresses" href="/services/networking/floating-ips" color="#197560">
+    Associate public IPs with instances — ensure your security group allows inbound traffic first
+  </Card>
+  <Card title="Security Hardening" href="/services/networking/security" color="#197560">
+    Administrator guide for port security, anti-spoofing, and default group hardening
+  </Card>
+  <Card title="Network Troubleshooting" href="/services/networking/troubleshooting" color="#197560">
+    Diagnose security group and connectivity issues
+  </Card>
+  <Card title="Create a Network" href="/services/networking/create-network" color="#197560">
+    Set up the network your secured instances attach to
+  </Card>
+</CardGroup>

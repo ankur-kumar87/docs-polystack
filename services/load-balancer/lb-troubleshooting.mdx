@@ -1,0 +1,175 @@
+---
+title: "Load Balancer Admin Troubleshooting"
+description: "Diagnose and resolve platform-level Xloud Load Balancer issues — service outages, appliance provisioning failures, and performance degradation."
+sidebarTitle: "Troubleshooting"
+---
+
+import AdminWarning from '/snippets/admin-warning.mdx';
+
+## Overview
+
+This guide covers platform-level load balancer issues requiring administrator access —
+service agent failures, appliance provisioning problems, and capacity-related performance
+degradation.
+
+<AdminWarning />
+
+<Note>
+  For user-facing issues (PENDING_CREATE status, member OFFLINE, TLS errors), see the
+  [Load Balancer User Troubleshooting](/services/load-balancer/troubleshooting) guide.
+</Note>
+
+---
+
+## Service Not Responding
+
+<AccordionGroup>
+  <Accordion title="Load balancer API service unavailable" icon="server" defaultOpen>
+    **Cause**: The load balancer API service or worker containers may be stopped.
+
+    **Diagnose**:
+    ```bash title="Check all load balancer service containers"
+    docker ps --filter name=octavia
+    ```
+
+    Check container logs for errors:
+    ```bash title="View API container logs"
+    docker logs octavia_api --tail 100
+    ```
+
+    ```bash title="View worker/health manager logs"
+    docker logs octavia_worker --tail 100
+    docker logs octavia_health_manager --tail 100
+    ```
+
+    **Resolution**: Restart services via XDeploy:
+    ```bash title="Restart load balancer services"
+    xavs-ansible deploy --tags octavia
+    ```
+  </Accordion>
+
+  <Accordion title="RabbitMQ connectivity lost" icon="message-circle">
+    **Cause**: The load balancer worker cannot connect to the message queue, preventing
+    it from receiving provisioning commands.
+
+    **Diagnose**:
+    ```bash title="Check RabbitMQ connectivity from worker"
+    docker exec octavia_worker python3 -c "
+    import pika
+    conn = pika.BlockingConnection(pika.URLParameters('amqp://octavia:<password>@<host>:5672/'))
+    print('RabbitMQ connection OK')
+    conn.close()
+    "
+    ```
+
+    **Resolution**: Verify RabbitMQ is running and the octavia user credentials are correct.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Appliance Provisioning Failures
+
+<AccordionGroup>
+  <Accordion title="Appliance provisioning fails — DHCP pool exhausted" icon="network">
+    **Cause**: The management network DHCP pool has no available IP addresses.
+
+    **Diagnose**:
+    ```bash title="Check DHCP pool usage"
+    openstack subnet show lb-management-subnet \
+      -c allocation_pools -c dns_nameservers
+    ```
+
+    ```bash title="Count current appliance IPs in use"
+    openstack loadbalancer amphora list \
+      -c lb_network_ip | grep -v None | wc -l
+    ```
+
+    **Resolution**: Expand the DHCP pool by updating the management subnet allocation range:
+    ```bash title="Update DHCP pool range"
+    openstack subnet set \
+      --allocation-pool start=<new-start>,end=<new-end> \
+      lb-management-subnet
+    ```
+  </Accordion>
+
+  <Accordion title="Appliance image unavailable" icon="disc">
+    **Cause**: The appliance image is not registered in the Image Service, or it has been
+    deactivated.
+
+    **Diagnose**:
+    ```bash title="Check appliance image availability"
+    openstack image list --tag amphora
+    ```
+
+    **Resolution**: If the image is missing, re-upload it:
+    ```bash title="Upload amphora image"
+    openstack image create \
+      --disk-format qcow2 \
+      --container-format bare \
+      --file amphora-x64-haproxy.qcow2 \
+      --tag amphora \
+      --public \
+      amphora-image
+    ```
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Performance Degradation
+
+<AccordionGroup>
+  <Accordion title="High latency through load balancer" icon="clock">
+    **Cause**: Appliance compute resources are saturated, or the backend member count has
+    grown beyond the flavor profile's rated capacity.
+
+    **Diagnose**: Check appliance statistics for connection counts:
+    ```bash title="Check load balancer connection statistics"
+    openstack loadbalancer stats show <lb-name>
+    ```
+
+    Compare `active_connections` against the flavor profile's rated capacity.
+
+    **Resolution**: Create a new load balancer with a higher-capacity flavor and migrate
+    listeners:
+
+    <Warning>
+      Flavor profiles cannot be changed on existing load balancers. To upgrade capacity:
+      1. Create a new load balancer with the target flavor
+      2. Recreate all listeners, pools, and members on the new load balancer
+      3. Update DNS / floating IP to point to the new load balancer
+      4. Delete the original load balancer after traffic is migrated
+    </Warning>
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Service Log Reference
+
+| Container | Log command |
+|-----------|------------|
+| Load balancer API | `docker logs octavia_api --tail 100` |
+| Worker | `docker logs octavia_worker --tail 100` |
+| Health manager | `docker logs octavia_health_manager --tail 100` |
+| Housekeeping | `docker logs octavia_housekeeping --tail 100` |
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Monitoring" href="/services/load-balancer/lb-monitoring" color="#197560">
+    Set up proactive monitoring to catch issues before they impact production.
+  </Card>
+  <Card title="Flavor Profiles" href="/services/load-balancer/flavor-profiles" color="#197560">
+    Create higher-capacity flavor profiles for workloads experiencing saturation.
+  </Card>
+  <Card title="Architecture" href="/services/load-balancer/lb-architecture" color="#197560">
+    Review the component relationships that can cause cascading failures.
+  </Card>
+  <Card title="Security" href="/services/load-balancer/lb-security" color="#197560">
+    Verify management plane isolation after resolving connectivity issues.
+  </Card>
+</CardGroup>

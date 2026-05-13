@@ -1,0 +1,129 @@
+---
+title: "Object Storage CLI Reference"
+description: "Complete openstack container and object CLI commands for managing Xloud Object Storage — containers, objects, access control, and large objects."
+sidebarTitle: "CLI Reference"
+---
+
+## Overview
+
+The `openstack container` and `openstack object` command groups manage Swift-compatible object storage — containers, objects, metadata, and access policies.
+
+<Note>
+  **Prerequisites**
+  - CLI installed and authenticated — see [CLI Setup](/cli-setup)
+  - Python swiftclient installed: `pip install python-swiftclient`
+</Note>
+
+---
+
+## Containers
+
+<CodeGroup>
+```bash title="List containers"
+openstack container list
+```
+
+```bash title="Create container"
+openstack container create my-bucket
+```
+
+```bash title="Show container details"
+openstack container show my-bucket
+```
+
+```bash title="Set container metadata"
+openstack container set --property owner=team-a my-bucket
+```
+
+```bash title="Make container public"
+openstack container set \
+  --property "X-Container-Read=.r:*,.rlistings" \
+  my-bucket
+```
+
+```bash title="Delete container"
+openstack container delete my-bucket
+```
+</CodeGroup>
+
+---
+
+## Objects
+
+<CodeGroup>
+```bash title="List objects in container"
+openstack object list my-bucket
+openstack object list --prefix logs/ my-bucket
+```
+
+```bash title="Upload object"
+openstack object create my-bucket ./report.pdf
+```
+
+```bash title="Upload with custom name"
+openstack object create --name backups/2026-01-01.tar.gz my-bucket ./backup.tar.gz
+```
+
+```bash title="Upload entire directory"
+swift upload my-bucket ./my-directory/
+```
+
+```bash title="Show object details"
+openstack object show my-bucket report.pdf
+```
+
+```bash title="Download object"
+openstack object save my-bucket report.pdf
+```
+
+```bash title="Download to specific path"
+openstack object save --file /tmp/report.pdf my-bucket report.pdf
+```
+
+```bash title="Delete object"
+openstack object delete my-bucket report.pdf
+```
+</CodeGroup>
+
+---
+
+## Large Objects (Segmented)
+
+<CodeGroup>
+```bash title="Upload large file in segments (swift CLI)"
+swift upload --segment-size 1G --use-slo my-bucket large-file.iso
+```
+
+```bash title="List segments"
+openstack object list my-bucket_segments
+```
+</CodeGroup>
+
+---
+
+## Temporary URLs
+
+<CodeGroup>
+```bash title="Generate temp URL (swift CLI)"
+swift tempurl GET 3600 \
+  /v1/AUTH_<project-id>/my-bucket/report.pdf \
+  <temp-url-key>
+```
+
+```bash title="Set temp URL key on account"
+swift post -m "Temp-Url-Key:<your-secret-key>"
+```
+</CodeGroup>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Create Container Guide" href="/services/object-storage/create-container" color="#197560">
+    Step-by-step guide to creating containers and uploading objects
+  </Card>
+  <Card title="Access Control Guide" href="/services/object-storage/access-control" color="#197560">
+    Configure container and object access policies
+  </Card>
+</CardGroup>

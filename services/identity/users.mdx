@@ -1,0 +1,196 @@
+---
+title: "Manage Users"
+description: "Create, configure, and manage user accounts and role assignments in Xloud Identity."
+sidebarTitle: "Users"
+---
+
+import PrerequisitesAuth from '/snippets/prerequisites-auth.mdx';
+import CliAuth from '/snippets/cli-auth.mdx';
+
+## Overview
+
+User accounts in Xloud Identity represent individual humans or service identities that
+authenticate against the platform. Each user belongs to a domain, can be a member of
+multiple projects with different roles, and can hold application credentials for
+non-interactive access. This guide covers creating users, assigning roles, and managing
+the full user lifecycle.
+
+<PrerequisitesAuth />
+
+---
+
+## Create a User
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Open User Management" icon="users">
+        Navigate to
+        **Identity > Users** (admin view). Click **Create User**.
+      </Step>
+      <Step title="Configure the user" icon="user">
+        | Field | Description |
+        |-------|-------------|
+        | **Username** | Login identifier. Must be unique within the domain. |
+        | **Email** | Used for password reset and notifications. |
+        | **Password** | Initial password. Communicate securely to the user. |
+        | **Primary Project** | Default project context on login. |
+        | **Enabled** | Must be toggled on for the user to authenticate. |
+      </Step>
+      <Step title="Confirm creation">
+        Click **Confirm**. The new account appears immediately in the user list.
+        <Check>The user can now authenticate using their credentials.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    <Steps titleSize="h3">
+      <Step title="Authenticate" icon="key">
+        <CliAuth />
+      </Step>
+      <Step title="Create the user" icon="user-plus">
+        ```bash title="Create user with password prompt"
+        openstack user create \
+          --domain Default \
+          --project backend-prod \
+          --password-prompt \
+          --email alice@example.com \
+          alice
+        ```
+        <Tip>
+          The `--password-prompt` flag avoids exposing the password in shell history. The
+          CLI will interactively prompt for the password securely.
+        </Tip>
+      </Step>
+      <Step title="Verify user creation" icon="search">
+        ```bash title="Show user details"
+        openstack user show alice
+        ```
+        <Check>The output shows `enabled: True` — the user is active and can authenticate.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+</Tabs>
+
+---
+
+## Assign Roles to Users
+
+Roles determine what a user can do within a project. Assign the minimum role necessary
+for the user's responsibilities.
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    Navigate to **Identity > Projects** (admin view). On the target project row, click the
+    **More** dropdown and select **Manage User**. Select users and assign roles.
+
+    | Role | Capability |
+    |------|-----------|
+    | `admin` | Full project administration — manage resources, users, and quotas |
+    | `member` | Standard access — create and manage resources within the project |
+    | `reader` | Read-only — suitable for monitoring, auditing, and dashboards |
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Assign member role to user in project"
+    openstack role add \
+      --project backend-prod \
+      --user alice \
+      member
+    ```
+
+    ```bash title="List all role assignments for a user"
+    openstack role assignment list \
+      --user alice \
+      --names
+    ```
+
+    ```bash title="Grant reader access to another project"
+    openstack role add \
+      --project monitoring \
+      --user alice \
+      reader
+    ```
+
+    <Note>
+      A user can hold different roles in different projects simultaneously. The token scope
+      determines which role is active for each API request.
+    </Note>
+  </Tab>
+</Tabs>
+
+---
+
+## Update User Accounts
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    Open a user in **Identity > Users** (admin view) and click **Edit** to modify their email,
+    primary project, or enabled state. Use **Change Password** to set a new password.
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    <CodeGroup>
+    ```bash title="Change user email"
+    openstack user set --email newemail@example.com alice
+    ```
+    ```bash title="Reset user password"
+    openstack user set --password-prompt alice
+    ```
+    ```bash title="Disable user (preserves resource ownership)"
+    openstack user set --disable alice
+    ```
+    ```bash title="Re-enable a disabled user"
+    openstack user set --enable alice
+    ```
+    ```bash title="Delete user permanently"
+    openstack user delete alice
+    ```
+    </CodeGroup>
+
+    <Warning>
+      Deleting a user does not delete resources they own. Orphaned instances, volumes, and
+      networks must be reassigned or cleaned up manually before removing the account.
+    </Warning>
+  </Tab>
+</Tabs>
+
+---
+
+## List and Audit Users
+
+Regularly review active user accounts and role assignments as part of access governance.
+
+```bash title="List all users in the Default domain"
+openstack user list --domain Default
+```
+
+```bash title="List all users with their enabled status"
+openstack user list -c Name -c Enabled
+```
+
+```bash title="Audit all role assignments across all projects"
+openstack role assignment list --names
+```
+
+<Tip>
+  Run quarterly access reviews using `openstack role assignment list --names` to identify
+  accounts with elevated roles that may no longer be required.
+</Tip>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Projects" href="/services/identity/projects" color="#197560">
+    Create projects and manage team membership with role assignments.
+  </Card>
+  <Card title="Application Credentials" href="/services/identity/application-credentials" color="#197560">
+    Create non-interactive credentials for automation pipelines and CI/CD systems.
+  </Card>
+  <Card title="Multi-Factor Authentication" href="/services/identity/multi-factor-auth" color="#197560">
+    Enable TOTP-based two-factor authentication for enhanced user account security.
+  </Card>
+  <Card title="Troubleshooting" href="/services/identity/troubleshooting" color="#197560">
+    Resolve authentication failures, permission errors, and token scope issues.
+  </Card>
+</CardGroup>

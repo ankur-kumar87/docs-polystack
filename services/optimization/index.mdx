@@ -1,0 +1,115 @@
+---
+title: "Cluster Optimization"
+description: "Automated resource optimization for Xloud — workload placement, consolidation, and dynamic scaling."
+icon: "trending-up"
+sidebarTitle: "Optimization"
+mode: "wide"
+---
+
+Maximize infrastructure efficiency with automated workload analysis and intelligent
+placement. Xloud Cluster Optimization continuously audits your compute cluster, generates
+actionable improvement plans, and executes workload rebalancing — reducing resource
+waste, lowering energy consumption, and improving workload performance.
+
+<Card title="XAVS — Advanced Virtualization Solutions" icon="external-link" href="https://xloud.tech/xavs" color="#197560" horizontal>
+  Product details on xloud.tech
+</Card>
+
+---
+
+<p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Cluster Optimization</p>
+
+<CardGroup cols={2}>
+  <Card title="User Guide" icon="book-open" href="/services/optimization/user-guide" color="#197560">
+    Run optimization audits, select goals and strategies, review action plans, and
+    execute workload rebalancing from the Dashboard or CLI.
+  </Card>
+  <Card title="Admin Guide" icon="shield-check" href="/services/optimization/admin-guide" color="#197560">
+    Configure optimization strategies, data sources, scheduled audits, and integration
+    with compute metrics for platform-wide resource management.
+  </Card>
+  <Card title="CLI Reference" icon="terminal" href="/services/optimization/cli-reference" color="#197560">
+    Complete command reference for managing goals, audits, action plans, and strategies
+    using the openstack CLI.
+  </Card>
+  <Card title="Compute Service" icon="server" href="/services/compute" color="#197560">
+    Xloud Compute provides the workload and host metrics that drive optimization
+    decisions and executes the resulting migration actions.
+  </Card>
+</CardGroup>
+
+---
+
+<p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Key Capabilities</p>
+
+<CardGroup cols={2}>
+  <Card title="Intelligent Workload Consolidation" icon="layers" href="/services/optimization/user-guide/run-audit" color="#197560">
+    Identify underutilized hosts and consolidate workloads to reduce the active host
+    footprint — enabling idle hosts to enter low-power states or be decommissioned.
+  </Card>
+  <Card title="Thermal Optimization" icon="thermometer" href="/services/optimization/user-guide/optimization-goals" color="#197560">
+    Monitor inlet temperatures and redistribute workloads away from overheating compute
+    racks, protecting hardware and extending its operational lifespan.
+  </Card>
+  <Card title="Workload Stability" icon="activity" href="/services/optimization/user-guide/optimization-goals" color="#197560">
+    Detect noisy-neighbor interference and migrate workloads to hosts where they
+    can achieve stable, consistent performance metrics.
+  </Card>
+  <Card title="Energy Efficiency" icon="zap" href="/services/optimization/user-guide/optimization-goals" color="#197560">
+    Optimize placement to minimize the number of active compute hosts, reducing
+    power consumption during off-peak periods.
+  </Card>
+  <Card title="Scheduled Audits" icon="calendar" href="/services/optimization/admin-guide/scheduling" color="#197560">
+    Run optimization analyses on a schedule — daily, weekly, or triggered by capacity
+    events — without manual initiation.
+  </Card>
+  <Card title="Review Before Execute" icon="eye" href="/services/optimization/user-guide/action-plans" color="#197560">
+    Every audit produces a human-readable action plan. Review and approve actions
+    before execution, or configure fully automated application.
+  </Card>
+</CardGroup>
+
+---
+
+<p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>How It Works</p>
+
+```mermaid
+graph TD
+    A[Cluster Metrics<br/>vCPU, RAM, Temp] -->|Collected| B[Decision Engine]
+    B -->|Apply strategy| C[Optimization Planner]
+    C -->|Generate| D[Action Plan]
+    D -->|Reviewed by operator| E{Start?}
+    E -->|Yes| F[Action Applier]
+    E -->|No| G[Discard / Modify]
+    F -->|Start migrations| H[Xloud Compute API]
+    H -->|Live migrate workloads| I[Optimized Cluster]
+```
+
+---
+
+<p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Optimization Goals</p>
+
+| Goal | Description | Common Strategy |
+|------|-------------|-----------------|
+| Server Consolidation | Reduce the number of active compute hosts | `server_consolidation` |
+| Thermal Optimization | Reduce inlet temperatures by redistributing heat load | `outlet_temperature` |
+| Workload Stabilization | Improve instance performance consistency | `workload_stabilization` |
+| Energy Savings | Minimize active host count to reduce power draw | `saving_energy` |
+| Zone Rebalancing | Distribute workloads evenly across availability zones | `zone_migration` |
+| Noisy Neighbor Mitigation | Isolate CPU/memory contention between instances | `noisy_neighbor` |
+
+---
+
+<p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Related Services</p>
+
+<CardGroup cols={3}>
+  <Card title="Xloud Compute" icon="server" href="/services/compute" color="#197560">
+    Workload placement and live migration executed by the Optimization
+  </Card>
+  <Card title="Instance HA" icon="heart-pulse" href="/services/instance-ha/index" color="#197560">
+    Recovery events that trigger rebalancing workflows
+  </Card>
+  <Card title="Xloud Identity" icon="fingerprint" href="/services/identity/index" color="#197560">
+    RBAC policies governing who can approve and execute optimization actions
+  </Card>
+</CardGroup>

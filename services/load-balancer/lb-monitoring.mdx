@@ -1,0 +1,139 @@
+---
+title: "Load Balancer Monitoring"
+description: "Monitor Xloud Load Balancer appliance health, connection statistics, and service component status for platform observability."
+sidebarTitle: "Monitoring"
+---
+
+import AdminWarning from '/snippets/admin-warning.mdx';
+
+## Overview
+
+Monitoring the load balancing infrastructure ensures production traffic is not impacted
+by appliance degradation, certificate expiry, or capacity saturation. This guide covers
+appliance health checks, traffic statistics, and manual failover procedures.
+
+<AdminWarning />
+
+---
+
+## Appliance Health
+
+```bash title="List all appliances with health status"
+openstack loadbalancer amphora list
+```
+
+Key status fields to monitor:
+
+| Field | Healthy Value | Description |
+|-------|--------------|-------------|
+| `status` | `ALLOCATED` | Appliance is assigned to a load balancer |
+| `lb_network_ip` | Non-empty | Management plane connectivity established |
+| `cert_expiration` | Future date | Appliance TLS certificate validity |
+| `compute_id` | Non-empty | Backing compute instance exists |
+
+```bash title="Show detailed appliance information"
+openstack loadbalancer amphora show <amphora-id>
+```
+
+---
+
+## Traffic Statistics
+
+<Tabs>
+  <Tab title="Load balancer statistics" icon="bar-chart">
+    ```bash title="Show load balancer statistics"
+    openstack loadbalancer stats show <lb-name>
+    ```
+
+    | Statistic | Description |
+    |-----------|-------------|
+    | `active_connections` | Current open connections to the load balancer |
+    | `bytes_in` | Total bytes received from clients |
+    | `bytes_out` | Total bytes sent to clients |
+    | `request_errors` | Failed requests — useful for detecting upstream issues |
+    | `total_connections` | Lifetime connection count |
+  </Tab>
+  <Tab title="Listener statistics" icon="ear">
+    ```bash title="Show per-listener statistics"
+    openstack loadbalancer listener stats show <listener-name>
+    ```
+
+    Listener statistics provide granular visibility when a load balancer has multiple
+    listeners on different protocols or ports.
+  </Tab>
+</Tabs>
+
+---
+
+## Certificate Expiration Monitoring
+
+Appliances use TLS certificates for controller-to-appliance management communication.
+Monitor expiration to prevent management plane failures:
+
+```bash title="Check certificate expiration on all appliances"
+openstack loadbalancer amphora list \
+  -c id -c cert_expiration -c status \
+  --sort-column cert_expiration
+```
+
+<Warning>
+  Appliances with expired certificates cannot receive configuration updates from the
+  controller. If an appliance certificate expires, trigger a failover to rotate the
+  certificate:
+  ```bash title="Rotate appliance certificate via failover"
+  openstack loadbalancer amphora failover <amphora-id>
+  ```
+</Warning>
+
+---
+
+## Manual Failover
+
+Trigger a manual failover to replace a degraded or expired appliance:
+
+```bash title="Failover an appliance"
+openstack loadbalancer amphora failover <amphora-id>
+```
+
+<Warning>
+  Failover causes brief service interruption (typically under 30 seconds for
+  ACTIVE_STANDBY topologies) while the replacement appliance is provisioned
+  and configuration is replicated.
+</Warning>
+
+Monitor failover progress:
+```bash title="Monitor load balancer provisioning status during failover"
+watch -n 5 "openstack loadbalancer show <lb-name> -c provisioning_status"
+```
+
+---
+
+## Prometheus Integration
+
+Xloud Load Balancer exposes metrics via the Octavia Prometheus exporter when configured.
+Key metrics to alert on:
+
+| Metric | Alert Threshold | Description |
+|--------|----------------|-------------|
+| `octavia_loadbalancer_status` | != 1 | Load balancer not ACTIVE |
+| `octavia_member_status` | != 1 | Member not ONLINE |
+| `octavia_amphora_cert_expiry_days` | < 30 | Appliance certificate expiring soon |
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Security" href="/services/load-balancer/lb-security" color="#197560">
+    Configure TLS certificate lifecycle management and management plane access controls.
+  </Card>
+  <Card title="Admin Troubleshooting" href="/services/load-balancer/lb-troubleshooting" color="#197560">
+    Use monitoring data to diagnose and resolve platform-level failures.
+  </Card>
+  <Card title="Flavor Profiles" href="/services/load-balancer/flavor-profiles" color="#197560">
+    Upgrade appliance capacity when statistics show saturation.
+  </Card>
+  <Card title="Architecture" href="/services/load-balancer/lb-architecture" color="#197560">
+    Understand the relationship between appliances and the management plane.
+  </Card>
+</CardGroup>

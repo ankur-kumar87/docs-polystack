@@ -1,0 +1,280 @@
+---
+title: "Upload an Image"
+description: "Upload virtual machine disk images to the Xloud Image Service from a local file or URL using the Dashboard or CLI."
+sidebarTitle: "Upload Image"
+---
+
+import PrerequisitesAuth from '/snippets/prerequisites-auth.mdx';
+
+## Overview
+
+The Xloud Image Service accepts virtual machine disk images in several formats for use
+as boot sources when launching new instances. Upload images through the Dashboard's
+Create Image form or via the CLI.
+
+<iframe
+  className="w-full aspect-video rounded-xl"
+  src="https://www.youtube.com/embed/-X325vysRQY"
+  title="How to Upload an Image on Xloud"
+  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+  allowFullScreen
+></iframe>
+
+<PrerequisitesAuth />
+
+---
+
+## Create an Image
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Navigate to Images">
+        Navigate to **Compute > Images** in the sidebar. Click **Create Image**.
+        The create form opens as a full page.
+      </Step>
+      <Step title="Configure basic information">
+        | Field | Type | Required | Description |
+        |-------|------|----------|-------------|
+        | **Name** | Text | Yes | Image display name (e.g., `ubuntu-24.04-lts`) |
+        | **Upload Type** | Radio | No | **Upload File** (default) or **File URL** |
+        | **File** | File upload | If Upload File | Select the local disk image file |
+        | **File URL** | Text | If File URL | URL starting with `http://` or `https://` |
+        | **Disk Format** | Dropdown | Yes | RAW, QCOW2, ISO (admin users also see AKI, ARI, AMI, VDI, VHD, VMDK) |
+        | **Container Format** | Dropdown | Conditional | Bare or Docker (shown when multiple formats are available) |
+
+        <Note>
+          Administrators see an additional **Owned Project** selector to upload
+          images on behalf of other projects.
+        </Note>
+      </Step>
+      <Step title="Configure OS details (bare container format)">
+        When the container format is **Bare** (default), these OS fields appear:
+
+        | Field | Type | Required | Description |
+        |-------|------|----------|-------------|
+        | **OS** | Dropdown | Yes | CentOS, Ubuntu, Fedora, Windows, Debian, CoreOS, Arch, FreeBSD, Others |
+        | **OS Version** | Text | Yes | Version string (e.g., `24.04`, `9.3`) |
+        | **OS Admin** | Text | Yes | Default admin user (`root` for Linux, `Administrator` for Windows) |
+
+        <Tip>
+          Setting the OS Admin correctly enables password injection. The instance
+          create wizard uses this field to pre-populate the login username.
+        </Tip>
+      </Step>
+      <Step title="Set resource requirements">
+        | Field | Type | Description |
+        |-------|------|-------------|
+        | **Min System Disk (GiB)** | Number (0-500) | Minimum root disk for launching (0 = unlimited) |
+        | **Min Memory (GiB)** | Number (0-500) | Minimum RAM for launching (0 = unlimited) |
+      </Step>
+      <Step title="Configure visibility and usage">
+        | Field | Type | Description |
+        |-------|------|-------------|
+        | **Visibility** | Radio (admin only) | Public (default for admin), Private (default for users), or Shared |
+        | **Project** | Multi-select table | Select projects to share with (shown when Shared visibility) |
+        | **Protected** | Checkbox | Prevent accidental deletion |
+        | **Usage Type** | Dropdown | Common Server (default), Bare Metal. Administrators also see: Bare Metal Enroll, Load Balancer, Database, Container, Application Template |
+        | **Description** | Text area | Optional notes (max 255 characters) |
+      </Step>
+      <Step title="Advanced options (optional)">
+        Click **Advanced Options** to expand:
+
+        | Field | Type | Default | Description |
+        |-------|------|---------|-------------|
+        | **qemu_guest_agent enabled** | Radio | Yes | Enable the QEMU guest agent for password change support |
+        | **CPU Policy** | Dropdown | Not set | shared, dedicated (for CPU pinning) |
+        | **CPU Thread Policy** | Dropdown | Not set | prefer, isolate, require |
+      </Step>
+      <Step title="Submit">
+        Click **Confirm**. The image enters `Saving` status while data transfers.
+
+        <Check>
+          Image status transitions to **Active** when upload completes. Ready for
+          launching instances.
+        </Check>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Source credentials"
+    source openrc.sh
+    ```
+
+    <CodeGroup>
+    ```bash title="Upload a QCOW2 image"
+    openstack image create \
+      --disk-format qcow2 \
+      --container-format bare \
+      --file /path/to/ubuntu-24.04.qcow2 \
+      --min-disk 10 \
+      --min-ram 1024 \
+      --property os_type=linux \
+      --property os_distro=ubuntu \
+      --property os_version=24.04 \
+      --property os_admin_user=root \
+      ubuntu-24.04-lts
+    ```
+    ```bash title="Import from URL"
+    openstack image create \
+      --disk-format qcow2 \
+      --container-format bare \
+      --uri https://cloud-images.ubuntu.com/noble/current/noble-server-cloudimg-amd64.img \
+      ubuntu-24.04-noble
+    ```
+    ```bash title="Upload a Windows ISO"
+    openstack image create \
+      --disk-format iso \
+      --container-format bare \
+      --file /path/to/windows-2022.iso \
+      --min-disk 40 \
+      --min-ram 2048 \
+      --property os_type=windows \
+      --property os_distro=windows \
+      --property os_admin_user=Administrator \
+      windows-2022-iso
+    ```
+    </CodeGroup>
+
+    ```bash title="Verify image is active"
+    openstack image show ubuntu-24.04-lts -c status -c size
+    ```
+
+    <Check>Status shows `active` — ready for use.</Check>
+  </Tab>
+</Tabs>
+
+---
+
+## View Images
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    Navigate to **Compute > Images**. The list shows images in tabs:
+
+    | Tab | Shows |
+    |-----|-------|
+    | **Current Project Images** | Images owned by your project |
+    | **Public Images** | Publicly visible images |
+    | **Shared Images** | Images shared with your project |
+    | **All Images** | All images (admin role required) |
+
+    List columns:
+
+    | Column | Description |
+    |--------|-------------|
+    | **ID/Name** | Image identifier (clickable to view details) |
+    | **Description** | Optional description |
+    | **Use Type** | Common Server, Bare Metal, Load Balancer, etc. |
+    | **Container Format** | Bare or Docker |
+    | **Type** | OS distribution (CentOS, Ubuntu, Windows, etc.) |
+    | **Status** | Active, Saving, Queued, Deactivated, etc. |
+    | **Visibility** | Public, Private, or Shared |
+    | **Disk Format** | RAW, QCOW2, ISO, etc. |
+    | **Size** | Image file size |
+    | **Created At** | Upload timestamp |
+
+    Filter by **Name**, **Status**, or **Visibility**.
+
+    **User actions**:
+
+    | Action | Location | Description |
+    |--------|----------|-------------|
+    | **Edit** | First row action | Edit name, OS details, protection |
+    | **Create Instance** | More dropdown | Launch a VM from this image |
+    | **Create Ironic Instance** | More dropdown | Launch a bare metal instance (if Ironic enabled) |
+    | **Create Volume** | More dropdown | Create a block storage volume from the image |
+    | **Delete** | More dropdown / batch | Delete the image |
+
+    **Admin actions** (completely different set):
+
+    | Action | Location | Description |
+    |--------|----------|-------------|
+    | **Edit** | First row action | Edit name, OS details, visibility, protection |
+    | **Delete** | More dropdown | Delete the image |
+    | **Manage Access** | More dropdown | Share with projects (requires Shared visibility) |
+    | **Manage Metadata** | More dropdown | Edit image metadata key-value pairs |
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    <CodeGroup>
+    ```bash title="List all images"
+    openstack image list
+    ```
+    ```bash title="List active images"
+    openstack image list --status active
+    ```
+    ```bash title="Show image details"
+    openstack image show <IMAGE_NAME>
+    ```
+    </CodeGroup>
+  </Tab>
+</Tabs>
+
+---
+
+## Image Detail
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    Click an image name to open the detail page. The header shows Name, Status,
+    Project ID, Description, Created At, and Updated At.
+
+    The **Detail** tab shows:
+
+    | Section | Fields |
+    |---------|--------|
+    | **Base Info** | Size, Min System Disk, Min Memory, Disk Format, OS, OS Version, Container Format |
+    | **Security Info** | Owner (copyable), Filename (copyable), Visibility, Protected, Checksum (copyable) |
+    | **Custom Properties** | All image metadata key-value pairs |
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Show full image details"
+    openstack image show <IMAGE_NAME> -f json
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Upload Best Practices
+
+<AccordionGroup>
+  <Accordion title="Always set min_disk and min_ram" defaultOpen>
+    Setting minimum disk and RAM prevents instance launch failures on flavors
+    too small for the image:
+
+    | OS | Recommended min_disk | Recommended min_ram |
+    |----|---------------------|---------------------|
+    | Ubuntu 22.04+ | 10 GiB | 1 GiB |
+    | CentOS/RHEL 9 | 15 GiB | 1 GiB |
+    | Windows Server | 40 GiB | 2 GiB |
+  </Accordion>
+  <Accordion title="Enable qemu_guest_agent">
+    The QEMU guest agent enables password changes and other management operations
+    from the Dashboard. Set `hw_qemu_guest_agent=yes` in Advanced Options (enabled
+    by default in the Dashboard form).
+  </Accordion>
+  <Accordion title="Name images with version and date">
+    Include OS version and build date for easy lifecycle management:
+    `ubuntu-24.04-lts-2026-03`, `windows-2022-std-2026-03`.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Image Properties" href="/services/images/image-properties" color="#197560">
+    Set hardware requirements and OS metadata on uploaded images
+  </Card>
+  <Card title="Share Images" href="/services/images/share-images" color="#197560">
+    Share images with other projects in your organization
+  </Card>
+  <Card title="Create a Snapshot" href="/services/images/create-snapshot" color="#197560">
+    Capture running instances as golden images
+  </Card>
+  <Card title="Troubleshooting" href="/services/images/troubleshooting" color="#197560">
+    Resolve upload failures and stuck images
+  </Card>
+</CardGroup>

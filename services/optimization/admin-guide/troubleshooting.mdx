@@ -1,0 +1,318 @@
+---
+title: "Troubleshooting"
+description: "Diagnose and resolve Xloud Optimization failures — audit errors, action plan execution failures, live migration issues, data source connectivity, and."
+sidebarTitle: "Troubleshooting"
+---
+
+## Overview
+
+This guide covers the most common failure modes in the Optimization: audits that
+fail to complete, action plans that stall during execution, live migration errors from
+the Compute API, and data source connectivity issues. Each section includes log locations,
+diagnostic commands, and remediation steps.
+
+---
+
+## Quick Diagnostic Reference
+
+<AccordionGroup>
+  <Accordion title="Check all Optimization container health" icon="heart-pulse" defaultOpen>
+    ```bash title="Check container status"
+    docker ps --filter name=watcher \
+      --format "table {{.Names}}\t{{.Status}}"
+    ```
+
+    All three containers must show `(healthy)`:
+    - `watcher_api`
+    - `watcher_decision_engine`
+    - `watcher_applier`
+
+    ```bash title="Check for recent errors in all containers"
+    for c in watcher_api watcher_decision_engine watcher_applier; do
+      echo "=== $c ==="; docker logs --tail 20 $c 2>&1 | grep -E "ERROR|CRITICAL"
+    done
+    ```
+  </Accordion>
+  <Accordion title="Audit state glossary" icon="book">
+    | State | Meaning |
+    |-------|---------|
+    | `PENDING` | Queued, waiting for Decision Engine |
+    | `ONGOING` | Decision Engine is running the strategy |
+    | `SUCCEEDED` | Audit complete — action plan generated |
+    | `FAILED` | Audit failed — check Decision Engine logs |
+    | `CANCELLED` | Manually cancelled by an operator |
+  </Accordion>
+  <Accordion title="Action plan state glossary" icon="book">
+    | State | Meaning |
+    |-------|---------|
+    | `RECOMMENDED` | Awaiting operator approval |
+    | `PENDING` | Started, waiting for Applier |
+    | `ONGOING` | Applier is executing actions |
+    | `SUCCEEDED` | All actions completed successfully |
+    | `FAILED` | One or more actions failed |
+    | `CANCELLED` | Expired or manually cancelled |
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Audit Failures
+
+### Audit Stuck in PENDING
+
+The audit is queued but the Decision Engine has not picked it up.
+
+```bash title="Check Decision Engine is running"
+docker ps --filter name=watcher_decision_engine
+docker logs watcher_decision_engine --tail 50
+```
+
+**Common causes:**
+- Decision Engine container is stopped or unhealthy
+- RabbitMQ messaging connection is broken
+- All Decision Engine workers are busy with another audit
+
+```bash title="Restart Decision Engine"
+docker restart watcher_decision_engine
+```
+
+---
+
+### Audit Fails with Strategy Error
+
+```bash title="Show audit details"
+watcher audit show <audit-uuid> \
+  -f value -c state -c scope
+```
+
+```bash title="Check Decision Engine logs for strategy errors"
+docker logs watcher_decision_engine 2>&1 \
+  | grep -A 5 "ERROR.*strategy\|exception in.*strategy"
+```
+
+**Common causes and fixes:**
+
+| Symptom | Cause | Fix |
+|---------|-------|-----|
+| `NoDataFound` | Data source not configured or unreachable | Configure Prometheus or Telemetry — see [Data Sources](/services/optimization/admin-guide/data-sources) |
+| `InsufficientData` | Not enough metric history | Wait 2–4 hours for Telemetry to accumulate history |
+| `StrategyNotFound` | Custom strategy not registered | Reinstall the strategy package and restart Decision Engine |
+| `NoCandidateFound` | All hosts are above the utilization threshold | Adjust strategy parameters — see [Strategy Configuration](/services/optimization/admin-guide/strategy-config) |
+
+---
+
+### Audit Succeeds but Generates Empty Action Plan
+
+The audit completed successfully but no migrations were recommended.
+
+This is expected behaviour when:
+- All hosts are within the target utilization range (no consolidation needed)
+- All instances are already on their optimal host
+- The cluster is fully balanced for the selected goal
+
+```bash title="Check current utilization"
+openstack hypervisor list --long \
+  -f table -c Hostname -c "vCPUs Used" -c "Memory MB Used"
+```
+
+If the cluster appears underutilized but no actions were generated, lower the strategy
+threshold parameters — see [Strategy Configuration](/services/optimization/admin-guide/strategy-config).
+
+---
+
+## Action Plan Execution Failures
+
+### Action Plan Stuck in PENDING
+
+The plan was approved but the Applier has not started execution.
+
+```bash title="Check Applier logs"
+docker logs watcher_applier --tail 50
+```
+
+```bash title="Check action plan details"
+watcher actionplan show <plan-uuid>
+```
+
+**Common causes:**
+- Applier container is stopped
+- Plan has expired (exceeded `action_plan_expiry`)
+- Taskflow workflow database is locked
+
+```bash title="Restart Applier"
+docker restart watcher_applier
+```
+
+If the plan is expired, create a new audit to generate a fresh plan.
+
+---
+
+### Live Migration Action Fails
+
+The Applier attempted a migration but Xloud Compute rejected it.
+
+```bash title="Check action-level failure details"
+watcher action list \
+  --action-plan <plan-uuid> \
+  -f table -c uuid -c action_type -c state -c description
+```
+
+```bash title="Check Applier logs for migration errors"
+docker logs watcher_applier 2>&1 \
+  | grep -A 10 "ERROR.*migrate\|MigrationError"
+```
+
+**Common migration errors:**
+
+<AccordionGroup>
+  <Accordion title="Instance has no shared storage" icon="hard-drive">
+    **Error**: `LiveMigrationWithOldNovaNotSupported` or migration times out.
+
+    The instance disk is backed by local ephemeral storage and cannot be live-migrated.
+
+    **Fix**: Verify the instance is volume-backed before running optimization:
+    ```bash title="Check instance storage"
+    openstack server show <instance-id> \
+      -f value -c "os-extended-volumes:volumes_attached"
+    ```
+
+    Instances with no attached volumes must be excluded from optimization scope or
+    migrated to volume-backed equivalents by the project owner.
+  </Accordion>
+  <Accordion title="CPU feature mismatch" icon="cpu">
+    **Error**: `MigrationPreCheckError: Guest requires CPU feature not present on destination`.
+
+    Compute hosts have different CPU feature sets and no common baseline is configured.
+
+    **Fix**: Set a common CPU model in `nova.conf` on all compute hosts:
+    ```ini title="nova.conf — CPU compatibility"
+    [libvirt]
+    cpu_mode = custom
+    cpu_model = Cascadelake-Server-noTSX
+    ```
+
+    See [Compute Integration](/services/optimization/admin-guide/compute-integration) for details.
+  </Accordion>
+  <Accordion title="Destination host has insufficient capacity" icon="server">
+    **Error**: `NoValidHost: No valid host was found`.
+
+    The destination host identified during the audit no longer has sufficient vCPU or
+    memory available (cluster state changed between audit and execution).
+
+    **Fix**: Run a new audit to generate a fresh plan reflecting current cluster state.
+    Lower `action_plan_expiry` to prevent stale plans from executing:
+    ```ini title="watcher.conf"
+    [DEFAULT]
+    action_plan_expiry = 6
+    ```
+  </Accordion>
+  <Accordion title="Source or destination host is disabled" icon="circle-xmark">
+    **Error**: `HTTPBadRequest: Cannot live migrate to disabled host`.
+
+    A host was disabled between audit completion and plan execution.
+
+    **Fix**: Re-enable the host or run a new audit with current host availability.
+    ```bash title="Re-enable a host"
+    openstack compute service set --enable <hostname> nova-compute
+    ```
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Data Source Issues
+
+### Prometheus Not Reachable
+
+Strategies that require Prometheus (`outlet_temperature`, `saving_energy`) fail with
+`NoDataFound`.
+
+```bash title="Test Prometheus connectivity from Decision Engine"
+docker exec watcher_decision_engine \
+  curl -s "http://10.0.1.71:9291/api/v1/query?query=up" | python3 -m json.tool
+```
+
+Expected: `"status": "success"` with results.
+
+```bash title="Check Prometheus section in watcher.conf"
+grep -A 5 "\[prometheus_client\]" /etc/xavs/watcher/watcher.conf
+```
+
+---
+
+### Telemetry Metrics Missing
+
+Strategies that require Telemetry (`workload_stabilization`, `noisy_neighbor`) fail
+with `InsufficientData` or generate no recommendations.
+
+```bash title="Check Telemetry collector is configured"
+grep -A 5 "\[ceilometer_client\]" /etc/xavs/watcher/watcher.conf
+```
+
+```bash title="Verify metrics exist in Telemetry"
+openstack metric resource list --type instance | head -5
+```
+
+If no instance resources are listed, the Telemetry service is not collecting metrics.
+Verify Xloud Telemetry is deployed and the `ceilometer` compute agent is enabled.
+
+---
+
+## Authentication Failures
+
+### 401 Unauthorized in Applier Logs
+
+The Applier service account credentials are invalid or expired.
+
+```bash title="Check Applier authentication errors"
+docker logs watcher_applier 2>&1 | grep "401\|Unauthorized\|keystoneauth"
+```
+
+```bash title="Test the service account token"
+openstack --os-username watcher-service \
+  --os-password "<service-account-password>" \
+  --os-project-name service \
+  token issue
+```
+
+If token issue fails, the service account credentials in `watcher.conf` are incorrect.
+Update the `[keystone_authtoken]` section and restart all Optimizer containers:
+
+```bash title="Restart after credential update"
+docker restart watcher_api watcher_decision_engine watcher_applier
+```
+
+---
+
+## Log Locations
+
+| Component | Log Location |
+|-----------|-------------|
+| API | `docker logs watcher_api` |
+| Decision Engine | `docker logs watcher_decision_engine` |
+| Applier | `docker logs watcher_applier` |
+| Full log files | `/var/log/kolla/watcher/` (on controller host) |
+
+```bash title="Search all Optimizer logs for errors"
+grep -r "ERROR\|CRITICAL" /var/log/kolla/watcher/ \
+  | tail -50
+```
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Strategy Configuration" href="/services/optimization/admin-guide/strategy-config" color="#197560">
+    Adjust thresholds and parameters when audits generate no recommendations.
+  </Card>
+  <Card title="Compute Integration" href="/services/optimization/admin-guide/compute-integration" color="#197560">
+    Verify shared storage and CPU compatibility for live migration.
+  </Card>
+  <Card title="Data Sources" href="/services/optimization/admin-guide/data-sources" color="#197560">
+    Diagnose Prometheus and Telemetry connectivity failures.
+  </Card>
+  <Card title="Security" href="/services/optimization/admin-guide/security" color="#197560">
+    Resolve service account authentication failures.
+  </Card>
+</CardGroup>

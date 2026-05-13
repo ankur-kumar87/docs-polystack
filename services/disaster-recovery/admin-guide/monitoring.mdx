@@ -1,0 +1,180 @@
+---
+title: "XDR Monitoring"
+description: "Integrate XDR with XIMP to monitor replication health, RPO adherence, site availability, and DR readiness across all protection plans."
+sidebarTitle: "Monitoring"
+---
+
+## Overview
+
+Continuous monitoring of XDR replication is critical — a silent replication failure
+discovered only during an actual disaster event can mean data loss far beyond the
+configured RPO. Integrate XDR with XIMP to surface replication lag, site health,
+and DR readiness metrics before they become incidents.
+
+<Note>
+  **Prerequisites**
+  - XIMP deployed and agents active on both primary and DR sites
+  - XDR controller API accessible from the XIMP collector
+  - Protection plans in `ACTIVE` status
+</Note>
+
+---
+
+## Key Metrics
+
+| Metric | Description | Alert Threshold |
+|--------|-------------|----------------|
+| `xdr_replication_lag_seconds` | Current replication lag per plan | > RPO target |
+| `xdr_site_health` | Site availability status | `UNREACHABLE` |
+| `xdr_plan_status` | Plan replication state | Not `ACTIVE` |
+| `xdr_last_test_age_days` | Days since last DR test for a plan | > 90 days |
+| `xdr_recovery_point_count` | Number of available recovery points | < minimum configured |
+| `xdr_replication_throughput_bytes` | Replication throughput per link | N/A (trending) |
+| `xdr_sync_progress_percent` | Initial sync progress (0–100) | < 100 after 48h |
+| `xdr_link_latency_ms` | Round-trip latency between sites | > site-specific threshold |
+
+---
+
+## XIMP Dashboard
+
+XDR includes a pre-built XIMP dashboard showing all protection plans and their
+current replication status. Navigate to **Monitoring → Dashboards → XDR Overview**.
+
+The dashboard provides:
+- Per-plan replication lag (sparkline, 24h history)
+- Site health indicator for all registered sites
+- RPO compliance percentage per plan (7d rolling)
+- Last DR test date and outcome per plan
+- Active failover events (if any)
+
+---
+
+## Alert Rules
+
+Configure XIMP alert rules to notify operations teams before replication problems
+impact RPO compliance.
+
+<AccordionGroup>
+  <Accordion title="Replication lag approaching RPO" icon="clock">
+    Alert before lag actually exceeds the RPO target — early warning allows
+    investigation before data loss risk is realized.
+
+    Navigate to **Monitoring → Alerting → Alert Rules → Create Rule**:
+
+    ```
+    Name: XDR Replication Lag Warning
+    Condition: xdr_replication_lag_seconds > (xdr_rpo_target_seconds * 0.75)
+    For: 5 minutes
+    Severity: Warning
+    Channel: ops-alerts
+    ```
+
+    ```
+    Name: XDR Replication Lag Critical
+    Condition: xdr_replication_lag_seconds > xdr_rpo_target_seconds
+    For: 2 minutes
+    Severity: Critical
+    Channel: ops-pagerduty
+    ```
+  </Accordion>
+  <Accordion title="Plan not active" icon="shield">
+    Alert immediately if a protection plan transitions out of `ACTIVE` status —
+    this means replication has stopped and the DR site data is not being updated.
+
+    ```
+    Name: XDR Plan Not Active
+    Condition: xdr_plan_status != "ACTIVE"
+    For: 1 minute
+    Severity: Critical
+    Channel: ops-pagerduty
+    ```
+  </Accordion>
+  <Accordion title="Site unreachable" icon="server">
+    Alert when a site becomes unreachable — could indicate the primary site has
+    failed or network connectivity between sites has been lost.
+
+    ```
+    Name: XDR Site Unreachable
+    Condition: xdr_site_health == "UNREACHABLE"
+    For: 2 minutes
+    Severity: Critical
+    Channel: ops-pagerduty
+    ```
+  </Accordion>
+  <Accordion title="DR test overdue" icon="flask-conical">
+    Alert when a protection plan has not been tested within the configured interval.
+    DR plans that are never tested cannot be relied upon during an actual disaster.
+
+    ```
+    Name: XDR Test Overdue
+    Condition: xdr_last_test_age_days > 90
+    For: immediate
+    Severity: Warning
+    Channel: ops-alerts
+    ```
+
+    Navigate to **Monitoring → Alerting → Alert Rules** and create a rule sourcing
+    the `xdr_last_test_age_days` metric to ensure tests are not missed.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Diagnostic Views
+
+All diagnostic information is available through the XDR Dashboard:
+
+| Diagnostic | Dashboard Location |
+|------------|-------------------|
+| Replication lag across all plans | **Disaster Recovery → Protection Plans** — lag column in the plan list |
+| Replication health history | **Disaster Recovery → Protection Plans → [Plan]** — replication lag sparkline (24h history) |
+| Site health status | **Disaster Recovery → Sites** — health indicator per site |
+| Link throughput statistics | **Disaster Recovery → Sites → Replication Links → [Link]** — throughput and latency metrics |
+
+---
+
+## Replication Health Thresholds
+
+Use these thresholds when configuring XIMP alert rules:
+
+| Metric | Healthy | Warning | Critical |
+|--------|---------|---------|---------|
+| Replication lag | < 50% of RPO target | 50–100% of RPO target | > RPO target |
+| Plan status | `ACTIVE` | `DEGRADED` | `FAILED` / `STOPPED` |
+| Site health | `CONNECTED` | `DEGRADED` | `UNREACHABLE` |
+| Last recovery point age | < RPO target | RPO target to 2× RPO | > 2× RPO target |
+| Sync progress (initial) | Increasing | Stalled > 30 min | No progress > 2h |
+
+---
+
+## Log Collection
+
+XDR agent and controller logs are forwarded to XIMP log analytics automatically
+when agents are deployed via XDeploy. Query logs in **Monitoring → Log Explorer**:
+
+| Log Source | Query Pattern |
+|-----------|---------------|
+| XDR controller | `service: xdr-controller` |
+| XDR agent (primary) | `service: xdr-agent AND site: primary-dc1` |
+| XDR agent (DR) | `service: xdr-agent AND site: dr-site-a` |
+| Failover events | `service: xdr-controller AND event_type: failover` |
+| Runbook scripts | `service: xdr-runbook AND plan: prod-database-dr` |
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="XIMP Admin Guide — Alert Channels" href="/services/monitoring/admin-guide/alert-channels" color="#197560">
+    Configure notification channels for XDR alerts
+  </Card>
+  <Card title="Compliance" href="/services/disaster-recovery/admin-guide/compliance" color="#197560">
+    Generate RPO/RTO compliance reports from monitoring history
+  </Card>
+  <Card title="DR Automation" href="/services/disaster-recovery/admin-guide/dr-automation" color="#197560">
+    Configure automatic failover on site health alerts
+  </Card>
+  <Card title="Troubleshooting" href="/services/disaster-recovery/admin-guide/troubleshooting" color="#197560">
+    Diagnose replication lag and plan health issues
+  </Card>
+</CardGroup>

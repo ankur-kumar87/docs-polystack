@@ -1,0 +1,194 @@
+---
+title: "Cluster Drivers"
+description: "Configure and manage Xloud K8SaaS cluster drivers — the provisioning engine that templates and deploys Kubernetes clusters on the platform infrastructure."
+sidebarTitle: "Cluster Drivers"
+---
+
+## Overview
+
+Cluster drivers are the provisioning engine behind K8SaaS. Each driver defines the
+orchestration templates and bootstrap scripts used to deploy and manage a specific
+type of cluster. Xloud K8SaaS ships with the `kubernetes` driver as the supported
+default. You can enable, disable, or configure driver behaviour through
+the K8SaaS service configuration file.
+
+<Warning>
+  Changing driver configuration affects all future cluster deployments. Existing
+  clusters continue to use the driver version they were provisioned with.
+</Warning>
+
+---
+
+## Available Drivers
+
+| Driver | Status | Description |
+|--------|--------|-------------|
+| `kubernetes` | <Badge color="green" size="sm" shape="pill">Default</Badge> | Provisions Kubernetes clusters using Xloud Orchestration (Heat) templates |
+
+The `kubernetes` driver is the only supported driver in standard Xloud K8SaaS deployments.
+Third-party drivers (e.g., `swarm`, `mesos`) are not enabled by default and are not
+supported in production configurations.
+
+---
+
+## Verify the Driver is Active
+
+```bash title="List registered driver entry points"
+openstack coe cluster template list --public
+```
+
+The output shows public cluster templates. If templates exist and are usable, the driver
+is active.
+
+```bash title="Check driver configuration"
+grep -E "disabled_drivers|driver" \
+  /etc/xavs/kubernetes/kubernetes.conf
+```
+
+If `disabled_drivers` is empty or not present, all built-in drivers are enabled.
+
+---
+
+## Driver Configuration
+
+Driver behaviour is configurable in the K8SaaS service configuration file.
+
+<Tree>
+  <Tree.Folder name="etc" defaultOpen>
+    <Tree.Folder name="xavs" defaultOpen>
+      <Tree.Folder name="kubernetes" defaultOpen>
+        <Tree.File name="kubernetes.conf — K8SaaS service configuration" />
+      </Tree.Folder>
+    </Tree.Folder>
+  </Tree.Folder>
+</Tree>
+
+<Tabs>
+  <Tab title="XDeploy" icon="server">
+    <Steps titleSize="h3">
+      <Step title="Open Advanced Configuration" icon="settings">
+        Navigate to **XDeploy → Advanced Configuration** and select **magnum** in the
+        Service Tree.
+      </Step>
+      <Step title="Edit kubernetes.conf" icon="file-code">
+        Select or create `kubernetes.conf` in the file list. Use the Code Editor to
+        add or modify driver and conductor settings:
+
+        ```ini title="kubernetes.conf — Disable experimental drivers"
+        [drivers]
+        disabled_drivers = swarm,mesos
+        ```
+
+        ```ini title="kubernetes.conf — Increase conductor workers"
+        [DEFAULT]
+        workers = 4
+        ```
+
+        Click **Save Current File** after each change.
+      </Step>
+      <Step title="Deploy the changes" icon="rocket">
+        Navigate to **XDeploy → Operations** and run a **Reconfigure** for the
+        Kubernetes service.
+
+        <Check>Driver restrictions and conductor worker count are applied.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ### Disable Specific Drivers
+
+    To restrict the platform to only the `kubernetes` driver and prevent experimental
+    drivers from being registered:
+
+    ```ini title="/etc/xavs/kubernetes/kubernetes.conf"
+    [drivers]
+    disabled_drivers = swarm,mesos
+    ```
+
+    ### Conductor Worker Count
+
+    Increase the number of Conductor workers to handle more concurrent cluster operations:
+
+    ```ini title="/etc/xavs/kubernetes/kubernetes.conf"
+    [DEFAULT]
+    workers = 4
+    ```
+
+    Restart the Conductor after changes:
+
+    ```bash title="Restart Conductor"
+    docker restart magnum_conductor
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Driver Template Location
+
+The `kubernetes` driver ships Orchestration templates that define the full cluster
+resource stack. These templates are embedded in the K8SaaS container image.
+
+```bash title="List driver templates inside the container"
+docker exec magnum_conductor find \
+  /usr/lib/python3/dist-packages/magnum/drivers \
+  -name "*.yaml" -maxdepth 4
+```
+
+To inspect a specific template:
+
+```bash title="View base cluster template"
+docker exec magnum_conductor cat \
+  /usr/lib/python3/dist-packages/magnum/drivers/k8s_fedora_coreos_v1/templates/cluster.yaml
+```
+
+---
+
+## Validate Driver Functionality
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    Navigate to **Container (admin view) > Cluster Templates** and create a test public
+    template using the `kubernetes` driver. If the template is created successfully
+    without errors, the driver is functioning correctly.
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Verify Conductor is processing tasks"
+    docker logs magnum_conductor | tail -20
+    ```
+
+    ```bash title="Create a test template"
+    openstack coe cluster template create driver-test \
+      --coe kubernetes \
+      --image fedora-coreos-39 \
+      --keypair admin-keypair \
+      --flavor m1.medium \
+      --external-network public
+    ```
+
+    ```bash title="Delete test template"
+    openstack coe cluster template delete driver-test
+    ```
+
+    <Check>Template creates and deletes without errors — driver is operational.</Check>
+  </Tab>
+</Tabs>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Template Management" href="/services/kubernetes/admin-guide/template-management" color="#197560">
+    Create and publish public cluster templates for project teams.
+  </Card>
+  <Card title="Container Runtime" href="/services/kubernetes/admin-guide/container-runtime" color="#197560">
+    Configure the container runtime for cluster templates.
+  </Card>
+  <Card title="Network Drivers" href="/services/kubernetes/admin-guide/network-drivers" color="#197560">
+    Select and configure CNI plugins for production clusters.
+  </Card>
+  <Card title="Architecture" href="/services/kubernetes/admin-guide/architecture" color="#197560">
+    Review the full K8SaaS component architecture.
+  </Card>
+</CardGroup>

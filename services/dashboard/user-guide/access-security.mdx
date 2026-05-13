@@ -1,0 +1,102 @@
+---
+title: "Access & Security"
+description: "Manage SSH key pairs, security groups, and application credentials through the Xloud Dashboard."
+sidebarTitle: "Access & Security"
+---
+
+## Overview
+
+Access and security resources are managed across multiple sidebar sections in the
+Dashboard:
+
+| Resource | Location |
+|----------|----------|
+| **Key Pairs** | Compute > Key Pairs |
+| **Security Groups** | Network > Security Groups |
+| **Application Credentials** | User profile menu > User Center > Application Credentials |
+
+---
+
+## Key Pairs
+
+Navigate to **Compute > Key Pairs**. Key pairs provide SSH authentication for
+Linux instances.
+
+**Create a Key Pair**: Click **Create Key Pair**.
+
+| Field | Description |
+|-------|-------------|
+| **Type** | Create new (generates keypair) or Import (paste public key) |
+| **Name** | Key pair name (required) |
+| **Public Key** | Paste your public key (shown when Type is Import) |
+
+When creating a new key pair, the private key downloads automatically as a `.pem`
+file. Store it securely — it cannot be retrieved later.
+
+<Warning>
+  Key pair quota is displayed in the create dialog. If exhausted, delete unused
+  key pairs before creating new ones.
+</Warning>
+
+---
+
+## Security Groups
+
+Navigate to **Network > Security Groups**. Security groups act as virtual firewalls
+controlling inbound and outbound traffic per instance port.
+
+**Create a Security Group**: Click **Create Security Group**. Enter a **Name** and
+optional **Description**. Default egress rules (allow all outbound IPv4/IPv6) are
+created automatically.
+
+**Add Rules**: Click the group name to open the detail page, then click **Add Rule**:
+
+| Field | Options |
+|-------|---------|
+| **Direction** | Ingress or Egress |
+| **Ether Type** | IPv4 or IPv6 |
+| **Protocol** | TCP, UDP, ICMP, or ANY |
+| **Port Range** | Min/Max port (TCP/UDP only) |
+| **Remote IP Prefix** | CIDR notation (e.g., `0.0.0.0/0`) |
+
+<Note>
+  For the complete security groups reference, see
+  [Network Security Groups](/services/networking/security-groups).
+</Note>
+
+---
+
+## Application Credentials
+
+Application credentials allow non-interactive API authentication without exposing
+your password.
+
+Navigate to the **user profile menu** (top-right avatar) and select **Application
+Credentials** under **User Center**.
+
+Click **Create Application Credentials**. Configure name, description, expiration,
+roles, and whether the credential is unrestricted.
+
+<Note>
+  Application Credentials are accessed via the user profile dropdown in Skyline,
+  not through the Identity sidebar section.
+</Note>
+
+---
+
+## Detailed Guides
+
+<CardGroup cols={2}>
+  <Card title="Security Groups" href="/services/networking/security-groups" color="#197560">
+    Complete security group and rule management
+  </Card>
+  <Card title="Manage IPs" href="/services/compute/manage-ips" color="#197560">
+    Associate floating IPs with instances
+  </Card>
+  <Card title="Launch an Instance" href="/services/compute/launch-instance" color="#197560">
+    Select key pairs and security groups during launch
+  </Card>
+  <Card title="Key Manager" href="/services/key-manager/user-guide" color="#197560">
+    Store secrets and certificates
+  </Card>
+</CardGroup>

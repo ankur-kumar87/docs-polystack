@@ -1,0 +1,245 @@
+---
+title: "Volume Snapshots"
+description: "Create, restore, and manage point-in-time snapshots of Xloud Block Storage volumes. Use snapshots for fast recovery, volume cloning, and pre-change checkpoints."
+sidebarTitle: "Snapshots"
+---
+
+import CliAuth from '/snippets/cli-auth.mdx';
+
+## Overview
+
+A snapshot captures the state of a volume at a specific point in time. Snapshots are <Tooltip tip="The data is consistent as if the power were cut — no guarantee of application-level consistency unless writes were quiesced first">crash-consistent</Tooltip> and stored within the same storage cluster as the source volume. Creating a snapshot takes seconds — only metadata is recorded at creation time, with changed blocks tracked incrementally. Snapshots are ideal for pre-change checkpoints, test environment cloning, and fast volume recovery.
+
+<Note>
+  **Prerequisites**
+  - An active project with snapshot quota available (`openstack quota show`)
+  - The source volume must exist (it can be attached or detached)
+  - For application-consistent snapshots of databases, quiesce writes or use a
+    maintenance window before creating the snapshot
+</Note>
+
+---
+
+## Snapshot vs Backup
+
+| Feature | Snapshot | Backup |
+|---------|----------|--------|
+| Storage location | Same cluster as source volume | Separate backup target |
+| Creation time | Seconds (metadata + COW tracking) | Minutes (full data copy) |
+| Incremental support | Implicit (copy-on-write) | Yes — after first full backup |
+| Survives cluster failure | No | Yes |
+| Restore time | Seconds (new volume from snapshot) | Minutes (data restore) |
+| Use case | Fast recovery points, cloning | Long-term retention, disaster recovery |
+
+<Tip>
+  Use snapshots for frequent, short-term checkpoints. Use [backups](/services/storage/backups)
+  for long-term retention and disaster recovery scenarios.
+</Tip>
+
+---
+
+## Create a Snapshot
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Navigate to Volumes" icon="compass">
+        Navigate to
+        **Storage > Volumes**.
+      </Step>
+      <Step title="Create snapshot" icon="camera">
+        Locate the target volume and click the **More** dropdown and select **Data Protection > Create Snapshot**.
+
+        Provide a descriptive name, then click **Confirm**.
+
+        <Tip>
+           Name snapshots with a timestamp and purpose for easy identification —
+          e.g., `db-primary-2026-03-18-pre-migration`.
+        </Tip>
+      </Step>
+      <Step title="Verify" icon="circle-check">
+        Navigate to **Storage > Volume Snapshots**. The new snapshot appears with
+        status **Available**.
+
+        <Check>Snapshot created — status shows **Available**.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    <Steps titleSize="h3">
+      <Step title="Authenticate" icon="key">
+        <CliAuth />
+      </Step>
+      <Step title="Create the snapshot" icon="camera">
+        ```bash title="Create volume snapshot"
+        openstack volume snapshot create \
+          --volume <volume-name-or-id> \
+          --description "Pre-deployment checkpoint" \
+          my-snapshot-2026-03-18
+        ```
+      </Step>
+      <Step title="List and verify" icon="list">
+        ```bash title="List all snapshots"
+        openstack volume snapshot list
+        ```
+
+        ```bash title="Show snapshot details"
+        openstack volume snapshot show my-snapshot-2026-03-18
+        ```
+
+        <Check>Snapshot status shows `available` — ready for restore or volume creation.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+</Tabs>
+
+---
+
+## Restore from a Snapshot
+
+Restoring creates a new independent volume pre-populated with the snapshot data. The
+original source volume and snapshot are unaffected.
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Navigate to Snapshots" icon="compass">
+        Navigate to **Storage > Volume Snapshots**.
+      </Step>
+      <Step title="Create volume from snapshot" icon="rotate-ccw">
+        Click the **More** dropdown and select **Create Volume** on the desired snapshot. Configure the new
+        volume name, type, and availability zone, then click **Confirm**.
+
+        <Note>
+          The new volume size defaults to the snapshot size. You can specify a larger
+          size, but not smaller.
+        </Note>
+      </Step>
+      <Step title="Attach the restored volume" icon="link">
+        The restored volume appears in the Volumes list with status **Available**.
+        [Attach it to an instance](/services/storage/attach-volume) and verify the data.
+
+        <Check>Volume restored from snapshot and ready for attachment.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    <Steps titleSize="h3">
+      <Step title="Create volume from snapshot" icon="rotate-ccw">
+        ```bash title="Restore snapshot to a new volume"
+        openstack volume create \
+          --snapshot my-snapshot-2026-03-18 \
+          --size 100 \
+          restored-volume
+        ```
+      </Step>
+      <Step title="Verify the restored volume" icon="circle-check">
+        ```bash title="Check restored volume status"
+        openstack volume show restored-volume -c status -c size
+        ```
+
+        <Check>Status `available` — volume restored and ready to attach.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+</Tabs>
+
+---
+
+## Delete a Snapshot
+
+<Warning>
+  Snapshot deletion is permanent and cannot be undone. Ensure no volumes are currently
+  being created from the snapshot before deleting it. Volumes that depend on a snapshot
+  (created from it) must be deleted first if the backend requires it.
+</Warning>
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    Navigate to **Storage > Volume Snapshots**. Click the **More** dropdown and select **Delete**
+    on the target snapshot and confirm the deletion.
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Delete a snapshot"
+    openstack volume snapshot delete <snapshot-name-or-id>
+    ```
+
+    ```bash title="Verify deletion"
+    openstack volume snapshot list
+    ```
+
+    <Check>Snapshot deleted. The source volume is unaffected.</Check>
+  </Tab>
+</Tabs>
+
+---
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Snapshot stuck in 'creating' status" icon="clock">
+    **Cause**: The storage backend did not complete the snapshot operation within the
+    expected timeout, or the volume is in an inconsistent state.
+
+    **Resolution**:
+    ```bash title="Check snapshot status"
+    openstack volume snapshot show <snapshot-id> -c status
+    ```
+
+    Wait a few minutes for backends under load. If the snapshot remains in `creating`
+    for more than 10 minutes, contact your administrator — the backend may require
+    manual cleanup.
+  </Accordion>
+
+  <Accordion title="Snapshot in 'error' status" icon="triangle-alert">
+    **Cause**: The backend encountered an error during snapshot creation. Common causes
+    include insufficient storage capacity or backend driver issues.
+
+    **Resolution**:
+    ```bash title="Delete the failed snapshot"
+    openstack volume snapshot delete <snapshot-id>
+    ```
+
+    Check available capacity on the storage cluster and retry. Do not repeatedly retry
+    on a degraded backend — resolve the underlying storage issue first.
+  </Accordion>
+
+  <Accordion title="Cannot delete snapshot — 'snapshot has dependent volumes'" icon="link">
+    **Cause**: A volume was created from this snapshot and the backend tracks the
+    dependency. Some backends require the child volume to be deleted before the snapshot.
+
+    **Resolution**: Delete the volumes created from the snapshot first, then delete
+    the snapshot.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Application-Consistent and File-Level Restore
+
+For application-consistent snapshots with XAVS Guest Agent coordination (filesystem freeze, VSS provider for Windows, custom hooks) and agentless file-level restore, see the Compute snapshots guide. The file-level restore feature lets you browse and download individual files from any snapshot.
+
+<CardGroup cols={1}>
+  <Card title="Instance Snapshots and Backups" href="/services/compute/snapshots" color="#197560">
+    Application-consistent snapshots, XAVS Guest Agent integration, and agentless file-level restore from the Dashboard
+  </Card>
+</CardGroup>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Volume Backups" href="/services/storage/backups" color="#197560">
+    Create full and incremental backups for long-term retention and disaster recovery
+  </Card>
+  <Card title="Extend a Volume" href="/services/storage/extend-volume" color="#197560">
+    Increase volume capacity before or after restoring from a snapshot
+  </Card>
+  <Card title="Attach / Detach" href="/services/storage/attach-volume" color="#197560">
+    Attach a restored volume to a compute instance
+  </Card>
+  <Card title="Create a Volume" href="/services/storage/create-volume" color="#197560">
+    Create a new volume from an image, snapshot, or blank
+  </Card>
+</CardGroup>

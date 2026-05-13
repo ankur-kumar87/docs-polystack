@@ -1,0 +1,129 @@
+---
+title: "Kubernetes as a Service"
+description: "Deploy and manage production-grade Kubernetes clusters on Xloud infrastructure — automated provisioning, scaling, and lifecycle management for."
+icon: "container"
+sidebarTitle: "Kubernetes (K8SaaS)"
+mode: "wide"
+---
+
+Deploy and manage production-grade Kubernetes clusters directly on your Xloud private
+cloud. Xloud Kubernetes as a Service (K8SaaS) automates cluster provisioning, node
+scaling, certificate management, and upgrades — giving teams a fully managed Kubernetes
+experience on dedicated infrastructure.
+
+<Card title="XAVS — Advanced Virtualization Solutions" icon="external-link" href="https://xloud.tech/xavs" color="#197560" horizontal>
+  Product details on xloud.tech
+</Card>
+
+---
+
+<p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Kubernetes as a Service</p>
+
+<CardGroup cols={2}>
+  <Card title="User Guide" icon="book-open" href="/services/kubernetes/user-guide" color="#197560">
+    Create cluster templates, deploy Kubernetes clusters, scale node groups, access
+    clusters via kubectl, and manage the full cluster lifecycle.
+  </Card>
+  <Card title="Admin Guide" icon="shield-check" href="/services/kubernetes/admin-guide" color="#197560">
+    Configure cluster drivers, manage quotas, administer certificate authorities,
+    choose container runtimes, and monitor cluster health across projects.
+  </Card>
+  <Card title="CLI Reference" icon="terminal" href="/services/kubernetes/cli-reference" color="#197560">
+    Create cluster templates, provision clusters, manage node groups, and retrieve
+    kubeconfig files using the openstack CLI.
+  </Card>
+  <Card title="Compute Service" icon="server" href="/services/compute" color="#197560">
+    Xloud Compute provides the virtual machine instances that form Kubernetes master
+    and worker nodes.
+  </Card>
+</CardGroup>
+
+---
+
+<p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Key Capabilities</p>
+
+<CardGroup cols={2}>
+  <Card title="One-Click Cluster Provisioning" icon="rocket" href="/services/kubernetes/user-guide/deploy-cluster" color="#197560">
+    Deploy a fully configured Kubernetes cluster from a template in minutes — nodes,
+    networking, certificates, and API access configured automatically.
+  </Card>
+  <Card title="Elastic Node Scaling" icon="up-right-and-down-left-from-center" href="/services/kubernetes/user-guide/scale-cluster" color="#197560">
+    Scale worker node groups up or down on demand. Autoscaling policies adapt cluster
+    capacity to workload pressure automatically.
+  </Card>
+  <Card title="Multi-Node-Group Clusters" icon="layers" href="/services/kubernetes/user-guide/node-groups" color="#197560">
+    Create heterogeneous clusters with multiple node groups — differentiated by flavor,
+    availability zone, or hardware profile — for GPU, memory-optimized, and general
+    workloads.
+  </Card>
+  <Card title="Automated Certificate Management" icon="lock" href="/services/kubernetes/admin-guide/certificates" color="#197560">
+    Cluster certificates are generated, rotated, and managed automatically. No manual
+    PKI configuration required.
+  </Card>
+  <Card title="Network Plugin Choice" icon="network" href="/services/kubernetes/admin-guide/network-drivers" color="#197560">
+    Choose between Flannel (simple overlay) and Calico (network policy enforcement)
+    at cluster template creation time. Switch plugins between clusters, not within.
+  </Card>
+  <Card title="Cluster Upgrades" icon="arrow-up" href="/services/kubernetes/user-guide/cluster-upgrades" color="#197560">
+    Perform rolling Kubernetes version upgrades with zero downtime — master nodes
+    upgraded first, worker nodes drained and replaced sequentially.
+  </Card>
+</CardGroup>
+
+---
+
+<p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>How It Works</p>
+
+```mermaid
+graph TD
+    U[User / Dashboard] -->|Create cluster| API[K8SaaS API]
+    API -->|Provision stack| ORCH[Xloud Orchestration]
+    ORCH -->|Launch VMs| COMPUTE[Xloud Compute]
+    ORCH -->|Allocate VIPs| LB[Xloud Load Balancer]
+    ORCH -->|Assign DNS| DNS[Xloud DNS]
+    COMPUTE -->|Master nodes| MASTER[Control Plane VMs]
+    COMPUTE -->|Worker nodes| WORKER[Worker Node VMs]
+    MASTER -->|Join cluster| K8S[Kubernetes API Server]
+    WORKER -->|Join cluster| K8S
+    K8S -->|Accessible via| KUBECTL[kubectl / Dashboard]
+```
+
+---
+
+<p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Supported Kubernetes Versions</p>
+
+<Note>
+  Supported Kubernetes versions are determined by the cluster templates deployed on
+  your platform. Contact your administrator for the available version matrix.
+</Note>
+
+| Channel | Version | Status |
+|---------|---------|--------|
+| Stable | 1.29.x | <Badge color="green" size="sm" shape="pill">GA</Badge> |
+| LTS | 1.28.x | <Badge color="green" size="sm" shape="pill">GA</Badge> |
+| Preview | 1.30.x | <Badge color="blue" size="sm" shape="pill">Preview</Badge> |
+
+---
+
+<p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Related Services</p>
+
+<CardGroup cols={3}>
+  <Card title="Xloud Compute" icon="server" href="/services/compute" color="#197560">
+    Virtual machine instances that run Kubernetes master and worker nodes
+  </Card>
+  <Card title="Xloud Load Balancer" icon="combine" href="/services/load-balancer" color="#197560">
+    API server and service load balancing for Kubernetes clusters
+  </Card>
+  <Card title="Xloud Networking" icon="network" href="/services/networking/index" color="#197560">
+    Tenant networks, floating IPs, and security groups for cluster nodes
+  </Card>
+  <Card title="Xloud Block Storage" icon="hard-drive" href="/services/storage/index" color="#197560">
+    Persistent volume claims backed by Xloud block storage
+  </Card>
+  <Card title="Xloud DNS" icon="globe" href="/services/dns" color="#197560">
+    DNS records for Kubernetes ingress and service endpoints
+  </Card>
+  <Card title="Xloud Key Management" icon="lock" href="/services/key-manager" color="#197560">
+    Secrets management for cluster certificates and service credentials
+  </Card>
+</CardGroup>

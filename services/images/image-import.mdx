@@ -1,0 +1,143 @@
+---
+title: "Image Import API"
+description: "Use the web-download and chunked upload import methods for large-scale or automated image ingestion in Xloud."
+sidebarTitle: "Image Import"
+---
+
+import AdminWarning from '/snippets/admin-warning.mdx';
+
+## Overview
+
+The Image Import API provides advanced upload mechanisms beyond the basic PUT endpoint.
+Web download allows server-side fetching directly from a URL — no local staging needed.
+Chunked upload supports resumable large-image transfers. Both methods are available to
+users, but administrators configure the allowed import methods and staging area at the
+platform level.
+
+<AdminWarning />
+
+---
+
+## Allowed Import Methods
+
+Configure which import methods are available to users via XDeploy globals:
+
+```yaml title="Enable import methods"
+glance_enabled_import_methods: "web-download,glance-direct"
+```
+
+| Method | Description | Best For |
+|--------|-------------|---------|
+| `web-download` | Image Service fetches data from a URL server-side | Importing from public cloud image registries |
+| `glance-direct` | Client uploads in chunks via staging area | Large files (>5 GB) requiring resumable upload |
+| `copy-image` | Copy image between stores | Multi-store deployments |
+
+---
+
+## Web Download Import
+
+The web download method imports images directly from a public URL. The Image Service
+downloads the file server-side — no local disk space required on the client.
+
+<Steps titleSize="h3">
+  <Step title="Create the image record" icon="plus">
+    ```bash title="Create image record for web-download"
+    openstack image create \
+      --disk-format qcow2 \
+      --container-format bare \
+      --import-method web-download \
+      ubuntu-24.04-noble
+    ```
+    Note the image `id` from the output.
+  </Step>
+  <Step title="Trigger the import" icon="cloud-download">
+    ```bash title="Import from Ubuntu cloud images"
+    openstack image import \
+      --method web-download \
+      --uri https://cloud-images.ubuntu.com/noble/current/noble-server-cloudimg-amd64.img \
+      <IMAGE_ID>
+    ```
+  </Step>
+  <Step title="Monitor import progress" icon="activity">
+    ```bash title="Poll import status"
+    watch -n 5 "openstack image show <IMAGE_ID> -c status"
+    ```
+    <Check>Status transitions from `importing` to `active` when complete.</Check>
+  </Step>
+</Steps>
+
+---
+
+## Chunked Upload (Glance Direct)
+
+Chunked upload allows large images to be uploaded in parts, with the ability to resume
+if the connection is interrupted.
+
+<Steps titleSize="h3">
+  <Step title="Create the image record" icon="plus">
+    ```bash title="Create image record"
+    openstack image create \
+      --disk-format qcow2 \
+      --container-format bare \
+      large-windows-image
+    ```
+    Note the image `id`.
+  </Step>
+  <Step title="Stage data to the import queue" icon="upload">
+    Stage image data via the v2 import API. The staging area is temporary and managed
+    by the Image Service:
+    ```bash title="Stage image data"
+    TOKEN=$(openstack token issue -f value -c id)
+
+    curl -X PUT \
+      -H "X-Auth-Token: $TOKEN" \
+      -H "Content-Type: application/octet-stream" \
+      --data-binary @/path/to/large-image.qcow2 \
+      "https://api.<your-domain>:9292/v2/images/<IMAGE_ID>/stage"
+    ```
+  </Step>
+  <Step title="Trigger import from staging" icon="circle-check">
+    ```bash title="Import from staging area"
+    openstack image import \
+      --method glance-direct \
+      <IMAGE_ID>
+    ```
+    <Check>Image transitions to `active` after import completes from the staging area.</Check>
+  </Step>
+</Steps>
+
+---
+
+## Staging Area Configuration
+
+The staging area is a temporary directory used by the glance-direct import method.
+Configure its location and size limits:
+
+```yaml title="Staging area configuration"
+glance_image_import_plugins: "image_conversion,inject_image_metadata"
+glance_staging_store_uri: "file:///var/lib/glance/staging"
+```
+
+<Tip>
+  The staging area should be on fast local storage (SSD) with sufficient capacity
+  for your largest expected image. Staging data is deleted after successful import.
+</Tip>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Storage Backends" href="/services/images/storage-backends" color="#197560">
+    Configure where imported images are stored after the import completes.
+  </Card>
+  <Card title="Metadata" href="/services/images/metadata" color="#197560">
+    Define metadata namespaces for consistent property schemas on imported images.
+  </Card>
+  <Card title="Admin Troubleshooting" href="/services/images/admin-troubleshooting" color="#197560">
+    Resolve web-download timeouts and staging area failures.
+  </Card>
+  <Card title="Upload an Image" href="/services/images/upload-image" color="#197560">
+    Standard upload workflow for user-facing image ingestion.
+  </Card>
+</CardGroup>

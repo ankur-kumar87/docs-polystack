@@ -1,0 +1,192 @@
+---
+title: "Authentication Backends"
+description: "Configure SQL, LDAP, SAML 2.0, and OpenID Connect authentication drivers for Xloud Identity."
+sidebarTitle: "Auth Backends"
+---
+
+import AdminWarning from '/snippets/admin-warning.mdx';
+
+## Overview
+
+Xloud Identity supports multiple authentication drivers that can be combined within the
+same deployment. Each domain can use a different backend, allowing you to integrate
+enterprise LDAP directories or federated identity providers alongside local SQL accounts.
+
+<AdminWarning />
+
+---
+
+## Backend Comparison
+
+| Backend | Use Case | Configuration |
+|---------|----------|---------------|
+| **SQL** | Default. Local users stored in MariaDB. Zero external dependencies. | Built-in; no additional config required. |
+| **LDAP** | Enterprise directory integration. Users and groups sourced from Active Directory or OpenLDAP. | Configured per-domain via XDeploy globals. |
+| **SAML 2.0** | SSO with corporate IdPs (Okta, Azure AD, ADFS). | Requires `mod_shib` and federation mapping rules. |
+| **OIDC** | Modern SSO via OAuth 2.0 / OpenID Connect providers. | Requires `mod_auth_openidc` and attribute mapping. |
+
+---
+
+## SQL Backend (Default)
+
+The SQL backend is active by default and requires no additional configuration.
+All user accounts created through the Dashboard or CLI are stored in MariaDB.
+
+```bash title="Verify the SQL backend is active"
+openstack --os-cloud admin domain show Default -f json | grep -i driver
+```
+
+<Tip>
+  The SQL backend is appropriate for most deployments. Use LDAP or federation only
+  when integrating with an existing enterprise directory.
+</Tip>
+
+---
+
+## LDAP Integration
+
+LDAP integration sources users and groups from an external directory. Xloud Identity
+connects in read-only mode — user creation and password changes must happen in the
+directory, not in Xloud.
+
+<Steps titleSize="h3">
+  <Step title="Configure LDAP in XDeploy globals" icon="settings">
+    Set the following in your deployment globals via XDeploy:
+
+    ```yaml title="LDAP configuration in deployment globals"
+    keystone_ldap:
+      url: ldap://ldap.example.com
+      user: cn=xloud-svc,dc=example,dc=com
+      password: "{{ ldap_bind_password }}"
+      suffix: dc=example,dc=com
+      user_tree_dn: ou=Users,dc=example,dc=com
+      group_tree_dn: ou=Groups,dc=example,dc=com
+      user_id_attribute: sAMAccountName
+      user_name_attribute: sAMAccountName
+      user_mail_attribute: mail
+      group_id_attribute: cn
+      group_name_attribute: cn
+      group_member_attribute: member
+    ```
+  </Step>
+  <Step title="Deploy the configuration" icon="upload">
+    ```bash title="Apply LDAP configuration"
+    xavs-ansible deploy --tags keystone
+    ```
+  </Step>
+  <Step title="Verify LDAP connectivity" icon="circle-check">
+    Test the LDAP connection from the Identity API node:
+    ```bash title="Test LDAP connectivity"
+    ldapsearch -x -H ldap://ldap.example.com \
+      -D "cn=xloud-svc,dc=example,dc=com" \
+      -w "$LDAP_PASSWORD" \
+      -b "ou=Users,dc=example,dc=com" \
+      "(sAMAccountName=alice)"
+    ```
+    <Check>User record is returned — LDAP is reachable and the bind account has read access.</Check>
+  </Step>
+</Steps>
+
+<Warning>
+  LDAP integration is read-only. User management (password resets, account creation)
+  must be performed in the directory, not through the Xloud Dashboard or CLI.
+</Warning>
+
+---
+
+## SAML 2.0 Federation
+
+SAML 2.0 federation enables SSO with corporate identity providers. Users authenticate
+at the IdP and receive Xloud tokens without a local password.
+
+<Steps titleSize="h3">
+  <Step title="Configure the identity provider in your IdP" icon="building">
+    Register Xloud as a service provider in your IdP. Provide the Xloud SAML metadata URL:
+    ```
+    https://api.<your-domain>:5000/v3/OS-FEDERATION/identity_providers/<IDP_ID>/protocols/saml2/auth
+    ```
+  </Step>
+  <Step title="Register the IdP in Xloud" icon="plus">
+    ```bash title="Create identity provider"
+    openstack identity provider create \
+      --remote-id https://idp.example.com/sso/saml \
+      corporate-idp
+    ```
+  </Step>
+  <Step title="Create attribute mapping" icon="route">
+    Define how IdP attributes map to Xloud groups and projects:
+    ```bash title="Create mapping rules"
+    openstack mapping create \
+      --rules mapping-rules.json \
+      corporate-mapping
+    ```
+
+    Example mapping rules:
+    ```json title="mapping-rules.json"
+    [
+      {
+        "local": [
+          {"user": {"name": "{0}"}},
+          {"group": {"id": "<XLOUD_GROUP_ID>"}}
+        ],
+        "remote": [
+          {"type": "ADFS_LOGIN"},
+          {"type": "memberOf", "any_one_of": ["CN=xloud-users,OU=Groups,DC=example,DC=com"]}
+        ]
+      }
+    ]
+    ```
+  </Step>
+  <Step title="Create the federation protocol" icon="link">
+    ```bash title="Link IdP, mapping, and protocol"
+    openstack federation protocol create saml2 \
+      --identity-provider corporate-idp \
+      --mapping corporate-mapping
+    ```
+    <Check>Federation protocol is created. IdP users can now authenticate via SAML SSO.</Check>
+  </Step>
+</Steps>
+
+---
+
+## OpenID Connect
+
+OIDC federation uses OAuth 2.0 bearer tokens from a compatible provider (Google, Azure AD,
+Okta, Keycloak).
+
+```bash title="Create OIDC identity provider"
+openstack identity provider create \
+  --remote-id https://accounts.google.com \
+  google-oidc
+```
+
+```bash title="Create OIDC mapping"
+openstack mapping create \
+  --rules oidc-mapping-rules.json \
+  google-mapping
+```
+
+```bash title="Create OIDC federation protocol"
+openstack federation protocol create openid \
+  --identity-provider google-oidc \
+  --mapping google-mapping
+```
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Domain Management" href="/services/identity/domain-management" color="#197560">
+    Assign different authentication backends to different domains.
+  </Card>
+  <Card title="Federation" href="/services/identity/federation" color="#197560">
+    Advanced federation configuration — mapping rules and attribute assertions.
+  </Card>
+  <Card title="Security Hardening" href="/services/identity/security" color="#197560">
+    Secure your authentication backends with encryption and access controls.
+  </Card>
+  <Card title="Admin Troubleshooting" href="/services/identity/admin-troubleshooting" color="#197560">
+    Debug LDAP connectivity and federation authentication issues.
+  </Card>
+</CardGroup>

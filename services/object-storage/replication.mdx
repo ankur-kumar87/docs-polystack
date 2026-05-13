@@ -1,0 +1,125 @@
+---
+title: "Object Storage Replication"
+description: "Monitor replication health in Xloud Object Storage — check replica consistency, manage quarantined objects, and verify data durability across storage nodes."
+sidebarTitle: "Replication"
+---
+
+import AdminWarning from '/snippets/admin-warning.mdx';
+
+## Overview
+
+The replicator daemon continuously ensures each object has the configured number of
+replicas across different zones, detecting and repairing divergence. Monitoring
+replication health is essential for maintaining data durability guarantees.
+
+<AdminWarning />
+
+---
+
+## Monitor Replication
+
+<Tabs>
+  <Tab title="Cluster-wide status" icon="activity">
+    ```bash title="Check replication status across all nodes"
+    xavs-storage-recon --replication
+    ```
+
+    ```bash title="Verbose replication check"
+    xavs-storage-recon --replication --verbose
+    ```
+
+    Key replication metrics:
+
+    | Metric | Healthy Value | Concern Threshold |
+    |--------|--------------|-------------------|
+    | `replication_time` | < 60 seconds | > 300 seconds |
+    | `replication_last` | Recent timestamp | Older than 600 seconds |
+    | `object_count` | Consistent across replicas | Divergence > 1% |
+  </Tab>
+  <Tab title="Single node check" icon="server">
+    ```bash title="Check replication on a specific storage node"
+    xavs-storage-recon --replication -v <storage-node-ip>
+    ```
+  </Tab>
+  <Tab title="Overall cluster health" icon="heart-pulse">
+    ```bash title="Comprehensive cluster health check"
+    xavs-storage-recon --all
+    ```
+
+    ```bash title="Disk usage across all nodes"
+    xavs-storage-recon --diskusage
+    ```
+
+    ```bash title="Check for quarantined objects"
+    xavs-storage-recon --quarantined
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Quarantined Objects
+
+The auditor daemon detects data corruption (bit-rot, write errors) through checksum
+verification. Corrupted objects are moved to a quarantine directory and excluded from
+reads until a healthy replica is served instead.
+
+<Warning>
+  A high quarantine count indicates data corruption — potentially caused by drive
+  failures, bit rot, or network errors during replication. Investigate and replace
+  affected drives promptly. Quarantined objects are excluded from reads until a
+  healthy replica is found.
+</Warning>
+
+```bash title="Check quarantine counts by node"
+xavs-storage-recon --quarantined --verbose
+```
+
+```bash title="View quarantined objects on a node (SSH to node)"
+ls /var/lib/xavs-object-storage/quarantined/
+```
+
+If quarantine counts are high on a specific node:
+1. Check drive health with `smartctl` or the hardware vendor tool
+2. Replace failing drives and add replacement devices to the ring
+3. Remove the degraded device from the ring to allow data to drain
+
+---
+
+## Replication Configuration
+
+Key replication parameters configurable through XDeploy:
+
+| Parameter | Description | Default |
+|-----------|-------------|---------|
+| `concurrency` | Number of parallel replication threads per daemon | 1 |
+| `interval` | Seconds between replication passes | 30 |
+| `node_timeout` | Seconds before marking a replica push as failed | 10 |
+
+Adjust `concurrency` during off-peak hours to accelerate replication after large ring
+changes:
+
+```bash title="Temporarily increase replication concurrency (XDeploy config)"
+# Edit object storage configuration → replicator section
+# Set concurrency = 4, then deploy
+xavs-ansible deploy -t swift
+```
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Ring Management" href="/services/object-storage/ring-management" color="#197560">
+    Add or remove drives that affect replication targets
+  </Card>
+  <Card title="Monitoring" href="/services/object-storage/monitoring" color="#197560">
+    Set up capacity and replication health monitoring
+  </Card>
+  <Card title="Admin Troubleshooting" href="/services/object-storage/admin-troubleshooting" color="#197560">
+    Diagnose replication failures and high-latency nodes
+  </Card>
+  <Card title="Storage Policies" href="/services/object-storage/storage-policies" color="#197560">
+    Review replication factors for each storage policy
+  </Card>
+</CardGroup>

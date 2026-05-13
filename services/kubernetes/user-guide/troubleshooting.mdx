@@ -1,0 +1,204 @@
+---
+title: "Kubernetes Troubleshooting — User Guide"
+description: "Resolve common Xloud K8SaaS issues — clusters stuck in CREATE_IN_PROGRESS, kubectl connection failures, nodes in NotReady state, and upgrade failures."
+sidebarTitle: "Troubleshooting"
+---
+
+## Overview
+
+This page covers the most common Kubernetes cluster issues encountered by project users,
+with targeted diagnostics and resolution steps. For platform-level issues such as driver
+configuration failures or quota enforcement problems, refer to the
+[Kubernetes Admin Troubleshooting](/services/kubernetes/admin-guide/troubleshooting) guide.
+
+---
+
+## Common Issues
+
+<AccordionGroup>
+  <Accordion title="Cluster stuck in CREATE_IN_PROGRESS" icon="clock">
+    **Cause**: Node provisioning is delayed — commonly due to insufficient compute quota,
+    an unavailable node image, or a network configuration issue during node bootstrap.
+
+    **Resolution**:
+
+    ```bash title="Show cluster failure reason"
+    openstack coe cluster show prod-cluster-01 \
+      -f value -c status_reason
+    ```
+
+    Check compute quota:
+
+    ```bash title="Check project quota"
+    openstack quota show --detail
+    ```
+
+    Verify the node image exists:
+
+    ```bash title="Verify image"
+    openstack image show fedora-coreos-39
+    ```
+
+    If resources are insufficient, request a quota increase from your administrator.
+    If the image is missing, ask your administrator to upload the required image.
+  </Accordion>
+
+  <Accordion title="kubectl connection refused or timeout" icon="network">
+    **Cause**: The cluster API server endpoint is unreachable. The master load balancer
+    floating IP may not have been allocated, or a security group rule is blocking
+    port 6443.
+
+    **Resolution**:
+
+    ```bash title="Show API server endpoint"
+    openstack coe cluster show prod-cluster-01 \
+      -f value -c api_address
+    ```
+
+    Verify the API address is a reachable floating IP:
+
+    ```bash title="Test API server connectivity"
+    curl -sk https://<api-address>:6443/healthz
+    ```
+
+    Expected: `ok`
+
+    If the endpoint is unreachable, check security groups for the master nodes:
+
+    ```bash title="List cluster security groups"
+    openstack security group list | grep prod-cluster-01
+    ```
+
+    Ensure inbound TCP port 6443 is permitted from your management network.
+  </Accordion>
+
+  <Accordion title="Nodes in NotReady state" icon="circle-alert">
+    **Cause**: The container network interface plugin has not initialized, the node is
+    still bootstrapping, or the node has run out of resources.
+
+    **Resolution**:
+
+    ```bash title="Check node conditions"
+    kubectl describe node <node-name>
+    ```
+
+    Look for `NetworkPlugin`, `DiskPressure`, `MemoryPressure`, or `PIDPressure`
+    conditions in the output.
+
+    For CNI failures, check node logs via the instance console:
+
+    ```bash title="Access node console"
+    openstack console url show <node-instance-id>
+    ```
+
+    Review the bootstrap logs for CNI installation errors. If the CNI plugin did not
+    install correctly, the node may need to be replaced (scale down then back up).
+  </Accordion>
+
+  <Accordion title="Cluster upgrade fails mid-way" icon="circle-x">
+    **Cause**: A node replacement failed during the rolling upgrade — commonly due to
+    quota exhaustion or an image pull failure on the replacement node.
+
+    **Resolution**:
+
+    ```bash title="Check upgrade status and reason"
+    openstack coe cluster show prod-cluster-01 \
+      -f value -c status -c status_reason
+    ```
+
+    Identify the failure cause from `status_reason`. Common causes:
+    - **Quota exhausted**: Free up compute quota, then retry the upgrade command
+    - **Image unavailable**: Verify the target template's image exists and is accessible
+
+    After resolving the root cause, retry the upgrade:
+
+    ```bash title="Retry upgrade"
+    openstack coe cluster upgrade prod-cluster-01 k8s-1.30-prod
+    ```
+  </Accordion>
+
+  <Accordion title="Persistent volume claims not binding" icon="hard-drive">
+    **Cause**: The volume driver (`cinder`) is not configured in the cluster template,
+    or the storage class is missing from the cluster.
+
+    **Resolution**:
+
+    ```bash title="Check storage classes"
+    kubectl get storageclass
+    ```
+
+    If no storage classes exist, verify the cluster template has `--volume-driver cinder`:
+
+    ```bash title="Show template volume driver"
+    openstack coe cluster template show k8s-1.29-prod \
+      -f value -c volume_driver
+    ```
+
+    If the volume driver is missing, the cluster must be recreated from a corrected
+    template. Contact your administrator to update the platform template. Your administrator can configure this through [XDeploy](/deployment).
+  </Accordion>
+
+  <Accordion title="kubectl shows certificate verification error" icon="lock">
+    **Cause**: The cluster CA has been rotated since you downloaded the kubeconfig,
+    or the kubeconfig references an expired certificate.
+
+    **Resolution**: Refresh your kubeconfig:
+
+    ```bash title="Re-download kubeconfig"
+    openstack coe cluster config prod-cluster-01 \
+      --dir ~/.kube \
+      --force
+    ```
+
+    ```bash title="Set kubeconfig"
+    export KUBECONFIG=~/.kube/config
+    ```
+
+    ```bash title="Verify connectivity"
+    kubectl get nodes
+    ```
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Diagnostic Commands Reference
+
+```bash title="Show cluster full detail"
+openstack coe cluster show prod-cluster-01 -f json
+```
+
+```bash title="List all clusters and their statuses"
+openstack coe cluster list
+```
+
+```bash title="Check kubectl cluster connectivity"
+kubectl cluster-info
+```
+
+```bash title="Show all system pods"
+kubectl get pods -n kube-system
+```
+
+```bash title="Describe a specific node"
+kubectl describe node <node-name>
+```
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Deploy Cluster" href="/services/kubernetes/user-guide/deploy-cluster" color="#197560">
+    Re-deploy a cluster after resolving provisioning issues.
+  </Card>
+  <Card title="Access Cluster" href="/services/kubernetes/user-guide/access-cluster" color="#197560">
+    Reconfigure kubectl connectivity after certificate or endpoint changes.
+  </Card>
+  <Card title="Kubernetes Admin Troubleshooting" href="/services/kubernetes/admin-guide/troubleshooting" color="#197560">
+    Platform-level diagnostics for driver and quota issues.
+  </Card>
+  <Card title="Cluster Upgrades" href="/services/kubernetes/user-guide/cluster-upgrades" color="#197560">
+    Resume or retry failed version upgrades.
+  </Card>
+</CardGroup>

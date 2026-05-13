@@ -1,0 +1,295 @@
+---
+title: "Orchestration Template Guide"
+description: "Write Heat templates to define cloud infrastructure as code. Covers resource types, parameters, and outputs."
+sidebarTitle: "Templates"
+---
+
+## Overview
+
+An orchestration template is a YAML document that declaratively describes a set of
+cloud resources and their relationships. The Orchestration engine reads the template,
+resolves dependencies between resources, and provisions them in the correct order.
+Templates are reusable — parameterized values allow the same template to deploy
+different environments without modification.
+
+<Note>
+  **Prerequisites**
+  - Familiarity with YAML syntax
+  - Access to the Xloud Orchestration service in your project
+  - `xloud` CLI installed for template validation
+</Note>
+
+---
+
+## Template Structure
+
+Every orchestration template has up to six top-level sections:
+
+```yaml title="template-skeleton.yaml"
+xloud_template_version: "2025-10-15"   # Required — template format version
+
+description: >                          # Optional — human-readable description
+  Brief summary of what this template deploys.
+
+parameter_groups:                       # Optional — group parameters for the UI
+  - label: Instance Settings
+    parameters: [instance_name, flavor]
+
+parameters:                             # Optional — runtime variables
+  instance_name:
+    type: string
+    default: my-instance
+
+conditions:                             # Optional — conditional resource creation
+  create_extra_volume:
+    equals: [{ get_param: env }, production]
+
+resources:                              # Required — cloud objects to create
+  my_instance:
+    type: Xloud::Compute::Server
+    properties:
+      name: { get_param: instance_name }
+
+outputs:                                # Optional — values returned after creation
+  server_ip:
+    description: The instance IP address
+    value: { get_attr: [my_instance, first_address] }
+```
+
+| Section | Required | Purpose |
+|---------|----------|---------|
+| `xloud_template_version` | Yes | Specifies the template format version |
+| `description` | No | Human-readable summary shown in the Dashboard |
+| `parameter_groups` | No | Groups parameters into labeled sections in the Dashboard UI |
+| `parameters` | No | Defines input variables that customize the template at runtime |
+| `conditions` | No | Named boolean expressions controlling conditional resource creation |
+| `resources` | Yes | The cloud resources to create, update, or delete |
+| `outputs` | No | Values extracted from created resources and returned to the caller |
+
+---
+
+## Parameters
+
+Parameters make templates reusable across different environments and projects.
+
+### Parameter Types
+
+| Type | Description | Example Value |
+|------|-------------|--------------|
+| `string` | Arbitrary text value | `"m1.large"` |
+| `number` | Integer or float | `3` |
+| `boolean` | `true` or `false` | `true` |
+| `json` | Arbitrary JSON object or array | `{"key": "value"}` |
+| `comma_delimited_list` | CSV string interpreted as a list | `"az1,az2,az3"` |
+
+### Parameter Definition Reference
+
+```yaml title="parameters-reference.yaml"
+parameters:
+
+  flavor:
+    type: string
+    label: Instance Flavor
+    description: The compute flavor (vCPU and RAM profile) for the instance
+    default: m1.small
+    constraints:
+      - allowed_values: [m1.small, m1.medium, m1.large]
+        description: Must be a supported flavor
+
+  instance_count:
+    type: number
+    label: Instance Count
+    description: Number of instances to launch in the scaling group
+    default: 2
+    constraints:
+      - range: { min: 1, max: 20 }
+        description: Between 1 and 20 instances
+
+  enable_monitoring:
+    type: boolean
+    label: Enable Monitoring
+    description: Whether to install the monitoring agent on boot
+    default: false
+
+  tags:
+    type: json
+    label: Instance Tags
+    description: Key-value metadata to attach to each instance
+    default: { "env": "dev", "team": "platform" }
+```
+
+<Tip>
+  Validate parameters before deploying: run `openstack orchestration template validate -t your-template.yaml`
+  to catch type mismatches and constraint violations before the stack is submitted.
+</Tip>
+
+---
+
+## Resources
+
+Resources are the core of every template. Each resource has a logical name, a type,
+and a set of properties.
+
+```yaml title="resource-definition.yaml"
+resources:
+
+  web_server:
+    type: Xloud::Compute::Server
+    depends_on: [web_network_port]        # Explicit dependency
+    deletion_policy: Retain               # Retain | Snapshot | Delete (default)
+    update_policy:
+      rolling_update:
+        max_batch_size: 1
+        pause_time: PT30S
+    properties:
+      name: web-server-01
+      image: { get_param: image }
+      flavor: { get_param: flavor }
+      key_name: { get_param: key_name }
+      networks:
+        - port: { get_resource: web_network_port }
+      user_data: |
+        #!/bin/bash
+        apt-get install -y nginx
+```
+
+---
+
+## Intrinsic Functions
+
+Intrinsic functions allow template sections to reference other parts of the template
+dynamically at runtime.
+
+| Function | Syntax | Description |
+|----------|--------|-------------|
+| `get_param` | `{ get_param: param_name }` | Returns the value of a template parameter |
+| `get_resource` | `{ get_resource: resource_name }` | Returns the ID of another resource in the stack |
+| `get_attr` | `{ get_attr: [resource_name, attribute] }` | Returns a specific attribute of a resource |
+| `str_replace` | `{ str_replace: { template: "...", params: {...} } }` | Performs string substitution |
+| `list_join` | `{ list_join: [",", [value1, value2]] }` | Joins a list of values with a delimiter |
+| `if` | `{ if: [condition_name, true_value, false_value] }` | Returns one of two values based on a condition |
+| `equals` | `{ equals: [value_a, value_b] }` | Returns `true` if both values are equal |
+| `not` | `{ not: condition }` | Negates a condition |
+| `and` | `{ and: [condition_a, condition_b] }` | Returns `true` if all conditions are true |
+| `or` | `{ or: [condition_a, condition_b] }` | Returns `true` if any condition is true |
+
+### Function Examples
+
+```yaml title="intrinsic-function-examples.yaml"
+resources:
+
+  # get_param — retrieve a parameter value
+  my_instance:
+    type: Xloud::Compute::Server
+    properties:
+      flavor: { get_param: flavor }
+
+  # get_resource — reference another resource's ID
+  volume_attachment:
+    type: Xloud::BlockStorage::VolumeAttachment
+    properties:
+      instance_uuid: { get_resource: my_instance }
+      volume_id: { get_resource: my_volume }
+
+  # get_attr — retrieve a resource attribute
+  floating_ip_assoc:
+    type: Xloud::Networking::FloatingIPAssociation
+    properties:
+      floatingip_id: { get_resource: my_floating_ip }
+      port_id: { get_attr: [my_instance, addresses, default, 0, port] }
+
+  # str_replace — build a user_data script from parameters
+  bootstrap_instance:
+    type: Xloud::Compute::Server
+    properties:
+      user_data:
+        str_replace:
+          template: |
+            #!/bin/bash
+            echo "Deploying to $ENV_NAME" > /etc/motd
+          params:
+            $ENV_NAME: { get_param: environment }
+```
+
+---
+
+## Conditions
+
+Conditions enable selective resource creation based on parameter values. Define a
+condition by name, then reference it in resource definitions with `condition:`.
+
+```yaml title="conditions-example.yaml"
+parameters:
+  environment:
+    type: string
+    default: dev
+    constraints:
+      - allowed_values: [dev, staging, production]
+
+conditions:
+  is_production:
+    equals: [{ get_param: environment }, production]
+
+resources:
+
+  # Always created
+  app_server:
+    type: Xloud::Compute::Server
+    properties:
+      flavor: { if: [is_production, m1.large, m1.small] }
+      image: { get_param: image }
+
+  # Only created in production
+  monitoring_agent:
+    type: Xloud::Compute::Server
+    condition: is_production
+    properties:
+      flavor: m1.small
+      image: { get_param: image }
+```
+
+---
+
+## Outputs
+
+Outputs expose values from created resources back to the caller. They are visible in
+the Dashboard stack detail view and retrievable via CLI.
+
+```yaml title="outputs-example.yaml"
+outputs:
+
+  instance_id:
+    description: UUID of the compute instance
+    value: { get_resource: my_instance }
+
+  instance_ip:
+    description: Primary fixed IP address
+    value: { get_attr: [my_instance, first_address] }
+
+  public_url:
+    description: Publicly accessible application URL
+    value:
+      str_replace:
+        template: "https://$IP/app"
+        params:
+          $IP: { get_attr: [my_floating_ip, floating_ip_address] }
+```
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Resource Types" href="/services/orchestration/resources" color="#197560">
+    Full reference for all supported resource types and their properties
+  </Card>
+  <Card title="Getting Started" href="/services/orchestration/getting-started" color="#197560">
+    Deploy your first stack using a complete example template
+  </Card>
+  <Card title="Auto-Scaling" href="/services/orchestration/autoscaling" color="#197560">
+    Use scaling groups and alarm policies in templates
+  </Card>
+  <Card title="Manage Stacks" href="/services/orchestration/stacks" color="#197560">
+    Update and manage stacks through their full lifecycle
+  </Card>
+</CardGroup>

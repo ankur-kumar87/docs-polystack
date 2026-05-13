@@ -1,0 +1,165 @@
+---
+title: "Log Collection"
+description: "Configure XIMP log source paths, syslog forwarding, and log format parsers for centralized log ingestion across all managed infrastructure nodes."
+sidebarTitle: "Log Collection"
+---
+
+import AdminWarning from '/snippets/admin-warning.mdx';
+
+## Overview
+
+XIMP collects logs from all registered nodes via file-based collection and syslog
+forwarding. Centralized log data flows into the log index for full-text search and
+alert-based detection. This page covers configuring log sources and troubleshooting
+ingestion issues.
+
+<AdminWarning />
+
+<Note>
+  **Prerequisites**
+  - Administrator credentials with the `admin` role
+  - XIMP agents deployed on target nodes (see [Agent Configuration](/services/monitoring/admin-guide/agent-config))
+</Note>
+
+---
+
+## Configuring Log Sources
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="View configured log sources" icon="list">
+        Navigate to **Monitor Center > Logging** (Log Sources, admin view). Each log source
+        defines a file path pattern, the node scope it applies to, and the expected
+        format.
+      </Step>
+      <Step title="Add a log source" icon="plus">
+        Click **Add Log Source** and provide:
+
+        | Field | Description |
+        |-------|-------------|
+        | **Path Pattern** | Glob pattern for the log file (e.g., `/var/log/nova/*.log`) |
+        | **Node Selector** | Applies this source to nodes matching the label (e.g., `role=compute`) |
+        | **Format** | `json`, `plain`, or `multiline` (for stack traces) |
+        | **Service Label** | Tag applied to all ingested events for filtering |
+      </Step>
+      <Step title="Verify ingestion" icon="circle-check">
+        After saving, navigate to **Monitor Center > Logging** (admin view) and filter
+        by the new service label. Entries should appear within the configured scrape interval.
+
+        <Check>Log events appear in Log Explorer with correct service label and timestamp.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="Configuration File" icon="file-text">
+    Log sources can also be defined in `/etc/ximp/log-sources.yaml` on the managed node:
+
+    ```yaml title="/etc/ximp/log-sources.yaml"
+    sources:
+      - path: /var/log/nova/*.log
+        format: plain
+        labels:
+          service: nova
+          role: compute
+
+      - path: /var/log/cinder/*.log
+        format: plain
+        labels:
+          service: cinder
+
+      - path: /var/log/docker/containers/**/*.log
+        format: json
+        labels:
+          service: docker
+
+      - path: /var/log/syslog
+        format: plain
+        labels:
+          service: syslog
+    ```
+
+    Reload the agent after updating the configuration:
+    ```bash title="Reload agent configuration"
+    systemctl reload ximp-agent
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Syslog Forwarding
+
+Services that write to syslog rather than log files can forward directly to XIMP's
+syslog receiver.
+
+<Steps titleSize="h3">
+  <Step title="Configure rsyslog forwarding" icon="send">
+    Add a forwarding rule to `/etc/rsyslog.d/99-ximp.conf` on the source node:
+
+    ```bash title="/etc/rsyslog.d/99-ximp.conf"
+    # Forward all facility/severity combinations to XIMP via TCP
+    *.* @@ximp.xloud.internal:5140
+    ```
+
+    <Note>
+      Use TCP forwarding (`@@`) for reliable delivery. UDP forwarding (`@`) may drop
+      messages under high log volume and is not recommended for production.
+    </Note>
+  </Step>
+  <Step title="Reload rsyslog" icon="refresh-cw">
+    ```bash title="Reload rsyslog"
+    systemctl reload rsyslog
+    ```
+  </Step>
+  <Step title="Verify ingestion" icon="circle-check">
+    Navigate to **Monitor Center > Logging** (admin view) and filter by `service:syslog`
+    and the source hostname. Entries should appear within 60 seconds.
+
+    <Check>Syslog events appear in Log Explorer with correct host and timestamp.</Check>
+  </Step>
+</Steps>
+
+---
+
+## Log Format Parsers
+
+Configure parsers for structured log formats to enable field-level filtering in
+Log Analytics:
+
+| Format | Configuration | Notes |
+|--------|-------------|-------|
+| `json` | Automatic | Fields extracted automatically from JSON keys |
+| `plain` | Default | Full-text search only; no structured field extraction |
+| `multiline` | Requires pattern | Stack traces and multi-line entries joined before indexing |
+
+For multiline logs (Java stack traces, Python tracebacks):
+```yaml title="Multiline log source configuration"
+sources:
+  - path: /var/log/app/*.log
+    format: multiline
+    multiline:
+      start_pattern: "^[0-9]{4}-[0-9]{2}-[0-9]{2}"
+      negate: false
+      match: after
+    labels:
+      service: app-service
+```
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Agent Configuration" href="/services/monitoring/admin-guide/agent-config" color="#197560">
+    Deploy agents that run the log collection defined here
+  </Card>
+  <Card title="Retention Policies" href="/services/monitoring/admin-guide/retention" color="#197560">
+    Configure how long collected log data is retained
+  </Card>
+  <Card title="Log Analytics (User Guide)" href="/services/monitoring/user-guide/log-analytics" color="#197560">
+    How tenants query and create alerts from the logs you've configured
+  </Card>
+  <Card title="Troubleshooting" href="/services/monitoring/admin-guide/troubleshooting" color="#197560">
+    Diagnose log ingestion backlogs and missing log data
+  </Card>
+</CardGroup>

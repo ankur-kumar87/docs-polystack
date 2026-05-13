@@ -1,0 +1,151 @@
+---
+title: "DNS Admin Troubleshooting"
+description: "Diagnose and resolve platform-level Xloud DNS issues — API outages, zone propagation failures, nameserver synchronization inconsistencies, and worker."
+sidebarTitle: "Troubleshooting"
+---
+
+import AdminWarning from '/snippets/admin-warning.mdx';
+
+## Overview
+
+This guide covers platform-level DNS issues that require administrator access. For
+user-facing issues such as record set errors or propagation delays, see the
+[DNS Troubleshooting](/services/dns/troubleshooting) guide.
+
+<AdminWarning />
+
+---
+
+## Diagnostic Checklist
+
+Before investigating individual components, run this quick health check:
+
+```bash title="Check DNS service container status"
+docker ps --filter name=dns
+```
+
+```bash title="Verify DNS API is responding"
+openstack zone list --limit 1
+```
+
+```bash title="Check nameserver is authoritative for a zone"
+dig @<nameserver-ip> example.com. SOA +norecurse
+```
+
+---
+
+## Platform Issues
+
+<AccordionGroup>
+  <Accordion title="DNS API not responding" icon="server" defaultOpen>
+    **Cause**: The DNS API service container may be unavailable or crashed.
+
+    **Resolution**:
+    ```bash title="Check DNS service containers"
+    docker ps --filter name=dns
+    ```
+    ```bash title="Review container logs"
+    docker logs dns-api --tail 100
+    ```
+    If the container exited unexpectedly, check for configuration errors in the startup
+    log. Restart affected containers:
+    ```bash title="Restart DNS API container"
+    docker restart dns-api
+    ```
+    If the container fails to start, verify the database connection and configuration
+    files deployed by XDeploy.
+  </Accordion>
+
+  <Accordion title="Zone changes not propagating to nameservers" icon="refresh-cw">
+    **Cause**: The DNS worker may be unable to push updates to backend nameservers.
+
+    **Resolution**:
+    1. Verify the worker container is running and connected to the message queue:
+       ```bash title="Check DNS worker container"
+       docker ps --filter name=dns-worker
+       docker logs dns-worker --tail 50
+       ```
+    2. Check for push errors in the worker logs — look for connection refused or timeout
+       errors to pool target addresses
+    3. Verify network connectivity from the worker host to each nameserver's management port:
+       ```bash title="Test connectivity to nameserver target"
+       curl -s http://<nameserver-ip>:<target-port>/
+       ```
+    4. If a nameserver is unreachable, temporarily remove it from the pool via XDeploy
+       while investigating
+  </Accordion>
+
+  <Accordion title="Inconsistent answers from different nameservers" icon="git-branch">
+    **Cause**: Zone synchronization lag — one nameserver received the update while another
+    did not.
+
+    **Diagnosis**:
+    ```bash title="Check zone serial on each nameserver"
+    dig @<ns1-ip> example.com. SOA +short
+    dig @<ns2-ip> example.com. SOA +short
+    ```
+
+    SOA serial numbers should match. A lagging nameserver indicates a synchronization
+    failure.
+
+    **Resolution**: Check the DNS worker logs for push errors to the specific nameserver's
+    target configuration. If the push is failing due to authentication or connectivity,
+    correct the target configuration in XDeploy and redeploy.
+  </Accordion>
+
+  <Accordion title="DNS worker backlog growing" icon="clock">
+    **Cause**: The worker cannot process zone updates as fast as they are being created —
+    typically due to a slow or overloaded nameserver backend.
+
+    **Resolution**:
+    ```bash title="Check message queue depth"
+    docker logs dns-central --tail 50 | grep queue
+    ```
+    - If a specific nameserver backend is slow, investigate its resource usage
+    - Consider adding worker replicas via XDeploy to parallelize processing
+    - If the backlog grew due to a temporary nameserver outage, it should drain
+      automatically once connectivity is restored
+  </Accordion>
+
+  <Accordion title="Database connection errors on startup" icon="database">
+    **Cause**: The DNS service cannot reach the database, or the database schema
+    is not initialized.
+
+    **Resolution**:
+    ```bash title="Check DNS API logs for DB errors"
+    docker logs dns-api --tail 100 | grep -i "error\|database\|connect"
+    ```
+    Verify the database service is running and that the DNS service configuration
+    in XDeploy has the correct connection credentials and host address.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Log Locations
+
+| Component | Log Command |
+|-----------|-------------|
+| DNS API | `docker logs dns-api` |
+| DNS Central | `docker logs dns-central` |
+| DNS Worker | `docker logs dns-worker` |
+| DNS MDns | `docker logs dns-mdns` |
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="DNS Troubleshooting (User)" href="/services/dns/troubleshooting" color="#197560">
+    User-facing DNS issues — zone errors, propagation, CNAME conflicts
+  </Card>
+  <Card title="Architecture" href="/services/dns/architecture" color="#197560">
+    Understand component roles to narrow down failure scope
+  </Card>
+  <Card title="Backend Configuration" href="/services/dns/backend-config" color="#197560">
+    Verify and update pool target configuration
+  </Card>
+  <Card title="Pool Management" href="/services/dns/pool-management" color="#197560">
+    Remove or replace unhealthy nameservers from pools
+  </Card>
+</CardGroup>

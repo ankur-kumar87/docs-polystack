@@ -1,0 +1,141 @@
+---
+title: "DDoS Protection"
+description: "Configure XIMP DDoS detection thresholds, mitigation policies, whitelist exemptions, and review attack events and false-positive unblocking procedures."
+sidebarTitle: "DDoS Protection"
+---
+
+import AdminWarning from '/snippets/admin-warning.mdx';
+
+## Overview
+
+XIMP's DDoS prevention module analyzes traffic patterns and automatically mitigates
+volumetric and application-layer attacks before they reach protected workloads.
+The module operates in two modes: Monitor (detection only) and Mitigate (automatic
+blocking).
+
+<AdminWarning />
+
+<Note>
+  **Prerequisites**
+  - Administrator credentials with the `admin` role
+  - Network flow collection configured (see [Agent Configuration](/services/monitoring/admin-guide/agent-config))
+  - Baseline traffic patterns established (minimum 72 hours of Monitor mode data recommended)
+</Note>
+
+---
+
+## Configuring DDoS Protection Policy
+
+<Steps titleSize="h3">
+  <Step title="Navigate to DDoS Protection" icon="shield">
+    Navigate to **Monitor Center > Monitoring** (DDoS Policies, admin view).
+  </Step>
+  <Step title="Configure detection settings" icon="settings">
+    | Setting | Description | Recommended |
+    |---------|-------------|-------------|
+    | **Detection Mode** | `Monitor` (alerts only) or `Mitigate` (automatic blocking) | Start with `Monitor` |
+    | **Threshold — Volumetric** | Inbound packet rate (pps) or bandwidth (Mbps) triggering detection | 2× baseline peak |
+    | **Threshold — SYN Flood** | New TCP connections/second before SYN-cookie protection activates | 10,000 conn/s |
+    | **Block Duration** | How long a detected source is blocked before reassessment | 5 minutes |
+    | **Whitelist** | IP ranges exempt from DDoS mitigation | Monitoring systems, partner IPs |
+
+    <Warning>
+      Start with **Monitor** mode to baseline normal traffic patterns for at least
+      72 hours before switching to **Mitigate** mode. Aggressive thresholds in
+      mitigation mode may block legitimate traffic, causing customer-facing outages.
+    </Warning>
+  </Step>
+  <Step title="Add whitelist entries" icon="list">
+    Add IP ranges that should never be blocked regardless of traffic volume:
+    - XIMP monitoring system IPs (prevent self-blocking)
+    - Partner or customer IP ranges with legitimate high-volume traffic
+    - Internal automation systems
+
+    Navigate to **Monitor Center > Monitoring** (DDoS Whitelist, admin view).
+  </Step>
+  <Step title="Switch to Mitigate mode" icon="shield">
+    After at least 72 hours of Monitor mode with no false positives:
+    1. Review the alert history for any false positive detections
+    2. Add any flagged legitimate sources to the whitelist
+    3. Switch the policy to **Mitigate** mode
+
+    <Check>Policy shows Mitigate mode active. Check the DDoS Events feed to confirm no legitimate traffic is being blocked.</Check>
+  </Step>
+</Steps>
+
+---
+
+## Reviewing DDoS Events
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    Navigate to **Monitor Center > Monitoring** (DDoS Events, admin view) to review detected and
+    mitigated attacks:
+
+    | Column | Description |
+    |--------|-------------|
+    | **Time** | When the detection occurred |
+    | **Source IP** | Originating attack IP or range |
+    | **Type** | `volumetric`, `syn-flood`, `application-layer`, or `anomaly` |
+    | **Peak Rate** | Maximum observed attack bandwidth or packet rate |
+    | **Status** | `Active`, `Mitigated`, or `Expired` |
+    | **Action Taken** | `Alert only` (Monitor mode) or `Blocked` (Mitigate mode) |
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="List recent DDoS events"
+    ximp security ddos events --last 24h
+    ```
+
+    ```bash title="View details of a specific event"
+    ximp security ddos event show <EVENT_ID>
+    ```
+
+    ```bash title="List currently blocked sources"
+    ximp security ddos blocklist
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Handling False Positives
+
+If a legitimate source is incorrectly blocked:
+
+<Steps titleSize="h3">
+  <Step title="Identify the blocked source" icon="search">
+    ```bash title="Check if a specific IP is blocked"
+    ximp security ddos blocklist | grep <IP_ADDRESS>
+    ```
+  </Step>
+  <Step title="Unblock the source" icon="unlock">
+    ```bash title="Unblock a specific source"
+    ximp security ddos unblock --source 203.0.113.50
+    ```
+  </Step>
+  <Step title="Add to whitelist to prevent future blocks" icon="list">
+    Navigate to **Monitor Center > Monitoring** (DDoS Whitelist, admin view) and add the IP range
+    of the legitimate source with a descriptive comment.
+
+    <Check>Source is unblocked and whitelist entry prevents future false positives.</Check>
+  </Step>
+</Steps>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Network Monitoring (User Guide)" href="/services/monitoring/user-guide/network-monitoring" color="#197560">
+    User-level network traffic analysis for attack investigation
+  </Card>
+  <Card title="Alert Channels" href="/services/monitoring/admin-guide/alert-channels" color="#197560">
+    Configure notification channels for DDoS detection events
+  </Card>
+  <Card title="Security" href="/services/monitoring/admin-guide/security" color="#197560">
+    Overall XIMP security configuration including access control
+  </Card>
+  <Card title="Troubleshooting" href="/services/monitoring/admin-guide/troubleshooting" color="#197560">
+    Diagnose false positive blocks and detection threshold tuning
+  </Card>
+</CardGroup>

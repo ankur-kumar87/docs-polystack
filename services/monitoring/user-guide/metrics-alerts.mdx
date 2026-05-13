@@ -1,0 +1,160 @@
+---
+title: "Metrics & Alerts"
+description: "Create and manage XIMP alert rules, define notification channels, and monitor alert history for your infrastructure and applications."
+sidebarTitle: "Metrics & Alerts"
+---
+
+## Overview
+
+XIMP evaluates metric-based alert rules continuously against live time-series data.
+When a rule's condition is met for the configured evaluation period, XIMP fires an
+alert to the configured notification channels. This page covers creating, managing,
+and troubleshooting alert rules.
+
+<Note>
+  **Prerequisites**
+  - An active Xloud account with project access
+  - At least one notification channel configured (see [Alert Rules Advanced](/services/monitoring/user-guide/alert-rules))
+</Note>
+
+---
+
+## Creating Alert Rules
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Navigate to Alert Rules" icon="bell">
+        Navigate to **Monitor Center > Monitoring** (Alerting section, admin view) and click **New Alert Rule**.
+      </Step>
+      <Step title="Define the condition" icon="settings">
+        Configure the alert trigger:
+
+        | Field | Description |
+        |-------|-------------|
+        | **Name** | Descriptive label for the rule (e.g., `high-cpu-utilization`) |
+        | **Metric** | The time-series metric to evaluate (e.g., `xloud_compute_cpu_utilization`) |
+        | **Condition** | Threshold operator: `>`, `<`, `>=`, `<=`, or `== NaN` |
+        | **Threshold** | Numeric value that triggers the alert |
+        | **Evaluation Period** | Duration the condition must persist before firing (e.g., 5 minutes) |
+        | **Severity** | `Critical`, `Warning`, or `Info` |
+      </Step>
+      <Step title="Assign a notification channel" icon="send">
+        Under **Notifications**, select one or more configured channels (email, webhook,
+        or on-call integration). Multiple channels can be assigned per rule.
+
+        <Warning>
+          Alert rules with no notification channel assigned are evaluated but never
+          delivered to operators. Always assign at least one channel for production rules.
+        </Warning>
+      </Step>
+      <Step title="Save and activate" icon="circle-check">
+        Click **Save and Enable**. The rule enters the **Active** state and begins
+        evaluating on the next collection cycle.
+
+        <Check>Alert rule appears in the Active Rules list with state **Evaluating**.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    <Steps titleSize="h3">
+      <Step title="Create from a definition file" icon="plus">
+        ```bash title="Create alert rule from file"
+        ximp alert rule create --file alert-cpu-high.yaml
+        ```
+
+        ```yaml title="alert-cpu-high.yaml"
+        name: high-cpu-utilization
+        metric: xloud_compute_cpu_utilization
+        condition: ">"
+        threshold: 90
+        evaluation_period: 5m
+        severity: warning
+        notification_channels:
+          - ops-email
+          - pagerduty-oncall
+        ```
+      </Step>
+      <Step title="List existing rules" icon="list">
+        ```bash title="List all alert rules"
+        ximp alert rule list
+        ```
+
+        ```bash title="Show specific rule details"
+        ximp alert rule show high-cpu-utilization
+        ```
+      </Step>
+      <Step title="Update or delete a rule" icon="settings">
+        ```bash title="Update rule threshold"
+        ximp alert rule update high-cpu-utilization --threshold 85
+        ```
+
+        ```bash title="Delete a rule"
+        ximp alert rule delete high-cpu-utilization
+        ```
+      </Step>
+    </Steps>
+  </Tab>
+</Tabs>
+
+---
+
+## Viewing Alert History
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    Navigate to **Monitor Center > Monitoring** (Alert History, admin view) to see a timestamped
+    feed of all alert fire and resolution events.
+
+    Filter by:
+    - **Rule name** — view history for a specific alert rule
+    - **Severity** — show only Critical or Warning events
+    - **Time range** — focus on a specific incident window
+    - **Status** — Active (currently firing) or Resolved
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="View alert history for a rule"
+    ximp alert history --rule high-cpu-utilization --last 24h
+    ```
+
+    ```bash title="View all active (currently firing) alerts"
+    ximp alert list --status active
+    ```
+
+    ```bash title="Acknowledge an active alert"
+    ximp alert acknowledge <ALERT_ID> --comment "Investigating high CPU on compute-node-03"
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Common Alert Rules Reference
+
+| Alert | Metric | Condition | Threshold | Evaluation Period |
+|-------|--------|-----------|-----------|------------------|
+| High CPU | `xloud_compute_cpu_utilization` | `>` | 90% | 5m |
+| Low memory | `xloud_compute_memory_free_pct` | `<` | 10% | 5m |
+| High disk I/O latency | `xloud_storage_osd_apply_latency_ms` | `>` | 20ms | 10m |
+| Pool capacity warning | `xloud_storage_pool_used_pct` | `>` | 70% | 15m |
+| Host unreachable | `up{job="node_exporter"}` | `==` | 0 | 2m |
+| Replication lag | `xdr_replication_lag_seconds` | `>` | RPO target | 5m |
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Alert Rules (Advanced)" href="/services/monitoring/user-guide/alert-rules" color="#197560">
+    Compound conditions, silences, inhibition rules, and escalation policies
+  </Card>
+  <Card title="XIMP Admin — Alert Channels" href="/services/monitoring/admin-guide/alert-channels" color="#197560">
+    Configure email, webhook, PagerDuty, and Slack notification channels
+  </Card>
+  <Card title="Dashboards" href="/services/monitoring/user-guide/dashboards" color="#197560">
+    Visualize the metrics your alert rules monitor
+  </Card>
+  <Card title="Troubleshooting" href="/services/monitoring/user-guide/troubleshooting" color="#197560">
+    Diagnose alert rules that are not firing as expected
+  </Card>
+</CardGroup>

@@ -1,0 +1,62 @@
+---
+title: "Object Storage"
+description: "Browse, create, and manage object storage containers and files through the Xloud Dashboard."
+sidebarTitle: "Object Storage"
+---
+
+## Overview
+
+Navigate to **Storage > Object Storage** in the sidebar to manage containers and
+objects. The object storage service provides scalable, replicated storage for
+unstructured data like backups, media files, and static assets.
+
+---
+
+## Manage Containers
+
+The container list shows: **Name**, **Size**, **Last Updated**, and a detail popover
+with object count, storage policy, and public access URL.
+
+**Create a container**: Click **Create Container**. Enter a **Name** (max 63 characters,
+cannot be changed after creation) and toggle **Public Access** if objects should be
+accessible via public URL.
+
+**Actions**: **Access** (first action — toggle public access), **Delete** (More dropdown).
+
+---
+
+## Manage Objects
+
+Click a container name to browse its contents. The file browser shows objects with
+Name, Size, and Last Updated columns.
+
+**Available actions**:
+
+| Action | Description |
+|--------|-------------|
+| **Create Folder** | Create a pseudo-folder (path prefix) |
+| **Upload** | Upload files (max 1 GiB per file) |
+| **Download** | Download individual files |
+| **Edit** | Replace file content (same filename) |
+| **Rename** | Rename a file (copies and deletes original) |
+| **Copy / Cut / Paste** | Move or copy files between folders |
+| **Delete** | Delete files or empty folders |
+
+Use the breadcrumb navigation at the top to navigate folder hierarchy.
+
+<Note>
+  For the complete object storage reference, see [Object Storage User Guide](/services/object-storage/user-guide).
+</Note>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Object Storage User Guide" href="/services/object-storage/user-guide" color="#197560">
+    Complete object storage management reference
+  </Card>
+  <Card title="Block Storage" href="/services/dashboard/user-guide/volumes" color="#197560">
+    Persistent volumes for compute instances
+  </Card>
+</CardGroup>

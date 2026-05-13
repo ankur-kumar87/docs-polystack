@@ -1,0 +1,210 @@
+---
+title: "Manage Projects"
+description: "Create and manage resource namespaces, add members, and assign roles to teams in Xloud Identity."
+sidebarTitle: "Projects"
+---
+
+import PrerequisitesAuth from '/snippets/prerequisites-auth.mdx';
+import CliAuth from '/snippets/cli-auth.mdx';
+
+## Overview
+
+Projects are the fundamental resource namespace in Xloud. Every instance, volume, network,
+and image belongs to a project. Projects allow you to isolate resources between teams,
+enforce independent quotas, and apply fine-grained role-based access control. This guide
+covers creating projects, adding members, assigning roles, and managing project lifecycle.
+
+<PrerequisitesAuth />
+
+---
+
+## Create a Project
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Navigate to Identity" icon="fingerprint">
+        Navigate to
+        **Identity > Projects** (admin view).
+      </Step>
+      <Step title="Create a project" icon="plus">
+        Click **Create Project** and fill in the form:
+
+        | Field | Description |
+        |-------|-------------|
+        | **Name** | Unique identifier within the domain |
+        | **Description** | Optional — describes the project's purpose |
+        | **Enabled** | Toggle on to allow resource creation immediately |
+
+        <Tip>
+          Use a consistent naming convention such as `team-environment` (e.g., `backend-prod`,
+          `frontend-staging`) to keep the project list scannable as it grows.
+        </Tip>
+      </Step>
+      <Step title="Confirm creation" icon="circle-check">
+        Click **Confirm**. The project appears in the list immediately.
+        <Check>The new project is visible in **Identity > Projects** (admin view) with status Enabled.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    <Steps titleSize="h3">
+      <Step title="Authenticate" icon="key">
+        <CliAuth />
+      </Step>
+      <Step title="Create the project" icon="plus">
+        ```bash title="Create project"
+        openstack project create \
+          --domain Default \
+          --description "Backend production environment" \
+          backend-prod
+        ```
+      </Step>
+      <Step title="List projects" icon="list">
+        ```bash title="List all projects"
+        openstack project list
+        ```
+        ```bash title="Show project details"
+        openstack project show backend-prod
+        ```
+      </Step>
+    </Steps>
+  </Tab>
+</Tabs>
+
+---
+
+## Manage Project Members
+
+Add users to a project and assign the appropriate role to control what each user can do.
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Open project members" icon="users">
+        Navigate to **Identity > Projects** (admin view). On the target project row, click the
+        **More** dropdown and select **Manage User**.
+      </Step>
+      <Step title="Add a member" icon="user-plus">
+        Click **Add Member**, select a user from the dropdown, and select a role:
+
+        | Role | What the user can do |
+        |------|---------------------|
+        | `admin` | Full management rights — create, modify, delete all resources and manage users |
+        | `member` | Standard access — create and manage resources within the project |
+        | `reader` | Read-only — view resources but cannot create or modify anything |
+
+        <Tip>
+          Changes take effect on the user's next token request. Existing tokens retain the
+          old permissions until they expire.
+        </Tip>
+      </Step>
+      <Step title="Confirm membership" icon="circle-check">
+        <Check>The user appears in the members list with the assigned role.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    <Steps titleSize="h3">
+      <Step title="Grant a role" icon="shield">
+        ```bash title="Grant role to user in project"
+        openstack role add \
+          --project backend-prod \
+          --user alice \
+          member
+        ```
+        <Note>No output is returned on success — the absence of an error confirms the assignment.</Note>
+      </Step>
+      <Step title="Verify role assignment" icon="search">
+        ```bash title="List role assignments for user"
+        openstack role assignment list \
+          --user alice \
+          --project backend-prod \
+          --names
+        ```
+        <Check>The role assignment appears in the output with the correct project and user names.</Check>
+      </Step>
+      <Step title="Remove a role" icon="user-minus">
+        ```bash title="Revoke role from user in project"
+        openstack role remove \
+          --project backend-prod \
+          --user alice \
+          member
+        ```
+      </Step>
+    </Steps>
+  </Tab>
+</Tabs>
+
+---
+
+## Update and Disable Projects
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    Open the project in **Identity > Projects** (admin view) and click **Edit** to modify the
+    name, description, or enabled state. Disabling a project immediately prevents new
+    resource creation but does not delete existing resources.
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    <CodeGroup>
+    ```bash title="Rename a project"
+    openstack project set --name new-name backend-prod
+    ```
+    ```bash title="Disable a project"
+    openstack project set --disable backend-prod
+    ```
+    ```bash title="Re-enable a project"
+    openstack project set --enable backend-prod
+    ```
+    ```bash title="Delete a project permanently"
+    openstack project delete backend-prod
+    ```
+    </CodeGroup>
+
+    <Warning>
+      Deleting a project does not automatically delete the resources within it. Clean up
+      instances, volumes, and networks before deleting to avoid orphaned resources that
+      continue consuming quota.
+    </Warning>
+  </Tab>
+</Tabs>
+
+---
+
+## Project Quotas
+
+Quotas cap the total resources a project can consume. Administrators set quotas per project
+to prevent any single team from exhausting shared infrastructure.
+
+```bash title="View current project quotas"
+openstack quota show backend-prod
+```
+
+```bash title="Check actual usage against quotas"
+openstack quota show --usage backend-prod
+```
+
+<Note>
+  Quota changes are applied by your platform administrator. Contact your admin or refer
+  to the [Identity Admin Guide](/services/identity/admin-guide) to modify project quotas.
+</Note>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Users" href="/services/identity/users" color="#197560">
+    Create user accounts and assign them to projects with appropriate roles.
+  </Card>
+  <Card title="Application Credentials" href="/services/identity/application-credentials" color="#197560">
+    Generate non-interactive credentials scoped to project roles for automation pipelines.
+  </Card>
+  <Card title="Compute User Guide" href="/services/compute/user-guide" color="#197560">
+    Launch and manage compute instances within your project.
+  </Card>
+  <Card title="Identity Admin Guide" href="/services/identity/admin-guide" color="#197560">
+    Configure domain management, token policies, and authentication backends.
+  </Card>
+</CardGroup>

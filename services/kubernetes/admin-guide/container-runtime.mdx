@@ -1,0 +1,111 @@
+---
+title: "Container Runtime"
+description: "Configure the container runtime for Xloud K8SaaS cluster templates — containerd recommendations, deprecated Docker support, and runtime configuration labels."
+sidebarTitle: "Container Runtime"
+---
+
+## Overview
+
+The container runtime is specified in the cluster template and determines how container
+images are pulled, started, and managed on cluster nodes. Xloud K8SaaS supports
+`containerd` as the recommended runtime for all Kubernetes versions 1.24 and above.
+Docker runtime support was removed from Kubernetes upstream in version 1.24.
+
+---
+
+## Supported Runtimes
+
+| Runtime | Status | Kubernetes Support | Recommended For |
+|---------|--------|-------------------|----------------|
+| `containerd` | <Badge color="green" size="sm" shape="pill">Recommended</Badge> | 1.20+ | All production clusters on Kubernetes 1.24+ |
+| `docker` | <Badge color="red" size="sm" shape="pill">Deprecated</Badge> | Removed in 1.24 | Legacy clusters only |
+
+<Warning>
+  Do not create new cluster templates with the `docker` runtime. Docker as the Kubernetes
+  container runtime was removed in Kubernetes 1.24. All new templates must use `containerd`.
+</Warning>
+
+---
+
+## Configure Runtime in a Template
+
+Set the container runtime via the `container_runtime` label in the cluster template:
+
+```bash title="Create template with containerd runtime"
+openstack coe cluster template create k8s-1.29-standard \
+  --coe kubernetes \
+  --image fedora-coreos-39 \
+  --labels container_runtime=containerd \
+  ...
+```
+
+```bash title="Verify runtime label on existing template"
+openstack coe cluster template show k8s-1.29-standard \
+  -f value -c labels
+```
+
+Expected output includes `container_runtime=containerd`.
+
+---
+
+## containerd Configuration
+
+The `containerd` runtime is pre-configured in the cluster node bootstrap script.
+Default containerd settings suitable for most deployments:
+
+| Setting | Default | Description |
+|---------|---------|-------------|
+| CRI socket | `/run/containerd/containerd.sock` | Standard CRI socket path |
+| Pause image | Configured by K8SaaS bootstrap | Kubernetes pause container image |
+| Sandbox image | `registry.k8s.io/pause:3.9` | Infrastructure sandbox container |
+| Image pull policy | `IfNotPresent` | Default pull policy for workload containers |
+
+---
+
+## Private Registry Configuration
+
+If your organization uses an internal container registry, configure it in the cluster
+template using the `insecure_registry` label:
+
+```bash title="Template with internal registry"
+openstack coe cluster template create k8s-internal-registry \
+  --coe kubernetes \
+  --labels container_runtime=containerd \
+  --labels insecure_registry=registry.xloud.local:5000 \
+  ...
+```
+
+For HTTPS-enabled internal registries, configure the CA certificate via a custom
+bootstrap script or a ConfigMap deployed to the cluster after provisioning.
+
+---
+
+## Verify Runtime on Running Nodes
+
+After cluster deployment, confirm `containerd` is active on all nodes:
+
+```bash title="Check runtime on all nodes"
+kubectl get nodes \
+  -o custom-columns='NAME:.metadata.name,RUNTIME:.status.nodeInfo.containerRuntimeVersion'
+```
+
+Expected output for each node: `containerd://1.7.x`
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Network Drivers" href="/services/kubernetes/admin-guide/network-drivers" color="#197560">
+    Configure the CNI plugin for cluster network policy enforcement.
+  </Card>
+  <Card title="Template Management" href="/services/kubernetes/admin-guide/template-management" color="#197560">
+    Create and publish public templates with the correct runtime configuration.
+  </Card>
+  <Card title="Security" href="/services/kubernetes/admin-guide/security" color="#197560">
+    Harden container runtime configuration for production clusters.
+  </Card>
+  <Card title="Cluster Drivers" href="/services/kubernetes/admin-guide/cluster-drivers" color="#197560">
+    Review the provisioning driver that uses the template runtime configuration.
+  </Card>
+</CardGroup>

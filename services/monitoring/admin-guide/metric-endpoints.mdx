@@ -1,0 +1,142 @@
+---
+title: "Metric Endpoints"
+description: "Configure XIMP metric scrape targets, manage endpoint discovery, and organize metrics by namespace for alert rules and dashboards."
+sidebarTitle: "Metric Endpoints"
+---
+
+import AdminWarning from '/snippets/admin-warning.mdx';
+
+## Overview
+
+XIMP scrapes metrics from standardized metric endpoints exposed by services across
+the infrastructure. Most infrastructure services are auto-detected via agent registration.
+This page covers configuring additional endpoints for application-specific exporters
+and managing the namespace organization of collected metrics.
+
+<AdminWarning />
+
+<Note>
+  **Prerequisites**
+  - Administrator credentials with the `admin` role
+  - Target endpoints must be reachable from the XIMP collector nodes
+</Note>
+
+---
+
+## Viewing Configured Targets
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    Navigate to **Monitor Center > Monitoring** (Scrape Targets, admin view). Each entry shows:
+    - **URL**: The endpoint being scraped
+    - **Status**: `UP` (healthy) or `DOWN` (not reachable)
+    - **Last Scrape**: Timestamp of the most recent successful scrape
+    - **Labels**: Metadata tags applied to all metrics from this target
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="List all scrape targets"
+    ximp target list
+    ```
+
+    ```bash title="Check target health with details"
+    ximp target health --verbose
+    ```
+
+    Targets with status `DOWN` are not being scraped. Review connectivity and
+    authentication configuration for affected targets.
+  </Tab>
+</Tabs>
+
+---
+
+## Adding Custom Metric Endpoints
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    Navigate to **Monitor Center > Monitoring** (Add Scrape Target, admin view):
+
+    | Field | Description |
+    |-------|-------------|
+    | **URL** | Full endpoint URL (e.g., `http://10.0.1.71:9399/metrics`) |
+    | **Scrape Interval** | How often to collect (default: `30s`) |
+    | **Labels** | Key-value metadata tags for the target (e.g., `service=xloud-filefs`) |
+    | **TLS Config** | CA certificate path for HTTPS endpoints |
+    | **Auth** | Basic auth credentials or bearer token for secured endpoints |
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Add scrape target"
+    ximp target add \
+      --url http://10.0.1.71:9399/metrics \
+      --interval 30s \
+      --label service=xloud-filefs \
+      --label host=xd1
+    ```
+
+    ```bash title="Add target with basic auth"
+    ximp target add \
+      --url https://10.0.1.71:9291/metrics \
+      --interval 60s \
+      --label service=storage-cluster \
+      --auth-user admin \
+      --auth-password <PASSWORD>
+    ```
+
+    ```bash title="Remove a target"
+    ximp target remove <TARGET_ID>
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Metric Namespaces
+
+XIMP organizes metrics by namespace. Use the namespace prefix when writing alert
+rules and dashboard queries:
+
+| Namespace | Source | Example Metrics |
+|-----------|--------|----------------|
+| `xloud_compute` | Compute node agents | `cpu_utilization`, `memory_used_bytes` |
+| `xloud_storage` | XSDS cluster | `pool_used_bytes`, `osd_latency_ms` |
+| `xloud_network` | Network agents | `interface_rx_bytes`, `packet_loss_pct` |
+| `xloud_vm` | XAVS Guest Agent | `vm_cpu_usage`, `vm_memory_rss` |
+| `xloud_filefs` | File FS service | `requests_total`, `guestfs_handles_active` |
+| `xdr` | Disaster recovery agent | `replication_lag_seconds`, `site_health` |
+
+---
+
+## Firewall Requirements
+
+Metric endpoints must be accessible from the XIMP collector nodes. Configure
+security groups or firewall rules to permit:
+
+| Source | Destination | Port | Protocol |
+|--------|-------------|------|----------|
+| XIMP collector IP | Target node | Configured scrape port | TCP |
+| XIMP collector IP | 9100 (node exporter default) | All nodes | TCP |
+| XIMP collector IP | 9283 (XSDS metrics) | Storage nodes | TCP |
+
+<Note>
+  XIMP collector IPs are listed under **Monitor Center > Monitoring** (Collectors, admin view).
+  Update security group rules to include all collector IPs when adding new collectors
+  during scale-out.
+</Note>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Agent Configuration" href="/services/monitoring/admin-guide/agent-config" color="#197560">
+    Configure agents and their default scrape targets on managed nodes
+  </Card>
+  <Card title="Alert Channels" href="/services/monitoring/admin-guide/alert-channels" color="#197560">
+    Configure notification channels using the metric namespaces defined here
+  </Card>
+  <Card title="Retention Policies" href="/services/monitoring/admin-guide/retention" color="#197560">
+    Configure how long metric data from each namespace is retained
+  </Card>
+  <Card title="Troubleshooting" href="/services/monitoring/admin-guide/troubleshooting" color="#197560">
+    Diagnose targets in DOWN state and missing metric series
+  </Card>
+</CardGroup>

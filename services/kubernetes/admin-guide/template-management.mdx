@@ -1,0 +1,182 @@
+---
+title: "Template Management"
+description: "Create and manage Xloud K8SaaS public cluster templates — publish standardized Kubernetes configurations for project teams, and enforce platform-wide defaults."
+sidebarTitle: "Template Management"
+---
+
+## Overview
+
+Administrators create and publish **public** cluster templates that are shared across
+all projects. Public templates provide standardized, pre-approved Kubernetes configurations
+— ensuring project teams use consistent Kubernetes versions, flavors, and network drivers
+without needing to configure templates themselves. This page covers creating, updating,
+and retiring public templates.
+
+<Warning>
+  Changes to public templates do not affect clusters already deployed from those templates.
+  However, all new clusters created from an updated template will use the new configuration.
+</Warning>
+
+---
+
+## Public vs Private Templates
+
+| Type | Visibility | Created By | Used By |
+|------|-----------|-----------|--------|
+| Public | All projects | Administrator | Any project team |
+| Private | Current project only | Any user | Own project only |
+
+---
+
+## Create a Public Template
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Navigate to Cluster Templates (admin)" icon="compass">
+        Navigate to
+        **Container (admin view) > Cluster Templates**.
+      </Step>
+      <Step title="Create template" icon="plus">
+        Click **Create Cluster Template** and fill in the fields. Set **Public** to `True`.
+
+        | Field | Recommended Value | Notes |
+        |-------|-------------------|-------|
+        | **Master Flavor** | `m1.xlarge` | Control plane: 8 vCPU / 16 GB minimum |
+        | **Master LB Enabled** | `True` | Required for HA control plane |
+        | **Network Driver** | `calico` | NetworkPolicy enforcement for production |
+        | **Volume Driver** | `cinder` | Enables PersistentVolumeClaims |
+        | **Docker Volume Size** | `50` GB | Container image storage per node |
+        | **Floating IP Enabled** | `True` | kubectl access via floating IP |
+        | **Public** | `True` | Share across all projects |
+      </Step>
+      <Step title="Add auto-healing labels" icon="settings">
+        In the **Labels** field, add:
+
+        ```
+        auto_healing_enabled=true
+        ```
+
+        This enables automatic node replacement when a node becomes unhealthy.
+      </Step>
+      <Step title="Save" icon="circle-check">
+        Click **Create Cluster Template**. The template appears in all project template
+        lists immediately.
+
+        <Check>Template is visible in all projects and usable for cluster creation.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Create public cluster template"
+    openstack coe cluster template create k8s-1.29-standard \
+      --coe kubernetes \
+      --image fedora-coreos-39 \
+      --keypair admin-keypair \
+      --flavor m1.large \
+      --master-flavor m1.xlarge \
+      --network-driver calico \
+      --volume-driver cinder \
+      --external-network public \
+      --dns-nameserver 8.8.8.8 \
+      --docker-volume-size 50 \
+      --master-lb-enabled \
+      --floating-ip-enabled \
+      --public \
+      --labels auto_healing_enabled=true,auto_scaling_enabled=true
+    ```
+
+    ```bash title="Verify template is public"
+    openstack coe cluster template show k8s-1.29-standard \
+      -f value -c public
+    ```
+
+    Expected: `True`
+  </Tab>
+</Tabs>
+
+---
+
+## Template Version Lifecycle
+
+Maintain a clear versioning strategy for public templates as Kubernetes versions are
+released and deprecated.
+
+| Stage | Action |
+|-------|--------|
+| New version available | Create new public template (e.g., `k8s-1.30-standard`) |
+| Previous version stable | Keep both templates public — users can choose |
+| Previous version deprecated | Mark old template as non-public; notify project teams |
+| Previous version retired | Delete old template after all clusters have been upgraded |
+
+```bash title="Make an existing template private (deprecation)"
+openstack coe cluster template update k8s-1.28-standard \
+  replace public=False
+```
+
+```bash title="Delete a retired template"
+openstack coe cluster template delete k8s-1.28-standard
+```
+
+<Warning>
+  Templates referenced by active clusters cannot be deleted. All clusters using a
+  template must be upgraded or deleted before the template can be removed.
+</Warning>
+
+---
+
+## Recommended Label Configuration
+
+Labels control advanced Kubernetes and platform features at the template level.
+
+| Label | Value | Effect |
+|-------|-------|--------|
+| `auto_healing_enabled` | `true` | Automatically replace unhealthy nodes |
+| `auto_scaling_enabled` | `true` | Enable Cluster Autoscaler |
+| `container_runtime` | `containerd` | Set container runtime (required for Kubernetes 1.24+) |
+| `cloud_provider_enabled` | `true` | Enable Xloud cloud provider for LoadBalancer services |
+| `cinder_csi_enabled` | `true` | Enable Cinder CSI driver for PersistentVolumeClaims |
+
+---
+
+## Validation
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    Navigate to a non-admin project and check **Container > Cluster Templates**.
+    Verify the public template is visible and selectable for cluster creation.
+
+    <Check>Public template is visible in all projects and usable for cluster creation.</Check>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="List all public templates"
+    openstack coe cluster template list --public
+    ```
+
+    ```bash title="Verify from a non-admin project context"
+    OS_PROJECT_NAME=<user-project> \
+      openstack coe cluster template list
+    ```
+
+    <Check>Template appears in all project contexts.</Check>
+  </Tab>
+</Tabs>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Quotas" href="/services/kubernetes/admin-guide/quotas" color="#197560">
+    Set per-project limits on cluster and node counts.
+  </Card>
+  <Card title="Container Runtime" href="/services/kubernetes/admin-guide/container-runtime" color="#197560">
+    Configure the recommended container runtime for new templates.
+  </Card>
+  <Card title="Network Drivers" href="/services/kubernetes/admin-guide/network-drivers" color="#197560">
+    Choose CNI plugins and configure NetworkPolicy defaults.
+  </Card>
+  <Card title="Certificates" href="/services/kubernetes/admin-guide/certificates" color="#197560">
+    Manage cluster certificate authorities and perform CA rotations.
+  </Card>
+</CardGroup>

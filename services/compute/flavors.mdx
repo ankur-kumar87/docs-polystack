@@ -1,0 +1,258 @@
+---
+title: "Flavor Management"
+description: "Create and manage compute flavors using the 2-step wizard. Define vCPU, RAM, disk, GPU, NUMA, and access control."
+sidebarTitle: "Flavors"
+---
+
+import AdminWarning from '/snippets/admin-warning.mdx';
+
+## Overview
+
+Flavors define the virtual hardware profile for instances — vCPU count, memory allocation,
+root disk size, and optional hardware extensions like GPU and NUMA pinning. Administrators
+manage the flavor catalog. Users select flavors when launching instances.
+
+<AdminWarning />
+
+<Note>
+  **Prerequisites**
+  - Administrator access to the Xloud Dashboard (admin view)
+</Note>
+
+---
+
+## View Flavors
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    Navigate to **Compute > Flavors** in the admin sidebar. The list shows:
+
+    | Column | Description |
+    |--------|-------------|
+    | **ID/Name** | Flavor identifier (clickable to view details) |
+    | **Category** | General Purpose, Compute Optimized, Memory Optimized, etc. |
+    | **CPU** | Number of vCPUs |
+    | **Memory** | RAM allocation (formatted as GiB) |
+    | **Internal Network Bandwidth** | Network throughput in Gbps |
+    | **Ephemeral Disk** | Temporary scratch disk size (GiB) |
+    | **Storage IOPS** | I/O operations per second limit |
+    | **Public** | Whether the flavor is available to all projects |
+
+    Filter by **Name**, **CPU**, **Memory**, or **Category**.
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Source credentials"
+    source openrc.sh
+    ```
+
+    <CodeGroup>
+    ```bash title="List all flavors"
+    openstack flavor list --all
+    ```
+    ```bash title="Show flavor details"
+    openstack flavor show <FLAVOR_NAME>
+    ```
+    </CodeGroup>
+  </Tab>
+</Tabs>
+
+---
+
+## Create a Flavor
+
+The Dashboard provides a 2-step wizard: **Params Setting** and **Access Type Setting**.
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Open the Create Flavor wizard">
+        Navigate to **Compute > Flavors** in the admin sidebar.
+        Click **Create Flavor**.
+      </Step>
+      <Step title="Step 1 — Params Setting">
+        Configure the virtual hardware profile.
+
+        **Architecture** (required) — Select the hardware architecture:
+
+        | Architecture | Description |
+        |-------------|-------------|
+        | X86 Architecture | Standard x86-64 virtual machines |
+        | Heterogeneous Computing | GPU-accelerated instances |
+        | Bare Metal | Physical server provisioning |
+        | ARM Architecture | ARM-based instances |
+
+        **Category** (required) — Depends on the selected architecture:
+        - X86: General Purpose, Compute Optimized, Memory Optimized, Big Data, Local SSD, High Clock Speed
+        - Heterogeneous: GPU Compute, Visualization Compute
+
+        **Basic parameters**:
+
+        | Field | Type | Required | Description |
+        |-------|------|----------|-------------|
+        | **Name** | Text | Yes | Flavor name |
+        | **vCPUs** | Number | Yes | Virtual CPU count (min: 1) |
+        | **Memory (GiB)** | Number | Yes | RAM allocation (min: 1) |
+
+        **Hot-Add Configuration** (hidden for Bare Metal):
+
+        | Field | Description |
+        |-------|-------------|
+        | **Enable Hot-Add** | Yes/No — enables live vCPU/RAM scaling |
+        | **Minimum CPU** | Minimum vCPUs at boot (required if Hot-Add enabled) |
+        | **Minimum Memory (GiB)** | Minimum RAM at boot (required if Hot-Add enabled) |
+
+        <Info>
+          **Xloud-Developed** — Hot-Add configuration for live vCPU and RAM scaling
+          is developed by Xloud and ships with XAVS / XPCI.
+        </Info>
+
+        **Storage & Bandwidth** (varies by architecture):
+
+        | Field | Visibility | Description |
+        |-------|-----------|-------------|
+        | **Bandwidth** | Hidden for Bare Metal | Internal network bandwidth (Gbps) |
+        | **Ephemeral Disk** | When applicable | Temporary scratch disk (GiB) |
+        | **Root Disk** | Hidden when block storage enabled | Root disk size (GiB) |
+        | **IOPS** | Hidden for Bare Metal | Storage I/O limit |
+
+        **NUMA Configuration** (for non-compute-optimized, non-bare-metal):
+
+        | Field | Description |
+        |-------|-------------|
+        | **NUMA Nodes** | Number of NUMA nodes |
+        | **Memory Page Size** | large, small, any, or custom value |
+
+        **GPU Parameters** (only for GPU categories):
+
+        | Field | Description |
+        |-------|-------------|
+        | **GPU Type** | Select from configured GPU models |
+        | **GPU Number** | Number of GPUs (min: 1) |
+
+        **Compute Optimized Parameters** (only for Compute Optimized category):
+
+        | Field | Description |
+        |-------|-------------|
+        | **NUMA Nodes** | Per-node CPU and RAM allocation (total must match flavor vCPUs/RAM) |
+        | **CPU Policy** | `dedicated` or `shared` |
+        | **CPU Thread Policy** | `prefer`, `isolate`, or `require` |
+        | **Memory Page Size** | `large`, `small`, `any`, or custom |
+      </Step>
+      <Step title="Step 2 — Access Type Setting">
+        Configure which projects can use this flavor.
+
+        | Option | Description |
+        |--------|-------------|
+        | **Public** | Available to all projects on the platform |
+        | **Access Control** | Restricted to selected projects only |
+
+        When **Access Control** is selected, a project table appears. Select one
+        or more projects to grant access.
+      </Step>
+      <Step title="Create the flavor">
+        Click **Confirm** to create the flavor.
+
+        <Check>Flavor appears in the list and is available for instance creation.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    <CodeGroup>
+    ```bash title="Create a basic flavor"
+    openstack flavor create \
+      --vcpus 4 --ram 8192 --disk 80 \
+      --public \
+      m1.large
+    ```
+    ```bash title="Create a private flavor"
+    openstack flavor create \
+      --vcpus 8 --ram 16384 --disk 160 \
+      --private \
+      m1.xlarge
+
+    # Grant access to specific project
+    openstack flavor set --project <PROJECT_ID> m1.xlarge
+    ```
+    ```bash title="Create flavor with extra specs (NUMA, CPU pinning)"
+    openstack flavor create \
+      --vcpus 4 --ram 8192 --disk 0 \
+      --public \
+      compute-optimized.large
+
+    openstack flavor set \
+      --property hw:cpu_policy=dedicated \
+      --property hw:cpu_thread_policy=prefer \
+      --property hw:mem_page_size=large \
+      --property hw:numa_nodes=1 \
+      compute-optimized.large
+    ```
+    </CodeGroup>
+  </Tab>
+</Tabs>
+
+---
+
+## Flavor Detail
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    Click a flavor name in the list. The detail page shows:
+
+    **Detail tab** — Flavor specifications:
+    - Base Info: Network Bandwidth, Ephemeral Disk, IOPS, NUMA config
+    - GPU Info (if applicable): GPU type and count
+    - Compute Optimized Info (if applicable): Per-NUMA-node CPU/RAM, CPU/thread policy, page size
+    - Extra Specs: Full JSON of all extra specifications
+
+    **Instances tab** — All instances currently using this flavor.
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    <CodeGroup>
+    ```bash title="Show flavor details"
+    openstack flavor show <FLAVOR_NAME>
+    ```
+    ```bash title="List extra specs"
+    openstack flavor show <FLAVOR_NAME> -c properties
+    ```
+    </CodeGroup>
+  </Tab>
+</Tabs>
+
+---
+
+## Delete a Flavor
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    Click the **Delete** action (first row action) on the flavor row. Confirm deletion.
+
+    <Danger>
+      Existing instances using the deleted flavor continue running but cannot be
+      resized. Create a replacement flavor before deleting.
+    </Danger>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Delete a flavor"
+    openstack flavor delete <FLAVOR_NAME>
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Launch an Instance" href="/services/compute/launch-instance" color="#197560">
+    Use flavors when creating instances in the 4-step wizard
+  </Card>
+  <Card title="Live vCPU/RAM Scaling" href="/services/compute/live-resize-admin" color="#197560">
+    Configure Hot-Add flavors for zero-downtime scaling
+  </Card>
+  <Card title="Quotas" href="/services/compute/quotas" color="#197560">
+    Set per-project limits on vCPU, RAM, and instance counts
+  </Card>
+  <Card title="Compute Hosts" href="/services/compute/compute-hosts" color="#197560">
+    Monitor hypervisor resources and host availability
+  </Card>
+</CardGroup>

@@ -1,0 +1,391 @@
+---
+title: "Storage Quality of Service"
+description: "Define IOPS limits, throughput caps, and burst allowances for block storage volumes. Create and associate QoS specifications."
+sidebarTitle: "QoS"
+---
+
+import AdminWarning from '/snippets/admin-warning.mdx';
+import CliAuth from '/snippets/cli-auth.mdx';
+
+## Overview
+
+Storage QoS (Quality of Service) specifications define performance boundaries for block storage volumes — capping IOPS, throughput, and burst behavior at the hypervisor-to-storage layer. QoS specs are attached to volume types, so every volume created from that type automatically inherits the performance constraints. This prevents high-throughput workloads from starving adjacent volumes on shared storage.
+
+<AdminWarning />
+
+<Note>
+  **Prerequisites**
+  - Admin credentials sourced from `openrc.sh`
+  - Block Storage service deployed and healthy
+  - Volume types configured ([Volume Types Admin Guide](/services/storage/volume-types-admin))
+  - QoS support enabled on the target storage backend (Ceph, NetApp, or Pure Storage)
+</Note>
+
+---
+
+## QoS Specification Parameters
+
+Storage QoS specs define performance limits using key-value pairs. The specific keys supported depend on the storage backend driver.
+
+<AccordionGroup>
+  <Accordion title="Standard QoS Keys (all backends)" icon="settings" defaultOpen>
+    | Key | Unit | Description |
+    |-----|------|-------------|
+    | `total_iops_sec` | IOPS | Maximum combined read + write IOPS |
+    | `read_iops_sec` | IOPS | Maximum read IOPS |
+    | `write_iops_sec` | IOPS | Maximum write IOPS |
+    | `total_bytes_sec` | bytes/s | Maximum combined read + write throughput |
+    | `read_bytes_sec` | bytes/s | Maximum read throughput |
+    | `write_bytes_sec` | bytes/s | Maximum write throughput |
+    | `total_iops_sec_max` | IOPS | Burst IOPS ceiling |
+    | `total_bytes_sec_max` | bytes/s | Burst throughput ceiling |
+    | `size_iops_sec` | IOPS/GB | IOPS scaling factor (per GB of volume size) |
+
+    <Info>
+      `size_iops_sec` scales limits proportionally to volume size. A spec of `size_iops_sec=10` grants a 100 GB volume 1,000 IOPS and a 500 GB volume 5,000 IOPS automatically.
+    </Info>
+  </Accordion>
+  <Accordion title="Ceph RBD QoS Keys" icon="database">
+    Ceph RBD enforces QoS through its `rbd_qos_*` parameters, configured in `ceph.conf` and overridable per volume via extra specs.
+
+    | Key | Unit | Description |
+    |-----|------|-------------|
+    | `rbd_qos_iops_limit` | IOPS | Combined read+write IOPS cap |
+    | `rbd_qos_read_iops_limit` | IOPS | Read IOPS cap |
+    | `rbd_qos_write_iops_limit` | IOPS | Write IOPS cap |
+    | `rbd_qos_bps_limit` | bytes/s | Combined throughput cap |
+    | `rbd_qos_read_bps_limit` | bytes/s | Read throughput cap |
+    | `rbd_qos_write_bps_limit` | bytes/s | Write throughput cap |
+    | `rbd_qos_iops_burst` | IOPS | Burst IOPS above the sustained limit |
+    | `rbd_qos_bps_burst` | bytes/s | Burst throughput above sustained limit |
+
+    <Tip>
+      Ceph QoS is enforced at the librbd layer — inside the QEMU process on the hypervisor. It does not require OSD-level configuration changes and applies per-volume independently.
+    </Tip>
+  </Accordion>
+  <Accordion title="NetApp ONTAP QoS Keys" icon="server">
+    | Key | Unit | Description |
+    |-----|------|-------------|
+    | `netapp:qos_policy_group` | Policy name | Reference to an ONTAP QoS policy group |
+    | `netapp:qos_adaptive_policy_group` | Policy name | Reference to an ONTAP adaptive QoS policy |
+    | `total_iops_sec` | IOPS | Enforced via ONTAP QoS policy |
+    | `total_bytes_sec` | bytes/s | Enforced via ONTAP QoS policy |
+
+    NetApp adaptive QoS adjusts limits automatically based on volume size (TB) — `expected` and `peak` IOPS/TB values are set in the ONTAP adaptive policy group.
+  </Accordion>
+  <Accordion title="Pure Storage QoS Keys" icon="zap">
+    | Key | Unit | Description |
+    |-----|------|-------------|
+    | `pure_qos_max_bandwidth` | bytes/s | Maximum combined read + write throughput |
+    | `pure_qos_max_iops` | IOPS | Maximum combined IOPS |
+
+    Pure Storage enforces QoS at the array level — limits apply to the volume regardless of which host or hypervisor is accessing it.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Create QoS Specifications
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Navigate to QoS Specs" icon="compass">
+        Navigate to **Storage > Volume Types** (QoS Specs tab, admin view). Click **Create QoS Spec**.
+      </Step>
+      <Step title="Define the spec" icon="settings">
+        | Field | Value | Description |
+        |-------|-------|-------------|
+        | **Name** | e.g., `bronze-1000iops` | Descriptive name |
+        | **Consumer** | `front-end` | Where limits are enforced: `front-end` (hypervisor), `back-end` (storage array), or `both` |
+
+        Click **Confirm** to save the spec.
+      </Step>
+      <Step title="Add key-value pairs" icon="plus">
+        Open the newly created spec and click **Edit Keys**. Add the desired performance parameters:
+
+        | Key | Example Value |
+        |-----|--------------|
+        | `total_iops_sec` | `1000` |
+        | `total_bytes_sec` | `104857600` (100 MB/s) |
+        | `total_iops_sec_max` | `2000` |
+
+        <Check>Click **Confirm** to apply the key-value pairs to the spec.</Check>
+      </Step>
+      <Step title="Associate with a volume type" icon="link">
+        Navigate to **Storage > Volume Types** (admin view), select a volume type, click **Manage QoS Spec**, and select the QoS spec from the dropdown.
+
+        <Check>All new volumes created from this volume type inherit the QoS limits automatically.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    <Steps titleSize="h3">
+      <Step title="Authenticate" icon="key">
+        <CliAuth />
+      </Step>
+      <Step title="Create the QoS spec" icon="plus">
+        ```bash title="Create bronze QoS spec (1,000 IOPS, 100 MB/s)"
+        openstack volume qos create bronze-1000iops \
+          --consumer front-end \
+          --property total_iops_sec=1000 \
+          --property total_bytes_sec=104857600 \
+          --property total_iops_sec_max=2000
+        ```
+
+        ```bash title="Create gold QoS spec (10,000 IOPS, 1 GB/s)"
+        openstack volume qos create gold-10000iops \
+          --consumer front-end \
+          --property total_iops_sec=10000 \
+          --property total_bytes_sec=1073741824 \
+          --property total_iops_sec_max=15000 \
+          --property total_bytes_sec_max=2147483648
+        ```
+
+        The `--consumer` flag controls enforcement location:
+        - `front-end` — enforced by the hypervisor (libvirt QoS)
+        - `back-end` — enforced by the storage array
+        - `both` — enforced at both layers
+      </Step>
+      <Step title="Associate with a volume type" icon="link">
+        ```bash title="Associate QoS spec with a volume type"
+        openstack volume qos associate bronze-1000iops standard-ssd
+        ```
+
+        ```bash title="Associate gold spec with premium volume type"
+        openstack volume qos associate gold-10000iops performance-ssd
+        ```
+      </Step>
+      <Step title="Verify the association" icon="circle-check">
+        ```bash title="Show volume type with QoS association"
+        openstack volume type show standard-ssd -c qos_specs_id
+        ```
+
+        ```bash title="List all QoS specs"
+        openstack volume qos list
+        ```
+
+        <Check>The volume type displays the associated QoS spec ID. New volumes created from this type are QoS-limited automatically.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+</Tabs>
+
+---
+
+## Backend-Specific QoS Examples
+
+<Tabs>
+  <Tab title="Ceph RBD" icon="database">
+    For Ceph RBD backends, use the `rbd_qos_*` keys. These are enforced by the QEMU librbd driver on the hypervisor.
+
+    ```bash title="Create Ceph-specific QoS spec"
+    openstack volume qos create ceph-standard-qos \
+      --consumer front-end \
+      --property rbd_qos_iops_limit=1000 \
+      --property rbd_qos_bps_limit=104857600 \
+      --property rbd_qos_iops_burst=2000 \
+      --property rbd_qos_bps_burst=209715200
+    ```
+
+    ```bash title="Associate with Ceph volume type"
+    openstack volume qos associate ceph-standard-qos ceph-ssd
+    ```
+
+    <Tip>
+      Set `rbd_qos_iops_burst` to 2× the sustained `rbd_qos_iops_limit` to absorb short IO spikes (e.g., application startup, database checkpoint) without violating the sustained limit.
+    </Tip>
+  </Tab>
+  <Tab title="Standard (libvirt)" icon="server">
+    For standard backends where QoS is enforced at the hypervisor by libvirt:
+
+    ```bash title="Tiered QoS specs — bronze, silver, gold"
+    # Bronze: 500 IOPS, 50 MB/s
+    openstack volume qos create bronze \
+      --consumer front-end \
+      --property total_iops_sec=500 \
+      --property total_bytes_sec=52428800
+
+    # Silver: 2,000 IOPS, 200 MB/s
+    openstack volume qos create silver \
+      --consumer front-end \
+      --property total_iops_sec=2000 \
+      --property total_bytes_sec=209715200
+
+    # Gold: 10,000 IOPS, 1 GB/s with burst
+    openstack volume qos create gold \
+      --consumer front-end \
+      --property total_iops_sec=10000 \
+      --property total_bytes_sec=1073741824 \
+      --property total_iops_sec_max=15000 \
+      --property total_bytes_sec_max=2147483648
+    ```
+  </Tab>
+  <Tab title="Size-Scaled QoS" icon="trending-up">
+    Use `size_iops_sec` to scale IOPS proportionally with volume size — larger volumes receive more IOPS automatically.
+
+    ```bash title="Create size-scaled QoS spec (10 IOPS per GB)"
+    openstack volume qos create scaled-10iops-per-gb \
+      --consumer front-end \
+      --property size_iops_sec=10
+    ```
+
+    Effective IOPS by volume size with this spec:
+    - 100 GB volume → 1,000 IOPS
+    - 500 GB volume → 5,000 IOPS
+    - 2,000 GB volume → 20,000 IOPS
+
+    <Tip>
+      Size-scaled QoS is ideal for database volume types where larger databases justifiably require more IO capacity, and smaller test databases should receive proportionally less.
+    </Tip>
+  </Tab>
+</Tabs>
+
+---
+
+## QoS Capability Comparison
+
+| Capability | Ceph RBD | NetApp ONTAP | Pure Storage | Standard (libvirt) |
+|------------|----------|-------------|-------------|-------------------|
+| IOPS limit | Yes | Yes | Yes | Yes |
+| Throughput limit | Yes | Yes | Yes | Yes |
+| Burst IOPS | Yes | Yes (adaptive) | No | Yes |
+| Burst throughput | Yes | Yes (adaptive) | No | Yes |
+| Per-read/write limits | Yes | No | No | Yes |
+| Size-scaled IOPS | No | Yes (adaptive) | No | Yes |
+| Enforcement layer | Hypervisor (librbd) | Array | Array | Hypervisor (libvirt) |
+| Live update | Yes (libvirt) | Yes | Yes | Yes (libvirt) |
+
+---
+
+## Manage QoS Specs
+
+```bash title="List all QoS specifications"
+openstack volume qos list
+```
+
+```bash title="Show a QoS spec and its properties"
+openstack volume qos show bronze-1000iops
+```
+
+```bash title="Update a QoS spec property"
+openstack volume qos set bronze-1000iops \
+  --property total_iops_sec=1500
+```
+
+```bash title="Remove a property from a QoS spec"
+openstack volume qos unset bronze-1000iops --property total_iops_sec_max
+```
+
+```bash title="Disassociate QoS spec from a volume type"
+openstack volume qos disassociate bronze-1000iops standard-ssd
+```
+
+```bash title="Delete a QoS spec"
+openstack volume qos delete bronze-1000iops
+```
+
+<Warning>
+  Deleting a QoS spec that is still associated with a volume type will fail. Disassociate
+  from all volume types before deleting the spec.
+</Warning>
+
+---
+
+## Monitoring QoS Compliance
+
+<Tabs>
+  <Tab title="Xloud Dashboard (XIMP)" icon="activity">
+    Navigate to **Monitoring → Storage → Volume Metrics** in Xloud XIMP. Per-volume IOPS and throughput graphs show whether volumes are hitting their QoS limits:
+
+    - IOPS at or near the `total_iops_sec` limit — the volume is QoS-constrained
+    - Sustained IOPS below limit — the workload does not require the full allocation
+    - Burst IOPS exceeding sustained limit but below burst cap — normal burst behavior
+
+    <Tip>
+      Set XIMP alerts for volumes that sustain QoS-constrained behavior for more than 5 minutes — this signals that the volume type's QoS limit may be too low for the workload.
+    </Tip>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Show volume details including QoS association"
+    openstack volume show <volume-id> -c volume_type -c metadata
+    ```
+
+    ```bash title="Show current QoS spec for a volume type"
+    openstack volume type show <volume-type> -c qos_specs_id
+    ```
+
+    For Ceph-backed volumes, verify QoS enforcement on the hypervisor:
+    ```bash title="Check RBD QoS settings on running volume (on compute node)"
+    virsh domblkstat <domain-name> <disk-device>
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Align with Volume Types" icon="layers" color="#197560">
+    Define one QoS spec per volume tier (bronze, silver, gold). Attach specs to volume
+    types so QoS is automatically applied without per-volume manual steps.
+  </Card>
+  <Card title="Set Burst at 2x Sustained" icon="gauge" color="#197560">
+    Configure burst limits at 2× the sustained limit to absorb application startup
+    and checkpoint IO spikes without permanently raising the sustained cap.
+  </Card>
+  <Card title="Use Size-Scaled for Databases" icon="database" color="#197560">
+    Apply `size_iops_sec` to database volume types. Larger database volumes
+    automatically receive proportionally more IOPS without manual reconfiguration.
+  </Card>
+  <Card title="Monitor Before Limiting" icon="activity" color="#197560">
+    Baseline actual workload IOPS using XIMP before applying QoS limits. Setting limits
+    below actual peak workload demand causes application performance degradation.
+  </Card>
+</CardGroup>
+
+---
+
+## Tiered QoS Profiles
+
+<Info>**Xloud-Developed** -- This capability is developed by Xloud and ships with XAVS / XPCI.</Info>
+
+Xloud provides pre-defined tiered QoS profiles that align with common workload classes. Each profile sets per-instance IOPS limits, bandwidth caps, and burst allowances with separate read and write thresholds.
+
+| Profile | IOPS (sustained) | Throughput | Burst IOPS | Target Workload |
+|---------|------------------|------------|------------|-----------------|
+| **Bronze** | 500 | 50 MB/s | 1,000 | Development, test environments |
+| **Silver** | 2,000 | 200 MB/s | 4,000 | General-purpose applications |
+| **Gold** | 10,000 | 1 GB/s | 15,000 | Transactional databases, analytics |
+| **Platinum** | 50,000 | 3 GB/s | 75,000 | High-frequency trading, real-time ingestion |
+
+Key capabilities of tiered QoS profiles:
+
+- **Per-instance enforcement** -- limits apply at the individual instance level, not shared across a tenant
+- **Read/write-differentiated limits** -- separate IOPS and bandwidth caps for read and write operations allow tuning for read-heavy or write-heavy workloads independently
+- **Burst support** -- short IO spikes (application startup, checkpoints) are absorbed up to the burst ceiling without throttling
+
+<Tip>
+  Assign profiles to volume types so every volume inherits the correct QoS automatically.
+  See [Storage Tiers](/services/storage/storage-tiers) for aligning QoS profiles with hardware tiers.
+</Tip>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Volume Types Admin" href="/services/storage/volume-types-admin" color="#197560">
+    Create and manage volume types to associate with QoS specs
+  </Card>
+  <Card title="Storage Tiers" href="/services/storage/storage-tiers" color="#197560">
+    Configure tiered storage pools aligned with QoS tiers
+  </Card>
+  <Card title="Storage Backends" href="/services/storage/storage-backends" color="#197560">
+    Review backend-specific capabilities and QoS driver support
+  </Card>
+  <Card title="Block Storage Architecture" href="/services/storage/architecture" color="#197560">
+    Understand how QoS is enforced across the storage service stack
+  </Card>
+</CardGroup>

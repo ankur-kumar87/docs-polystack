@@ -1,0 +1,288 @@
+---
+title: "Compute CLI Reference"
+description: "CLI commands for managing Xloud Compute instances — create, list, start, stop, resize, migrate, and manage keypairs."
+sidebarTitle: "CLI Reference"
+---
+
+## Overview
+
+The `openstack server` command group manages the full lifecycle of compute instances. Commands cover instance creation, power operations, resize, migration, console access, keypair management, and security group assignment.
+
+<Note>
+  **Prerequisites**
+  - CLI installed and authenticated — see [CLI Setup](/cli-setup)
+  - Project membership with appropriate role (Member for user operations, Admin for host-level ops)
+</Note>
+
+---
+
+## Instances
+
+### List and Inspect
+
+<CodeGroup>
+```bash title="List all instances in your project"
+openstack server list
+```
+
+```bash title="Filter by status"
+openstack server list --status ACTIVE
+openstack server list --status SHUTOFF
+openstack server list --status ERROR
+```
+
+```bash title="Show all tenants (admin)"
+openstack server list --all-projects
+```
+
+```bash title="Show instance details"
+openstack server show <server>
+```
+
+```bash title="JSON output for scripting"
+openstack server show <server> --format json
+```
+</CodeGroup>
+
+### Create
+
+<CodeGroup>
+```bash title="Basic instance"
+openstack server create \
+  --flavor m1.small \
+  --image Ubuntu-22.04 \
+  --network private \
+  --key-name my-keypair \
+  my-instance
+```
+
+```bash title="With user-data script"
+openstack server create \
+  --flavor m1.medium \
+  --image Ubuntu-22.04 \
+  --network private \
+  --key-name my-keypair \
+  --user-data ./bootstrap.sh \
+  my-instance
+```
+
+```bash title="With security group and boot volume"
+openstack server create \
+  --flavor m1.large \
+  --image Ubuntu-22.04 \
+  --network private \
+  --key-name my-keypair \
+  --security-group web-servers \
+  --boot-from-volume 50 \
+  my-instance
+```
+
+```bash title="In specific availability zone"
+openstack server create \
+  --flavor m1.small \
+  --image Ubuntu-22.04 \
+  --network private \
+  --availability-zone zone-a \
+  my-instance
+```
+</CodeGroup>
+
+### Power Operations
+
+<CodeGroup>
+```bash title="Stop / Start / Reboot"
+openstack server stop <server>
+openstack server start <server>
+openstack server reboot <server>
+openstack server reboot --hard <server>
+```
+
+```bash title="Suspend / Resume / Pause"
+openstack server suspend <server>
+openstack server resume <server>
+openstack server pause <server>
+openstack server unpause <server>
+```
+
+```bash title="Rescue / Unrescue"
+openstack server rescue <server>
+openstack server unrescue <server>
+```
+</CodeGroup>
+
+### Resize and Migrate
+
+<CodeGroup>
+```bash title="Resize instance"
+openstack server resize --flavor m1.large <server>
+openstack server resize confirm <server>
+openstack server resize revert <server>
+```
+
+```bash title="Live migration (admin)"
+openstack server migrate --live-migration <server>
+openstack server migrate --live-migration --host <dest-host> <server>
+```
+
+```bash title="Cold migration (admin)"
+openstack server migrate <server>
+```
+</CodeGroup>
+
+### Snapshots and Backups
+
+<CodeGroup>
+```bash title="Create snapshot"
+openstack server image create --name my-snapshot <server>
+```
+
+```bash title="List backups"
+openstack server backup list <server>
+```
+
+```bash title="Create backup"
+openstack server backup create \
+  --name weekly-backup \
+  --type weekly \
+  --rotate 4 \
+  <server>
+```
+</CodeGroup>
+
+### Delete
+
+```bash title="Delete instance"
+openstack server delete <server>
+```
+
+```bash title="Delete multiple instances"
+openstack server delete <server1> <server2> <server3>
+```
+
+---
+
+## Keypairs
+
+<CodeGroup>
+```bash title="List keypairs"
+openstack keypair list
+```
+
+```bash title="Create keypair (generates private key)"
+openstack keypair create my-keypair
+openstack keypair create my-keypair > my-keypair.pem
+chmod 600 my-keypair.pem
+```
+
+```bash title="Import existing public key"
+openstack keypair create --public-key ~/.ssh/id_rsa.pub my-keypair
+```
+
+```bash title="Show keypair"
+openstack keypair show my-keypair
+```
+
+```bash title="Delete keypair"
+openstack keypair delete my-keypair
+```
+</CodeGroup>
+
+---
+
+## Flavors
+
+<CodeGroup>
+```bash title="List flavors"
+openstack flavor list
+openstack flavor list --public
+```
+
+```bash title="Show flavor details"
+openstack flavor show m1.small
+```
+
+```bash title="Create custom flavor (admin)"
+openstack flavor create \
+  --ram 4096 \
+  --vcpus 2 \
+  --disk 40 \
+  --public \
+  m1.custom
+```
+</CodeGroup>
+
+---
+
+## Console Access
+
+<CodeGroup>
+```bash title="Get VNC console URL"
+openstack console url show <server>
+```
+
+```bash title="Get serial console"
+openstack console url show --serial <server>
+```
+
+```bash title="View console log"
+openstack console log show <server>
+openstack console log show --lines 50 <server>
+```
+</CodeGroup>
+
+---
+
+## Server Groups (Anti-Affinity)
+
+<CodeGroup>
+```bash title="List server groups"
+openstack server group list
+```
+
+```bash title="Create anti-affinity group"
+openstack server group create --policy anti-affinity my-group
+```
+
+```bash title="Create affinity group"
+openstack server group create --policy affinity my-group
+```
+
+```bash title="Launch instance in server group"
+openstack server create \
+  --flavor m1.small \
+  --image Ubuntu-22.04 \
+  --network private \
+  --hint group=<group-id> \
+  my-instance
+```
+
+```bash title="Delete server group"
+openstack server group delete my-group
+```
+</CodeGroup>
+
+---
+
+## Common Options
+
+| Option | Description |
+|--------|-------------|
+| `--format json` | Output as JSON |
+| `--format yaml` | Output as YAML |
+| `--format value -c <col>` | Extract a single field |
+| `--os-project-name <proj>` | Override project for this command |
+| `--all-projects` | Show resources across all projects (admin) |
+| `--wait` | Block until the operation completes |
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Launch Instance Guide" href="/services/compute/launch-instance" color="#197560">
+    Step-by-step walkthrough for launching your first instance
+  </Card>
+  <Card title="Block Storage CLI" href="/services/storage/cli-reference" color="#197560">
+    Volume create, attach, and snapshot commands
+  </Card>
+</CardGroup>

@@ -1,0 +1,313 @@
+---
+title: "Security"
+description: "Secure the Xloud Optimization — configure the Applier service account, restrict RBAC execution policies, enable API audit logging, and protect the."
+sidebarTitle: "Security"
+---
+
+## Overview
+
+The Optimization requires a dedicated service account with sufficient privileges to
+call the Compute API for live migration. Hardening this account — and restricting who
+can approve and execute action plans — prevents unauthorized workload movement and ensures
+a complete audit trail for all optimization activity.
+
+<Note>
+  **Prerequisites**
+  - Administrator privileges on both the Optimization and Xloud Identity
+  - Xloud Compute deployed and operational
+  - Optimization services running (API, Decision Engine, Applier)
+</Note>
+
+---
+
+## Service Account Hardening
+
+The Applier uses a dedicated service account to authenticate against the Compute API.
+This account must have sufficient permissions to perform live migrations but should be
+scoped to the minimum necessary privileges.
+
+### Create a Dedicated Service Account
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Create the user" icon="user-plus">
+        Navigate to **Identity > Users** (admin view) and click **Create User**.
+
+        | Field | Value |
+        |-------|-------|
+        | **Username** | `watcher-service` |
+        | **Email** | `watcher@internal.xloud.tech` |
+        | **Project** | `service` |
+        | **Role** | `admin` (required for live migration) |
+
+        Set a strong password and save it to your secrets manager.
+      </Step>
+      <Step title="Restrict to service project" icon="folder-lock">
+        Ensure the `watcher-service` user has the `admin` role **only** in the `service`
+        project — not in tenant projects. This limits blast radius if the account is compromised.
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Create the Applier service account"
+    openstack user create watcher-service \
+      --project service \
+      --password "$(openssl rand -base64 32)"
+
+    openstack role add admin \
+      --user watcher-service \
+      --project service
+    ```
+
+    ```bash title="Verify account permissions"
+    openstack role assignment list \
+      --user watcher-service \
+      --names
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Protect watcher.conf Credentials
+
+The `watcher.conf` file contains the Applier's service account credentials. Restrict
+access to this file on controller nodes and verify the authentication configuration.
+
+<Tabs>
+  <Tab title="XDeploy" icon="browser">
+    <Steps titleSize="h3">
+      <Step title="Automatic Credential Management" icon="shield-check">
+        Service account credentials and authentication settings are **automatically managed**
+        by XDeploy during deployment. XDeploy generates the `[keystone_authtoken]` section
+        with the correct service account, endpoint URLs, and permissions.
+
+        No manual configuration is required for standard deployments.
+      </Step>
+      <Step title="Custom Authentication Settings (Optional)" icon="settings">
+        For advanced troubleshooting or custom authentication configuration, navigate to
+        **Advanced Configuration**. In the **Service Tree** (left panel), select **watcher**.
+        Click **New File** or select an existing `watcher.conf` from the **File Browser**
+        (right panel).
+
+        Modify the `[keystone_authtoken]` section in the **Code Editor** (center panel):
+
+        ```ini title="/etc/xavs/config/watcher/watcher.conf"
+        [keystone_authtoken]
+        www_authenticate_uri = http://10.0.1.71:5000
+        auth_url = http://10.0.1.71:5000/v3
+        memcached_servers = 10.0.1.71:11211
+        auth_type = password
+        project_domain_name = Default
+        user_domain_name = Default
+        project_name = service
+        username = watcher-service
+        password = <service-account-password>
+        ```
+      </Step>
+      <Step title="Save and Apply" icon="circle-check">
+        Click **Save Current File**. Return to **Operations** and run **reconfigure** to
+        apply the authentication changes.
+
+        <Check>Service credentials configured and applied via XDeploy.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    Restrict access to the configuration file on controller nodes:
+
+    ```bash title="Restrict watcher.conf permissions"
+    chmod 640 /etc/xavs/watcher/watcher.conf
+    chown root:watcher /etc/xavs/watcher/watcher.conf
+    ```
+
+    Verify the `[keystone_authtoken]` section uses the dedicated account:
+
+    ```ini title="/etc/xavs/watcher/watcher.conf -- keystone_authtoken section"
+    [keystone_authtoken]
+    www_authenticate_uri = http://10.0.1.71:5000
+    auth_url = http://10.0.1.71:5000/v3
+    memcached_servers = 10.0.1.71:11211
+    auth_type = password
+    project_domain_name = Default
+    user_domain_name = Default
+    project_name = service
+    username = watcher-service
+    password = <service-account-password>
+    ```
+  </Tab>
+</Tabs>
+
+<Warning>
+  Never store credentials in plain text outside `/etc/xavs/`. Do not commit `watcher.conf`
+  to version control. If the password must be rotated, update `watcher.conf` and restart
+  the Applier container.
+</Warning>
+
+---
+
+## RBAC Execution Policies
+
+The Optimization enforces role-based access control on all API operations.
+The default policy grants:
+
+| Operation | Required Role |
+|-----------|--------------|
+| Create audit | `admin` |
+| View audit results | `member`, `reader` |
+| Start action plan | `admin` |
+| Start action plan | `admin` |
+| Cancel action plan | `admin` |
+| View action plans | `member`, `reader` |
+
+### Verify Default Policies
+
+```bash title="List active RBAC policies"
+docker exec watcher_api \
+  oslopolicy-list-redundant \
+  --config-file /etc/watcher/watcher.conf
+```
+
+### Restrict Execution to Named Administrators
+
+To restrict action plan execution to a dedicated ops team without granting full `admin`,
+create a custom project-scoped role and override the policy:
+
+```bash title="Create an optimizer-operator role"
+openstack role create optimizer-operator
+openstack role add optimizer-operator \
+  --user ops-user \
+  --project service
+```
+
+```yaml title="/etc/xavs/watcher/policy.yaml — execution override"
+"action_plan:execute": "role:optimizer-operator or role:admin"
+```
+
+```bash title="Restart API after policy change"
+docker restart watcher_api
+```
+
+---
+
+## API Audit Logging
+
+Enable verbose API request logging to record who approved and executed each action plan:
+
+```ini title="/etc/xavs/watcher/watcher.conf — audit logging"
+[DEFAULT]
+use_journal = True
+
+[oslo_middleware]
+enable_proxy_headers_parsing = True
+```
+
+Logs are written to the container's journal and to the XAVS log volume:
+
+```bash title="Follow real-time API logs"
+docker logs -f watcher_api
+```
+
+```bash title="Search for execution events"
+docker logs watcher_api 2>&1 \
+  | grep "action_plan.*execute"
+```
+
+---
+
+## TLS for API Communications
+
+The Optimization API should be served behind the HAProxy endpoint which handles
+TLS termination. Verify that all client traffic reaches the API via HTTPS:
+
+```bash title="Verify API endpoint (should be HTTPS in production)"
+openstack endpoint list \
+  --service optimization \
+  -f table -c Interface -c URL
+```
+
+For internal controller communication, TLS on the RPC transport (RabbitMQ) is managed
+by the platform-wide `[oslo_messaging_rabbit]` configuration.
+
+---
+
+## Rotation: Service Account Password
+
+When rotating the Applier service account password:
+
+<Steps titleSize="h3">
+  <Step title="Update the password in Xloud Identity" icon="key">
+    ```bash title="Set a new password"
+    openstack user set watcher-service \
+      --password "<new-strong-password>"
+    ```
+  </Step>
+  <Step title="Update watcher.conf" icon="file-pen">
+    Edit `/etc/xavs/watcher/watcher.conf` and update the `password` field under
+    `[keystone_authtoken]`.
+  </Step>
+  <Step title="Restart all Optimizer containers" icon="rotate">
+    ```bash title="Restart all Optimization services"
+    docker restart watcher_api watcher_decision_engine watcher_applier
+    ```
+  </Step>
+  <Step title="Verify authentication" icon="circle-check">
+    ```bash title="Confirm API is reachable after rotation"
+    watcher audit list
+    ```
+
+    <Check>Audit list returns without authentication errors — password rotation complete.</Check>
+  </Step>
+</Steps>
+
+---
+
+## Validation
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    Navigate to **Optimization → Audits**. Attempt to create an audit
+    as a non-admin user — the action should be blocked with an authorization error.
+
+    <Check>Non-admin users cannot create audits or execute action plans.</Check>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Test with a non-admin token"
+    openstack --os-auth-type password \
+      --os-username member-user \
+      --os-password member-pass \
+      --os-project-name member-project \
+      optimize audit create --goal server_consolidation
+    ```
+
+    Expected: `HTTP 403 Forbidden — Policy does not allow this request to be performed.`
+
+    ```bash title="Verify watcher.conf permissions"
+    stat /etc/xavs/watcher/watcher.conf
+    ```
+
+    Expected: `Access: (0640/-rw-r-----)  Uid: (    0/    root)   Gid: ( XXXX/watcher)`
+
+    <Check>File permissions and RBAC policy both restrict access to authorized roles.</Check>
+  </Tab>
+</Tabs>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Action Policies" href="/services/optimization/admin-guide/action-policies" color="#197560">
+    Configure manual approval vs automatic execution policies for action plans.
+  </Card>
+  <Card title="Compute Integration" href="/services/optimization/admin-guide/compute-integration" color="#197560">
+    Verify the service account has compute permissions for live migration.
+  </Card>
+  <Card title="Architecture" href="/services/optimization/admin-guide/architecture" color="#197560">
+    Review which containers use the service account credentials.
+  </Card>
+  <Card title="Troubleshooting" href="/services/optimization/admin-guide/troubleshooting" color="#197560">
+    Diagnose authentication failures and permission errors.
+  </Card>
+</CardGroup>

@@ -1,0 +1,74 @@
+---
+title: "XDR Administration Guide"
+description: "Configure and operate Xloud Disaster Recovery — replication topology, recovery plans, DR automation, cross-site connectivity, compliance, and monitoring."
+sidebarTitle: "Admin Guide"
+mode: "wide"
+---
+
+import AdminWarning from '/snippets/admin-warning.mdx';
+
+<p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Overview</p>
+
+The XDR Administration Guide covers the full administrative lifecycle of Xloud Disaster
+Recovery — from initial site registration and replication topology setup through ongoing
+operational management, compliance reporting, and security hardening.
+
+<AdminWarning />
+
+<Note>
+  **Prerequisites**
+  - Administrator credentials with the `admin` role on both primary and DR sites
+  - Access to **XDeploy** (`https://connect.<your-domain>`) on both sites
+  - Network connectivity established between primary and DR sites (dedicated replication link recommended)
+  - Familiarity with RPO/RTO concepts and distributed storage replication
+</Note>
+
+---
+
+<p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Topics</p>
+
+<CardGroup cols={4}>
+  <Card title="Architecture" icon="cpu" href="/services/disaster-recovery/admin-guide/architecture" color="#197560">
+    XDR component topology, control plane design, and deployment models
+  </Card>
+  <Card title="Replication Configuration" icon="refresh-cw" href="/services/disaster-recovery/admin-guide/replication-config" color="#197560">
+    Register sites, configure replication links, bandwidth, and encryption
+  </Card>
+  <Card title="Recovery Plans" icon="shield" href="/services/disaster-recovery/admin-guide/recovery-plans" color="#197560">
+    Define resource groups, recovery ordering, health checks, and automation hooks
+  </Card>
+  <Card title="DR Automation" icon="zap" href="/services/disaster-recovery/admin-guide/dr-automation" color="#197560">
+    Automatic failover triggers, runbook scripting, and replication scheduling
+  </Card>
+  <Card title="Monitoring" icon="activity" href="/services/disaster-recovery/admin-guide/monitoring" color="#197560">
+    XIMP integration, key DR metrics, alert thresholds, and dashboards
+  </Card>
+  <Card title="Compliance" icon="shield-check" href="/services/disaster-recovery/admin-guide/compliance" color="#197560">
+    RPO/RTO compliance reports, DR test audit trail, and failover history
+  </Card>
+  <Card title="Security" icon="lock" href="/services/disaster-recovery/admin-guide/security" color="#197560">
+    Replication encryption, RBAC roles, and site token management
+  </Card>
+  <Card title="Troubleshooting" icon="wrench" href="/services/disaster-recovery/admin-guide/troubleshooting" color="#197560">
+    Diagnose sync failures, unexpected failovers, and runbook script errors
+  </Card>
+</CardGroup>
+
+---
+
+<p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Next Steps</p>
+
+<CardGroup cols={4}>
+  <Card title="XDR User Guide" icon="book-open" href="/services/disaster-recovery/user-guide" color="#197560">
+    Create protection plans, run DR tests, and perform failover and failback operations
+  </Card>
+  <Card title="XSDS Admin Guide" icon="database" href="/services/sds/admin-guide" color="#197560">
+    Configure the distributed storage cluster that powers XDR replication
+  </Card>
+  <Card title="XIMP Admin Guide" icon="activity" href="/services/monitoring/admin-guide" color="#197560">
+    Set up monitoring and alerts for replication lag and DR readiness metrics
+  </Card>
+  <Card title="Xloud Compute Admin Guide" icon="server" href="/services/compute/admin-guide" color="#197560">
+    Manage the compute infrastructure protected by XDR recovery plans
+  </Card>
+</CardGroup>

@@ -1,0 +1,120 @@
+---
+title: "Key Manager Security"
+description: "Harden Xloud Key Manager — protect master encryption keys, configure HSM access controls, audit secret access logs, enforce expiration policies, and."
+sidebarTitle: "Security"
+---
+
+import AdminWarning from '/snippets/admin-warning.mdx';
+
+## Overview
+
+The Key Manager service is a critical security component — it stores the credentials
+that protect all other services. A compromise of the Key Manager backend could expose
+secrets used across your entire platform. This guide covers the key hardening areas.
+
+<AdminWarning />
+
+---
+
+## Hardening Guidelines
+
+<AccordionGroup>
+  <Accordion title="Protect the master encryption key" icon="lock" defaultOpen>
+    The `simple_crypto` backend encrypts secrets using a master key. This key must be
+    treated as the most sensitive credential in your platform:
+
+    - Store master key files with `0400` permissions, owned by the Key Manager service user
+    - Back up the master key to offline, encrypted media stored in a physically secure location
+    - Never include the master key in container images, version control, or backup snapshots
+    - Rotate the master key annually — plan a maintenance window for the re-encryption operation
+
+    ```bash title="Verify master key file permissions"
+    ls -la /etc/xavs/key-manager/kek.conf
+    # Expected: -r-------- key-manager:key-manager
+    ```
+  </Accordion>
+
+  <Accordion title="HSM access control" icon="microchip">
+    For PKCS#11 deployments:
+
+    - Assign a dedicated HSM partition exclusively to Key Manager — never share partitions
+      with other applications
+    - Use separate HSM credentials for Key Manager vs. HSM administration tasks
+    - Enable HSM audit logging and forward logs to your SIEM
+    - Test HSM failover procedures quarterly — Key Manager unavailability during HSM outage
+      blocks secret retrieval across all dependent services
+    - Restrict physical HSM access to authorized datacenter staff only
+  </Accordion>
+
+  <Accordion title="Audit secret access" icon="file-text">
+    All Key Manager API requests are logged. Forward logs to your centralized logging
+    platform for:
+
+    - Secret creation and deletion events
+    - ACL modifications — track when access is granted or revoked
+    - Secret retrieval (`GET /v1/secrets/<id>/payload`) — every access by every caller
+    - Failed access attempts — potential indicators of unauthorized access attempts
+
+    <Tip>
+      Correlate Key Manager retrieval logs with the services that should legitimately
+      access each secret. Unexplained retrieval events from unfamiliar callers warrant
+      immediate investigation.
+    </Tip>
+  </Accordion>
+
+  <Accordion title="Secret expiration policy" icon="clock">
+    Enforce expiration on time-sensitive secrets:
+
+    - Set expiration dates on all API tokens and temporary credentials
+    - TLS certificates: track expiration in an external calendar — Key Manager does not
+      send expiration alerts
+    - Implement rotation workflows: create a new secret, update all references, then
+      delete the old secret
+    - Review and purge secrets without expiration dates quarterly — accumulation of
+      orphaned secrets increases the blast radius of a breach
+  </Accordion>
+
+  <Accordion title="Restrict API network access" icon="network">
+    The Key Manager API should not be exposed on public networks:
+
+    - Bind the API to the internal management network only
+    - Configure firewall rules limiting port 9311 access to authorized service hosts
+    - Use HAProxy frontend ACLs to restrict source IPs if Key Manager is behind a load balancer
+    - Enable HTTPS on the Key Manager API endpoint — never transmit secrets over plain HTTP
+    - Disable direct external access — all API calls should originate from within the platform
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Security Checklist
+
+| Control | Frequency | Notes |
+|---------|-----------|-------|
+| Master key file permissions | At deployment | `0400`, owned by service user |
+| Master key offline backup | At rotation | Encrypted media, physically secured |
+| Master key rotation | Annually | Plan maintenance window |
+| HSM partition isolation | At setup | Dedicated partition per service |
+| Audit log forwarding | Continuous | SIEM integration |
+| Orphaned secret review | Quarterly | Purge secrets without expiration |
+| Network access controls | At deployment | Firewall rules on port 9311 |
+| HTTPS on API endpoint | Always | TLS termination at HAProxy |
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Backend Configuration" href="/services/key-manager/backend-config" color="#197560">
+    Configure HSM and KMIP backends for production deployments
+  </Card>
+  <Card title="Quotas" href="/services/key-manager/quotas" color="#197560">
+    Set per-project limits to control resource consumption
+  </Card>
+  <Card title="Admin Troubleshooting" href="/services/key-manager/admin-troubleshooting" color="#197560">
+    Diagnose security-related Key Manager service issues
+  </Card>
+  <Card title="DNS Security" href="/services/dns/security" color="#197560">
+    Secure DNSSEC keys stored in Key Manager
+  </Card>
+</CardGroup>

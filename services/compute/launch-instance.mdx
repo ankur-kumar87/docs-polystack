@@ -1,0 +1,401 @@
+---
+title: "Create an Instance"
+description: "Create a virtual machine using the Dashboard's 4-step wizard or CLI. Select source, flavor, network, and login credentials."
+sidebarTitle: "Create Instance"
+---
+
+## Overview
+
+Launching an instance creates a virtual machine on an Xloud Compute host. The Dashboard
+provides a 4-step wizard that walks you through base configuration, networking, system
+settings, and a confirmation review. Once active, the instance can be accessed via SSH,
+console, or RDP depending on the guest OS.
+
+<CardGroup cols={2}>
+  <Card title="Windows VM from ISO" icon="monitor" href="/services/compute/windows-vm-guide" color="#197560">
+    ISO boot with VirtIO driver injection, Sysprep, and image creation
+  </Card>
+  <Card title="Linux VM from ISO" icon="terminal" href="/services/compute/linux-vm-guide" color="#197560">
+    Custom Linux installation from ISO with disk setup and image creation
+  </Card>
+</CardGroup>
+
+<Note>
+  **Prerequisites**
+  - An active image in the Xloud Image Service (or an existing bootable volume)
+  - A flavor appropriate for your workload
+  - At least one network available in your project
+  - An SSH key pair for Linux instances, or a configured password for Windows
+  - A security group with the required inbound rules
+</Note>
+
+---
+
+<iframe
+  className="w-full aspect-video rounded-xl"
+  src="https://www.youtube.com/embed/OXlBmUSqFK0"
+  title="How to Create a Virtual Machine on Xloud"
+  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+  allowFullScreen
+></iframe>
+
+## Create an Instance
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+
+    The Instance Create wizard has 4 steps: **Base Config**, **Network Config**,
+    **System Config**, and **Confirm Config**. An **Instance Count** input and
+    real-time **quota display** are shown in the footer throughout all steps.
+
+    <Steps titleSize="h3">
+      <Step title="Open the Create Instance wizard">
+        Navigate to **Compute > Instances** in the sidebar. Click **Create Instance**
+        in the top-right corner.
+      </Step>
+
+      <Step title="Step 1 — Base Config">
+        Configure the boot source, flavor, and storage.
+
+        **Available Zone** (required) — Select the availability zone for host placement.
+
+        <Tip>
+          Administrators see an additional **Pin to Host** group that allows selecting
+          a specific physical hypervisor (`zone:hostname` format). Regular users see
+          only the zone names.
+        </Tip>
+
+        **Specification (Flavor)** (required) — Select the virtual hardware profile.
+        The flavor table supports filtering by architecture and category:
+
+        | Architecture | Categories |
+        |-------------|------------|
+        | X86 Architecture | General Purpose, Compute Optimized, Memory Optimized, Big Data, Local SSD, High Clock Speed |
+        | Heterogeneous Computing | GPU Compute, Visualization Compute |
+        | Bare Metal | — |
+        | ARM Architecture | — |
+
+        The table shows columns: Name, CPU, Memory, Internal Network Bandwidth,
+        Ephemeral Disk (if applicable), and IOPS (if applicable). Filter by Name,
+        CPU, or Memory.
+
+        **Start Source** (required) — Select the boot source type:
+
+        | Source | Description |
+        |--------|-------------|
+        | **Image** | Boot from an OS image in the Xloud Image Service |
+        | **Instance Snapshot** | Restore from a previously captured instance snapshot |
+        | **Bootable Volume** | Boot from an existing persistent block storage volume (only shown if block storage is enabled) |
+
+        When **Image** is selected, choose the operating system from tabs organized
+        by distribution (CentOS, Ubuntu, Fedora, Windows, Debian, CoreOS, Arch, FreeBSD, Others).
+
+        **Boot From Volume** — When source is Image or Instance Snapshot:
+
+        | Option | Description |
+        |--------|-------------|
+        | **Yes** | Create a new system disk (persistent boot volume) |
+        | **No** | Boot directly from image (ephemeral root disk) |
+
+        **System Disk** — Shown when Boot From Volume is Yes. Select:
+        - **Volume Type** from available storage backends
+        - **Size (GiB)** — minimum is determined by the flavor disk size, image minimum
+          disk, and image size (whichever is largest)
+        - **Delete on Termination** — whether to delete the boot volume when the instance
+          is deleted
+
+        **Data Disk** (optional) — Add additional data disks. Click **Add Data Disks** to
+        add one or more disks, each with Volume Type, Size, and Delete on Termination
+        settings.
+
+        <Note>
+          When source is **Bootable Volume**, the instance count is limited to 1 and
+          the Data Disk section is shown for additional disks.
+        </Note>
+
+        **CD-ROM Source** (optional) — Attach an ISO image or existing volume as a
+        CD-ROM device:
+
+        | Option | Description |
+        |--------|-------------|
+        | **None** | No CD-ROM attached (default) |
+        | **Image** | Select an image to mount as CD-ROM |
+        | **Volume** | Select an existing volume to mount as CD-ROM |
+      </Step>
+
+      <Step title="Step 2 — Network Config">
+        Configure networking and security.
+
+        **Networks** (required if no ports selected) — Select one or more networks
+        from the available list. Networks without subnets are disabled.
+
+        After selecting networks, a **Virtual LAN** section appears for each
+        selected network with:
+
+        | Field | Description |
+        |-------|-------------|
+        | **Network** | Auto-populated from selection |
+        | **Subnet** | Dropdown of subnets in the selected network |
+        | **IP Type** | Automatically Assigned Address or Manually Assigned Address |
+        | **IP Address** | Manual IPv4 or IPv6 input (only when IP Type is manual) |
+
+        <Warning>
+          If you specify a manual IP address AND set the instance count to more than 1,
+          the wizard will block submission — manual IPs cannot be used with batch creation.
+        </Warning>
+
+        **Ports** (required if no networks selected) — Alternatively, select pre-created
+        ports (only ports with status `DOWN` are shown). At least one network or port
+        must be selected.
+
+        **Security Group** (required when shown) — Select one or more security groups.
+        This field is hidden if any selected network or port has port security disabled.
+
+        <Note>
+          The security group rules apply to all virtual network interfaces of the instance,
+          not just the primary interface.
+        </Note>
+      </Step>
+
+      <Step title="Step 3 — System Config">
+        Configure the instance name, login credentials, and advanced options.
+
+        **Name** (required) — The instance display name. When launching multiple
+        instances (count > 1), instances are named `{name}-1`, `{name}-2`, etc.
+
+        **Login Type** (required) — Choose the authentication method:
+
+        | Type | Description |
+        |------|-------------|
+        | **Keypair** | Select an existing SSH key pair or create a new one. Disabled for Windows images |
+        | **Password** | Set a login username and password. Required for Windows images |
+
+        When **Keypair** is selected, choose from the key pair table or click
+        **Create Keypair** to generate a new one.
+
+        When **Password** is selected:
+        - **Login Name** — Auto-populated from the image's `os_admin_user` property
+          if available, otherwise enter manually
+        - **Login Password** — Must meet password complexity requirements
+        - **Confirm Password** — Must match the login password
+
+        <Warning>
+          For Windows images, the Keypair option is automatically disabled.
+          Password login is the only option for Windows instances.
+        </Warning>
+
+        **Advanced Options** — Click to expand additional settings:
+
+        | Field | Visibility | Description |
+        |-------|-----------|-------------|
+        | **Physical Node** | Admin only | Smart Scheduling (default) or Manually Specify a hypervisor |
+        | **Server Group** | All users | Select an existing server group for affinity/anti-affinity placement |
+        | **User Data** | All users | Cloud-init script (text area with file upload, ASCII only, max 1000 characters) |
+        | **Virtual TPM** | All users | Attach a virtual TPM device (requires Xloud KMS). See [vTPM and Secure Boot](/services/compute/vtpm-secure-boot) |
+        | **Secure Boot** | All users | Require UEFI Secure Boot (requires Xloud KMS). See [vTPM and Secure Boot](/services/compute/vtpm-secure-boot) |
+
+        <Info>
+          **Virtual TPM** and **Secure Boot** both require the **Xloud Key Management**
+          service to be enabled on the cluster — both checkboxes are disabled otherwise.
+          Full walkthrough: [vTPM and Secure Boot](/services/compute/vtpm-secure-boot).
+        </Info>
+      </Step>
+
+      <Step title="Step 4 — Confirm Config">
+        Review all settings before launching. The confirmation page shows a read-only
+        summary organized into three sections:
+
+        - **Base Config** — Source, system disk, data disks, availability zone, flavor, project
+        - **Network Config** — Virtual LANs with subnet/IP assignments, selected ports, security groups
+        - **System Config** — Instance name, login type, physical node, server group
+
+        Click any section heading to navigate back to that step for corrections.
+
+        The footer shows the **Instance Count** and real-time **quota usage**:
+
+        | Quota | Tracked |
+        |-------|---------|
+        | Instance | Count against instance limit |
+        | CPU | vCPUs x count against cores limit |
+        | Memory (GiB) | RAM x count against RAM limit |
+        | Volume | New volumes against volume limit |
+        | Volume Capacity (GiB) | Total new volume size against storage limit |
+        | Server Group Member | Members against group limit (when server group selected) |
+
+        <Warning>
+          If any quota would be exceeded, a red badge is displayed and the Confirm
+          button is disabled. Free up resources or contact your administrator to
+          increase quotas.
+        </Warning>
+
+        Click **Confirm** to launch the instance.
+
+        <Check>
+          The instance appears in the list with status **Build**, transitioning to
+          **Active** within seconds to minutes depending on image size and host
+          availability.
+        </Check>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    <Steps titleSize="h3">
+      <Step title="Authenticate">
+        ```bash title="Load credentials"
+        source openrc.sh
+        ```
+      </Step>
+      <Step title="Gather required identifiers">
+        <CodeGroup>
+        ```bash title="List active images"
+        openstack image list --status active
+        ```
+        ```bash title="List available flavors"
+        openstack flavor list
+        ```
+        ```bash title="List project networks"
+        openstack network list
+        ```
+        ```bash title="List key pairs"
+        openstack keypair list
+        ```
+        ```bash title="List security groups"
+        openstack security group list
+        ```
+        </CodeGroup>
+      </Step>
+      <Step title="Launch the instance">
+        ```bash title="Create an instance from image"
+        openstack server create \
+          --image <IMAGE_ID> \
+          --flavor <FLAVOR_NAME> \
+          --network <NETWORK_ID> \
+          --key-name <KEYPAIR_NAME> \
+          --security-group <SECURITY_GROUP> \
+          --availability-zone <ZONE_NAME> \
+          my-instance
+        ```
+
+        <CodeGroup>
+        ```bash title="Boot from volume"
+        openstack server create \
+          --volume <VOLUME_ID> \
+          --flavor <FLAVOR_NAME> \
+          --network <NETWORK_ID> \
+          --key-name <KEYPAIR_NAME> \
+          my-instance
+        ```
+        ```bash title="Boot from image with new volume"
+        openstack server create \
+          --image <IMAGE_ID> \
+          --boot-from-volume 50 \
+          --flavor <FLAVOR_NAME> \
+          --network <NETWORK_ID> \
+          --key-name <KEYPAIR_NAME> \
+          my-instance
+        ```
+        ```bash title="Launch with user data"
+        openstack server create \
+          --image <IMAGE_ID> \
+          --flavor <FLAVOR_NAME> \
+          --network <NETWORK_ID> \
+          --key-name <KEYPAIR_NAME> \
+          --user-data /path/to/init.sh \
+          my-instance
+        ```
+        ```bash title="Launch in a server group"
+        openstack server create \
+          --image <IMAGE_ID> \
+          --flavor <FLAVOR_NAME> \
+          --network <NETWORK_ID> \
+          --key-name <KEYPAIR_NAME> \
+          --hint group=<SERVER_GROUP_ID> \
+          my-instance
+        ```
+        ```bash title="Launch multiple instances"
+        openstack server create \
+          --image <IMAGE_ID> \
+          --flavor <FLAVOR_NAME> \
+          --network <NETWORK_ID> \
+          --key-name <KEYPAIR_NAME> \
+          --min 3 --max 3 \
+          my-instance
+        ```
+        </CodeGroup>
+      </Step>
+      <Step title="Verify the instance is active">
+        ```bash title="Check instance status"
+        openstack server show my-instance -c status -c addresses
+        ```
+
+        <Check>
+          `status` shows `ACTIVE` and `addresses` lists the assigned IP. The instance
+          is ready to accept connections.
+        </Check>
+      </Step>
+    </Steps>
+  </Tab>
+</Tabs>
+
+---
+
+## Post-Launch Verification
+
+After the instance reaches `ACTIVE` status, confirm it is fully operational:
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Open the instance detail">
+        Navigate to **Compute > Instances** and click the instance name. The detail
+        page shows 8 tabs: Detail, Volumes, Instance Snapshots, Interfaces, Floating IPs,
+        Security Groups, Action Logs, and Logs.
+      </Step>
+      <Step title="Check console output">
+        Click the **Logs** tab to view the serial console output. A successful boot
+        shows login prompts or cloud-init completion messages.
+      </Step>
+      <Step title="Open the console">
+        Click the **Console** action (the first row action) to open a VNC console
+        in a new browser tab.
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Check instance details"
+    openstack server show my-instance \
+      -c status -c addresses -c "OS-EXT-AZ:availability_zone"
+    ```
+
+    ```bash title="View console log"
+    openstack console log show my-instance | tail -30
+    ```
+
+    ```bash title="Get VNC console URL"
+    openstack console url show my-instance
+    ```
+
+    <Check>
+      Console log shows OS boot completion. Status is `ACTIVE`. IP address is present.
+    </Check>
+  </Tab>
+</Tabs>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Security Groups" href="/services/compute/security-groups" color="#197560">
+    Create and manage firewall rules to control traffic to your instances
+  </Card>
+  <Card title="Manage IP Addresses" href="/services/compute/manage-ips" color="#197560">
+    Allocate and associate floating IPs for external instance access
+  </Card>
+  <Card title="Resize an Instance" href="/services/compute/resize-instance" color="#197560">
+    Change the flavor of a running instance to adjust vCPU and RAM
+  </Card>
+  <Card title="Server Groups" href="/services/compute/server-groups" color="#197560">
+    Control instance placement with affinity and anti-affinity policies
+  </Card>
+</CardGroup>

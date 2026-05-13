@@ -1,0 +1,470 @@
+# Xloud Documentation Authoring Guidelines
+
+> Canonical reference for writing enterprise-grade documentation.
+> Read this file BEFORE creating or editing any documentation page.
+
+---
+
+## 1. Role & Objective
+
+You are a technical documentation engineer. Your task is to produce polished, enterprise-grade
+documentation for Xloud — a cloud infrastructure platform. Every page must match the quality
+standard of AWS, Azure, DigitalOcean, and Stripe documentation.
+
+When rewriting from OpenStack sources:
+- **Completely rewrite** — never copy-paste from upstream
+- Transform community-style docs into structured enterprise product documentation
+- Add clarity, validation steps, and best practices where the source is vague or incomplete
+
+---
+
+## 2. Mandatory Branding Transformations
+
+### 2.1 Terminology Replacements
+
+| Source Term | Xloud Term | Notes |
+|-------------|-----------|-------|
+| OpenStack | Xloud | All references — headings, body, commands explanation |
+| KVM | hypervisor | Never expose KVM directly to customers |
+| Horizon | Xloud Dashboard | The web management interface |
+| DevStack | Xloud Development Environment | Local dev setup |
+| Heat | Xloud Orchestration | IaC / stack management |
+| Cinder | Xloud Block Storage | Volume service |
+| Nova | Xloud Compute | Compute service |
+| Neutron | Xloud Networking | Network service |
+| Glance | Xloud Image Service | Image management |
+| Keystone | Xloud Identity | Authentication / authorization |
+| Swift | Xloud Object Storage | Object store |
+| Octavia | Xloud Load Balancer | LBaaS |
+| Barbican | Xloud Key Management | KMS / secrets |
+| Designate | Xloud DNS | DNSaaS |
+| Manila | Xloud Shared Filesystem | Shared storage |
+| Watcher | Xloud Resource Optimizer | Resource optimization |
+| Masakari | Xloud High Availability | Instance HA |
+| Ceph | Xloud Distributed Storage | Storage backend |
+| XDeploy | XDeploy | Keep as-is — the deployment management UI |
+| xavs-ansible | xavs-ansible | Keep as-is — the deployment automation tool |
+
+### 2.2 Branding Constants
+
+- **Company**: Xloud Technologies
+- **Platform**: Xloud Cloud Platform
+- **Primary color**: `#197560`
+- **Support email**: support@xloud.tech
+- **Dashboard URL**: `https://connect.<your-domain>`
+- **API base URL**: `https://api.<your-domain>`
+- **Documentation URL**: `https://docs.xloud.tech`
+
+---
+
+## 3. Writing Style
+
+### 3.1 Tone
+
+- **Enterprise professional** — like AWS/Azure documentation
+- **Clear and direct** — no unnecessary elaboration
+- **Precise technical language** — correct terminology, specific values
+- **Action-oriented** — lead with what the reader should do
+- **Confident** — state facts, avoid hedging ("should work", "might need")
+
+### 3.2 Prohibited Patterns
+
+| Do NOT write | Write instead |
+|-------------|--------------|
+| "We recommend..." | "Xloud recommends..." or just state the recommendation |
+| "You guys" / "Folks" | Remove — address the reader directly or use "administrators" / "users" |
+| "Let's configure..." | "Configure..." |
+| "Basically..." / "Simply..." | Remove — just describe the action |
+| "Please note that..." | Use a `<Note>` callout instead |
+| "It is important to..." | Use a `<Warning>` or `<Note>` callout |
+| Long paragraphs of explanation | Break into Steps, Tables, or Accordion components |
+| Bare URLs | Hyperlinked text: `**Dashboard** (`https://connect.<your-domain>`)` |
+| Screenshots without context | `<Frame caption="Description">` with alt text |
+
+### 3.3 Voice & Person
+
+- Use **second person** ("Configure your instance") for procedural content
+- Use **third person** ("The scheduler assigns...") for conceptual/architectural content
+- Use **imperative mood** for instructions ("Run the command", "Select the option")
+- Never use first person ("we", "our") — except in official company statements
+
+---
+
+## 4. Page Structure (Mandatory)
+
+Every documentation page MUST follow this structure. Sections may be omitted only when
+genuinely not applicable (e.g., no CLI for a purely conceptual page).
+
+### 4.1 Full Page Template
+
+```
+---
+title: "Page Title"
+description: "SEO-friendly description, 50-160 characters"
+icon: "relevant-icon"
+sidebarTitle: "Short Nav Label"
+---
+
+## Overview
+One-paragraph summary. What is this? Why does it matter?
+
+<Note>
+  **Prerequisites**
+  - Requirement 1
+  - Requirement 2
+  - Requirement 3
+</Note>
+
+---
+
+## Architecture / Concepts (if applicable)
+Explain the underlying design. Use Mermaid diagrams for architecture.
+Use Tables for component descriptions. Use Accordions for deep dives.
+
+---
+
+## Configuration / Procedure
+This is the main content section. Always provide GUI + CLI paths:
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps>
+      <Step title="Step 1">GUI instructions</Step>
+      <Step title="Step 2">GUI instructions</Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    <Steps>
+      <Step title="Step 1">
+        CLI instructions with CodeGroup
+      </Step>
+    </Steps>
+  </Tab>
+</Tabs>
+
+---
+
+## Validation / Verification
+How to confirm the operation succeeded. Always include this even if source doesn't.
+
+---
+
+## Best Practices (if applicable)
+Concise, actionable recommendations. Use Cards or numbered lists.
+
+---
+
+## Troubleshooting (if applicable)
+Common issues and resolutions. Use AccordionGroup.
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Related Topic" icon="arrow-right" href="/path" color="#197560">
+    Brief description
+  </Card>
+  <Card title="Another Topic" icon="arrow-right" href="/path" color="#197560">
+    Brief description
+  </Card>
+</CardGroup>
+```
+
+### 4.2 GUI Section Rules
+
+| Scenario | Action |
+|----------|--------|
+| GUI steps exist in source | Rewrite them for Xloud Dashboard |
+| GUI steps NOT in source | Create realistic GUI steps based on standard Xloud Dashboard workflows |
+| GUI not applicable | State: "This operation is performed via XDeploy" and provide XDeploy steps |
+| Admin-only operation | Add `<Warning>This operation requires administrator privileges.</Warning>` |
+
+### 4.3 CLI Section Rules
+
+- Rewrite commands for Xloud context
+- Keep commands clean and minimal
+- Add a one-line explanation below each command (not verbose)
+- Use `<CodeGroup>` when showing equivalent commands across tools
+- Always show expected output where helpful
+
+---
+
+## 5. Component Usage Rules
+
+### 5.1 Minimum Component Density
+
+| Page Type | Minimum Required |
+|-----------|-----------------|
+| Landing / Overview | 3+ CardGroups, Tabs, Steps, Mermaid |
+| Procedural Guide | Steps, 2+ CodeGroups, 3+ Callouts, Prerequisites, GUI/CLI Tabs |
+| Conceptual / Architecture | Tabs, Cards, Accordions, Mermaid diagrams |
+| API Reference | ParamFields, ResponseFields, RequestExample, ResponseExample, error table |
+| Troubleshooting | AccordionGroup, CodeGroups, Warning/Danger callouts |
+| Changelog | Update components, version Tabs |
+| CLI Reference | CodeGroups, option Tables, Expandable |
+
+### 5.2 When to Use Each Component
+
+| Component | Use When |
+|-----------|---------|
+| `<Tabs>` | Multiple approaches to same task (Dashboard/CLI/API), role-based content (Admin/User), OS-specific instructions |
+| `<Steps>` | ANY sequential procedure (never use numbered markdown lists for procedures) |
+| `<CodeGroup>` | Showing same operation in multiple languages/tools |
+| `<Note>` | Prerequisites, important context, version requirements |
+| `<Warning>` | Potential data loss, breaking changes, security implications |
+| `<Danger>` | Critical operations that cannot be undone |
+| `<Tip>` | Best practices, performance hints, shortcuts |
+| `<Info>` | Supplementary context that aids understanding |
+| `<Check>` | Confirming successful completion of a step |
+| `<Accordion>` | Deep-dive explanations, FAQs, optional detail that would clutter the main flow |
+| `<Card>` / `<CardGroup>` | Navigation to related content, feature highlights, next steps |
+| `<Badge>` | Feature status (GA, Beta, Enterprise, Deprecated) |
+| `<Mermaid>` | Architecture diagrams, request flows, system topology |
+| `<Tree>` | File/directory structures, configuration layouts |
+| `<Frame>` | Screenshots, diagrams — always with descriptive captions |
+| `<Tooltip>` | First use of technical terms, acronym definitions |
+| `<Table>` | Parameters, limits, feature comparisons, configuration options |
+| `<ParamField>` | API endpoint parameters |
+| `<ResponseField>` | API response properties |
+| `<Expandable>` | Nested object properties in API docs |
+| `<RequestExample>` | API request code samples (right sidebar) |
+| `<ResponseExample>` | API response samples (right sidebar) |
+| `<Update>` | Changelog entries |
+| `<Snippet>` | Reusable content blocks (prerequisites, CTAs) |
+| `<Prompt>` | AI-ready command templates |
+
+### 5.3 Prohibited Patterns
+
+| Do NOT | Do Instead |
+|--------|-----------|
+| Plain numbered lists for procedures | `<Steps>` component |
+| Inline "Note:" or "Warning:" text | `<Note>` or `<Warning>` callout component |
+| Single code block for multi-tool commands | `<CodeGroup>` with labeled tabs |
+| Wall of text explanation | Break into Accordion, Tabs, or Cards |
+| Raw markdown tables for API params | `<ParamField>` and `<ResponseField>` |
+| Bullet-point navigation links | `<CardGroup>` with Cards |
+| ASCII art diagrams | Mermaid code blocks |
+| Inline directory listings | `<Tree>` component |
+| Bare technical jargon | `<Tooltip>` on first use |
+
+---
+
+## 6. Configuration Section Pattern
+
+Every procedural page MUST include a configuration/procedure section with this pattern:
+
+```mdx
+## Configuration
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Navigate to the Service" icon="compass">
+        Log in to the **Xloud Dashboard** (`https://connect.<your-domain>`) and navigate
+        to **Project → Compute → Instances**.
+      </Step>
+      <Step title="Configure the Resource" icon="gear">
+        Description of what to configure in the UI.
+
+        | Field | Value | Description |
+        |-------|-------|-------------|
+        | Name | `my-resource` | Display name for the resource |
+        | Type | `standard` | Resource type selection |
+
+        <Tip>Select the appropriate availability zone for optimal latency.</Tip>
+      </Step>
+      <Step title="Review and Confirm" icon="circle-check">
+        Review the configuration summary and click **Create**.
+
+        <Check>The resource appears in the list with status **Active**.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    <Steps titleSize="h3">
+      <Step title="Authenticate" icon="key">
+        Source your credentials file:
+        ```bash title="Load credentials"
+        source admin-openrc.sh
+        ```
+      </Step>
+      <Step title="Create the Resource" icon="plus">
+        ```bash title="Create resource"
+        xloud resource create --name my-resource --type standard
+        ```
+        This creates a new resource with the specified name and type.
+      </Step>
+      <Step title="Verify" icon="circle-check">
+        ```bash title="List resources"
+        xloud resource list
+        ```
+        Confirm the resource appears with status `ACTIVE`.
+
+        <Check>Resource created and verified successfully.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+</Tabs>
+```
+
+---
+
+## 7. Validation Section Pattern
+
+ALWAYS include a validation section, even if the source documentation does not have one:
+
+```mdx
+## Validation
+
+Confirm the operation completed successfully:
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    Navigate to the resource list. The newly created resource displays with:
+    - **Status**: Active (green indicator)
+    - **Name**: Matches the configured name
+    - **Type**: Matches the selected type
+
+    <Check>The resource is operational and ready for use.</Check>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Verify resource status"
+    xloud resource show my-resource -f json
+    ```
+
+    Expected output:
+    ```json title="Expected response"
+    {
+      "name": "my-resource",
+      "status": "ACTIVE",
+      "type": "standard"
+    }
+    ```
+
+    <Check>Status shows `ACTIVE` — the resource is operational.</Check>
+  </Tab>
+</Tabs>
+```
+
+---
+
+## 8. Troubleshooting Section Pattern
+
+Use AccordionGroup for common issues:
+
+```mdx
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Resource stuck in BUILD status" icon="clock">
+    **Cause**: The scheduler was unable to place the resource on an available host.
+
+    **Resolution**:
+    ```bash title="Check resource events"
+    xloud resource event-list my-resource
+    ```
+    Review the event log for scheduling failures. Common causes:
+    - Insufficient compute capacity
+    - Availability zone constraint mismatch
+    - Quota exceeded
+
+    <Tip>Use `xloud quota show` to verify available capacity.</Tip>
+  </Accordion>
+
+  <Accordion title="Permission denied error" icon="lock">
+    **Cause**: The current user role lacks the required policy permissions.
+
+    **Resolution**: Verify your role assignment:
+    ```bash title="Check role assignments"
+    xloud role assignment list --user $USER --project $PROJECT
+    ```
+    Contact your administrator to request the `member` or `admin` role.
+  </Accordion>
+</AccordionGroup>
+```
+
+---
+
+## 9. SEO & Frontmatter Requirements
+
+Every page MUST include:
+
+| Field | Requirement | Example |
+|-------|------------|---------|
+| `title` | 50-60 chars, primary keyword included | `"Compute Instances"` |
+| `description` | 150-160 chars, compelling action-oriented summary | `"Create, manage, and scale virtual machine instances in your Xloud environment"` |
+| `icon` | Always set — use Font Awesome name | `"server"` |
+| `sidebarTitle` | Set when title is long | `"Instances"` |
+| `keywords` | 3-5 discovery terms (optional but recommended) | `["compute", "vm", "instance"]` |
+
+---
+
+## 10. Cross-Linking Rules
+
+- Every page MUST link to at least 2 related pages
+- Use inline links in body text for contextual references
+- Use `<CardGroup>` in "Next Steps" section for navigation
+- Never create orphan pages (pages with no inbound links)
+- Prefer descriptive link text over raw page names
+
+**Examples**:
+- Good: `Learn more about [network security groups](/documentation/core/security)`
+- Bad: `See [here](/documentation/core/security)` or bare URL
+
+---
+
+## 11. Reusable Snippets
+
+Store common content blocks in `snippets/` directory:
+
+| Snippet | Purpose | Filename |
+|---------|---------|----------|
+| Auth prerequisites | Common auth requirements block | `snippets/prerequisites-auth.mdx` |
+| Admin warning | Admin-only operation warning | `snippets/admin-warning.mdx` |
+| Support CTA | Contact support call-to-action | `snippets/support-cta.mdx` |
+| CLI install | CLI installation reference | `snippets/cli-install.mdx` |
+| Version badge | Current version indicator | `snippets/version-badge.mdx` |
+
+Import pattern:
+```mdx
+import AdminWarning from '/snippets/admin-warning.mdx';
+
+<AdminWarning />
+```
+
+---
+
+## 12. Quality Checklist
+
+Before finalizing any page, verify:
+
+- [ ] Frontmatter complete (title, description, icon, sidebarTitle)
+- [ ] Overview paragraph present
+- [ ] Prerequisites listed in `<Note>` callout
+- [ ] GUI + CLI tabs for all procedural content
+- [ ] 5+ MDX components used (Steps, Tabs, CodeGroup, Callouts, Cards minimum)
+- [ ] Validation/verification section included
+- [ ] Next Steps CardGroup at bottom
+- [ ] No bare markdown where a component should be used
+- [ ] No OpenStack/KVM terminology exposed
+- [ ] All code blocks have titles
+- [ ] Cross-links to 2+ related pages
+- [ ] Page added to `docs.json` navigation
+- [ ] SEO fields populated
+- [ ] Enterprise tone — no casual language
+- [ ] Horizontal rules between major sections
+
+---
+
+## 13. Content Hierarchy (Diataxis Framework)
+
+| Type | Reader Goal | Structure | Key Components |
+|------|------------|-----------|---------------|
+| **Tutorial** | "Teach me" | Sequential learning path | Steps, CodeGroup, Check, Tip |
+| **How-To Guide** | "Help me do X" | Problem → Solution | Steps, Tabs (Dashboard/CLI), Warning, CodeGroup |
+| **Reference** | "Give me the facts" | Scannable tables/fields | ParamField, ResponseField, Tables, Expandable |
+| **Explanation** | "Help me understand" | Conceptual deep-dive | Mermaid, Accordion, Tabs, Frame |
+
+Choose the appropriate type before writing. Most Xloud docs are **How-To Guides** (procedural)
+or **Reference** (API/CLI). Apply the matching structure and components.

@@ -1,0 +1,153 @@
+---
+title: "Storage Back-ends"
+description: "How XMS writes migrated disk data into Xloud Block Storage and the supported back-end configurations."
+sidebarTitle: "Storage Back-ends"
+---
+
+## Overview
+
+Every migration writes source disk data into Xloud Block Storage. XMS does
+not manage storage directly — it uses the platform's block storage API, so
+any back-end that Xloud Block Storage supports is usable as a migration
+target. This page covers how the write path works and how to choose a
+target back-end per migration.
+
+---
+
+## Write Path
+
+At a high level, the write path is the same for cold and warm migrations:
+
+```mermaid
+graph LR
+    S[Source VM disk] --> X[Migration Worker]
+    X -->|Block Storage API| BS[Xloud Block Storage]
+    BS --> V[Target Volume]
+```
+
+1. The migration worker reads source blocks through the disk transport
+   session
+2. It creates an empty volume through the block storage API, pinned to the
+   volume type the user selected at submit time
+3. It writes the disk data into the new volume, and for warm migrations,
+   updates the same offsets on every incremental sync
+4. When guest conversion completes, the volume is marked bootable and
+   attached to the target instance
+
+Because the target volume is created through the block storage API, it
+behaves exactly like any other volume — it counts against the project's
+volume quota, respects the volume type's QoS settings, and can be
+snapshotted, backed up, or restored by the standard Xloud tooling.
+
+---
+
+## Volume Type Selection
+
+The user picks a volume type at migration submit time. The volume type
+determines:
+
+- Which back-end the target volume lives on
+- What performance tier it gets (QoS, IOPS limits)
+- Which availability zone it is pinned to, if the type is zone-pinned
+- Which encryption key is used, if the type has encryption enabled
+
+<Tip>
+  Operators should publish a small, well-named set of volume types — for
+  example, `standard-ssd`, `performance-nvme`, and `archive-hdd`. This gives
+  migration users a clear choice without overwhelming them with back-end
+  details.
+</Tip>
+
+---
+
+## Multi-Back-end Clusters
+
+If your Xloud platform has more than one storage back-end, you can direct
+migrations to any of them by publishing a volume type per back-end. Common
+layouts:
+
+<CardGroup cols={2}>
+  <Card title="Single-Back-end" icon="hard-drive" color="#197560">
+    One storage back-end serves every migration. The operator publishes a
+    default volume type and users always pick it. Simplest to operate.
+  </Card>
+  <Card title="Tiered Multi-Back-end" icon="layers" color="#197560">
+    Several back-ends at different performance and cost tiers. The operator
+    publishes one volume type per tier, and users pick the tier that matches
+    the workload. Common in mixed NVMe and HDD clusters.
+  </Card>
+  <Card title="Zone-Pinned" icon="map-pin" color="#197560">
+    Availability-zone-pinned volume types let users pin a migration to a
+    specific zone — useful for application-level affinity with existing
+    Xloud workloads.
+  </Card>
+  <Card title="Encrypted" icon="lock" color="#197560">
+    Encryption-enabled volume types automatically encrypt migrated volumes
+    at rest using the platform-managed key. No extra action needed at
+    submit time.
+  </Card>
+</CardGroup>
+
+---
+
+## Quota and Sizing
+
+Every migration consumes quota against the target project:
+
+| Resource | Impact |
+|----------|--------|
+| **Volume count** | One volume per source disk — multi-disk VMs use multiple volumes |
+| **Volume size** | Sum of source disk sizes, rounded up to the volume type granularity |
+| **Volume type-specific quota** | If your platform enforces per-type quota, make sure the chosen type has headroom |
+
+<Warning>
+  The full volume footprint is reserved at **submit time**, not at cutover.
+  For warm migrations, the target volume exists for the duration of the
+  sync window — plan quota accordingly.
+</Warning>
+
+---
+
+## Incremental Sync Behavior
+
+Warm migrations write every incremental sync to the same target volume:
+
+- The target volume is created once, during the full sync phase
+- Every incremental sync reads changed blocks from the source and writes
+  them to the same offsets on the target volume
+- There is no intermediate staging area — the target volume is always a
+  byte-for-byte replica of the source at the time of the last sync
+
+Because there is no staging, the volume count and volume footprint are
+fixed for the life of a warm migration. Incremental syncs do not create
+new volumes or new snapshots.
+
+---
+
+## Snapshot and Backup
+
+Because the target volume is a native Xloud block storage volume, you can:
+
+- Snapshot it through the standard snapshot API once the migration is done
+- Back it up through Xloud Block Storage backup if your deployment supports
+  cross-backend backup
+- Use it as the source for Xloud Disaster Recovery protection plans
+
+Most operators configure a post-migration snapshot automatically to give
+the workload owner a rollback point immediately after cutover.
+
+---
+
+## Next Steps
+
+<CardGroup cols={3}>
+  <Card title="Capacity Planning" href="/services/migration/admin-guide/capacity-planning" color="#197560">
+    Size XMS for concurrent migrations and multi-wave campaigns
+  </Card>
+  <Card title="Block Storage" href="/services/storage/index" color="#197560">
+    Xloud Block Storage user guide and operator reference
+  </Card>
+  <Card title="Disaster Recovery" href="/services/disaster-recovery" color="#197560">
+    Add migrated volumes to disaster recovery protection plans
+  </Card>
+</CardGroup>

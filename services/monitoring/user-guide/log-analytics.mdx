@@ -1,0 +1,166 @@
+---
+title: "Log Analytics"
+description: "Search, filter, and analyze centralized log streams in XIMP. Create log-based alert rules for real-time event detection across your infrastructure."
+sidebarTitle: "Log Analytics"
+---
+
+## Overview
+
+XIMP aggregates log streams from all registered infrastructure nodes and services
+into a centralized, searchable index. Log Analytics lets you query events across
+your entire environment with full-text search, structured field filtering, and
+anomaly detection — from a single interface.
+
+<Note>
+  **Prerequisites**
+  - An active Xloud account with project access
+  - Log collection configured for the services you want to query
+    (see [XIMP Admin — Log Collection](/services/monitoring/admin-guide/log-collection))
+</Note>
+
+---
+
+## Searching Logs
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Open Log Explorer" icon="search">
+        Navigate to **Monitor Center > Logging** (admin view).
+      </Step>
+      <Step title="Search and filter" icon="filter">
+        Use the query bar at the top to filter log entries:
+
+        | Filter | Syntax Example |
+        |--------|---------------|
+        | By host | `host:compute-node-01` |
+        | By service | `service:nova-compute` |
+        | By severity | `level:ERROR` |
+        | Full-text | `"connection refused"` |
+        | Combined | `host:xd1 level:ERROR service:nova*` |
+
+        <Tip>
+          Use the **Add Filter** panel on the left to build queries visually. The
+          query bar updates automatically as filters are applied.
+        </Tip>
+      </Step>
+      <Step title="Adjust the time range" icon="clock">
+        Use the time picker to scope your search. For incident investigation, set
+        an exact range spanning the incident window to avoid scrolling through
+        unrelated events.
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Search logs from the last hour"
+    ximp log search \
+      --query 'level:ERROR service:nova*' \
+      --from now-1h \
+      --limit 100
+    ```
+
+    ```bash title="Export logs to a file"
+    ximp log export \
+      --query 'host:xd1' \
+      --from 2026-03-01 \
+      --to 2026-03-15 \
+      --output /tmp/xd1-logs-march.jsonl
+    ```
+
+    ```bash title="Tail live log stream"
+    ximp log tail --query 'level:ERROR'
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Log-Based Alert Rules
+
+Create alerts that fire whenever a log entry matching a query appears.
+
+<Steps titleSize="h3">
+  <Step title="Open Log Explorer" icon="search">
+    Navigate to **Monitor Center > Logging** (admin view) and build the query that
+    should trigger an alert.
+  </Step>
+  <Step title="Create alert from query" icon="bell">
+    Click **Create Alert** in the Log Explorer toolbar.
+
+    | Field | Description |
+    |-------|-------------|
+    | **Name** | Descriptive alert name |
+    | **Query** | The log search query (pre-filled from Log Explorer) |
+    | **Condition** | `at least N occurrences within M minutes` |
+    | **Severity** | `Critical`, `Warning`, or `Info` |
+    | **Channels** | Notification channels to alert |
+
+    <Note>
+      Log-based alerts have a minimum evaluation interval of 1 minute. For
+      near-real-time security event detection, use the Security and IDS module
+      which processes events with sub-minute latency.
+    </Note>
+  </Step>
+  <Step title="Save and verify" icon="circle-check">
+    Click **Save**. The rule activates and evaluates the log query on each
+    collection cycle.
+
+    <Check>Alert rule appears in **Monitor Center > Monitoring** (Alerting section, admin view) with type `Log`.</Check>
+  </Step>
+</Steps>
+
+---
+
+## Useful Query Patterns
+
+<AccordionGroup>
+  <Accordion title="Find all errors in the last hour" icon="circle-x">
+    ```
+    level:ERROR
+    ```
+    Set time range to "Last 1h" in the time picker.
+  </Accordion>
+  <Accordion title="Track authentication failures" icon="lock">
+    ```
+    service:keystone "authentication failed"
+    ```
+    Use this for security auditing and failed login detection.
+  </Accordion>
+  <Accordion title="Find OOM (out of memory) events" icon="server">
+    ```
+    "Out of memory" OR "oom-kill" OR "kernel: Killed process"
+    ```
+    Identifies instances where the kernel killed processes due to memory pressure.
+  </Accordion>
+  <Accordion title="Disk I/O errors" icon="hard-drive">
+    ```
+    "I/O error" OR "EXT4-fs error" OR "blk_update_request" level:ERROR
+    ```
+    Surfaces disk-level errors that may indicate failing storage devices.
+  </Accordion>
+  <Accordion title="Network connection refused" icon="network">
+    ```
+    "Connection refused" OR "ECONNREFUSED" level:ERROR
+    ```
+    Identifies services that are failing to connect to their dependencies.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Metrics & Alerts" href="/services/monitoring/user-guide/metrics-alerts" color="#197560">
+    Combine log-based alerts with metric thresholds for comprehensive coverage
+  </Card>
+  <Card title="XIMP Admin — Log Collection" href="/services/monitoring/admin-guide/log-collection" color="#197560">
+    Configure log source paths and syslog forwarding (administrator)
+  </Card>
+  <Card title="Network Monitoring" href="/services/monitoring/user-guide/network-monitoring" color="#197560">
+    Analyze network traffic alongside log events for incident correlation
+  </Card>
+  <Card title="Troubleshooting" href="/services/monitoring/user-guide/troubleshooting" color="#197560">
+    Diagnose missing or delayed log ingestion
+  </Card>
+</CardGroup>

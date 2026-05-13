@@ -1,0 +1,117 @@
+---
+title: "Availability Zones"
+description: "Partition your compute cluster into independent fault domains. Select availability zones during instance launch."
+sidebarTitle: "Availability Zones"
+---
+
+## Overview
+
+Availability zones partition the compute cluster into independent fault domains. Each
+zone typically represents a separate rack, power circuit, or physical location. Placing
+instances across multiple zones protects against localized hardware failures.
+
+<Note>
+  **Prerequisites**
+  - At least one availability zone configured by your administrator
+  - Zones are configured through [Host Aggregates](/services/compute/scheduling)
+</Note>
+
+---
+
+## Select an Availability Zone at Launch
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    During instance creation, the **Available Zone** field appears in **Step 1
+    (Base Config)** of the wizard.
+
+    | User Type | Options Shown |
+    |-----------|--------------|
+    | **Regular users** | Dropdown of available zone names |
+    | **Administrators** | Grouped options — **Available Zones** (zone names) plus **Pin to Host** (`zone:hostname` entries for direct host placement) |
+
+    <Tip>
+      If you do not select a specific zone, the scheduler automatically chooses
+      the zone with the most available resources. This is recommended for most
+      workloads.
+    </Tip>
+
+    For high availability, launch replicated instances in different zones using a
+    [Server Group](/services/compute/server-groups) with `anti-affinity` policy.
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Source credentials"
+    source openrc.sh
+    ```
+
+    <CodeGroup>
+    ```bash title="List availability zones"
+    openstack availability zone list --compute
+    ```
+    ```bash title="Launch in a specific zone"
+    openstack server create \
+      --image <IMAGE_ID> \
+      --flavor <FLAVOR> \
+      --network <NETWORK> \
+      --availability-zone <ZONE_NAME> \
+      my-instance
+    ```
+    ```bash title="Launch on a specific host (admin)"
+    openstack server create \
+      --image <IMAGE_ID> \
+      --flavor <FLAVOR> \
+      --network <NETWORK> \
+      --availability-zone <ZONE_NAME>:<HOSTNAME> \
+      my-instance
+    ```
+    </CodeGroup>
+  </Tab>
+</Tabs>
+
+---
+
+## Zone Management
+
+Availability zones are managed through Host Aggregates by administrators. See
+[Compute Scheduling](/services/compute/scheduling) for creating aggregates with
+zone assignments.
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    Navigate to **Compute > Host Aggregates** in the admin sidebar. The
+    **Availability Zones** tab shows a read-only list of all configured zones.
+
+    To create a new zone, create a Host Aggregate and assign it a new availability
+    zone name during creation.
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    <CodeGroup>
+    ```bash title="List zones"
+    openstack availability zone list --compute
+    ```
+    ```bash title="Create zone via aggregate"
+    openstack aggregate create --zone new-zone my-aggregate
+    openstack aggregate add host my-aggregate <HOSTNAME>
+    ```
+    </CodeGroup>
+  </Tab>
+</Tabs>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Launch an Instance" href="/services/compute/launch-instance" color="#197560">
+    Select an availability zone in the instance create wizard
+  </Card>
+  <Card title="Server Groups" href="/services/compute/server-groups" color="#197560">
+    Combine zones with anti-affinity for maximum resilience
+  </Card>
+  <Card title="Scheduling" href="/services/compute/scheduling" color="#197560">
+    Create host aggregates and manage zone assignments
+  </Card>
+  <Card title="Compute Hosts" href="/services/compute/compute-hosts" color="#197560">
+    View which hosts belong to which zones
+  </Card>
+</CardGroup>

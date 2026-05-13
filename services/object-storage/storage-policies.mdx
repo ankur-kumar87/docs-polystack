@@ -1,0 +1,400 @@
+---
+title: "Object Storage Policies"
+description: "Configure storage policies for replication, erasure coding, and tiered object placement."
+sidebarTitle: "Storage Policies"
+---
+
+import AdminWarning from '/snippets/admin-warning.mdx';
+
+## Overview
+
+Storage policies define how object data is placed, replicated, and protected across storage nodes. Each container is assigned to exactly one policy at creation time — the policy cannot be changed after the container is created. Multiple policies enable tiered storage (standard replication, erasure coding, SSD-backed performance tiers, and archival tiers).
+
+<AdminWarning />
+
+<Note>
+  **Prerequisites**
+  - Admin credentials sourced from `openrc.sh`
+  - Object Storage service deployed and healthy
+  - Storage rings built for each policy (see [Ring Management](/services/object-storage/ring-management))
+</Note>
+
+---
+
+## Policy Types
+
+Xloud Object Storage supports three storage policy types. Each maps to a distinct object ring file and enforces different data placement and durability behavior.
+
+<Tabs>
+  <Tab title="Replication" icon="copy">
+    **Replication policies** store N identical copies of every object across distinct storage zones. Each replica is fully readable independently — no reconstruction is needed.
+
+    | Parameter | Typical Value | Description |
+    |-----------|--------------|-------------|
+    | `replica_count` | `3` | Number of full copies stored per object |
+    | Min drives writable | `2 of 3` | Write quorum for consistency |
+    | Read quorum | `1 of 3` | Any single replica can serve a GET |
+    | Storage overhead | `3×` | Total space = object size × replica count |
+    | Recovery time | Fast | Replication copies entire objects |
+
+    <Tip>
+      3-replica replication is the recommended default for general-purpose workloads. It tolerates simultaneous loss of any one zone with no data loss and no performance penalty during reads.
+    </Tip>
+  </Tab>
+  <Tab title="Erasure Coding" icon="shield">
+    **Erasure coding (EC) policies** encode objects into data fragments and parity fragments. The object can be reconstructed from any sufficient subset of fragments. EC significantly reduces storage overhead while maintaining high durability.
+
+    | Parameter | Example (8+4) | Description |
+    |-----------|--------------|-------------|
+    | `ec_type` | `liberasurecode_rs_vand` | EC algorithm |
+    | `ec_num_data_fragments` | `8` | Data shards per object |
+    | `ec_num_parity_fragments` | `4` | Parity shards per object |
+    | Storage overhead | `1.5×` | vs. `3×` for replication |
+    | Fault tolerance | Any 4 nodes | Can lose 4 of 12 fragments |
+    | Read cost | Higher CPU | Requires fragment assembly |
+
+    <Warning>
+      Erasure coding requires at least as many storage nodes as `ec_num_data_fragments + ec_num_parity_fragments`. An 8+4 EC policy requires at minimum 12 distinct storage targets. EC read latency is higher than replication — avoid EC for latency-sensitive workloads.
+    </Warning>
+
+    Supported EC algorithms:
+    - `liberasurecode_rs_vand` — Vandermonde Reed-Solomon (recommended)
+    - `liberasurecode_rs_cauchy` — Cauchy Reed-Solomon
+    - `flat_xor_hd` — XOR-based (limited parity)
+    - `isa_l_rs_vand` — Intel ISA-L accelerated (requires ISA-L library)
+  </Tab>
+  <Tab title="Multi-Tier" icon="database">
+    **Multi-tier policies** use separate rings targeting specific device classes (SSD vs. HDD). The ring builder restricts device placement to nodes tagged with the required device class, ensuring data lands on the correct hardware tier.
+
+    | Policy | Target Hardware | Ring File | Use Case |
+    |--------|----------------|-----------|----------|
+    | `gold` | SSD / NVMe | `object-1.ring.gz` | Frequently accessed, latency-sensitive |
+    | `standard` | Mixed or HDD | `object.ring.gz` | General workloads |
+    | `archive` | High-density HDD | `object-2.ring.gz` | Infrequent access, cost-optimized |
+
+    <Tip>
+      Label storage nodes with device class metadata during ring building. The ring builder enforces placement constraints — a ring built for SSD nodes will never place replicas on HDD-only nodes.
+    </Tip>
+  </Tab>
+</Tabs>
+
+---
+
+## Policy Configuration Reference
+
+Storage policies are defined in the Object Storage configuration managed by XDeploy. The configuration is applied during deployment via `xavs-ansible deploy -t swift`.
+
+```ini title="swift.conf — storage policy definition"
+[storage-policy:0]
+name = standard
+default = yes
+aliases = Policy-0, default
+
+[storage-policy:1]
+name = gold
+aliases = ssd, performance
+
+[storage-policy:2]
+name = archive
+aliases = ec, cold
+policy_type = erasure_coding
+ec_type = liberasurecode_rs_vand
+ec_num_data_fragments = 8
+ec_num_parity_fragments = 4
+ec_object_segment_size = 1048576
+```
+
+| Field | Description |
+|-------|-------------|
+| `[storage-policy:N]` | Section index — must match the ring file suffix (`object-N.ring.gz`) |
+| `name` | Human-readable identifier used in container creation |
+| `default` | `yes` for the policy applied without explicit selection |
+| `aliases` | Comma-separated alternate names |
+| `policy_type` | `replication` (default) or `erasure_coding` |
+| `ec_type` | EC algorithm — required when `policy_type = erasure_coding` |
+| `ec_num_data_fragments` | Data shards per EC stripe |
+| `ec_num_parity_fragments` | Parity shards per EC stripe |
+| `deprecated` | `yes` blocks new containers from using this policy |
+
+---
+
+## View and Manage Policies
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Navigate to Object Storage" icon="compass">
+        Navigate to
+        **Storage > Object Storage**. The storage policy is shown as a column
+        in the container list and is selectable during container creation.
+      </Step>
+      <Step title="Create a container with a specific policy" icon="plus">
+        Click **Create Container**. In the **Storage Policy** dropdown, select the desired
+        policy (e.g., `gold`, `archive`). Leaving the field blank assigns the default policy.
+
+        <Warning>
+          The storage policy field is only visible if multiple policies are configured in
+          your cluster. If only one policy exists, containers are automatically assigned to it.
+        </Warning>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    <Steps titleSize="h3">
+      <Step title="List available policies" icon="list">
+        ```bash title="List storage policies"
+        openstack object store policy list
+        ```
+
+        ```bash title="Show policy detail"
+        openstack object store policy show gold
+        ```
+
+        Policy attributes returned:
+
+        | Field | Description |
+        |-------|-------------|
+        | `name` | Human-readable identifier |
+        | `aliases` | Alternate names |
+        | `default` | `True` if this is the default policy |
+        | `deprecated` | `True` if new containers cannot use this policy |
+        | `index` | Numeric index matching the ring file suffix |
+      </Step>
+      <Step title="Create a container on a specific policy" icon="folder-plus">
+        ```bash title="Create container on gold (SSD) policy"
+        openstack container create --storage-policy gold my-fast-container
+        ```
+
+        ```bash title="Create container on archive (EC) policy"
+        openstack container create --storage-policy archive my-archive-container
+        ```
+      </Step>
+      <Step title="Verify the assigned policy" icon="circle-check">
+        ```bash title="Show container details"
+        openstack container show my-fast-container
+        ```
+
+        The `storage_policy` field in the output confirms the assigned policy.
+
+        <Check>The container is created and the correct storage policy is displayed.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+</Tabs>
+
+---
+
+## S3 API Compatibility
+
+Xloud Object Storage exposes an S3-compatible API endpoint alongside the native Swift API. All storage policies are accessible via both APIs.
+
+<Tabs>
+  <Tab title="S3 API Access" icon="code">
+    The S3-compatible endpoint uses the same underlying storage policies. Buckets created via S3 API map to Swift containers and inherit policy assignment behavior.
+
+    ```bash title="Create bucket via S3 API (default policy)"
+    aws s3 mb s3://my-bucket \
+      --endpoint-url https://object.<your-domain>
+
+    ```
+
+    ```bash title="Upload object via S3 API"
+    aws s3 cp myfile.tar.gz s3://my-bucket/ \
+      --endpoint-url https://object.<your-domain>
+    ```
+
+    <Info>
+      S3 bucket-to-policy mapping is configured by your administrator. Contact your Xloud
+      administrator to assign a specific storage policy to S3 buckets, or use the Swift
+      API to create containers with explicit policy selection.
+    </Info>
+
+    Supported S3 API operations:
+    - Bucket operations: `CreateBucket`, `ListBuckets`, `DeleteBucket`, `GetBucketLocation`
+    - Object operations: `PutObject`, `GetObject`, `DeleteObject`, `HeadObject`, `ListObjectsV2`
+    - Multipart: `CreateMultipartUpload`, `UploadPart`, `CompleteMultipartUpload`
+    - ACLs: `GetBucketAcl`, `PutBucketAcl`, `GetObjectAcl`
+    - Versioning: `GetBucketVersioning`, `PutBucketVersioning`, `ListObjectVersions`
+  </Tab>
+  <Tab title="Swift API Access" icon="terminal">
+    The native Swift API provides the most control, including explicit storage policy selection.
+
+    ```bash title="Authenticate and create container on archive policy"
+    swift \
+      --os-auth-url https://identity.<your-domain>/v3 \
+      --os-project-name myproject \
+      --os-username myuser \
+      --os-password mypassword \
+      --os-user-domain-name Default \
+      --os-project-domain-name Default \
+      post -H "X-Storage-Policy: archive" my-archive-bucket
+    ```
+
+    ```bash title="Upload object via Swift CLI"
+    swift upload my-archive-bucket large-dataset.tar.gz
+    ```
+
+    ```bash title="Verify container policy"
+    swift stat my-archive-bucket
+    ```
+
+    The `X-Storage-Policy` header in the stat output confirms the assigned policy.
+  </Tab>
+</Tabs>
+
+---
+
+## Multi-Cloud Access Patterns
+
+Xloud Object Storage integrates with external cloud object storage providers. Tenant virtual machines can access multiple object storage systems using standard CLI tools and SDKs.
+
+<AccordionGroup>
+  <Accordion title="Rclone — universal multi-cloud sync" icon="refresh-cw">
+    Rclone provides a unified interface for Xloud Object Storage, AWS S3, Google Cloud Storage, and Azure Blob Storage.
+
+    ```bash title="Configure Rclone for Xloud Object Storage"
+    rclone config create xloud-swift swift \
+      auth https://identity.<your-domain>/v3 \
+      user myuser \
+      key mypassword \
+      tenant myproject \
+      auth_version 3
+    ```
+
+    ```bash title="Sync from AWS S3 to Xloud Object Storage"
+    rclone sync s3:my-aws-bucket xloud-swift:my-local-container
+    ```
+
+    ```bash title="Mount Xloud container as local filesystem"
+    rclone mount xloud-swift:my-container /mnt/xloud-storage \
+      --vfs-cache-mode writes &
+    ```
+  </Accordion>
+  <Accordion title="AWS CLI — S3-compatible access" icon="cloud">
+    The AWS CLI connects to the Xloud S3-compatible endpoint using standard credentials.
+
+    ```bash title="Configure AWS CLI for Xloud S3 endpoint"
+    aws configure set aws_access_key_id YOUR_ACCESS_KEY
+    aws configure set aws_secret_access_key YOUR_SECRET_KEY
+    aws configure set default.region us-east-1
+    ```
+
+    ```bash title="List buckets"
+    aws s3 ls --endpoint-url https://object.<your-domain>
+    ```
+
+    ```bash title="Sync local directory to Xloud"
+    aws s3 sync ./backup/ s3://my-backup-bucket \
+      --endpoint-url https://object.<your-domain>
+    ```
+  </Accordion>
+  <Accordion title="Python boto3 — programmatic access" icon="code">
+    ```python title="boto3 client for Xloud S3-compatible endpoint"
+    import boto3
+
+    client = boto3.client(
+        's3',
+        endpoint_url='https://object.<your-domain>',
+        aws_access_key_id='YOUR_ACCESS_KEY',
+        aws_secret_access_key='YOUR_SECRET_KEY',
+        region_name='default'
+    )
+
+    # List buckets
+    response = client.list_buckets()
+    for bucket in response['Buckets']:
+        print(bucket['Name'])
+
+    # Upload object
+    client.upload_file('myfile.tar.gz', 'my-bucket', 'backups/myfile.tar.gz')
+    ```
+  </Accordion>
+  <Accordion title="Glance integration — image backend" icon="disc">
+    Xloud Image Service can store VM images and snapshots directly in Object Storage, eliminating local disk requirements on the image service nodes.
+
+    ```ini title="glance-api.conf — Swift backend"
+    [glance_store]
+    stores = swift
+    default_store = swift
+    swift_store_auth_version = 3
+    swift_store_auth_address = https://identity.<your-domain>/v3
+    swift_store_container = glance-images
+    swift_store_create_container_on_put = True
+    ```
+
+    ```ini title="glance-api.conf — S3-compatible backend (Ceph RGW)"
+    [glance_store]
+    stores = s3
+    default_store = s3
+    s3_store_host = https://object.<your-domain>
+    s3_store_access_key = YOUR_ACCESS_KEY
+    s3_store_secret_key = YOUR_SECRET_KEY
+    s3_store_bucket = glance-images
+    s3_store_create_bucket_on_put = True
+    ```
+
+    <Tip>
+      Using Object Storage as the Glance backend allows image sharing across all cluster nodes without NFS or shared filesystem dependencies.
+    </Tip>
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Deprecated Policies
+
+Mark a policy as deprecated to prevent new containers from using it while maintaining full access for existing containers.
+
+```bash title="Deprecate a policy via XDeploy configuration"
+# In the XDeploy Object Storage configuration:
+# Set deprecated = yes on the target policy section
+# Redeploy: xavs-ansible deploy -t swift
+```
+
+<Info>
+  Deprecated policies remain fully functional for existing containers. Only new container creation using the deprecated policy is blocked. Migrate data before removing the policy configuration entirely.
+</Info>
+
+---
+
+## Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Plan Policies Before Deployment" icon="map" color="#197560">
+    Policy indexes and names are permanent once containers are created. Design your tier
+    structure (standard, gold, archive) before the first container is provisioned.
+  </Card>
+  <Card title="Use EC for Archival Data" icon="shield" color="#197560">
+    Erasure coding at 8+4 reduces storage overhead from 3× to 1.5× with equivalent
+    or better durability. Apply EC to infrequently accessed data that tolerates
+    higher read latency.
+  </Card>
+  <Card title="Tag Rings by Device Class" icon="tag" color="#197560">
+    Use ring builder device class labels (SSD, HDD) to enforce hardware affinity.
+    Never mix device classes in a single ring — it defeats the purpose of tiering.
+  </Card>
+  <Card title="Set Sensible Defaults" icon="settings" color="#197560">
+    Configure the most common data tier as the default policy. Operators who need
+    high-performance or archival storage explicitly specify the policy at container
+    creation time.
+  </Card>
+</CardGroup>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Ring Management" href="/services/object-storage/ring-management" color="#197560">
+    Build and distribute ring files for each storage policy
+  </Card>
+  <Card title="Architecture" href="/services/object-storage/architecture" color="#197560">
+    Understand how rings, proxy servers, and storage nodes interact
+  </Card>
+  <Card title="Replication" href="/services/object-storage/replication" color="#197560">
+    Monitor replication health and manage quarantined objects
+  </Card>
+  <Card title="Quotas" href="/services/object-storage/quotas" color="#197560">
+    Set per-account and per-container storage limits
+  </Card>
+</CardGroup>

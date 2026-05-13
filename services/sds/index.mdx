@@ -1,0 +1,109 @@
+---
+title: "Software-Defined Storage"
+description: "Unified block, object, and file storage on commodity hardware — petabyte-scale, self-healing, and multi-protocol with XSDS."
+icon: "database"
+sidebarTitle: "XSDS"
+mode: "wide"
+---
+
+Xloud Software-Defined Storage (XSDS) delivers unified block, object, and file storage
+on commodity hardware — scaling from terabytes to petabytes with no single point of
+failure. A self-healing architecture continuously monitors and redistributes data to
+maintain durability, while multi-protocol access lets applications consume storage
+through the interface that suits them best.
+
+<Card title="XSDS — Software-Defined Storage" icon="external-link" href="https://xloud.tech/ceph" color="#197560" horizontal>
+  Product details, hardware compatibility matrix, performance benchmarks, and datasheet on xloud.tech
+</Card>
+
+---
+
+<p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>XSDS Documentation</p>
+
+<CardGroup cols={2}>
+  <Card title="User Guide" icon="book-open" href="/services/sds/user-guide" color="#197560">
+    Consume block volumes, object buckets, and shared file systems from your workloads.
+    Covers access methods, data protection policies, and performance configuration.
+  </Card>
+  <Card title="Admin Guide" icon="settings" href="/services/sds/admin-guide" color="#197560">
+    Deploy and operate distributed storage clusters. Configure pools, CRUSH maps, storage
+    tiers, encryption, and capacity planning for production environments.
+  </Card>
+  <Card title="CLI Reference" icon="terminal" href="/services/sds/cli-reference" color="#197560">
+    Manage Ceph clusters, pools, OSDs, RBD images, and object storage buckets using
+    ceph, rbd, and radosgw-admin CLI tools.
+  </Card>
+  <Card title="Block Storage" icon="hard-drive" href="/services/storage/user-guide" color="#197560">
+    Persistent block volumes for Xloud Compute instances — powered by the XSDS backend.
+  </Card>
+</CardGroup>
+
+---
+
+<p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Key Capabilities</p>
+
+<CardGroup cols={2}>
+  <Card title="Unified Storage" icon="layers" href="/services/sds/user-guide/storage-types" color="#197560">
+    Single platform delivers block, object, and file storage — eliminating the need for
+    separate storage appliances per protocol.
+  </Card>
+  <Card title="Self-Healing Architecture" icon="shield-check" href="/services/sds/admin-guide/architecture" color="#197560">
+    Continuous health monitoring detects failed components and automatically re-replicates
+    data to restore the configured redundancy level without operator intervention.
+  </Card>
+  <Card title="Petabyte Scalability" icon="trending-up" href="/services/sds/admin-guide/capacity-planning" color="#197560">
+    Scale storage capacity by adding nodes to the cluster — no downtime, no data migration,
+    and no architectural limits on growth.
+  </Card>
+  <Card title="Data Protection" icon="lock" href="/services/sds/user-guide/data-protection" color="#197560">
+    Configurable replication and erasure coding protect data across nodes, racks, and
+    data center rooms. Encryption at rest secures all stored data.
+  </Card>
+  <Card title="Performance Optimization" icon="zap" href="/services/sds/user-guide/performance" color="#197560">
+    Inline deduplication, compression, and intelligent caching maximize throughput and
+    minimize latency. Automated tiering places hot data on faster media.
+  </Card>
+  <Card title="Multi-Protocol Access" icon="network" href="/services/sds/user-guide/access-methods" color="#197560">
+    Native object (S3-compatible), block (RBD), and file (CephFS) interfaces alongside
+    NFS and SMB gateways for legacy application compatibility.
+  </Card>
+</CardGroup>
+
+---
+
+<p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Use Cases</p>
+
+<CardGroup cols={2}>
+  <Card title="Scalable Cloud Storage" icon="cloud" color="#197560">
+    Foundational storage layer for private cloud deployments — block volumes for instances,
+    object storage for unstructured data, and file shares for collaborative workloads.
+  </Card>
+  <Card title="Big Data & Analytics" icon="chart-bar" color="#197560">
+    High-throughput sequential I/O and massive capacity make XSDS ideal for data lake
+    architectures, log aggregation, and analytics pipelines.
+  </Card>
+  <Card title="Content Delivery & Media" icon="film" color="#197560">
+    S3-compatible object storage with horizontal scalability for large media libraries,
+    software distribution, and static asset hosting.
+  </Card>
+  <Card title="Backup & Recovery" icon="rotate-ccw" color="#197560">
+    Cost-efficient backup target using erasure coding for high durability at lower raw
+    capacity overhead compared to full replication.
+  </Card>
+</CardGroup>
+
+---
+
+<p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Related Services</p>
+
+<CardGroup cols={3}>
+  <Card title="Xloud Compute" icon="server" href="/services/compute" color="#197560">
+    Virtual machine instances that consume XSDS block volumes as persistent disks
+  </Card>
+  <Card title="Xloud Block Storage" icon="hard-drive" href="/services/storage/index" color="#197560">
+    Persistent block volumes backed by the XSDS distributed storage backend
+  </Card>
+  <Card title="Disaster Recovery" icon="rotate-ccw" href="/services/disaster-recovery/index" color="#197560">
+    Protect workloads and data with XDR replication and automated failover
+  </Card>
+</CardGroup>

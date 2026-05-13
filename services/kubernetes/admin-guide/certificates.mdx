@@ -1,0 +1,201 @@
+---
+title: "Certificate Management"
+description: "Manage Xloud K8SaaS cluster certificate authorities — view cluster CAs, rotate certificates, and handle post-rotation kubeconfig refresh for project users."
+sidebarTitle: "Certificates"
+---
+
+## Overview
+
+Every K8SaaS cluster has a dedicated certificate authority (CA) generated at provisioning
+time. The CA signs all cluster component certificates (API server, etcd, kubelet) and
+kubeconfig client certificates. Administrators rotate the CA when certificates approach
+expiry, when credentials are suspected compromised, or after a security incident.
+
+<Warning>
+  Rotating a cluster CA invalidates **all existing kubeconfigs** for that cluster.
+  All project users with access to the cluster must re-download their credentials
+  after rotation. Notify all users before performing a CA rotation.
+</Warning>
+
+---
+
+## View Cluster CA
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    Navigate to **Container (admin view) > Clusters**, click a cluster, and select
+    **Actions → Show CA** to view the cluster's current CA certificate (public key only).
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Show cluster CA certificate"
+    openstack coe ca show prod-cluster-01
+    ```
+
+    The output displays the PEM-encoded CA certificate. Check the expiry date:
+
+    ```bash title="Check CA certificate expiry"
+    openstack coe ca show prod-cluster-01 \
+      | grep -A 20 "BEGIN CERTIFICATE" \
+      | openssl x509 -noout -dates
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Rotate the Cluster CA
+
+<Warning>
+  CA rotation is irreversible. Existing kubeconfigs stop working immediately after rotation.
+  Plan rotation during a maintenance window and prepare user communication in advance.
+</Warning>
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Notify users" icon="bell">
+        Send advance notice to all users with cluster access that their kubeconfigs
+        will be invalidated at the scheduled rotation time.
+      </Step>
+      <Step title="Initiate rotation" icon="rotate">
+        Navigate to **Container (admin view) > Clusters**, click the cluster, and select
+        **Actions → Rotate CA**. Confirm the rotation.
+
+        The cluster enters `UPDATE_IN_PROGRESS` during CA regeneration.
+      </Step>
+      <Step title="Wait for completion" icon="clock">
+        Wait for the cluster to return to `UPDATE_COMPLETE` status.
+      </Step>
+      <Step title="Direct users to refresh" icon="arrow-down">
+        Notify all users to re-download their kubeconfig:
+
+        ```bash title="Refresh kubeconfig (user command)"
+        openstack coe cluster config prod-cluster-01 \
+          --dir ~/.kube \
+          --force
+        ```
+
+        <Check>All users can connect to the cluster with the new kubeconfig.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Rotate cluster CA"
+    openstack coe ca rotate prod-cluster-01
+    ```
+
+    ```bash title="Monitor rotation progress"
+    openstack coe cluster show prod-cluster-01 \
+      -f value -c status
+    ```
+
+    Wait for status to return to `UPDATE_COMPLETE`.
+
+    ```bash title="Verify new CA certificate"
+    openstack coe ca show prod-cluster-01
+    ```
+
+    After rotation, all users must refresh their kubeconfig:
+
+    ```bash title="Refresh kubeconfig"
+    openstack coe cluster config prod-cluster-01 \
+      --dir ~/.kube \
+      --force
+    ```
+
+    <Check>New CA is in place and kubectl connects with the refreshed kubeconfig.</Check>
+  </Tab>
+</Tabs>
+
+---
+
+## Certificate Expiry Planning
+
+Plan CA rotations proactively to avoid service disruption from expired certificates.
+
+| Certificate | Default Validity | Action Required |
+|-------------|-----------------|----------------|
+| Cluster CA | 10 years | Rotate 90 days before expiry |
+| API server TLS | 1 year (auto-renewed) | Monitor via `openssl x509 -noout -dates` |
+| Node kubelet certificates | 1 year (auto-renewed) | Ensure `auto_healing_enabled=true` in template |
+
+```bash title="Audit all cluster CA expiry dates"
+for cluster in $(openstack coe cluster list -f value -c name); do
+  echo -n "$cluster: "
+  openstack coe ca show $cluster \
+    | grep -A 20 "BEGIN CERTIFICATE" \
+    | openssl x509 -noout -enddate 2>/dev/null
+done
+```
+
+---
+
+## Xloud Key Management Integration
+
+For the highest security posture, store cluster CA private keys in Xloud Key Management
+rather than in the K8SaaS database.
+
+<Note>
+  Xloud Key Management must be deployed and the `magnum` service account must have the
+  `creator` role on the Key Management service before enabling this integration.
+</Note>
+
+<Tabs>
+  <Tab title="XDeploy" icon="server">
+    <Steps titleSize="h3">
+      <Step title="Open XDeploy Configuration" icon="settings">
+        Navigate to **XDeploy → Configuration** and select the **Advance Features** tab.
+      </Step>
+      <Step title="Enable KMS" icon="toggle-left">
+        Set **Enable KMS** to **Yes**. This deploys the Xloud Key Management service
+        and configures service account integration.
+      </Step>
+      <Step title="Set certificate manager type" icon="key">
+        Open **XDeploy → Advanced Configuration**, select **magnum** in the Service Tree,
+        then open or create `kubernetes.conf`. Add the following in the Code Editor:
+
+        ```ini title="kubernetes.conf"
+        [certificate]
+        cert_manager_type = barbican
+        ```
+
+        Click **Save Current File**.
+      </Step>
+      <Step title="Deploy the changes" icon="rocket">
+        Navigate to **XDeploy → Operations** and run a **Reconfigure** for the
+        Kubernetes and Key Management services.
+
+        <Check>K8SaaS is configured to store CA private keys in Xloud Key Management.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```ini title="/etc/xavs/kubernetes/kubernetes.conf"
+    [certificate]
+    cert_manager_type = barbican
+    ```
+
+    ```bash title="Restart API and Conductor after config change"
+    docker restart magnum_api magnum_conductor
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Security" href="/services/kubernetes/admin-guide/security" color="#197560">
+    Configure RBAC and node security groups alongside certificate management.
+  </Card>
+  <Card title="Monitoring" href="/services/kubernetes/admin-guide/monitoring" color="#197560">
+    Monitor certificate expiry and cluster health across all projects.
+  </Card>
+  <Card title="Cluster Upgrades (User)" href="/services/kubernetes/user-guide/cluster-upgrades" color="#197560">
+    Advise users on refreshing kubeconfigs after upgrades and CA rotations.
+  </Card>
+  <Card title="Key Manager" href="/services/key-manager" color="#197560">
+    Configure Xloud Key Management for secure CA private key storage.
+  </Card>
+</CardGroup>

@@ -1,0 +1,210 @@
+---
+title: "Load Balancer Troubleshooting"
+description: "Diagnose and resolve common Xloud Load Balancer issues — provisioning failures, member health problems, and TLS errors."
+sidebarTitle: "Troubleshooting"
+---
+
+## Overview
+
+This guide covers the most common issues encountered when working with Xloud Load Balancer
+— provisioning delays, member health failures, 503 errors, and TLS handshake problems.
+
+<Note>
+  For platform-level issues such as appliance provisioning failures or service agent
+  outages, refer to the [Load Balancer Admin Guide — Troubleshooting](/services/load-balancer/lb-troubleshooting).
+</Note>
+
+---
+
+## Provisioning Issues
+
+<AccordionGroup>
+  <Accordion title="Load balancer stuck in PENDING_CREATE" icon="clock" defaultOpen>
+    **Cause**: The load balancing agent did not receive or complete the provisioning request.
+
+    **Diagnose**:
+    ```bash title="Check provisioning status"
+    openstack loadbalancer show prod-web-lb \
+      -c provisioning_status -c operating_status
+    ```
+
+    If status remains `PENDING_CREATE` after 5 minutes, verify the appliance was created:
+    ```bash title="List appliances for this load balancer"
+    openstack loadbalancer amphora list \
+      --loadbalancer prod-web-lb
+    ```
+
+    **Resolution**: Contact your platform administrator if the appliance does not appear.
+    The load balancing service agent may need to be restarted.
+
+    <Tip>
+      A load balancer in `PENDING_CREATE` can be deleted and recreated. Use `--wait` to
+      block until the status resolves: `openstack loadbalancer delete --wait prod-web-lb`
+    </Tip>
+  </Accordion>
+
+  <Accordion title="Load balancer in ERROR status after creation" icon="circle-x">
+    **Cause**: The appliance provisioning failed — common causes include exhausted
+    management network DHCP pool or unavailable appliance image.
+
+    **Diagnose**:
+    ```bash title="Check provisioning status detail"
+    openstack loadbalancer show prod-web-lb -f json | python3 -m json.tool
+    ```
+    Review the `fault` field for a specific error message.
+
+    **Resolution**: This is a platform-level issue. See the Admin Guide for resolution steps.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Member Health Issues
+
+<AccordionGroup>
+  <Accordion title="Members showing OFFLINE or ERROR" icon="server">
+    **Cause**: Health monitor probes are failing. Common reasons:
+    - Application not running on the configured member port
+    - Security group blocking probe traffic from the load balancer VIP subnet
+    - Health check URL returning a non-2xx status code
+    - Application is not ready (still starting up)
+
+    **Diagnose**:
+    ```bash title="Show member detail"
+    openstack loadbalancer member show pool-http <member-id>
+    ```
+
+    Test the health endpoint directly from a host on the same subnet:
+    ```bash title="Test health endpoint manually"
+    curl -v http://<member-ip>:<member-port>/health
+    ```
+
+    **Resolution**: Verify that security groups allow ingress on the member port from
+    the load balancer VIP address. Add a rule if missing:
+    ```bash title="Allow LB probe traffic in security group"
+    openstack security group rule create \
+      --ingress \
+      --protocol tcp \
+      --dst-port <member-port> \
+      --remote-ip <lb-vip-address>/32 \
+      <member-security-group>
+    ```
+  </Accordion>
+
+  <Accordion title="Member flapping between ONLINE and OFFLINE" icon="activity">
+    **Cause**: The health check timeout is too short, or the application has slow response
+    times under load.
+
+    **Resolution**: Increase the health monitor timeout:
+    ```bash title="Increase health monitor timeout"
+    openstack loadbalancer healthmonitor set hm-http \
+      --timeout 10 \
+      --delay 15
+    ```
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Traffic Issues
+
+<AccordionGroup>
+  <Accordion title="503 Service Unavailable from load balancer" icon="triangle-alert">
+    **Cause**: All pool members are DOWN or the pool is empty.
+
+    **Diagnose**:
+    ```bash title="Check member operating status"
+    openstack loadbalancer member list pool-http \
+      -c address -c protocol_port -c operating_status
+    ```
+
+    **Resolution**: Restore at least one member to `ONLINE` status by:
+    1. Verifying the application is running on the member
+    2. Confirming the health check URL returns HTTP 200
+    3. Checking security group rules allow probe traffic
+  </Accordion>
+
+  <Accordion title="Uneven traffic distribution" icon="bar-chart">
+    **Cause**: Member weights are unequal, or sticky sessions are routing traffic to
+    a subset of members.
+
+    **Diagnose**:
+    ```bash title="Check member weights"
+    openstack loadbalancer member list pool-http \
+      -c name -c weight -c operating_status
+    ```
+
+    **Resolution**: Reset all member weights to equal values:
+    ```bash title="Normalize member weight"
+    openstack loadbalancer member set pool-http <member-id> --weight 1
+    ```
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## TLS Issues
+
+<AccordionGroup>
+  <Accordion title="TLS handshake failures on HTTPS listener" icon="shield-alert">
+    **Cause**: Certificate container reference is invalid, the certificate has expired,
+    or the private key does not match the certificate.
+
+    **Diagnose**:
+    ```bash title="Verify TLS container is accessible"
+    openstack secret container show <container-ref>
+    ```
+
+    Check certificate expiration:
+    ```bash title="View certificate content"
+    openstack secret get <cert-secret-ref> --payload | \
+      openssl x509 -noout -dates
+    ```
+
+    **Resolution**: Upload a valid certificate through Xloud Key Manager and update
+    the listener's TLS container reference:
+    ```bash title="Update listener TLS container"
+    openstack loadbalancer listener set listener-https \
+      --default-tls-container-ref <new-container-ref>
+    ```
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Status Reference
+
+| Provisioning Status | Meaning |
+|--------------------|---------|
+| `ACTIVE` | Resource is operational |
+| `PENDING_CREATE` | Provisioning in progress |
+| `PENDING_UPDATE` | Update in progress |
+| `PENDING_DELETE` | Deletion in progress |
+| `ERROR` | Operation failed — inspect the `fault` field |
+
+| Operating Status | Meaning |
+|-----------------|---------|
+| `ONLINE` | Resource is up and passing health checks |
+| `OFFLINE` | Resource is administratively disabled |
+| `DEGRADED` | Some sub-resources are in error |
+| `ERROR` | Resource has failed health checks |
+| `NO_MONITOR` | No health monitor configured — traffic still sent |
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Health Monitors" href="/services/load-balancer/health-monitors" color="#197560">
+    Review health monitor configuration to resolve OFFLINE member issues.
+  </Card>
+  <Card title="Listeners" href="/services/load-balancer/listeners" color="#197560">
+    Verify listener protocol and TLS configuration after resolving issues.
+  </Card>
+  <Card title="Load Balancer Admin Troubleshooting" href="/services/load-balancer/lb-troubleshooting" color="#197560">
+    Platform-level diagnostics for appliance and service agent failures.
+  </Card>
+  <Card title="Create Load Balancer" href="/services/load-balancer/create-lb" color="#197560">
+    Start fresh with a correctly configured load balancer if needed.
+  </Card>
+</CardGroup>

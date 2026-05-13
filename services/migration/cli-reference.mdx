@@ -1,0 +1,426 @@
+---
+title: "CLI Reference"
+description: "Complete command-line reference for the xms CLI — sources, discovery, preflight, migration jobs, cutover, and events."
+sidebarTitle: "CLI Reference"
+---
+
+## Overview
+
+The `xms` CLI is a command-line client for the Xloud Migration Suite. It
+mirrors the Dashboard Migration panel: every action you can take in the UI
+is available as a CLI command, and every object you can inspect in the UI is
+available as a structured CLI response.
+
+Use the CLI when you want to script multi-wave campaigns, run migrations
+from CI, or integrate XMS with your own automation.
+
+<Note>
+  The CLI authenticates against the platform identity service with the same
+  credentials you use for the Xloud Dashboard. Project scope is resolved
+  from the authenticated token.
+</Note>
+
+---
+
+## Global Options
+
+These options apply to every subcommand.
+
+| Option | Description |
+|--------|-------------|
+| `--os-cloud <name>` | Select a named cloud from your `clouds.yaml` |
+| `--os-auth-url <url>` | Override the identity endpoint |
+| `--os-project-name <name>` | Set the project scope |
+| `--os-project-domain-name <name>` | Set the project domain |
+| `--os-username <name>` | Authenticated user |
+| `--os-password <password>` | Password (prefer `--password-stdin` or env vars) |
+| `-f, --format <fmt>` | Output format: `table` (default), `json`, `yaml`, `csv` |
+| `-q, --quiet` | Suppress non-essential output |
+| `-v, --verbose` | Show request and response detail |
+| `--no-color` | Disable ANSI colors in table output |
+
+<Tip>
+  Store credentials in `clouds.yaml` or environment variables
+  (`OS_*`) and reference the cloud with `--os-cloud`. This keeps secrets
+  out of shell history.
+</Tip>
+
+---
+
+## Sources
+
+Manage registered migration source environments.
+
+### xms source create
+
+Register a new VMware source.
+
+```bash
+xms source create \
+  --name prod-vcenter \
+  --platform vmware \
+  --host vcenter.example.com \
+  --port 443 \
+  --username 'administrator@vsphere.local' \
+  --password-stdin \
+  --verify-ssl \
+  --datacenter DC-East
+```
+
+| Flag | Description |
+|------|-------------|
+| `--name` | Friendly source name, unique per project |
+| `--platform` | Source platform — `vmware` for vSphere |
+| `--host` | vCenter or ESXi hostname or IP |
+| `--port` | vSphere API port (default 443) |
+| `--username` | Source service account |
+| `--password-stdin` | Read password from stdin (preferred) |
+| `--password` | Inline password — discouraged, leaves secret in history |
+| `--verify-ssl` / `--no-verify-ssl` | TLS verification toggle |
+| `--datacenter` | Optional — pin discovery to a single datacenter |
+
+### xms source list
+
+List registered sources.
+
+```bash
+xms source list
+xms source list -f json
+```
+
+### xms source show
+
+Show a single source including status and detected vSphere version.
+
+```bash
+xms source show prod-vcenter
+```
+
+### xms source update
+
+Update fields on an existing source. Only the flags you pass are applied.
+
+```bash
+xms source update prod-vcenter --password-stdin
+xms source update prod-vcenter --host vcenter-new.example.com
+xms source update prod-vcenter --verify-ssl
+```
+
+### xms source test
+
+Re-run the connection test without changing anything.
+
+```bash
+xms source test prod-vcenter
+```
+
+### xms source delete
+
+Delete a source. Fails if any active job references it.
+
+```bash
+xms source delete prod-vcenter
+```
+
+---
+
+## Discovery
+
+Inventory VMs and disks from a registered source.
+
+### xms discovery start
+
+Kick off a discovery scan.
+
+```bash
+# Full inventory
+xms discovery start --source prod-vcenter
+
+# Scope to a datacenter
+xms discovery start --source prod-vcenter --datacenter DC-East
+
+# Scope to a folder or cluster
+xms discovery start --source prod-vcenter --folder "Production/Web"
+xms discovery start --source prod-vcenter --cluster Cluster-A
+```
+
+### xms discovery status
+
+Report the current scan state.
+
+```bash
+xms discovery status --source prod-vcenter
+xms discovery status --source prod-vcenter --follow
+```
+
+`--follow` streams progress until the scan completes.
+
+### xms discovery list
+
+List every discovered workload for a source.
+
+```bash
+xms discovery list --source prod-vcenter
+xms discovery list --source prod-vcenter --filter 'power_state=poweredOn'
+xms discovery list --source prod-vcenter --filter 'os=windows' -f json
+```
+
+### xms discovery show
+
+Show the full discovery record for a single VM.
+
+```bash
+xms discovery show --source prod-vcenter --vm win-ser-2022
+```
+
+---
+
+## Preflight
+
+Run compatibility checks against discovered workloads.
+
+### xms preflight run
+
+Run preflight against one or more VMs.
+
+```bash
+# Single VM
+xms preflight run --source prod-vcenter --vm win-ser-2022
+
+# Multiple VMs from a file (one name per line)
+xms preflight run --source prod-vcenter --from-file wave-1.txt
+
+# Entire discovered inventory
+xms preflight run --source prod-vcenter --all
+```
+
+### xms preflight show
+
+Fetch the latest preflight verdict for a VM.
+
+```bash
+xms preflight show --source prod-vcenter --vm win-ser-2022
+xms preflight show --source prod-vcenter --vm win-ser-2022 -f json
+```
+
+### xms preflight list
+
+List preflight verdicts across a source.
+
+```bash
+xms preflight list --source prod-vcenter
+xms preflight list --source prod-vcenter --filter 'verdict=block'
+```
+
+### xms preflight enable-cbt
+
+Enable Changed Block Tracking on a source VM through the vSphere API.
+
+```bash
+xms preflight enable-cbt --source prod-vcenter --vm db-prod-01
+```
+
+---
+
+## Migrations
+
+Submit, monitor, and manage migration jobs.
+
+### xms migration submit
+
+Submit a new migration job.
+
+```bash
+# Cold migration
+xms migration submit \
+  --source prod-vcenter \
+  --vm win-ser-2022 \
+  --kind cold \
+  --target-project infra \
+  --flavor m1.large \
+  --volume-type ssd \
+  --availability-zone az-1 \
+  --network-map 'VM Network=internal-net'
+
+# Warm migration with a 1-hour incremental cadence
+xms migration submit \
+  --source prod-vcenter \
+  --vm db-prod-01 \
+  --kind warm \
+  --target-project infra \
+  --flavor m1.xlarge \
+  --volume-type nvme \
+  --network-map 'VM Network=internal-net' \
+  --sync-cadence 1h
+```
+
+| Flag | Description |
+|------|-------------|
+| `--source` | Registered source name |
+| `--vm` | Source VM name |
+| `--kind` | `cold` or `warm` |
+| `--target-project` | Target Xloud project |
+| `--target-name` | Optional — instance name in the target project |
+| `--flavor` | Xloud flavor for the target instance |
+| `--volume-type` | Target volume type |
+| `--availability-zone` | Optional — pin the target to a zone |
+| `--network-map` | Source to target network mapping, can be repeated |
+| `--preserve-mac` | Attempt to preserve the source MAC on the target NIC |
+| `--sync-cadence` | Warm only — `manual`, `15m`, `1h`, `24h` |
+
+### xms migration list
+
+List migration jobs in the current project.
+
+```bash
+xms migration list
+xms migration list --filter 'status=ready'
+xms migration list --filter 'kind=warm,status=syncing'
+xms migration list -f json
+```
+
+### xms migration show
+
+Show the full state of a single migration job.
+
+```bash
+xms migration show <job-id>
+xms migration show <job-id> -f json
+```
+
+### xms migration events
+
+Stream the event history for a job.
+
+```bash
+xms migration events --job <job-id>
+xms migration events --job <job-id> --follow
+xms migration events --job <job-id> --since 10m
+```
+
+### xms migration sync
+
+Trigger an immediate incremental sync on a warm migration that is in the
+**Ready** state.
+
+```bash
+xms migration sync --job <job-id>
+```
+
+### xms migration pause
+
+Pause scheduled incrementals without losing progress. Only applies to warm
+migrations.
+
+```bash
+xms migration pause --job <job-id>
+```
+
+### xms migration resume
+
+Resume a paused warm migration.
+
+```bash
+xms migration resume --job <job-id>
+```
+
+### xms migration cutover
+
+Trigger cutover on a warm migration.
+
+```bash
+xms migration cutover --job <job-id>
+```
+
+### xms migration cancel
+
+Cancel a job. Releases any disk transport session and worker slot. Source
+and target state are left unchanged.
+
+```bash
+xms migration cancel --job <job-id>
+```
+
+---
+
+## Scripting Patterns
+
+### Wave Preflight and Submit
+
+Run preflight on a wave file, then submit cold migrations for everything
+that passes:
+
+```bash
+SOURCE=prod-vcenter
+WAVE=wave-1.txt
+
+# Preflight the whole wave
+xms preflight run --source $SOURCE --from-file $WAVE
+
+# Submit cold migrations for Pass results
+xms preflight list --source $SOURCE --filter 'verdict=pass' -f json \
+  | jq -r '.[].vm' \
+  | while read vm; do
+      xms migration submit \
+        --source $SOURCE \
+        --vm "$vm" \
+        --kind cold \
+        --target-project infra \
+        --flavor m1.large \
+        --volume-type ssd \
+        --network-map 'VM Network=internal-net'
+    done
+```
+
+### Watch a Running Campaign
+
+Follow every job in the current project and print a live status table:
+
+```bash
+watch -n 10 'xms migration list --filter "status=running,status=syncing"'
+```
+
+### Cutover After All Warm Jobs Reach Ready
+
+Wait until every warm migration in a wave is **Ready**, then cut them all
+over in sequence:
+
+```bash
+xms migration list --filter 'kind=warm' -f json \
+  | jq -r '.[] | select(.status == "ready") | .id' \
+  | while read job_id; do
+      xms migration cutover --job $job_id
+    done
+```
+
+---
+
+## Exit Codes
+
+The CLI exits with a non-zero code on failure so it can be used in shell
+pipelines and CI:
+
+| Exit Code | Meaning |
+|-----------|---------|
+| `0` | Success |
+| `1` | Generic error (bad flags, validation failure) |
+| `2` | Authentication or authorization failure |
+| `3` | Source or VM not found |
+| `4` | Job failed or timed out while following |
+| `5` | Network or transport error talking to XMS |
+
+---
+
+## Next Steps
+
+<CardGroup cols={3}>
+  <Card title="User Guide" href="/services/migration/user-guide" color="#197560">
+    End-to-end workflow using the Dashboard or CLI
+  </Card>
+  <Card title="Admin Guide" href="/services/migration/admin-guide" color="#197560">
+    Operator setup, credentials, and capacity planning
+  </Card>
+  <Card title="Troubleshooting" href="/services/migration/user-guide/troubleshooting" color="#197560">
+    Diagnose job failures and post-migration issues
+  </Card>
+</CardGroup>

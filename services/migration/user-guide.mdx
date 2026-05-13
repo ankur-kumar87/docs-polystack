@@ -1,0 +1,93 @@
+---
+title: "Migration User Guide"
+description: "Register a VMware source, discover workloads, run preflight checks, execute cold and warm migrations, and finish with cutover using the Xloud Dashboard."
+sidebarTitle: "User Guide"
+mode: "wide"
+---
+
+import PrerequisitesAuth from '/snippets/prerequisites-auth.mdx';
+
+## Overview
+
+
+XMS (Xloud Migration Suite) moves virtual machine workloads from VMware vSphere
+and standalone ESXi hosts into Xloud. This guide walks through the end-to-end
+flow: register a source, discover workloads, validate compatibility, run cold
+or warm migrations, and complete cutover.
+
+<PrerequisitesAuth />
+
+---
+
+## Topics
+
+
+<CardGroup cols={3}>
+  <Card title="Register a VMware Source" icon="plug" href="/services/migration/user-guide/register-source" color="#197560">
+    Add a vCenter or ESXi endpoint to the Migration panel with credentials
+    and optional datacenter scope.
+  </Card>
+  <Card title="Discover Workloads" icon="search" href="/services/migration/user-guide/discover-workloads" color="#197560">
+    Inventory VMs, disks, networks, and guest metadata through the vSphere API.
+  </Card>
+  <Card title="Preflight Assessment" icon="clipboard-check" href="/services/migration/user-guide/preflight" color="#197560">
+    Validate each candidate workload against Xloud compatibility rules before
+    submitting a migration job.
+  </Card>
+  <Card title="Cold Migration" icon="power" href="/services/migration/user-guide/cold-migration" color="#197560">
+    Power off the source VM and migrate all disks in a single pass — the
+    simplest path for workloads that can tolerate a maintenance window.
+  </Card>
+  <Card title="Warm Migration" icon="rotate-cw" href="/services/migration/user-guide/warm-migration" color="#197560">
+    Start a full sync while the source VM remains online, then replicate
+    only changed blocks until you schedule the cutover.
+  </Card>
+  <Card title="Cutover" icon="zap" href="/services/migration/user-guide/cutover" color="#197560">
+    Trigger the final sync and switch a warm migration job to its target
+    Xloud instance.
+  </Card>
+  <Card title="Post-Migration Validation" icon="circle-check" href="/services/migration/user-guide/post-migration" color="#197560">
+    Verify the migrated instance boots, has network connectivity, and mounts
+    all original disks.
+  </Card>
+  <Card title="Troubleshooting" icon="wrench" href="/services/migration/user-guide/troubleshooting" color="#197560">
+    Diagnose discovery failures, stalled syncs, stuck cutovers, and guest
+    boot issues after migration.
+  </Card>
+</CardGroup>
+
+---
+
+## Choosing Cold or Warm
+
+
+<CardGroup cols={2}>
+  <Card title="Use Cold Migration When" icon="power" color="#197560">
+    The workload tolerates a maintenance window, the disks are small, and
+    you want the simplest possible flow — one click, one pass, done.
+  </Card>
+  <Card title="Use Warm Migration When" icon="rotate-cw" color="#197560">
+    The workload must stay online until cutover, disks are large, or the
+    initial sync would exceed an acceptable downtime window.
+  </Card>
+</CardGroup>
+
+---
+
+## Next Steps
+
+
+<CardGroup cols={4}>
+  <Card title="Admin Guide" icon="settings" href="/services/migration/admin-guide" color="#197560">
+    Deployment, network ports, storage planning, and credential management
+  </Card>
+  <Card title="Block Storage" icon="hard-drive" href="/services/storage/user-guide" color="#197560">
+    Understand volume types and quotas that apply to migrated disks
+  </Card>
+  <Card title="Xloud Compute" icon="server" href="/services/compute/user-guide" color="#197560">
+    Manage migrated workloads as Xloud Compute instances
+  </Card>
+  <Card title="Infrastructure Monitoring" icon="activity" href="/services/monitoring/user-guide" color="#197560">
+    Monitor migrated workloads with XIMP dashboards and alerts
+  </Card>
+</CardGroup>

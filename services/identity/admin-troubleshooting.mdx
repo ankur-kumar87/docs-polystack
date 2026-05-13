@@ -1,0 +1,210 @@
+---
+title: "Identity Admin Troubleshooting"
+description: "Diagnose and resolve platform-level Identity issues — token validation failures, LDAP connectivity, federation errors, and service catalog misconfigurations."
+sidebarTitle: "Troubleshooting"
+---
+
+import AdminWarning from '/snippets/admin-warning.mdx';
+
+## Overview
+
+This guide covers platform-level Identity issues that require administrator access —
+token validation failures across services, LDAP and federation authentication problems,
+service catalog misconfigurations, and system-scope permission errors.
+
+<AdminWarning />
+
+<Note>
+  For end-user authentication issues (wrong password, expired token, missing role),
+  see the [Identity User Troubleshooting](/services/identity/troubleshooting) guide.
+</Note>
+
+---
+
+## Token Validation Failures
+
+<AccordionGroup>
+  <Accordion title="Token validation failures across services" icon="circle-x" defaultOpen>
+    **Cause**: Fernet keys are out of sync between Identity API nodes, or the token has
+    expired.
+
+    **Diagnose**: Verify key synchronization across all nodes. All nodes must have
+    identical key files in the fernet-keys directory:
+    ```bash title="Check key file count and timestamps on all nodes"
+    ls -la /var/lib/kolla/config_files/fernet-keys/
+    ```
+
+    Compare timestamps across nodes. If keys are inconsistent, force a rotation:
+    ```bash title="Force key rotation via xavs-ansible"
+    xavs-ansible deploy --tags keystone-fernet-rotate
+    ```
+
+    **Resolution**: After rotation, verify validation works:
+    ```bash title="Issue and validate a token"
+    TOKEN=$(openstack token issue -f value -c id)
+    openstack token show $TOKEN
+    ```
+    <Check>Token validates successfully on all Identity API nodes.</Check>
+  </Accordion>
+
+  <Accordion title="All services returning 401 Unauthorized" icon="lock">
+    **Cause**: The Identity API is unreachable, or all Identity API nodes are down.
+
+    **Diagnose**:
+    ```bash title="Check Identity API container status"
+    docker ps --filter name=keystone
+    ```
+
+    ```bash title="Test Identity API directly"
+    curl -s https://api.<your-domain>:5000/v3 | python3 -m json.tool
+    ```
+
+    **Resolution**: Restart the Identity service via XDeploy if containers are stopped:
+    ```bash title="Restart Identity containers"
+    xavs-ansible deploy --tags keystone
+    ```
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## LDAP Authentication Issues
+
+<AccordionGroup>
+  <Accordion title="LDAP users cannot authenticate" icon="network">
+    **Cause**: LDAP connection failure, incorrect bind credentials, or user not in the
+    configured `user_tree_dn`.
+
+    **Diagnose**: Test the LDAP connection from the Identity API node:
+    ```bash title="Test LDAP connectivity"
+    ldapsearch -x -H ldap://ldap.example.com \
+      -D "cn=xloud-svc,dc=example,dc=com" \
+      -w "$LDAP_PASSWORD" \
+      -b "ou=Users,dc=example,dc=com" \
+      "(sAMAccountName=alice)"
+    ```
+    Confirm the user exists in the expected OU and the bind account has read access.
+
+    **Check Identity API logs**:
+    ```bash title="View Identity API logs for LDAP errors"
+    docker logs keystone --tail 100 | grep -i ldap
+    ```
+  </Accordion>
+
+  <Accordion title="LDAP users not appearing in user list" icon="users">
+    **Cause**: The `user_tree_dn` does not match the OU where users are located, or
+    the `user_id_attribute` is set incorrectly for your directory schema.
+
+    **Resolution**: Verify the LDAP configuration matches your directory schema:
+    ```bash title="Check keystone LDAP configuration"
+    docker exec keystone grep -A 30 "\[ldap\]" /etc/keystone/keystone.conf
+    ```
+    Update the configuration via XDeploy globals and redeploy if attributes are incorrect.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Service Catalog Issues
+
+<AccordionGroup>
+  <Accordion title="Service catalog returns wrong endpoint" icon="route">
+    **Cause**: An endpoint was registered with an incorrect URL or interface type.
+
+    **Diagnose**:
+    ```bash title="List endpoints for a service"
+    openstack endpoint list --service compute
+    ```
+    Identify the incorrect endpoint by its ID and update the URL:
+    ```bash title="Update endpoint URL"
+    openstack endpoint set \
+      --url https://correct-url:8774/v2.1 \
+      <ENDPOINT_ID>
+    ```
+  </Accordion>
+
+  <Accordion title="CLI resolves to internal endpoint from external network" icon="globe">
+    **Cause**: The default endpoint interface is `public` but the CLI is resolving to
+    `internal` due to environment variable override.
+
+    **Diagnose**:
+    ```bash title="Check current endpoint interface setting"
+    echo $OS_ENDPOINT_TYPE
+    echo $OS_INTERFACE
+    ```
+
+    **Resolution**: Unset the override or set it explicitly to `public`:
+    ```bash title="Set interface to public"
+    export OS_INTERFACE=public
+    openstack catalog list
+    ```
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Federation Issues
+
+<AccordionGroup>
+  <Accordion title="SAML authentication fails with mapping error" icon="link">
+    **Cause**: IdP attributes do not match the mapping rules, or the `remote-id` does not
+    match the IdP's entity ID.
+
+    **Diagnose**: Check the Identity API logs for mapping evaluation errors:
+    ```bash title="View federation errors in Identity logs"
+    docker logs keystone --tail 200 | grep -i "federation\|mapping\|saml"
+    ```
+
+    **Resolution**: Verify the mapping rules match the attributes your IdP sends.
+    Use the mapping walkthrough API to test rules:
+    ```bash title="Test mapping rules"
+    openstack mapping validate \
+      --rules mapping-rules.json \
+      --properties @test-assertion.json \
+      corporate-mapping
+    ```
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Permission and Scope Errors
+
+<AccordionGroup>
+  <Accordion title="403 Forbidden on admin operations" icon="lock">
+    **Cause**: The user has the `admin` role in the project but not at the system or domain
+    scope required for administrative operations.
+
+    **Resolution**: Grant system-scope admin access:
+    ```bash title="Grant system admin role"
+    openstack role add \
+      --user alice \
+      --system all \
+      admin
+    ```
+
+    <Warning>
+      System-scope admin grants full control over all domains and projects. Reserve this
+      assignment for platform administrators only.
+    </Warning>
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Token Configuration" href="/services/identity/token-config" color="#197560">
+    Configure Fernet key rotation to prevent token validation failures.
+  </Card>
+  <Card title="Authentication Backends" href="/services/identity/auth-backends" color="#197560">
+    Review LDAP and federation backend configuration options.
+  </Card>
+  <Card title="Service Catalog" href="/services/identity/service-catalog" color="#197560">
+    Manage and correct endpoint registrations in the service catalog.
+  </Card>
+  <Card title="Security Hardening" href="/services/identity/security" color="#197560">
+    Apply security best practices to prevent future authentication issues.
+  </Card>
+</CardGroup>

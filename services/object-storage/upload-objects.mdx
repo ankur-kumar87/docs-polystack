@@ -1,0 +1,172 @@
+---
+title: "Upload and Manage Objects"
+description: "Upload, download, list, update, and delete objects in Xloud Object Storage containers using the Dashboard and CLI. Includes metadata and bulk operations."
+sidebarTitle: "Upload Objects"
+---
+
+import PrerequisitesAuth from '/snippets/prerequisites-auth.mdx';
+
+## Overview
+
+Objects are the files stored within your containers. Each object has a name, payload,
+content type, and optional custom metadata. Objects can be any size — files over 5 GB
+require the Large Object mechanism (see [Large Objects](/services/object-storage/large-objects)).
+
+<PrerequisitesAuth />
+
+<Note>
+  A container must exist before objects can be uploaded. See
+  [Create a Container](/services/object-storage/create-container) to provision one.
+</Note>
+
+---
+
+## Upload Objects
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Open the container">
+        Navigate to **Storage > Object Storage** and click the container name.
+      </Step>
+      <Step title="Upload files">
+        Click **Upload File** and select the file from your local filesystem. For multiple
+        files, use the **Upload Folder** option to upload directory contents recursively.
+
+        <Tip>
+          Set custom metadata during upload by expanding the **Custom Metadata** section.
+          Add key-value pairs for tagging, workflow state, or application-specific properties.
+        </Tip>
+      </Step>
+      <Step title="Confirm upload">
+        Uploaded objects appear in the container file browser with their size and last
+        modified timestamp.
+
+        <Check>Object is listed in the container with the correct file size.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    <CodeGroup>
+    ```bash title="Upload a single file"
+    openstack object create app-backups backup-2025-03-18.tar.gz
+    ```
+    ```bash title="Upload with custom metadata"
+    openstack object create \
+      --property backup-type=daily \
+      --property retention-days=90 \
+      app-backups backup-2025-03-18.tar.gz
+    ```
+    ```bash title="Upload all files from a directory"
+    for f in /backups/*.gz; do
+      openstack object create app-backups "$f"
+    done
+    ```
+    </CodeGroup>
+  </Tab>
+</Tabs>
+
+---
+
+## Download Objects
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    Navigate to the container, click the object name, and click **Download**.
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Download an object"
+    openstack object save app-backups backup-2025-03-18.tar.gz
+    ```
+
+    ```bash title="Download to a specific path"
+    openstack object save \
+      --file /tmp/backup-restore.tar.gz \
+      app-backups backup-2025-03-18.tar.gz
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## List and Inspect Objects
+
+<CodeGroup>
+```bash title="List objects in a container"
+openstack object list app-backups
+```
+```bash title="Show object metadata"
+openstack object show app-backups backup-2025-03-18.tar.gz
+```
+```bash title="List with long format (size, date)"
+openstack object list app-backups --long
+```
+```bash title="Filter by prefix"
+openstack object list app-backups --prefix backup-2025
+```
+</CodeGroup>
+
+---
+
+## Generate Temporary URLs
+
+Temporary URLs provide time-limited access to objects without requiring authentication
+tokens — useful for sharing objects with external parties.
+
+<Tabs>
+  <Tab title="Setup temp URL key" icon="key">
+    First, configure a temporary URL signing key on the account:
+    ```bash title="Set temporary URL key"
+    openstack object store account set \
+      --property Temp-URL-Key=$(openssl rand -hex 32)
+    ```
+    Store this key securely — it is required to generate all temporary URLs.
+  </Tab>
+  <Tab title="Generate a temp URL" icon="link">
+    ```bash title="Generate a 1-hour temporary download URL"
+    openstack object create app-backups backup.tar.gz  # ensure object exists
+
+    # Using the swift CLI for temp URL generation
+    swift tempurl GET 3600 \
+      /v1/<account>/app-backups/backup.tar.gz \
+      <temp-url-key>
+    ```
+
+    <Tip>
+      Set `Temp-URL-Key-2` as a secondary key to allow key rotation without invalidating
+      in-flight temporary URLs.
+    </Tip>
+  </Tab>
+</Tabs>
+
+---
+
+## Delete Objects
+
+<CodeGroup>
+```bash title="Delete a single object"
+openstack object delete app-backups backup-2025-03-18.tar.gz
+```
+```bash title="Delete multiple objects"
+openstack object delete app-backups obj1 obj2 obj3
+```
+</CodeGroup>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Access Control" href="/services/object-storage/access-control" color="#197560">
+    Configure ACLs to control who can access the container and its objects
+  </Card>
+  <Card title="Large Objects" href="/services/object-storage/large-objects" color="#197560">
+    Upload files larger than 5 GB using SLO or DLO
+  </Card>
+  <Card title="Versioning" href="/services/object-storage/versioning" color="#197560">
+    Protect objects from accidental overwrites with version retention
+  </Card>
+  <Card title="Troubleshooting" href="/services/object-storage/troubleshooting" color="#197560">
+    Resolve upload failures and access errors
+  </Card>
+</CardGroup>

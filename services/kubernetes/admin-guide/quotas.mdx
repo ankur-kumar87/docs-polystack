@@ -1,0 +1,163 @@
+---
+title: "Kubernetes Quotas"
+description: "Manage Xloud K8SaaS per-project cluster quotas — set cluster count limits, monitor usage, and coordinate with compute quotas for node capacity planning."
+sidebarTitle: "Quotas"
+---
+
+## Overview
+
+K8SaaS enforces per-project cluster quotas independent of compute quotas. A cluster quota
+limits the total number of clusters a project can create. Cluster nodes also consume
+compute quota (vCPU, RAM, and storage) — both quota systems must have sufficient headroom
+for cluster creation to succeed. This page covers setting K8SaaS quotas, monitoring usage,
+and coordinating limits across both services.
+
+<Note>
+  **Prerequisites**
+  - Cloud administrator role
+  - Project IDs for the projects you wish to quota
+</Note>
+
+---
+
+## Default Quota
+
+By default, K8SaaS applies a platform-wide quota of **20 clusters** per project. Projects
+without an explicit quota record use this default.
+
+---
+
+## Set a Project Quota
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Navigate to Quotas" icon="compass">
+        Navigate to
+        **Container (admin view) > Quotas**.
+      </Step>
+      <Step title="Create or edit quota" icon="sliders">
+        Click **Create Quota** and fill in:
+
+        | Field | Description | Example |
+        |-------|-------------|---------|
+        | **Project** | Target project | `production-team` |
+        | **Hard Limit (Clusters)** | Maximum clusters allowed | `10` |
+      </Step>
+      <Step title="Save" icon="circle-check">
+        Click **Create**. The quota takes effect immediately for the selected project.
+
+        <Check>Project quota is set and visible in the quota list.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Create a quota for a project"
+    openstack coe quota create \
+      --project <project-id> \
+      --hard-limit 10 \
+      kubernetes
+    ```
+
+    ```bash title="Show quota for a project"
+    openstack coe quota show \
+      --project <project-id> \
+      kubernetes
+    ```
+
+    ```bash title="List all project quotas"
+    openstack coe quota list
+    ```
+
+    <Tip>
+      Set conservative limits for development projects (3–5 clusters) and higher
+      limits for production projects (10–20). Coordinate with compute quota to
+      ensure sufficient resources for the maximum expected cluster footprint.
+    </Tip>
+  </Tab>
+</Tabs>
+
+---
+
+## Compute Quota Coordination
+
+K8SaaS cluster nodes consume compute resources. Use the following formula to estimate
+the compute quota needed for a project's K8SaaS allocation:
+
+```
+Total vCPU needed = (master_flavor_vcpu × master_count + worker_flavor_vcpu × worker_count) × max_clusters
+Total RAM needed  = (master_flavor_ram_gb × master_count + worker_flavor_ram_gb × worker_count) × max_clusters
+```
+
+Example: 5 clusters × (3 masters × 8 vCPU + 6 workers × 4 vCPU) = 5 × (24 + 24) = 240 vCPU
+
+```bash title="Check current project compute quota"
+openstack quota show --detail <project-id>
+```
+
+```bash title="Increase compute quota for a project"
+openstack quota set \
+  --cores 240 \
+  --ram 491520 \
+  <project-id>
+```
+
+---
+
+## Monitor Quota Usage
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    Navigate to **Container (admin view) > Quotas** to view current usage versus limit
+    for all projects. Click a project to see individual cluster details.
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Show quota usage for a specific project"
+    openstack coe quota show \
+      --project <project-id> \
+      kubernetes
+    ```
+
+    The output shows `hard_limit` and `in_use` values:
+
+    ```
+    hard_limit = 10
+    in_use = 3
+    ```
+
+    ```bash title="Count active clusters in a project"
+    openstack coe cluster list --all \
+      | grep <project-name> | wc -l
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Update an Existing Quota
+
+```bash title="Update an existing cluster quota"
+openstack coe quota update \
+  --project <project-id> \
+  --hard-limit 20 \
+  kubernetes
+```
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Monitoring" href="/services/kubernetes/admin-guide/monitoring" color="#197560">
+    Monitor cluster health and resource consumption across all projects.
+  </Card>
+  <Card title="Template Management" href="/services/kubernetes/admin-guide/template-management" color="#197560">
+    Create public templates that standardize cluster resource usage.
+  </Card>
+  <Card title="Security" href="/services/kubernetes/admin-guide/security" color="#197560">
+    Apply RBAC policies to restrict cluster operations per role.
+  </Card>
+  <Card title="Troubleshooting" href="/services/kubernetes/admin-guide/troubleshooting" color="#197560">
+    Resolve quota-related cluster creation failures.
+  </Card>
+</CardGroup>

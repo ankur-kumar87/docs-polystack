@@ -1,0 +1,127 @@
+---
+title: "Kubernetes (K8SaaS) CLI Reference"
+description: "Complete openstack coe cluster CLI commands for managing Xloud Kubernetes clusters — create, scale, upgrade, and manage cluster templates."
+sidebarTitle: "CLI Reference"
+---
+
+## Overview
+
+The `openstack coe cluster` and `openstack coe cluster template` command groups manage the full lifecycle of Kubernetes clusters.
+
+<Note>
+  **Prerequisites**
+  - CLI installed and authenticated — see [CLI Setup](/cli-setup)
+  - Python magnumclient installed: `pip install python-magnumclient`
+</Note>
+
+---
+
+## Cluster Templates
+
+<CodeGroup>
+```bash title="List cluster templates"
+openstack coe cluster template list
+```
+
+```bash title="Create cluster template"
+openstack coe cluster template create \
+  --name k8s-ubuntu \
+  --image Ubuntu-22.04 \
+  --keypair my-keypair \
+  --external-network external \
+  --dns-nameserver 8.8.8.8 \
+  --flavor m1.medium \
+  --master-flavor m1.large \
+  --docker-volume-size 50 \
+  --network-driver flannel \
+  --coe kubernetes
+```
+
+```bash title="Show template"
+openstack coe cluster template show k8s-ubuntu
+```
+
+```bash title="Delete template"
+openstack coe cluster template delete k8s-ubuntu
+```
+</CodeGroup>
+
+---
+
+## Clusters
+
+<CodeGroup>
+```bash title="List clusters"
+openstack coe cluster list
+```
+
+```bash title="Create cluster"
+openstack coe cluster create \
+  --cluster-template k8s-ubuntu \
+  --keypair my-keypair \
+  --master-count 1 \
+  --node-count 3 \
+  my-cluster
+```
+
+```bash title="Show cluster"
+openstack coe cluster show my-cluster
+```
+
+```bash title="Get kubeconfig"
+openstack coe cluster config my-cluster
+```
+
+```bash title="Scale worker nodes"
+openstack coe cluster resize my-cluster --node-count 5
+```
+
+```bash title="Upgrade cluster"
+openstack coe cluster upgrade my-cluster <new-template>
+```
+
+```bash title="Delete cluster"
+openstack coe cluster delete my-cluster
+```
+</CodeGroup>
+
+---
+
+## Node Groups
+
+<CodeGroup>
+```bash title="List node groups"
+openstack coe nodegroup list my-cluster
+```
+
+```bash title="Create node group"
+openstack coe nodegroup create my-cluster \
+  --name gpu-workers \
+  --flavor m1.gpu \
+  --node-count 2 \
+  --min-nodes 1 \
+  --max-nodes 5
+```
+
+```bash title="Scale node group"
+openstack coe nodegroup update my-cluster gpu-workers \
+  --node-count 3
+```
+
+```bash title="Delete node group"
+openstack coe nodegroup delete my-cluster gpu-workers
+```
+</CodeGroup>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Deploy Cluster Guide" href="/services/kubernetes/user-guide/deploy-cluster" color="#197560">
+    Step-by-step guide to deploying your first cluster
+  </Card>
+  <Card title="Scale Cluster Guide" href="/services/kubernetes/user-guide/scale-cluster" color="#197560">
+    Add and remove worker nodes
+  </Card>
+</CardGroup>

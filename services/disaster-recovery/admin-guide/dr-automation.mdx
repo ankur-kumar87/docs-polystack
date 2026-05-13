@@ -1,0 +1,233 @@
+---
+title: "DR Automation"
+description: "Configure automatic failover triggers, recovery runbook scripts, and replication scheduling to reduce manual intervention during XDR failover events."
+sidebarTitle: "DR Automation"
+---
+
+## Overview
+
+DR automation reduces manual intervention during failover by orchestrating the
+recovery sequence, updating external systems, and validating service health
+automatically. Well-tested automation is the difference between a 30-minute RTO
+and a 3-hour one.
+
+<Note>
+  **Prerequisites**
+  - Recovery plans created and in `ACTIVE` replication status
+  - Recovery runbook scripts tested against DR test instances before production use
+  - Automation hook scripts stored in a version-controlled location accessible from DR site
+</Note>
+
+---
+
+## Automatic Failover Triggers
+
+Configure health checks that trigger failover automatically when the primary site
+is unreachable, without requiring manual operator intervention.
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    Navigate to **Disaster Recovery → Recovery Plans → [Plan] → Automatic Triggers**:
+
+    | Setting | Description |
+    |---------|-------------|
+    | **Health Check URL** | Primary site endpoint to poll (e.g., load balancer VIP) |
+    | **Check Interval** | How often to poll (default: 30 seconds) |
+    | **Failure Threshold** | Consecutive failures before triggering (default: 3) |
+    | **Secondary Check** | Optional second endpoint — both must fail before triggering |
+    | **Notification Channel** | XIMP alert channel to notify when automatic failover begins |
+
+    <Warning>
+      Automatic failover bypasses the manual confirmation step. Enable only for
+      workloads where downtime cost exceeds the risk of an unnecessary failover.
+      Configure the failure threshold high enough to avoid triggering on transient
+      network blips.
+    </Warning>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    <Info>
+      XDR disaster recovery operations are managed exclusively through the XDR Dashboard.
+      CLI access is not available for DR operations. Use the **Dashboard** tab above to
+      configure automatic failover triggers.
+    </Info>
+  </Tab>
+</Tabs>
+
+---
+
+## Recovery Runbook Scripts
+
+Runbook scripts add application-level coordination to the automated recovery
+sequence. Scripts run before or after each resource group recovers.
+
+### Script Environment
+
+Scripts receive the following environment variables from the XDR runtime:
+
+| Variable | Value |
+|----------|-------|
+| `XDR_PLAN_NAME` | Name of the recovery plan |
+| `XDR_SITE` | Name of the recovery site (DR site) |
+| `XDR_GROUP_NAME` | Name of the current resource group |
+| `XDR_RESOURCE_IDS` | Space-separated list of recovered resource IDs |
+| `XDR_EVENT_ID` | Unique identifier for this failover event |
+| `XDR_RECOVERY_POINT` | Timestamp of the recovery point used |
+
+### Script Requirements
+
+- Must exit 0 for success — any non-zero exit halts recovery and triggers an alert
+- Timeout: 300 seconds (configurable per hook)
+- Must be idempotent — scripts may be retried after transient failures
+- Output is captured in the runbook log — keep output concise and meaningful
+
+### Example Scripts
+
+<AccordionGroup>
+  <Accordion title="DNS update after recovery" icon="globe">
+    ```bash title="post-recover: update internal DNS"
+    #!/bin/bash
+    # Updates internal DNS records to point to recovered DR instances
+    # Runs as: Post-Recover hook on databases group
+    # XDR injects environment variables at runtime
+
+    set -euo pipefail
+
+    # XDR_RESOURCE_IDS and XDR_SITE are provided by the XDR runtime
+    # Resource IPs are resolved from the recovery metadata
+    for id in $XDR_RESOURCE_IDS; do
+      # Parse recovery metadata for IP and hostname
+      ip=$(echo "$XDR_RECOVERY_METADATA" | jq -r ".resources[\"$id\"].ip")
+      hostname=$(echo "$XDR_RECOVERY_METADATA" | jq -r ".resources[\"$id\"].hostname")
+
+      nsupdate -k /etc/xavs/dns.key <<EOF
+    server 10.0.1.71
+    update delete ${hostname}.internal A
+    update add ${hostname}.internal 60 A ${ip}
+    send
+    EOF
+
+      echo "Updated DNS: ${hostname}.internal -> ${ip}"
+    done
+
+    echo "DNS update complete for group: $XDR_GROUP_NAME"
+    ```
+  </Accordion>
+  <Accordion title="Service registry update" icon="list">
+    ```bash title="post-recover: update service registry"
+    #!/bin/bash
+    # Registers recovered instances in the internal service registry
+    # Runs as: Post-Recover hook on app-servers group
+    # XDR injects environment variables at runtime
+
+    set -euo pipefail
+
+    REGISTRY_URL="http://service-registry.internal:8500"
+
+    # XDR_RESOURCE_IDS and XDR_RECOVERY_METADATA are provided by the XDR runtime
+    for id in $XDR_RESOURCE_IDS; do
+      ip=$(echo "$XDR_RECOVERY_METADATA" | jq -r ".resources[\"$id\"].ip")
+      service=$(echo "$XDR_RECOVERY_METADATA" | jq -r ".resources[\"$id\"].tags[\"service-name\"]")
+
+      curl -sf -X PUT "${REGISTRY_URL}/v1/agent/service/register" \
+        -H "Content-Type: application/json" \
+        -d "{\"ID\": \"${id}\", \"Name\": \"${service}\", \"Address\": \"${ip}\"}"
+
+      echo "Registered: $service at $ip"
+    done
+    ```
+  </Accordion>
+  <Accordion title="Pre-failover notification" icon="send">
+    ```bash title="pre-failover: notify on-call team"
+    #!/bin/bash
+    # Sends alert to on-call channel before failover begins
+    # Runs as: Pre-Failover hook on all groups
+
+    WEBHOOK_URL="https://hooks.<your-domain>/alert"
+
+    curl -sf -X POST "$WEBHOOK_URL" \
+      -H "Content-Type: application/json" \
+      -d "{
+        \"event\": \"DR_FAILOVER_STARTING\",
+        \"plan\": \"$XDR_PLAN_NAME\",
+        \"site\": \"$XDR_SITE\",
+        \"event_id\": \"$XDR_EVENT_ID\",
+        \"recovery_point\": \"$XDR_RECOVERY_POINT\"
+      }"
+
+    echo "On-call notified for failover event $XDR_EVENT_ID"
+    ```
+  </Accordion>
+</AccordionGroup>
+
+### Attaching Scripts to Resource Groups
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    Navigate to **Disaster Recovery → Recovery Plans → [Plan] → [Group] → Hooks**
+    and click **Add Hook**. Paste the script content or reference a stored script path.
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    <Info>
+      XDR disaster recovery operations are managed exclusively through the XDR Dashboard.
+      CLI access is not available for DR operations. Use the **Dashboard** tab above to
+      attach scripts to resource groups.
+    </Info>
+  </Tab>
+</Tabs>
+
+---
+
+## Replication Scheduling
+
+For asynchronous replication, configure replication windows to control when
+replication traffic runs and how much bandwidth it consumes.
+
+Navigate to **Disaster Recovery → Recovery Plans → [Plan] → Replication Schedule**:
+
+| Setting | Description |
+|---------|-------------|
+| **Mode** | `Continuous` — replicate in real time; `Scheduled` — replicate in defined windows |
+| **Schedule** | Cron expression for scheduled replication windows |
+| **Bandwidth Cap** | Limit throughput during peak production hours |
+
+Configure these settings directly in the replication schedule panel for each recovery plan.
+
+<Warning>
+  Scheduled replication increases RPO to the interval between replication windows.
+  Use continuous replication for any workload with an RPO shorter than the
+  replication interval.
+</Warning>
+
+---
+
+## Testing Automation
+
+Always validate runbook scripts with a DR test before relying on them in a real failover.
+Navigate to **Disaster Recovery → Protection Plans → [Plan]** and click **Test Failover**
+to exercise runbook scripts in an isolated environment. After the test completes, review
+the runbook execution log in **Disaster Recovery → Test Sessions → [Session] → Runbook Log**.
+
+<Tip>
+  After any change to a runbook script, run a DR test immediately to confirm the
+  updated script completes successfully. A script that fails silently during a test
+  will halt recovery during an actual disaster.
+</Tip>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Recovery Plans" href="/services/disaster-recovery/admin-guide/recovery-plans" color="#197560">
+    Configure resource groups and health checks
+  </Card>
+  <Card title="Monitoring" href="/services/disaster-recovery/admin-guide/monitoring" color="#197560">
+    Alert on automation failures and replication lag
+  </Card>
+  <Card title="XDR User Guide — DR Testing" href="/services/disaster-recovery/user-guide/test-dr" color="#197560">
+    Run DR tests to validate runbook scripts and measure RTO
+  </Card>
+  <Card title="Troubleshooting" href="/services/disaster-recovery/admin-guide/troubleshooting" color="#197560">
+    Diagnose runbook script failures and unexpected failovers
+  </Card>
+</CardGroup>

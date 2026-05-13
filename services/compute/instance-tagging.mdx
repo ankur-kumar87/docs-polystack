@@ -1,0 +1,461 @@
+---
+title: "Instance Tagging"
+description: "Add, edit, and delete user-defined tags on Xloud Compute instances. Use tags to organize instances, drive automation, and filter inventory through the CLI and APIs."
+sidebarTitle: "Instance Tagging"
+---
+
+## Overview
+
+Instance tags are short, user-defined labels you attach to a virtual machine.
+They are free-form strings you can use to mark environment, owner, application
+tier, cost center, lifecycle stage, or any custom taxonomy your team needs.
+
+Tags are stored on the instance record itself, so they travel with the VM
+across reboots, snapshots, migrations, and ownership changes.
+
+<iframe
+  className="w-full aspect-video rounded-xl"
+  src="https://www.youtube.com/embed/eXIcQ4Djp6Q?list=PLZUll47Vmx_LL4_kaKK4Mb30B3Zh_ORii"
+  title="How to Add, Edit, and Delete Instance Tags on Xloud"
+  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+  allowFullScreen
+></iframe>
+
+<Note>
+  **Prerequisites**
+  - An instance in `Active`, `Paused`, `Suspended`, or `Stopped` state.
+  - Permission to update server tags
+    (`os_compute_api:os-server-tags:update_all`). This is granted to project
+    members by default.
+</Note>
+
+---
+
+## Tag Rules
+
+| Rule | Limit |
+|------|-------|
+| Maximum tags per instance | 50 |
+| Maximum characters per tag | 60 |
+| Forbidden characters | `/` (forward slash), `,` (comma) |
+| Case sensitivity | Not case sensitive — `Prod` and `prod` are the same tag |
+| Duplicates | Not allowed (case-insensitive comparison) |
+| Whitespace | Allowed inside a tag, trimmed at the edges |
+
+<Tip>
+  Establish a tagging convention before you scale. Decide upfront whether to
+  use `env:prod` or `prod`, whether to use `team-platform` or `platform`, and
+  publish the convention internally. Consistent tags pay off when filtering
+  hundreds of VMs from the CLI or driving Terraform/Ansible from tags.
+</Tip>
+
+---
+
+## Where Tags Appear in the Dashboard
+
+| Location | Behaviour |
+|----------|-----------|
+| **Compute > Instances** list | A **Tags** column shows each tag as a colored pill. The column is hideable from the column-picker if you do not need it. |
+| **Instance detail page** | The **Tags Info** card on the BaseDetail tab lists every tag attached to the VM. Empty state shows a dash. |
+| **More menu on the instance row** | Contains **Modify Instance Tags**, the single dialog for all add/edit/delete actions. |
+
+<Note>
+  The Dashboard list page does not currently expose a tag-based search filter.
+  To filter by tag, use the CLI procedures below — the API supports tag
+  filtering and is the recommended path for inventory queries.
+</Note>
+
+---
+
+## Add, Edit, and Delete Tags
+
+All three actions — adding a new tag, replacing existing tags, and removing
+tags — happen inside a single dialog called **Modify Instance Tags**.
+The dialog shows the current tags as pills; you mutate the set and click
+**Confirm**, and the platform applies the new set in one operation.
+
+### Add Tags
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Open the Modify Instance Tags dialog">
+        Navigate to **Compute > Instances**. On the row of the instance you
+        want to tag, open the **More** menu and click **Modify Instance Tags**.
+      </Step>
+      <Step title="Type a tag and press Enter">
+        In the tag input field, type the tag value and press **Enter**. The
+        tag becomes a pill in the list. Repeat for each tag you want to add.
+
+        The dialog enforces:
+        - Maximum 50 tags per instance.
+        - Maximum 60 characters per tag.
+        - No forward slash `/` or comma `,`.
+        - No duplicate (case-insensitive) tags.
+
+        Invalid tags are rejected immediately with an inline error message.
+      </Step>
+      <Step title="Save the changes">
+        Click **Confirm**. The platform updates the VM's tag set and the
+        dialog closes.
+
+        <Check>The new tags appear in the **Tags** column and on the instance detail page within a few seconds.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    The `openstack` CLI offers two patterns. `openstack server set --tag`
+    adds a single tag without affecting existing tags. `openstack server set
+    --tags` replaces the entire tag set in one call.
+
+    ```bash title="Source credentials"
+    source openrc.sh
+    ```
+
+    <CodeGroup>
+    ```bash title="Add a single tag (preserves existing)"
+    openstack server set --tag production <INSTANCE_ID>
+    ```
+    ```bash title="Add several tags in one call"
+    openstack server set \
+      --tag production \
+      --tag web-tier \
+      --tag team-platform \
+      <INSTANCE_ID>
+    ```
+    ```bash title="Replace the entire tag set"
+    openstack server set --tags "production,web-tier,team-platform" <INSTANCE_ID>
+    ```
+    </CodeGroup>
+
+    <Check>
+      ```bash
+      openstack server show <INSTANCE_ID> -c tags
+      ```
+      Output lists every tag attached to the VM.
+    </Check>
+  </Tab>
+</Tabs>
+
+### Edit Tags
+
+Editing a tag means removing the old value and adding the new value — there
+is no in-place rename.
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Open Modify Instance Tags">
+        From **Compute > Instances**, open the **More** menu on the row and
+        click **Modify Instance Tags**.
+      </Step>
+      <Step title="Remove the old value">
+        Click the **X** on the tag you want to rename. The pill is removed
+        from the list. The change is not saved until you click **Confirm**.
+      </Step>
+      <Step title="Type the new value">
+        Type the new tag value and press **Enter**.
+      </Step>
+      <Step title="Save">
+        Click **Confirm**. Both changes — the removal and the addition —
+        apply in one update.
+
+        <Check>The instance's **Tags** column shows the new value and no longer shows the old one.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Rename a tag (remove old, add new in one call)"
+    openstack server unset --tag old-name <INSTANCE_ID>
+    openstack server set --tag new-name <INSTANCE_ID>
+    ```
+
+    <Tip>
+      For atomic edits, replace the whole tag set with `--tags`:
+      ```bash
+      openstack server set --tags "production,web-tier,team-payments" <INSTANCE_ID>
+      ```
+      Anything not listed is removed; anything new is added.
+    </Tip>
+  </Tab>
+</Tabs>
+
+### Delete Tags
+
+You can remove a single tag or clear every tag from a VM.
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Open Modify Instance Tags">
+        From **Compute > Instances**, open the **More** menu on the row and
+        click **Modify Instance Tags**.
+      </Step>
+      <Step title="Remove tags">
+        - To remove a single tag, click the **X** on its pill.
+        - To remove every tag, click **X** on each pill until the list is
+          empty.
+      </Step>
+      <Step title="Save">
+        Click **Confirm**. The selected tags are deleted from the VM.
+
+        <Check>The instance no longer shows the removed tags.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    <CodeGroup>
+    ```bash title="Remove a single tag"
+    openstack server unset --tag staging <INSTANCE_ID>
+    ```
+    ```bash title="Remove several tags in one call"
+    openstack server unset --tag staging --tag temporary <INSTANCE_ID>
+    ```
+    ```bash title="Clear ALL tags from an instance"
+    openstack server set --tags "" <INSTANCE_ID>
+    ```
+    </CodeGroup>
+
+    <Check>
+      ```bash
+      openstack server show <INSTANCE_ID> -c tags
+      ```
+      Output shows an empty list.
+    </Check>
+  </Tab>
+</Tabs>
+
+<Warning>
+  Tag changes apply immediately. There is no undo. Removing a tag that is
+  used by an automation system (Terraform, Ansible inventory, monitoring
+  rules) can cause that automation to lose track of the VM. Verify your
+  downstream tooling before bulk-removing tags in production.
+</Warning>
+
+---
+
+## Key-Value Pairs
+
+Tags in the Dashboard are **plain strings** (one label per pill). Some teams
+need true `key=value` pairs — for example, `env=production`, `team=payments`,
+`cost-center=R&D-12` — so they can branch automation, dashboards, or RBAC
+rules on the *value* of a key rather than scanning a flat list.
+
+Today on Xloud:
+
+| Path | What you get |
+|------|--------------|
+| **Dashboard (Modify Instance Tags)** | Plain strings only. By convention you can write `env=production` as a single string and split on `=` in your tooling, but the platform stores it as one opaque label. |
+| **CLI** | True key-value pairs are supported via the `--property` flag, which writes server metadata. Available today. |
+| **Dashboard (XCONNECT v2)** | A dedicated **Custom Metadata** editor for instances is on the roadmap for XCONNECT v2 — the next-generation Xloud Dashboard. It will surface the same key-value metadata as a first-class form on every instance row, so you will not need the CLI for this. |
+
+<Note>
+  Server metadata and instance tags are two different stores under the hood.
+  Tags are unordered string labels; metadata is a key-value dictionary. They
+  can coexist on the same VM and serve complementary purposes.
+</Note>
+
+### Add Key-Value Pairs from the CLI
+
+```bash title="Source credentials"
+source openrc.sh
+```
+
+<CodeGroup>
+```bash title="Set one or more key=value pairs"
+openstack server set \
+  --property env=production \
+  --property team=payments \
+  --property cost-center=R\&D-12 \
+  <INSTANCE_ID>
+```
+```bash title="Show all key-value pairs on an instance"
+openstack server show <INSTANCE_ID> -c properties
+```
+```bash title="Update an existing pair (same flag, new value)"
+openstack server set --property env=staging <INSTANCE_ID>
+```
+```bash title="Delete a single key"
+openstack server unset --property env <INSTANCE_ID>
+```
+</CodeGroup>
+
+<Check>
+  ```bash
+  openstack server show <INSTANCE_ID> -c properties
+  ```
+  Output prints each `key='value'` pair on its own line.
+</Check>
+
+<Tip>
+  Use **tags** for fast yes/no filtering — "is this VM in the production
+  group?". Use **key-value metadata** when the value matters — "which
+  environment is this VM in?" or "who owns this VM?". Many teams use both:
+  a coarse `production` tag for filtering and `env=production` metadata
+  for display.
+</Tip>
+
+---
+
+## Where You Can Use Tags
+
+Tags are not exclusive to instances. The Xloud Platform attaches the same
+flat-string tag concept to several resource types so you can apply the
+same naming convention across the whole cluster.
+
+| Resource | Tags supported | Where in the Dashboard | CLI |
+|----------|---------------|------------------------|-----|
+| **Instance** (Compute) | Yes — string tags | Compute > Instances > More > Modify Instance Tags | `openstack server set --tag` |
+| **Image** (Image Service) | Yes — string tags | Compute > Images (CLI is the primary path today) | `openstack image set --tag` |
+| **Project** (Identity) | Yes — string tags | Identity > Projects > Modify Project Tags | `openstack project set --tag` |
+| **Network** (Networking) | Yes — string tags | Networking views (CLI is the primary path today) | `openstack network set --tag` |
+| **Subnet, Router, Port, Floating IP, Security Group** (Networking) | Yes — string tags | CLI is the primary path today | `openstack <resource> set --tag` |
+| **Stack** (Orchestration) | Yes — string tags at create time | Set in the Heat template's `tags` parameter | `openstack stack create --tags` |
+| **Flavor** (Compute) | No native tags — use **metadata / extra_specs** instead | Compute > Flavors > Manage Metadata (admin) | `openstack flavor set --property` |
+| **Volume** (Block Storage) | No native tags — use **metadata** instead | Storage > Volumes > Manage Metadata | `openstack volume set --property` |
+| **Host Aggregate** (Compute, admin) | No native tags — use **metadata** instead | Compute > Host Aggregates > Manage Metadata | `openstack aggregate set --property` |
+
+<Note>
+  Resources marked "use metadata instead" never had a string-tag concept on
+  this platform — their key-value metadata is the only labelling mechanism.
+  Resources with native tags also support metadata if you need both.
+</Note>
+
+---
+
+## Actions You Can Perform Using Tags
+
+Tags become powerful when you use them as a key for filtering, automation,
+and reporting. The same tag set drives multiple workflows.
+
+### Filter the Instance Inventory by Tag
+
+The Compute API understands four tag filter parameters. The `openstack` CLI
+exposes them as flags on `openstack server list`.
+
+| Flag | Meaning |
+|------|---------|
+| `--tag X` | Return instances that have **all** of these tags. Repeat the flag for AND semantics. |
+| `--tag-any X` | Return instances that have **any** of these tags. Repeat the flag for OR semantics. |
+| `--not-tag X` | Return instances that do **not** have all of these tags. |
+| `--not-tag-any X` | Return instances that do **not** have any of these tags. |
+
+<CodeGroup>
+```bash title="All production web servers (AND)"
+openstack server list --tag production --tag web-tier
+```
+```bash title="Any of staging or development (OR)"
+openstack server list --tag-any staging --tag-any development
+```
+```bash title="Everything except temporary"
+openstack server list --not-tag-any temporary
+```
+```bash title="Production but NOT in the data-engineering team"
+openstack server list --tag production --not-tag team-data-engineering
+```
+</CodeGroup>
+
+<Tip>
+  Combine `--tag` and `--not-tag-any` to get clean inventory slices —
+  for example "production but not deprecated". The same combination via
+  the API drives audit reports and automation triggers.
+</Tip>
+
+### Drive Automation From Tags
+
+Most infrastructure tools can read instance tags directly and use them as
+the grouping key.
+
+| Tool | Pattern |
+|------|---------|
+| **Terraform** | `data "openstack_compute_instance_v2"` filters by tag; outputs feed downstream resources. |
+| **Ansible Dynamic Inventory** | The `openstack` inventory plugin supports `keyed_groups` from `tags`, so a VM tagged `web-tier` lands in an Ansible group called `web-tier` automatically. |
+| **Monitoring (Prometheus + node_exporter)** | Service discovery picks up `tags` as labels, so a Grafana dashboard or alert rule can scope by `environment="production"`. |
+| **Backup scheduling** | Tag a VM with `backup-daily` or `backup-weekly`; the backup runner targets the tag. |
+
+<Note>
+  The Xloud Dashboard does not currently expose a tag filter in its instance
+  search bar. For ad-hoc filtering inside the Dashboard, use the column-picker
+  to display the **Tags** column and search by name, then visually scan the
+  tags. For programmatic inventory queries, use the CLI flags above.
+</Note>
+
+### Use Tags as Lifecycle Markers
+
+A common pattern is to tag VMs with their intended lifetime, then run a
+periodic job that lists VMs with the relevant tag and acts on them.
+
+| Tag pattern | Operator behaviour |
+|-------------|-------------------|
+| `temporary`, `disposable` | Automation deletes after N days. |
+| `do-not-delete`, `protected` | Automation refuses to touch these regardless of other rules. |
+| `expires-2026-12-31` | A scheduled job parses the date and stops the VM on expiry. |
+| `owner:alice@example.com` | Notifications go to the tagged owner before any maintenance. |
+
+---
+
+## Common Tagging Patterns
+
+| Tag Category | Example Tags | Purpose |
+|--------------|--------------|---------|
+| **Environment** | `production`, `staging`, `development`, `testing` | Identify deployment stage |
+| **Team** | `team-platform`, `team-data`, `team-security` | Track ownership |
+| **Application** | `web-frontend`, `api-gateway`, `database`, `cache` | Group by application tier |
+| **Cost Center** | `dept-engineering`, `project-alpha` | Budget tracking and chargeback |
+| **Lifecycle** | `temporary`, `persistent`, `protected`, `do-not-delete` | Cleanup automation |
+| **Compliance** | `pci-dss`, `hipaa`, `internal` | Drive policy and access reviews |
+| **Backup** | `backup-daily`, `backup-weekly`, `no-backup` | Backup scheduler input |
+
+---
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Modify Instance Tags is greyed out">
+    The action is only available when the VM is in `Active`, `Paused`,
+    `Suspended`, or `Stopped` state. If the instance is `Building`,
+    `Error`, `Resizing`, or in any other transient state, wait for it to
+    settle and try again.
+  </Accordion>
+  <Accordion title="Invalid Tag Value error in the dialog">
+    The tag contains a forbidden character. Forward slash `/` and comma
+    `,` are not allowed because they conflict with the API's list
+    separator. Use a hyphen, underscore, or colon instead — for example
+    `env-prod` or `env_prod` instead of `env/prod`.
+  </Accordion>
+  <Accordion title="Duplicate tag name error">
+    Tags are case-insensitive. `Production` and `production` are
+    considered the same tag. The dialog rejects the second entry. Pick
+    a single canonical casing and stick with it.
+  </Accordion>
+  <Accordion title="Tag changes do not appear in the list view">
+    The list view caches results for a few seconds. Refresh the page or
+    re-run `openstack server list` to pick up the latest values. If the
+    delay persists for more than a minute, contact your administrator —
+    the cache layer may need to be cleared.
+  </Accordion>
+  <Accordion title="Permission denied when modifying tags">
+    Your project role does not include
+    `os_compute_api:os-server-tags:update_all`. Ask your administrator
+    to grant the `member` role on the project that owns the VM.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Launch an Instance" icon="server" href="/services/compute/launch-instance">
+    Create new instances and tag them at boot time.
+  </Card>
+  <Card title="Server Groups" icon="layers" href="/services/compute/server-groups">
+    Group instances by placement policy.
+  </Card>
+  <Card title="Instance Snapshots" icon="camera" href="/services/compute/snapshots">
+    Snapshot tagged instances for backup and rollback.
+  </Card>
+  <Card title="Resource Optimizer" icon="sliders" href="/services/optimization">
+    Use tags to scope optimization actions to specific workloads.
+  </Card>
+</CardGroup>

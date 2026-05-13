@@ -1,0 +1,224 @@
+---
+title: "Networking CLI Reference"
+description: "Complete openstack network CLI commands for managing Xloud Networking — networks, subnets, routers, floating IPs, security groups, and ports."
+sidebarTitle: "CLI Reference"
+---
+
+## Overview
+
+The `openstack network` command group manages software-defined networks, subnets, routers, ports, floating IPs, and security group rules.
+
+<Note>
+  **Prerequisites**
+  - CLI installed and authenticated — see [CLI Setup](/cli-setup)
+  - Python neutronclient installed: `pip install python-neutronclient`
+</Note>
+
+---
+
+## Networks
+
+<CodeGroup>
+```bash title="List networks"
+openstack network list
+openstack network list --internal
+openstack network list --external
+```
+
+```bash title="Create private network"
+openstack network create private-net
+```
+
+```bash title="Create with provider type (admin)"
+openstack network create \
+  --provider-network-type vlan \
+  --provider-physical-network physnet1 \
+  --provider-segment 100 \
+  vlan-100
+```
+
+```bash title="Show network"
+openstack network show private-net
+```
+
+```bash title="Delete network"
+openstack network delete private-net
+```
+</CodeGroup>
+
+---
+
+## Subnets
+
+<CodeGroup>
+```bash title="List subnets"
+openstack subnet list
+```
+
+```bash title="Create subnet"
+openstack subnet create \
+  --network private-net \
+  --subnet-range 10.0.1.0/24 \
+  --dns-nameserver 8.8.8.8 \
+  private-subnet
+```
+
+```bash title="Create with DHCP disabled"
+openstack subnet create \
+  --network private-net \
+  --subnet-range 10.0.2.0/24 \
+  --no-dhcp \
+  static-subnet
+```
+
+```bash title="Show subnet"
+openstack subnet show private-subnet
+```
+
+```bash title="Delete subnet"
+openstack subnet delete private-subnet
+```
+</CodeGroup>
+
+---
+
+## Routers
+
+<CodeGroup>
+```bash title="List routers"
+openstack router list
+```
+
+```bash title="Create router with external gateway"
+openstack router create my-router
+openstack router set --external-gateway external my-router
+```
+
+```bash title="Add subnet interface"
+openstack router add subnet my-router private-subnet
+```
+
+```bash title="Remove subnet interface"
+openstack router remove subnet my-router private-subnet
+```
+
+```bash title="Show router details"
+openstack router show my-router
+```
+
+```bash title="Delete router"
+openstack router delete my-router
+```
+</CodeGroup>
+
+---
+
+## Floating IPs
+
+<CodeGroup>
+```bash title="List floating IPs"
+openstack floating ip list
+```
+
+```bash title="Allocate floating IP"
+openstack floating ip create external
+```
+
+```bash title="Associate to instance"
+openstack server add floating ip <server> <floating-ip>
+```
+
+```bash title="Disassociate"
+openstack server remove floating ip <server> <floating-ip>
+```
+
+```bash title="Release floating IP"
+openstack floating ip delete <floating-ip>
+```
+</CodeGroup>
+
+---
+
+## Security Groups
+
+<CodeGroup>
+```bash title="List security groups"
+openstack security group list
+```
+
+```bash title="Create security group"
+openstack security group create web-servers \
+  --description "Allow HTTP and SSH"
+```
+
+```bash title="Add inbound rules"
+openstack security group rule create \
+  --protocol tcp --dst-port 22 --remote-ip 0.0.0.0/0 \
+  web-servers
+
+openstack security group rule create \
+  --protocol tcp --dst-port 80 --remote-ip 0.0.0.0/0 \
+  web-servers
+
+openstack security group rule create \
+  --protocol tcp --dst-port 443 --remote-ip 0.0.0.0/0 \
+  web-servers
+```
+
+```bash title="Allow ICMP (ping)"
+openstack security group rule create \
+  --protocol icmp \
+  web-servers
+```
+
+```bash title="List rules in a group"
+openstack security group rule list web-servers
+```
+
+```bash title="Delete rule"
+openstack security group rule delete <rule-id>
+```
+</CodeGroup>
+
+---
+
+## Ports
+
+<CodeGroup>
+```bash title="List ports"
+openstack port list
+openstack port list --network private-net
+```
+
+```bash title="Create port with fixed IP"
+openstack port create \
+  --network private-net \
+  --fixed-ip subnet=private-subnet,ip-address=10.0.1.50 \
+  my-port
+```
+
+```bash title="Show port"
+openstack port show <port>
+```
+
+```bash title="Disable port security"
+openstack port set --disable-port-security <port>
+```
+
+```bash title="Delete port"
+openstack port delete <port>
+```
+</CodeGroup>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Network User Guide" href="/services/networking/create-network" color="#197560">
+    Step-by-step network and subnet creation walkthrough
+  </Card>
+  <Card title="Compute CLI" href="/services/compute/cli-reference" color="#197560">
+    Attach floating IPs and security groups to instances
+  </Card>
+</CardGroup>

@@ -1,0 +1,153 @@
+---
+title: "Optimization CLI Reference"
+description: "Complete watcher CLI commands for running audits, reviewing action plans, and executing optimization actions on Xloud Compute clusters."
+sidebarTitle: "CLI Reference"
+---
+
+## Overview
+
+The `watcher` CLI manages resource optimization — goals, audits, audit templates, action plans, actions, and strategies for workload consolidation and efficiency.
+
+<Note>
+  **Prerequisites**
+  - CLI installed and authenticated — see [CLI Setup](/cli-setup)
+  - Watcher client installed: `pip install python-watcherclient`
+</Note>
+
+---
+
+## Goals
+
+<CodeGroup>
+```bash title="List optimization goals"
+watcher goal list
+```
+
+```bash title="Show goal details"
+watcher goal show server_consolidation
+```
+</CodeGroup>
+
+---
+
+## Audits
+
+<CodeGroup>
+```bash title="List audits"
+watcher audit list
+```
+
+```bash title="Create one-shot audit"
+watcher audit create \
+  --goal server_consolidation \
+  --strategy basic
+```
+
+```bash title="Create audit (auto-selects strategy)"
+watcher audit create \
+  --goal vm_workload_consolidation
+```
+
+```bash title="Create continuous audit"
+watcher audit create \
+  --goal server_consolidation \
+  --audit-type CONTINUOUS \
+  --interval 3600
+```
+
+```bash title="Show audit"
+watcher audit show <audit-uuid>
+```
+
+```bash title="Delete audit"
+watcher audit delete <audit-uuid>
+```
+</CodeGroup>
+
+---
+
+## Audit Templates
+
+<CodeGroup>
+```bash title="List audit templates"
+watcher audittemplate list
+```
+
+```bash title="Create audit template"
+watcher audittemplate create \
+  --goal server_consolidation \
+  --strategy basic \
+  weekly-consolidation
+```
+
+```bash title="Show audit template"
+watcher audittemplate show weekly-consolidation
+```
+
+```bash title="Delete audit template"
+watcher audittemplate delete weekly-consolidation
+```
+</CodeGroup>
+
+---
+
+## Action Plans
+
+<CodeGroup>
+```bash title="List action plans"
+watcher actionplan list
+```
+
+```bash title="Show action plan"
+watcher actionplan show <plan-uuid>
+```
+
+```bash title="Start action plan"
+watcher actionplan start <plan-uuid>
+```
+
+```bash title="Delete action plan"
+watcher actionplan delete <plan-uuid>
+```
+</CodeGroup>
+
+---
+
+## Actions
+
+<CodeGroup>
+```bash title="List actions in a plan"
+watcher action list --action-plan <plan-uuid>
+```
+
+```bash title="Show action details"
+watcher action show <action-uuid>
+```
+</CodeGroup>
+
+---
+
+## Strategies
+
+<CodeGroup>
+```bash title="List strategies"
+watcher strategy list
+```
+
+```bash title="Show strategy details"
+watcher strategy show basic
+```
+</CodeGroup>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Run Audit Guide" href="/services/optimization/user-guide/run-audit" color="#197560">
+    Step-by-step guide to running your first optimization audit
+  </Card>
+  <Card title="Action Plans Guide" href="/services/optimization/user-guide/action-plans" color="#197560">
+    Review and execute optimization action plans
+  </Card>
+</CardGroup>

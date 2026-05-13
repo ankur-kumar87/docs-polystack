@@ -1,0 +1,166 @@
+---
+title: "Floating IP Assignment"
+description: "Expose your Xloud Load Balancer VIP on a public network by associating a floating IP for external client access."
+sidebarTitle: "Floating IP"
+---
+
+import PrerequisitesAuth from '/snippets/prerequisites-auth.mdx';
+
+## Overview
+
+A floating IP maps a public IP address from an external network to your load balancer's
+virtual IP (VIP) port. This is the standard method for exposing a load balancer to
+external clients. Once associated, the floating IP routes all inbound traffic to the
+load balancer, which distributes it across backend members according to the listener
+and pool configuration.
+
+<PrerequisitesAuth />
+
+<Note>
+  Before associating a floating IP, ensure:
+  - The load balancer status is **ACTIVE**
+  - At least one listener is configured and **ACTIVE**
+  - A floating IP has been allocated from an external network in your project
+</Note>
+
+---
+
+## Associate a Floating IP
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Retrieve the VIP port" icon="network">
+        Navigate to **Network > Load Balancers**. Open your load balancer and
+        note the **VIP Port ID** from the overview panel.
+      </Step>
+      <Step title="Allocate a floating IP" icon="plus">
+        Navigate to **Network > Floating IPs**. Click **Allocate IP to Project**
+        and select your external network pool.
+      </Step>
+      <Step title="Associate the floating IP to the VIP" icon="link">
+        Click **Associate** next to the allocated floating IP. In the **Port to be associated**
+        dropdown, select the load balancer VIP port identified in step 1.
+
+        <Check>The floating IP is now associated with the load balancer VIP. External traffic
+        to the floating IP is forwarded to the load balancer.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    <Steps titleSize="h3">
+      <Step title="Retrieve the VIP port ID" icon="search">
+        ```bash title="Get VIP port ID"
+        openstack loadbalancer show prod-web-lb \
+          -c vip_port_id -f value
+        ```
+        Save this value as `VIP_PORT_ID`.
+      </Step>
+      <Step title="Allocate a floating IP" icon="plus">
+        ```bash title="Allocate floating IP from external network"
+        openstack floating ip create <external-network-name>
+        ```
+        Note the `floating_ip_address` from the output.
+      </Step>
+      <Step title="Associate floating IP with VIP port" icon="link">
+        ```bash title="Associate floating IP with load balancer VIP"
+        openstack floating ip set \
+          --port <VIP_PORT_ID> \
+          <floating-ip-address>
+        ```
+      </Step>
+      <Step title="Verify the association" icon="circle-check">
+        ```bash title="Confirm association"
+        openstack floating ip show <floating-ip-address> \
+          -c fixed_ip_address \
+          -c floating_ip_address \
+          -c status
+        ```
+        <Check>Status shows `ACTIVE` and `fixed_ip_address` matches the load balancer VIP.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+</Tabs>
+
+---
+
+## Test External Access
+
+After associating the floating IP, verify traffic reaches your backend members:
+
+```bash title="Test HTTP access via floating IP"
+curl -v http://<floating-ip-address>/health
+```
+
+```bash title="Test HTTPS access via floating IP"
+curl -v https://<floating-ip-address>/health
+```
+
+<Check>The health endpoint responds with HTTP 200 — traffic is flowing through the load balancer to backend members.</Check>
+
+---
+
+## Disassociate a Floating IP
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    Navigate to **Network > Floating IPs**. Click **Disassociate** next to the
+    floating IP attached to your load balancer.
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Disassociate floating IP"
+    openstack floating ip unset \
+      --port \
+      <floating-ip-address>
+    ```
+
+    The floating IP reverts to `DOWN` status and can be reassociated or released:
+    ```bash title="Release floating IP back to pool"
+    openstack floating ip delete <floating-ip-address>
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## DNS Configuration
+
+Map a domain name to the floating IP for production services:
+
+<Tabs>
+  <Tab title="Xloud DNS" icon="globe">
+    If using Xloud DNS, create an A record pointing to the floating IP:
+    ```bash title="Create DNS A record"
+    openstack recordset create \
+      --type A \
+      --records <floating-ip-address> \
+      --ttl 300 \
+      example.com. \
+      api.example.com.
+    ```
+    See the [Xloud DNS guide](/services/dns) for full DNS management instructions.
+  </Tab>
+  <Tab title="External DNS" icon="network">
+    Point your external DNS provider's A record for your domain to the floating IP address.
+    DNS propagation typically takes 1–5 minutes for TTLs under 5 minutes.
+  </Tab>
+</Tabs>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Listeners" href="/services/load-balancer/listeners" color="#197560">
+    Add HTTPS termination to your listener before exposing it publicly.
+  </Card>
+  <Card title="Xloud DNS" href="/services/dns" color="#197560">
+    Create DNS records pointing to your load balancer floating IP.
+  </Card>
+  <Card title="Xloud Key Manager" href="/services/key-manager" color="#197560">
+    Store TLS certificates used by HTTPS listeners.
+  </Card>
+  <Card title="Troubleshooting" href="/services/load-balancer/troubleshooting" color="#197560">
+    Resolve floating IP association failures and connectivity issues.
+  </Card>
+</CardGroup>

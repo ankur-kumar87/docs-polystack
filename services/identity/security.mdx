@@ -1,0 +1,162 @@
+---
+title: "Identity Security Hardening"
+description: "Enforce MFA, rotate Fernet keys, audit role assignments, and apply security best practices for Xloud Identity."
+sidebarTitle: "Security"
+---
+
+import AdminWarning from '/snippets/admin-warning.mdx';
+
+## Overview
+
+Xloud Identity is the authentication and authorization backbone for the entire platform.
+Hardening this service reduces the blast radius of credential compromise, limits lateral
+movement across projects, and ensures audit trails are maintained. This guide covers the
+complete security hardening checklist for production Identity deployments.
+
+<AdminWarning />
+
+---
+
+## Security Hardening Checklist
+
+<CardGroup cols={2}>
+  <Card title="Enforce MFA for Admins" icon="shield" color="#197560">
+    Require multi-factor authentication for all accounts with the `admin` role. Configure
+    an MFA enforcement rule via the Identity service policy to block admin token issuance
+    without a valid TOTP factor.
+  </Card>
+  <Card title="Rotate Fernet Keys" icon="rotate-cw" color="#197560">
+    Schedule automated key rotation every 24 hours. XDeploy includes a cron-based rotation
+    playbook that synchronizes keys across all Identity API nodes simultaneously.
+  </Card>
+  <Card title="Minimize Token Lifetime" icon="clock" color="#197560">
+    Set `keystone_token_expiration` to 3600 seconds (1 hour) or less. Use application
+    credentials with explicit expiry dates for automation pipelines instead of long-lived
+    user tokens.
+  </Card>
+  <Card title="Audit Role Assignments" icon="search" color="#197560">
+    Review role assignments quarterly. Remove the `admin` role from any account that no
+    longer requires elevated access. Export full audit reports regularly.
+  </Card>
+</CardGroup>
+
+---
+
+## MFA Enforcement Policy
+
+Enforce MFA for all accounts with the `admin` role by configuring an auth rules policy:
+
+```yaml title="/etc/xavs/keystone/policy.yaml — enforce MFA for admin token issuance"
+"identity:get_auth_token": "rule:admin_required and (rule:mfa_enabled or not role:admin)"
+```
+
+After applying, admin accounts without MFA enrolled cannot issue tokens:
+```bash title="Apply MFA enforcement policy"
+xavs-ansible deploy --tags keystone
+```
+
+<Warning>
+  Enforce MFA in a staged rollout. Ensure all admin accounts have enrolled a TOTP
+  device before applying the policy — otherwise admin accounts will be locked out.
+</Warning>
+
+---
+
+## Fernet Key Security
+
+<Steps titleSize="h3">
+  <Step title="Verify key file permissions" icon="lock">
+    Fernet keys must be readable only by the Identity service user:
+    ```bash title="Check key file permissions"
+    ls -la /var/lib/kolla/config_files/fernet-keys/
+    ```
+    Expected: `600 keystone:keystone` for all key files.
+  </Step>
+  <Step title="Configure automated rotation" icon="rotate-cw">
+    ```yaml title="XDeploy globals: automated Fernet rotation"
+    keystone_fernet_key_rotation: "0 */24 * * *"
+    keystone_fernet_max_active_keys: 3
+    ```
+    Deploy to activate:
+    ```bash title="Apply rotation configuration"
+    xavs-ansible deploy --tags keystone
+    ```
+  </Step>
+  <Step title="Verify rotation is running" icon="circle-check">
+    ```bash title="Check rotation cron job"
+    docker exec keystone crontab -l
+    ```
+    <Check>Cron job is scheduled and shows the configured rotation interval.</Check>
+  </Step>
+</Steps>
+
+---
+
+## Role Assignment Auditing
+
+Run quarterly access reviews to identify over-provisioned accounts:
+
+```bash title="Export all role assignments"
+openstack role assignment list --names \
+  -f csv > role-assignments-$(date +%Y%m%d).csv
+```
+
+```bash title="Find all admin role assignments"
+openstack role assignment list \
+  --role admin \
+  --names
+```
+
+```bash title="Find users with admin role in multiple projects"
+openstack role assignment list \
+  --role admin \
+  --names | grep -v "system"
+```
+
+<Tip>
+  Use the `reader` role for monitoring and dashboard accounts — it provides the
+  visibility they need without write access. Reserve `admin` for accounts that
+  genuinely require resource management capabilities.
+</Tip>
+
+---
+
+## Network-Level Controls
+
+<AccordionGroup>
+  <Accordion title="Restrict Identity API access" icon="network" defaultOpen>
+    The Identity API public endpoint (port 5000) should be accessible only from:
+    - Internal cluster networks
+    - VPN or bastion hosts for administrative access
+    - Dashboard and CLI clients via HAProxy
+
+    Configure HAProxy ACLs to block direct public access to the admin interface.
+  </Accordion>
+  <Accordion title="TLS configuration" icon="shield">
+    Ensure all Identity API endpoints use TLS with certificates from a trusted CA:
+    ```yaml title="XDeploy globals: TLS configuration"
+    kolla_enable_tls_external: "yes"
+    kolla_external_tls_cert: /etc/xavs/certs/external.crt
+    kolla_external_tls_key: /etc/xavs/certs/external.key
+    ```
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Token Configuration" href="/services/identity/token-config" color="#197560">
+    Configure Fernet key rotation schedules and token lifetime policies.
+  </Card>
+  <Card title="Policy Management" href="/services/identity/policy-management" color="#197560">
+    Customize RBAC policies and implement least-privilege access controls.
+  </Card>
+  <Card title="Multi-Factor Authentication" href="/services/identity/multi-factor-auth" color="#197560">
+    Enable TOTP enrollment for user accounts.
+  </Card>
+  <Card title="Admin Troubleshooting" href="/services/identity/admin-troubleshooting" color="#197560">
+    Diagnose security-related authentication and authorization failures.
+  </Card>
+</CardGroup>

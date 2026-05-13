@@ -1,0 +1,264 @@
+---
+title: "Image Templates and Catalogs"
+description: "Use Xloud images as VM templates, manage image catalogs, share community images, export images, and track versions across projects."
+sidebarTitle: "Templates & Catalogs"
+---
+
+import AdminWarning from '/snippets/admin-warning.mdx';
+import CliAuth from '/snippets/cli-auth.mdx';
+
+## Overview
+
+An image in Xloud serves as more than a boot disk — it is the authoritative template for instance provisioning. A well-managed image catalog ensures consistent deployments, enforces approved operating system versions, and supports multi-project sharing with access control. This guide covers using images as templates, organizing a catalog, publishing community images, exporting images for external use, and managing versions.
+
+---
+
+## Using Images as Templates
+
+Every instance launch derives from an image. Treating images as immutable, versioned templates — rather than ad-hoc uploads — produces consistent, repeatable deployments.
+
+**Template design principles:**
+
+- One image per OS version and configuration profile (e.g., `ubuntu-24.04-base`, `ubuntu-24.04-nginx`)
+- Images are never modified after publishing — create a new version instead
+- Customization at launch time uses cloud-init user data, not image-level changes
+- Golden images include security hardening, required packages, and licensing pre-applied
+
+<Tabs>
+  <Tab title="Dashboard" icon="monitor">
+    <Steps titleSize="h3">
+      <Step title="Upload or build the template image" icon="upload">
+        Navigate to **Compute > Images** and click **Create Image**.
+
+        Set **Visibility** to `Private` while the image is being validated, then promote to `Shared` or `Community` when ready.
+      </Step>
+      <Step title="Add template metadata" icon="tag">
+        After uploading, click the **More** dropdown on the image row (admin view) and select **Manage Metadata**. Use standard
+        image properties to communicate template purpose:
+
+        | Property | Example Value |
+        |----------|---------------|
+        | `os_distro` | `ubuntu` |
+        | `os_version` | `24.04` |
+        | `hw_disk_bus` | `virtio` |
+        | `hw_vif_model` | `virtio` |
+        | `description` | `Ubuntu 24.04 LTS base template v1.2` |
+      </Step>
+      <Step title="Launch from the template" icon="play">
+        When creating an instance, select the image as the **Start Source** in Step 1 (Base Config). The instance
+        inherits all hardware properties defined in the image metadata.
+
+        <Check>Template in use — instances launched from this image receive consistent hardware configuration.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    <CliAuth />
+
+    ```bash title="Upload a template image"
+    openstack image create \
+      --disk-format qcow2 \
+      --container-format bare \
+      --file ubuntu-24.04-server-cloudimg-amd64.img \
+      --property os_distro=ubuntu \
+      --property os_version=24.04 \
+      --property hw_disk_bus=virtio \
+      --property hw_vif_model=virtio \
+      --property description="Ubuntu 24.04 LTS base template v1.0" \
+      --visibility private \
+      ubuntu-24.04-base-v1.0
+    ```
+
+    ```bash title="Launch an instance from the template"
+    openstack server create \
+      --image ubuntu-24.04-base-v1.0 \
+      --flavor m1.medium \
+      --network internal-net \
+      my-vm-01
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Image Catalog Management
+
+A catalog is the set of approved, maintained images available to projects. Administrators control what appears in the catalog by managing image visibility and metadata.
+
+### Visibility Levels
+
+| Visibility | Who Can See | Use Case |
+|------------|-------------|----------|
+| `private` | Owner project only | Development, staging images not ready for sharing |
+| `shared` | Owner + explicitly shared projects | Controlled sharing with specific teams |
+| `community` | All projects (read-only for non-admin) | Approved OS catalog available platform-wide |
+| `public` | All projects (admin-controlled) | Platform-wide golden images |
+
+<Warning>
+  Only users with the `admin` role can set image visibility to `public` or `community`. You can set your own images to `shared` and add project members to the sharing list.
+</Warning>
+
+### Promote an Image to the Catalog
+
+<Tabs>
+  <Tab title="Dashboard" icon="monitor">
+    Navigate to **Compute > Images** (admin view), find the image, click **Edit**, and set **Visibility** to `Community` or `Public`.
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Promote image to community visibility"
+    openstack image set \
+      --community \
+      ubuntu-24.04-base-v1.0
+    ```
+
+    ```bash title="List all community images"
+    openstack image list \
+      --community \
+      --long
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Community Images
+
+Community images are images made available to all projects without requiring explicit sharing grants. They are managed by administrators and appear in every project's image list.
+
+```bash title="Create a community image"
+openstack image create \
+  --disk-format qcow2 \
+  --container-format bare \
+  --file rocky-linux-9.qcow2 \
+  --property os_distro=rocky \
+  --property os_version=9 \
+  --community \
+  rocky-linux-9-v1.0
+```
+
+```bash title="Decommission a community image (hide from catalog)"
+openstack image set \
+  --private \
+  rocky-linux-9-v1.0
+```
+
+<Note>
+  Setting an image back to `private` does not delete running instances that were launched from it. Only future launches are affected.
+</Note>
+
+---
+
+## Image Export
+
+Images can be exported for use outside the platform — for migration to another environment, backup archiving, or external distribution.
+
+<Tabs>
+  <Tab title="Dashboard" icon="monitor">
+    Navigate to **Compute > Images** (admin view), select the image, and use the CLI to download the image (`openstack image save`). The image file is downloaded in its native format (QCOW2 or RAW depending on upload format).
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Download an image to local disk"
+    openstack image save \
+      --file ubuntu-24.04-export.qcow2 \
+      ubuntu-24.04-base-v1.0
+    ```
+
+    ```bash title="Export and convert format (requires qemu-img)"
+    openstack image save --file /tmp/image.raw ubuntu-24.04-base-v1.0
+    qemu-img convert -f raw -O qcow2 /tmp/image.raw ubuntu-24.04-export.qcow2
+    ```
+
+    ```bash title="Verify exported image integrity"
+    qemu-img check ubuntu-24.04-export.qcow2
+    ```
+  </Tab>
+</Tabs>
+
+For large images, use the Glance image import deactivate/reactivate API to pause an image before export to ensure consistency:
+
+```bash title="Deactivate image before export (prevents modification)"
+openstack image deactivate <image-id>
+openstack image save --file large-image.qcow2 <image-id>
+openstack image reactivate <image-id>
+```
+
+---
+
+## Image Versioning
+
+Xloud Image Service does not enforce versioning natively — version tracking is implemented through naming conventions and image properties. The recommended approach:
+
+**Naming convention:** `<os>-<version>-<profile>-v<major>.<minor>`
+
+Examples:
+- `ubuntu-24.04-base-v1.0`
+- `ubuntu-24.04-base-v1.1`
+- `ubuntu-24.04-nginx-v2.0`
+
+**Deprecation workflow:**
+
+```bash title="Mark old version as deprecated"
+openstack image set \
+  --deactivated \
+  --property deprecated=true \
+  --property replacement=ubuntu-24.04-base-v1.1 \
+  ubuntu-24.04-base-v1.0
+```
+
+```bash title="Hide deprecated image from project catalog"
+openstack image set \
+  --private \
+  ubuntu-24.04-base-v1.0
+```
+
+<Tip>
+  Keep deprecated images in `private` visibility (not deleted) until you verify no instances are running from them. Check with: `openstack server list --all-projects --image <image-id>`
+</Tip>
+
+---
+
+## Sharing Images Between Projects
+
+<Tabs>
+  <Tab title="Dashboard" icon="monitor">
+    Navigate to **Compute > Images**, click the image name, select **Manage Access**, and enter the target project ID.
+
+    The target project administrator must accept the share from the **Shared Images** tab in **Compute > Images**.
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Share image with another project"
+    openstack image add project \
+      ubuntu-24.04-base-v1.0 \
+      <target-project-id>
+    ```
+
+    ```bash title="Target project accepts the shared image"
+    openstack image set \
+      --accept \
+      ubuntu-24.04-base-v1.0
+    ```
+
+    ```bash title="Verify shared image is visible in target project"
+    openstack image list --shared
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Storage Backends" href="/services/images/storage-backends" color="#197560">
+    Configure RBD, Swift, S3, or file store as the image storage backend
+  </Card>
+  <Card title="Image Properties" href="/services/images/image-properties" color="#197560">
+    Set hardware and scheduler properties on images to control instance behavior
+  </Card>
+  <Card title="Image Security" href="/services/images/image-security" color="#197560">
+    Sign images and enforce signature verification at launch time
+  </Card>
+  <Card title="Upload Image" href="/services/images/upload-image" color="#197560">
+    Upload custom images from ISO, QCOW2, RAW, or VMDK formats
+  </Card>
+</CardGroup>

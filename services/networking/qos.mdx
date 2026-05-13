@@ -1,0 +1,403 @@
+---
+title: "Network Quality of Service"
+description: "Apply bandwidth limits, DSCP marking, and minimum bandwidth guarantees to network ports. Define and manage QoS policies."
+sidebarTitle: "Quality of Service"
+---
+
+import AdminWarning from '/snippets/admin-warning.mdx';
+import CliAuth from '/snippets/cli-auth.mdx';
+
+## Overview
+
+Network QoS (Quality of Service) policies enforce traffic controls at the virtual switch level on each hypervisor. Policies apply bandwidth limits, burst allowances, DSCP markings, and minimum bandwidth guarantees to individual ports or entire networks. Controls are enforced by the L2 agent — no guest OS configuration is required.
+
+Administrators create and optionally share policies; project users apply them to their ports and networks.
+
+<AdminWarning />
+
+<Note>
+  **Prerequisites**
+  - Admin credentials sourced from `openrc.sh`
+  - QoS service plugin enabled in your cluster (configured via XDeploy under **Networking → Plugins**)
+  - Open vSwitch or Linux Bridge L2 agent running on all compute nodes
+</Note>
+
+---
+
+## QoS Rule Types
+
+Xloud Networking supports four QoS rule types. Multiple rules of different types can be combined within a single policy.
+
+| Rule Type | CLI `--type` | Direction | Hardware Required | Description |
+|-----------|-------------|-----------|-------------------|-------------|
+| **Bandwidth Limit** | `bandwidth-limit` | Egress / Ingress | No | Cap maximum throughput with optional burst allowance |
+| **DSCP Marking** | `dscp-marking` | Egress only | No | Mark outgoing packets with a DSCP value for QoS-aware routing |
+| **Minimum Bandwidth** | `minimum-bandwidth` | Egress / Ingress | Yes (SR-IOV) | Guarantee a minimum throughput floor |
+| **Minimum Packet Rate** | `minimum-packet-rate` | Egress / Ingress | Yes (SR-IOV) | Guarantee a minimum packet-per-second rate |
+
+<Info>
+  Minimum bandwidth and minimum packet rate guarantees require SR-IOV hardware and a compatible network backend. Standard OVS-based ports support bandwidth limits and DSCP marking only.
+</Info>
+
+---
+
+## Create a QoS Policy
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Navigate to QoS Policies" icon="compass">
+        Navigate to **Network > QoS Policies** (admin view). Click **Create Policy**.
+      </Step>
+      <Step title="Define the policy" icon="settings">
+        | Field | Value | Description |
+        |-------|-------|-------------|
+        | **Name** | e.g., `10mbps-limit` | Descriptive label for the policy |
+        | **Shared** | Enabled | Makes the policy available to all projects |
+        | **Default** | Optional | Applies this policy to all new ports by default |
+      </Step>
+      <Step title="Add a bandwidth limit rule" icon="sliders">
+        Open the newly created policy and click **Add Bandwidth Limit Rule**:
+
+        | Field | Value | Description |
+        |-------|-------|-------------|
+        | **Max Kbps** | `10240` | Maximum sustained throughput (10 Mbps) |
+        | **Max Burst Kbps** | `20480` | Allowed burst above the limit (20 Mbps) |
+        | **Direction** | Egress | Traffic direction to limit |
+
+        <Check>Click **Save** to activate the rule.</Check>
+      </Step>
+      <Step title="Apply to a port or network" icon="link">
+        To apply to a specific port: navigate to **Network > Ports** (admin view), select the
+        port, click **Edit Port**, and set the **QoS Policy** field.
+
+        To apply to an entire network: navigate to **Network > Networks** (admin view), select
+        the network, click **Edit Network**, and set the **QoS Policy** field.
+
+        <Info>
+          Applying a QoS policy to a network sets a default for all **new** ports on that
+          network. Existing ports are not retroactively updated.
+        </Info>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    <Steps titleSize="h3">
+      <Step title="Authenticate" icon="key">
+        <CliAuth />
+      </Step>
+      <Step title="Create the policy" icon="plus">
+        ```bash title="Create shared QoS policy"
+        openstack network qos policy create 10mbps-limit --share
+        ```
+      </Step>
+      <Step title="Add a bandwidth limit rule" icon="sliders">
+        ```bash title="Add egress bandwidth limit (10 Mbps, 20 Mbps burst)"
+        openstack network qos rule create 10mbps-limit \
+          --type bandwidth-limit \
+          --max-kbps 10240 \
+          --max-burst-kbps 20480 \
+          --egress
+        ```
+
+        ```bash title="Add ingress bandwidth limit"
+        openstack network qos rule create 10mbps-limit \
+          --type bandwidth-limit \
+          --max-kbps 10240 \
+          --max-burst-kbps 20480 \
+          --ingress
+        ```
+      </Step>
+      <Step title="Apply to a port" icon="link">
+        ```bash title="Apply QoS policy to a specific port"
+        openstack port set <port-id> --qos-policy 10mbps-limit
+        ```
+      </Step>
+      <Step title="Apply to a network" icon="network">
+        ```bash title="Apply QoS policy to an entire network"
+        openstack network set app-network --qos-policy 10mbps-limit
+        ```
+
+        <Check>All new ports on `app-network` will inherit the 10 Mbps limit automatically.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+</Tabs>
+
+---
+
+## DSCP Marking
+
+DSCP (Differentiated Services Code Point) marking tags outgoing packets so that upstream routers and switches can prioritize traffic flows. This is essential for real-time workloads such as VoIP, video conferencing, and database replication traffic.
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Open a QoS policy" icon="compass">
+        Navigate to **Network > QoS Policies** (admin view) and open an existing policy or
+        create a new one.
+      </Step>
+      <Step title="Add DSCP marking rule" icon="tag">
+        Click **Add DSCP Marking Rule** and set the DSCP value:
+
+        | Traffic Class | DSCP Value | Use Case |
+        |--------------|-----------|----------|
+        | Best Effort (BE) | `0` | Default traffic |
+        | Assured Forwarding 11 | `10` | Standard business traffic |
+        | Assured Forwarding 21 | `18` | Priority business traffic |
+        | Expedited Forwarding | `46` | VoIP, real-time traffic |
+        | Class Selector 3 | `24` | Database / transactional |
+
+        <Check>Click **Save**. The rule applies immediately to new packet flows on assigned ports.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Create QoS policy with DSCP marking for real-time traffic"
+    openstack network qos policy create realtime-voip --share
+    ```
+
+    ```bash title="Add DSCP EF marking (value 46 — Expedited Forwarding)"
+    openstack network qos rule create realtime-voip \
+      --type dscp-marking \
+      --dscp-mark 46
+    ```
+
+    ```bash title="Apply to a VoIP application port"
+    openstack port set <voip-port-id> --qos-policy realtime-voip
+    ```
+
+    <Tip>
+      Combine DSCP marking with a bandwidth limit rule in the same policy to both classify
+      and constrain VoIP traffic simultaneously.
+    </Tip>
+  </Tab>
+</Tabs>
+
+---
+
+## Guaranteed Minimum Bandwidth
+
+Minimum bandwidth rules provide a throughput floor — a guarantee that the port will always receive at least the specified bandwidth even under network congestion. This requires SR-IOV hardware and a compatible network backend.
+
+<Warning>
+  Minimum bandwidth guarantees are only supported on SR-IOV virtual functions (VFs) with a compatible hardware NIC. Standard OVS ports do not enforce minimum bandwidth floors — only maximum limits.
+</Warning>
+
+<Tabs>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Create minimum bandwidth policy for guaranteed throughput"
+    openstack network qos policy create guaranteed-1gbps --share
+    ```
+
+    ```bash title="Add 1 Gbps minimum bandwidth guarantee (egress)"
+    openstack network qos rule create guaranteed-1gbps \
+      --type minimum-bandwidth \
+      --min-kbps 1048576 \
+      --egress
+    ```
+
+    ```bash title="Apply to an SR-IOV port"
+    openstack port set <sriov-port-id> --qos-policy guaranteed-1gbps
+    ```
+  </Tab>
+  <Tab title="Minimum Packet Rate" icon="activity">
+    Minimum packet rate rules guarantee a floor in packets per second (pps) — important for workloads that generate many small packets (e.g., DNS, financial trading systems).
+
+    ```bash title="Create minimum packet rate policy"
+    openstack network qos policy create min-pps-policy --share
+    ```
+
+    ```bash title="Guarantee 500,000 packets per second minimum"
+    openstack network qos rule create min-pps-policy \
+      --type minimum-packet-rate \
+      --min-kpps 500 \
+      --egress
+    ```
+
+    ```bash title="Apply to trading application port"
+    openstack port set <trading-port-id> --qos-policy min-pps-policy
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Manage QoS Policies
+
+<Tabs>
+  <Tab title="List and Inspect" icon="list">
+    ```bash title="List all QoS policies"
+    openstack network qos policy list
+    ```
+
+    ```bash title="Show policy details"
+    openstack network qos policy show 10mbps-limit
+    ```
+
+    ```bash title="List rules in a policy"
+    openstack network qos rule list 10mbps-limit
+    ```
+  </Tab>
+  <Tab title="Update Rules" icon="settings">
+    ```bash title="Update bandwidth limit rule"
+    openstack network qos rule set 10mbps-limit <rule-id> \
+      --max-kbps 20480 \
+      --max-burst-kbps 40960
+    ```
+
+    ```bash title="Update DSCP mark"
+    openstack network qos rule set realtime-voip <rule-id> \
+      --dscp-mark 24
+    ```
+  </Tab>
+  <Tab title="Remove and Delete" icon="trash">
+    ```bash title="Remove QoS policy from a port"
+    openstack port unset <port-id> --qos-policy
+    ```
+
+    ```bash title="Remove QoS policy from a network"
+    openstack network set app-network --no-qos-policy
+    ```
+
+    ```bash title="Delete a QoS rule from a policy"
+    openstack network qos rule delete 10mbps-limit <rule-id>
+    ```
+
+    ```bash title="Delete a QoS policy"
+    openstack network qos policy delete 10mbps-limit
+    ```
+
+    <Warning>
+      Deleting a QoS policy that is still assigned to ports or networks will fail. Remove
+      all assignments before deleting the policy.
+    </Warning>
+  </Tab>
+</Tabs>
+
+---
+
+## Per-Port vs. Per-Network QoS
+
+| Scope | Application | Use Case |
+|-------|------------|---------|
+| **Per-port** | Direct assignment to a specific port | Granular control per instance NIC — ideal for mixed workload environments |
+| **Per-network** | Applied to a network; inherited by new ports | Consistent SLA enforcement across all instances on a tenant network |
+| **Combined** | Network policy + port override | Set a default at network level; override for specific ports that need exceptions |
+
+<Tip>
+  Apply QoS at the network level for consistent defaults, then override individual ports for exceptions (e.g., a database port that needs a higher limit than the general application tier).
+</Tip>
+
+---
+
+## Validation
+
+Confirm QoS enforcement is active after applying a policy:
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    Navigate to **Network > Ports** (admin view) and select the port. The **QoS Policy** field
+    should display the assigned policy name. Navigate to the instance and run a bandwidth
+    test from inside the guest to confirm enforcement.
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Confirm QoS policy applied to port"
+    openstack port show <port-id> -c qos_policy_id
+    ```
+
+    ```bash title="Verify policy rules are active"
+    openstack network qos rule list <policy-name-or-id>
+    ```
+
+    ```bash title="Test bandwidth from inside the guest (requires iperf3)"
+    # On a target host:
+    iperf3 -s
+    # On the guest port with the limit applied:
+    iperf3 -c <target-ip> -t 30
+    ```
+
+    <Check>The measured throughput should not exceed the configured `--max-kbps` value during sustained transfer.</Check>
+  </Tab>
+</Tabs>
+
+---
+
+## Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Tiered Policy Names" icon="layers" color="#197560">
+    Create named tiers — `bronze-10mbps`, `silver-100mbps`, `gold-1gbps` — and share them
+    across projects for consistent, predictable service levels.
+  </Card>
+  <Card title="Apply at Network Level" icon="network" color="#197560">
+    Apply QoS to networks for automatic inheritance. Override at the port level only
+    for exceptions that need different treatment from the network default.
+  </Card>
+  <Card title="Burst Sizing" icon="gauge" color="#197560">
+    Set burst to 2× the sustained limit. Short traffic spikes are absorbed by the burst
+    allowance without impacting the sustained throughput commitment.
+  </Card>
+  <Card title="Monitor with XIMP" icon="activity" color="#197560">
+    Use Xloud XIMP to track port-level throughput in real time and confirm QoS policies
+    are enforcing expected limits under production load.
+  </Card>
+</CardGroup>
+
+---
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="QoS policy not visible in Dashboard" icon="eye">
+    **Cause**: The QoS service plugin is not enabled in the Networking configuration.
+
+    **Resolution**: In XDeploy, navigate to **Networking → Plugins** and enable the QoS plugin. Redeploy the networking service:
+    ```bash title="Redeploy networking service"
+    xavs-ansible deploy -t neutron
+    ```
+    Restart the L2 agent on all compute nodes after the plugin is enabled.
+  </Accordion>
+  <Accordion title="Bandwidth limit not enforced" icon="sliders">
+    **Cause**: The L2 agent on the compute node hosting the instance may not have the QoS extension loaded.
+
+    **Resolution**: Verify the agent has the `qos` extension active:
+    ```bash title="Check L2 agent capabilities"
+    openstack network agent show <agent-id> -c configurations
+    ```
+    Look for `qos` in the `extensions` list. If absent, restart the L2 agent on the affected compute node.
+  </Accordion>
+  <Accordion title="Cannot delete QoS policy" icon="trash">
+    **Cause**: The policy is still assigned to one or more ports or networks.
+
+    **Resolution**: Find and clear all assignments:
+    ```bash title="Find ports using the policy"
+    openstack port list --long -c ID -c "QoS Policy ID"
+    ```
+    Remove assignments from each port, then retry the delete.
+  </Accordion>
+  <Accordion title="Minimum bandwidth rule creation fails" icon="circle-x">
+    **Cause**: Minimum bandwidth rules require SR-IOV hardware and a compatible backend (OVS-DPDK or SR-IOV). Standard OVS does not support minimum bandwidth enforcement.
+
+    **Resolution**: Use bandwidth limit rules for maximum throughput control on standard OVS ports. Deploy SR-IOV ports for guaranteed minimum bandwidth requirements.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Network Quotas" href="/services/networking/quotas" color="#197560">
+    Limit the number of networking resources per project alongside QoS controls
+  </Card>
+  <Card title="Provider Networks" href="/services/networking/provider-networks" color="#197560">
+    Configure the physical network that QoS policies apply to at the hypervisor level
+  </Card>
+  <Card title="Service Architecture" href="/services/networking/architecture" color="#197560">
+    Understand how L2 agents enforce QoS rules at the virtual switch level
+  </Card>
+  <Card title="Admin Troubleshooting" href="/services/networking/admin-troubleshooting" color="#197560">
+    Diagnose QoS enforcement issues and L2 agent configuration problems
+  </Card>
+</CardGroup>

@@ -1,0 +1,208 @@
+---
+title: "Storage Tiers"
+description: "Configure NVMe, SSD, and HDD storage tiers in Xloud Block Storage. Map hardware device classes to volume types and set the default tier for your deployment."
+sidebarTitle: "Storage Tiers"
+---
+
+import AdminWarning from '/snippets/admin-warning.mdx';
+import CliAuth from '/snippets/cli-auth.mdx';
+
+## Overview
+
+Storage tiering exposes different hardware performance classes as distinct volume types, allowing users to select the appropriate tier for each workload. Xloud Block Storage supports NVMe, SSD, and HDD tiers within a single distributed storage cluster by mapping CRUSH device classes to dedicated pools and volume types. Configure one volume type per hardware tier and set a default to ensure users without a specific preference land on the most appropriate tier.
+
+<AdminWarning />
+
+<Note>
+  **Prerequisites**
+  - Distributed storage cluster with at least one device class configured (e.g., `nvme`, `ssd`, `hdd`)
+  - Pools created for each device class in the storage cluster
+  - Storage backends registered in Block Storage (one per pool)
+  - Volume types created for each tier via the [Volume Types & QoS](/services/storage/volume-types-admin) guide
+</Note>
+
+---
+
+## Tier Performance Reference
+
+| Tier | Hardware | IOPS (4K Random) | Throughput | Recommended For |
+|------|---------|-----------------|------------|-----------------|
+| **NVMe** | PCIe NVMe SSDs | 100,000 – 1,000,000 | 3 – 14 GB/s | Transactional databases, low-latency caches |
+| **SSD** | SATA/SAS SSDs | 10,000 – 100,000 | 500 MB/s – 2 GB/s | Web application data, instance boot disks |
+| **Standard (HDD)** | 7.2K/10K RPM | 150 – 500 | 100 – 300 MB/s | Archival, bulk storage, infrequent access |
+
+---
+
+## Configure Tier Mappings
+
+<Tabs>
+  <Tab title="XDeploy" icon="package">
+    <Steps titleSize="h3">
+      <Step title="Open Storage Tiers in XDeploy" icon="layers">
+        Log in to XDeploy and navigate to **Configuration → Storage → Storage Tiers**.
+        XDeploy displays the detected hardware device classes from the storage cluster.
+      </Step>
+      <Step title="Configure tier mappings" icon="settings">
+        For each detected hardware tier, specify:
+
+        | Field | Description |
+        |-------|-------------|
+        | Storage Pool Name | The pool in the distributed storage cluster (e.g., `volumes-nvme`) |
+        | Volume Type Name | The volume type to expose to users (e.g., `nvme`) |
+        | QoS Spec | Optional QoS policy to attach to this tier |
+
+        Click **Save Tier Configuration**.
+      </Step>
+      <Step title="Set the default volume type" icon="star">
+        In the **Default Volume Type** field, select the tier to use when users create
+        volumes without specifying a type.
+
+        Xloud recommends setting `ssd` as the default for most deployments — you can
+        explicitly request `nvme` or `standard` when needed.
+
+        Click **Apply**.
+
+        <Check>Tier mappings saved and default type configured.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    <Steps titleSize="h3">
+      <Step title="Authenticate" icon="key">
+        <CliAuth />
+      </Step>
+      <Step title="List backend pools and device classes" icon="list">
+        ```bash title="List backend pools with capabilities"
+        openstack volume backend pool list --long
+        ```
+
+        Review `volume_backend_name`, `free_capacity_gb`, and `total_capacity_gb`
+        for each pool to understand available capacity per tier.
+      </Step>
+      <Step title="Create volume types for each tier" icon="plus">
+        ```bash title="Create NVMe volume type"
+        openstack volume type create \
+          --description "NVMe SSD — high-performance, low-latency" \
+          nvme
+        openstack volume type set --property volume_backend_name=nvme-backend nvme
+        ```
+
+        ```bash title="Create SSD volume type"
+        openstack volume type create \
+          --description "SSD — balanced performance and cost" \
+          ssd
+        openstack volume type set --property volume_backend_name=ssd-backend ssd
+        ```
+
+        ```bash title="Create HDD volume type"
+        openstack volume type create \
+          --description "Standard HDD — archival and bulk storage" \
+          standard
+        openstack volume type set --property volume_backend_name=hdd-backend standard
+        ```
+      </Step>
+      <Step title="Set the default volume type" icon="star">
+        ```bash title="Set default volume type"
+        openstack volume type set --default ssd
+        ```
+      </Step>
+      <Step title="Verify tier configuration" icon="circle-check">
+        ```bash title="List all volume types with properties"
+        openstack volume type list --long
+        ```
+
+        Confirm each type shows the correct `volume_backend_name` and that one type
+        is marked as default.
+
+        <Check>All storage tiers configured and visible to users.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+</Tabs>
+
+---
+
+## Single-Tier Deployments
+
+If your cluster has only one hardware class (e.g., all SSD), configure a single volume
+type pointing to the existing pool. There is no need to create additional pools or types.
+
+<Tip>
+  In a single-tier cluster, Xloud recommends still naming the type explicitly (e.g.,
+  `ssd`) rather than using a generic name — this makes future tier additions easier
+  without requiring users to update their volume creation workflows.
+</Tip>
+
+---
+
+## Adding a New Tier to an Existing Deployment
+
+When adding new hardware (e.g., NVMe drives to an existing SSD cluster):
+
+<Steps titleSize="h3">
+  <Step title="Add hardware and create a new pool" icon="database">
+    Add the new OSDs to the distributed storage cluster with the appropriate device
+    class. Create a dedicated pool using a CRUSH rule that targets only the new
+    device class.
+  </Step>
+  <Step title="Configure a new backend in XDeploy" icon="settings">
+    Add a new backend entry in XDeploy pointing to the new pool. Deploy the configuration
+    to register the new backend with the volume service.
+  </Step>
+  <Step title="Create a new volume type" icon="plus">
+    ```bash title="Create the new tier volume type"
+    openstack volume type create \
+      --description "NVMe PCIe — ultra-low latency" \
+      nvme
+    openstack volume type set --property volume_backend_name=nvme-pool nvme
+    ```
+  </Step>
+  <Step title="Verify availability" icon="circle-check">
+    ```bash title="Test the new tier"
+    openstack volume create --size 1 --type nvme test-nvme
+    openstack volume show test-nvme -c status
+    openstack volume delete test-nvme
+    ```
+
+    <Check>New tier operational and accessible to users.</Check>
+  </Step>
+</Steps>
+
+---
+
+## Automated Storage Tiering
+
+<Info>**Xloud-Developed** -- This capability is developed by Xloud and ships with XAVS / XPCI.</Info>
+
+The Xloud Resource Optimizer can automatically move volumes between NVMe, SSD, and HDD pools based on observed IOPS activity -- eliminating manual tier management for dynamic workloads.
+
+| Parameter | Description |
+|-----------|-------------|
+| **Promotion threshold** | Sustained high IOPS triggers migration to a faster tier (e.g., HDD to SSD, SSD to NVMe) |
+| **Demotion threshold** | Sustained low IOPS combined with volume age triggers migration to a cheaper tier |
+| **Max retypes per cycle** | Limits the number of volume migrations per optimization cycle to prevent thundering-herd effects on the storage cluster |
+
+All thresholds are configurable per deployment. The Resource Optimizer evaluates volumes periodically, generates a migration plan, and executes volume retypes through the Block Storage API without downtime to attached instances.
+
+<Tip>
+  Start with conservative thresholds and monitor the Resource Optimizer audit logs before tightening promotion or demotion criteria. Aggressive thresholds can cause volumes to bounce between tiers repeatedly.
+</Tip>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Volume Types & QoS" href="/services/storage/volume-types-admin" color="#197560">
+    Configure QoS policies to enforce per-tier IOPS and throughput limits
+  </Card>
+  <Card title="Migration" href="/services/storage/migration" color="#197560">
+    Move volumes between tiers to rebalance capacity or meet new requirements
+  </Card>
+  <Card title="Storage Backends" href="/services/storage/storage-backends" color="#197560">
+    Configure backend drivers for each storage tier
+  </Card>
+  <Card title="Volume Types (User)" href="/services/storage/volume-types" color="#197560">
+    User guide for selecting the right storage tier for a workload
+  </Card>
+</CardGroup>

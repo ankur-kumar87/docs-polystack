@@ -1,0 +1,167 @@
+---
+title: "Load Balancer Listeners"
+description: "Add and configure HTTP, HTTPS, TCP, and UDP listeners on Xloud Load Balancers for multi-protocol traffic handling."
+sidebarTitle: "Listeners"
+---
+
+import PrerequisitesAuth from '/snippets/prerequisites-auth.mdx';
+
+## Overview
+
+A listener defines a protocol and port combination on which a load balancer accepts
+inbound connections. A single load balancer supports multiple listeners simultaneously —
+e.g., an HTTP listener on port 80 and an HTTPS listener on port 443 can share
+the same load balancer VIP. Each listener routes traffic to its own default pool.
+
+<PrerequisitesAuth />
+
+---
+
+## Supported Protocols
+
+| Protocol | Port | Use Case |
+|----------|------|----------|
+| `HTTP` | Typically 80 | Unencrypted web application traffic |
+| `TERMINATED_HTTPS` | Typically 443 | TLS offloaded at the load balancer; backend receives plain HTTP |
+| `HTTPS` | Typically 443 | TLS passthrough; load balancer does not decrypt traffic |
+| `TCP` | Any | Any TCP service — databases, custom protocols |
+| `UDP` | Any | UDP-based services — DNS, game servers |
+| `SCTP` | Any | SCTP-based telecommunications traffic |
+
+---
+
+## Add a Listener
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Open listener creation" icon="plus">
+        Navigate to **Network > Load Balancers**, select your load balancer,
+        and click the **Listeners** tab. Click **Create Listener**.
+      </Step>
+      <Step title="Configure the listener" icon="settings">
+        | Field | Description |
+        |-------|-------------|
+        | **Name** | Display name (e.g., `listener-https`) |
+        | **Protocol** | Select from supported protocols above |
+        | **Protocol Port** | Port on which the listener accepts connections |
+        | **Connection Limit** | Maximum concurrent connections (-1 for unlimited) |
+        | **Default TLS Container** | For TERMINATED_HTTPS — select the certificate from Xloud Key Manager |
+      </Step>
+      <Step title="Associate a pool" icon="users">
+        After creating the listener, associate it with a backend pool. Select an existing
+        pool or create a new one from the **Pools** tab.
+        <Check>Listener is ACTIVE and routing to the associated pool.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Create HTTP listener"
+    openstack loadbalancer listener create \
+      --name listener-http \
+      --protocol HTTP \
+      --protocol-port 80 \
+      prod-web-lb
+    ```
+
+    ```bash title="Create HTTPS listener with TLS termination"
+    openstack loadbalancer listener create \
+      --name listener-https \
+      --protocol TERMINATED_HTTPS \
+      --protocol-port 443 \
+      --default-tls-container-ref <key-manager-container-ref> \
+      prod-web-lb
+    ```
+
+    ```bash title="Create TCP listener"
+    openstack loadbalancer listener create \
+      --name listener-db \
+      --protocol TCP \
+      --protocol-port 5432 \
+      prod-db-lb
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## TLS Termination (TERMINATED_HTTPS)
+
+TLS termination offloads certificate processing at the load balancer and forwards plain
+HTTP to backend members — reducing CPU overhead on application servers.
+
+<Steps titleSize="h3">
+  <Step title="Store certificate in Key Manager" icon="lock">
+    Store your TLS certificate and private key in Xloud Key Management:
+    ```bash title="Create secret container with certificate and key"
+    openstack secret store \
+      --name tls-cert \
+      --payload-content-type "application/pkix-cert" \
+      --payload "$(cat cert.pem | base64)"
+
+    openstack secret store \
+      --name tls-key \
+      --payload-content-type "application/octet-stream" \
+      --payload "$(cat key.pem | base64)"
+
+    openstack secret container create \
+      --name prod-tls-container \
+      --type certificate \
+      --secret "certificate=$(openstack secret list --name tls-cert -c 'Secret href' -f value)" \
+      --secret "private_key=$(openstack secret list --name tls-key -c 'Secret href' -f value)"
+    ```
+  </Step>
+  <Step title="Create listener with certificate container" icon="shield">
+    ```bash title="Create TERMINATED_HTTPS listener"
+    CONTAINER_REF=$(openstack secret container show prod-tls-container -c container_ref -f value)
+
+    openstack loadbalancer listener create \
+      --name listener-https \
+      --protocol TERMINATED_HTTPS \
+      --protocol-port 443 \
+      --default-tls-container-ref $CONTAINER_REF \
+      prod-web-lb
+    ```
+    <Check>Listener is ACTIVE and accepting encrypted connections on port 443.</Check>
+  </Step>
+</Steps>
+
+---
+
+## Manage Listeners
+
+<CodeGroup>
+```bash title="List listeners on a load balancer"
+openstack loadbalancer listener list \
+  --loadbalancer prod-web-lb
+```
+```bash title="Show listener details"
+openstack loadbalancer listener show listener-https
+```
+```bash title="Update connection limit"
+openstack loadbalancer listener set listener-http \
+  --connection-limit 10000
+```
+```bash title="Delete a listener"
+openstack loadbalancer listener delete listener-http
+```
+</CodeGroup>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Pools" href="/services/load-balancer/pools" color="#197560">
+    Configure backend pools and member management for each listener.
+  </Card>
+  <Card title="Health Monitors" href="/services/load-balancer/health-monitors" color="#197560">
+    Set up health checks for pools backing your listeners.
+  </Card>
+  <Card title="Floating IP Assignment" href="/services/load-balancer/floating-ip" color="#197560">
+    Expose the load balancer VIP publicly after configuring listeners.
+  </Card>
+  <Card title="Troubleshooting" href="/services/load-balancer/troubleshooting" color="#197560">
+    Resolve TLS handshake failures and protocol-specific issues.
+  </Card>
+</CardGroup>

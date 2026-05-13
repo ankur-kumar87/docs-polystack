@@ -1,0 +1,272 @@
+---
+title: "Block Storage Troubleshooting"
+description: "Diagnose common block storage issues — volumes stuck in error, attachment failures, snapshot errors, and quota limits."
+sidebarTitle: "Troubleshooting"
+---
+
+import CliAuth from '/snippets/cli-auth.mdx';
+
+## Overview
+
+This guide covers the most common issues encountered when working with Xloud Block Storage volumes, snapshots, backups, and attachments. Each section identifies the symptom, explains the most likely cause, and provides step-by-step resolution commands.
+
+<Note>
+  **Before troubleshooting**
+  - Authenticate with a valid project token: `source openrc.sh`
+  - For persistent or recurring issues, contact [Xloud Support](mailto:support@xloud.tech)
+    with the volume ID and the error message
+</Note>
+
+---
+
+## Volume Issues
+
+<AccordionGroup>
+  <Accordion title="Volume stuck in 'creating' status" icon="clock">
+    **Symptom**: A newly created volume remains in `creating` status for more than
+    5 minutes.
+
+    **Cause**: The storage backend did not respond within the expected timeout, or
+    the scheduler could not find a suitable backend for the requested volume type.
+
+    **Resolution**:
+    ```bash title="Check volume status and error reason"
+    openstack volume show <volume-id> -c status -c error_reason
+    ```
+
+    Common causes and fixes:
+    - **No backend available** — the requested volume type has no active backend. Try
+      a different volume type or availability zone.
+    - **Capacity exhausted** — the backend has no free capacity. Check with your
+      administrator.
+    - **Backend unreachable** — contact your administrator to verify storage service health.
+
+    <Tip>Try a different volume type or availability zone if the issue persists.</Tip>
+  </Accordion>
+
+  <Accordion title="Volume in 'error' status after creation" icon="circle-x">
+    **Symptom**: Volume creation completes but status shows `error`.
+
+    **Cause**: The backend driver encountered an error allocating the volume. Common
+    causes include pool capacity exhaustion, backend authentication failure, or
+    configuration issues.
+
+    **Resolution**:
+    ```bash title="Show volume details"
+    openstack volume show <volume-id>
+    ```
+
+    Delete the failed volume and retry with a different type:
+    ```bash title="Delete failed volume"
+    openstack volume delete <volume-id>
+    ```
+
+    If the error persists on all volume types, contact your administrator.
+  </Accordion>
+
+  <Accordion title="Cannot delete volume — 'volume is in use'" icon="lock">
+    **Symptom**: `openstack volume delete` fails with "volume is in use" or similar error.
+
+    **Cause**: The volume is still attached to an instance, or a snapshot was taken
+    while the volume was in a non-available state.
+
+    **Resolution**:
+    ```bash title="Check volume attachments"
+    openstack volume show <volume-id> -c status -c attachments
+    ```
+
+    [Detach the volume](/services/storage/attach-volume) from the instance first,
+    then retry deletion.
+  </Accordion>
+
+  <Accordion title="Quota exceeded when creating volume" icon="gauge">
+    **Symptom**: Volume creation fails with "Quota exceeded for volumes" or
+    "Quota exceeded for gigabytes".
+
+    **Cause**: The project has reached the storage quota limit.
+
+    **Resolution**:
+    ```bash title="Check current quota usage"
+    openstack quota show
+    ```
+
+    Review `volumes`, `gigabytes`, and `per_volume_gigabytes` limits. Either:
+    - Delete unused volumes and snapshots to free quota
+    - Contact your administrator to request a quota increase
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Attachment Issues
+
+<AccordionGroup>
+  <Accordion title="Cannot attach volume — availability zone mismatch" icon="triangle-alert">
+    **Symptom**: Attachment fails with an error referencing availability zone.
+
+    **Cause**: The volume and instance are in different availability zones. Volumes
+    can only be attached to instances in the same zone.
+
+    **Resolution**:
+    ```bash title="Check volume availability zone"
+    openstack volume show <volume-id> -c availability_zone
+    ```
+    ```bash title="Check instance availability zone"
+    openstack server show <instance-id> -c OS-EXT-AZ:availability_zone
+    ```
+
+    If the zones differ, create a new volume in the correct availability zone, or
+    restore a snapshot of the volume in the correct zone.
+  </Accordion>
+
+  <Accordion title="Volume shows 'In-use' but is not attached" icon="link">
+    **Symptom**: Volume status is `in-use` but the `attachments` field is empty, or
+    the instance it was attached to no longer exists.
+
+    **Cause**: The compute instance was force-deleted without detaching the volume,
+    leaving the volume in a stale `in-use` state.
+
+    **Resolution** (admin only):
+    ```bash title="Reset volume state"
+    openstack volume set --state available <volume-id>
+    ```
+
+    <Warning>
+      Only reset the state if you are certain the volume is not actually in use. Verify
+      the instance no longer exists before resetting.
+    </Warning>
+  </Accordion>
+
+  <Accordion title="Block device not visible inside instance after attach" icon="hard-drive">
+    **Symptom**: The volume shows `in-use` in the Dashboard/CLI, but `lsblk` inside
+    the instance does not show the new device.
+
+    **Cause**: The guest OS did not detect the hot-plug event.
+
+    **Resolution**: Rescan the SCSI bus inside the instance:
+    ```bash title="Rescan SCSI bus"
+    sudo echo "- - -" | sudo tee /sys/class/scsi_host/host*/scan
+    ```
+
+    Verify the device is now visible:
+    ```bash title="List block devices"
+    lsblk
+    ```
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Snapshot Issues
+
+<AccordionGroup>
+  <Accordion title="Snapshot failed or stuck in 'error' status" icon="triangle-alert">
+    **Cause**: The volume was in an inconsistent state, or the backend encountered
+    an error during the snapshot operation.
+
+    **Resolution**:
+    ```bash title="List snapshots with status"
+    openstack volume snapshot list
+    ```
+
+    ```bash title="Delete a failed snapshot"
+    openstack volume snapshot delete <snapshot-id>
+    ```
+
+    For snapshots stuck in `deleting` state, contact your administrator — the backend
+    may require manual cleanup.
+
+    <Warning>
+      Do not repeatedly retry snapshot creation on a degraded backend. Resolve the
+      underlying storage issue first.
+    </Warning>
+  </Accordion>
+
+  <Accordion title="Snapshot stuck in 'deleting' state" icon="clock">
+    **Cause**: The backend could not complete the deletion — common with distributed
+    storage when the cluster is degraded or the snapshot has dependent volumes.
+
+    **Resolution**: Check for volumes created from the snapshot:
+    ```bash title="List volumes from snapshot"
+    openstack volume list --property source_volid=<snapshot-id>
+    ```
+
+    Delete dependent volumes first, then retry snapshot deletion. If the snapshot
+    remains stuck, contact your administrator.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Backup Issues
+
+<AccordionGroup>
+  <Accordion title="Backup creation fails with 'backup service unavailable'" icon="circle-x">
+    **Cause**: The backup service is not running or is not configured for this
+    environment.
+
+    **Resolution**: Contact your administrator to verify the backup service is enabled
+    and the backup target is accessible.
+
+    ```bash title="Check backup service status (admin)"
+    openstack volume service list | grep backup
+    ```
+
+    State should be `up`.
+  </Accordion>
+
+  <Accordion title="Restore takes longer than expected" icon="clock">
+    **Cause**: Backup restoration is a full data copy operation. Duration depends on
+    the volume size, the backup target throughput, and current system load.
+
+    For large volumes (100+ GiB), restores may take 15–60 minutes. Monitor progress:
+    ```bash title="Check restore status"
+    openstack volume show <restored-volume-id> -c status
+    ```
+
+    Status transitions: `restoring-backup` → `available`
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Extension Issues
+
+<AccordionGroup>
+  <Accordion title="Filesystem does not reflect new capacity after extension" icon="expand">
+    **Cause**: The block device was extended but the filesystem was not resized.
+    The filesystem resize must be performed manually inside the instance.
+
+    **Resolution**:
+    ```bash title="Resize ext4 filesystem"
+    sudo resize2fs /dev/vdb
+    ```
+    ```bash title="Resize XFS filesystem"
+    sudo xfs_growfs /mnt/data
+    ```
+
+    Verify with:
+    ```bash title="Check new capacity"
+    df -h /mnt/data
+    ```
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Still Having Issues?
+
+<CardGroup cols={2}>
+  <Card title="Contact Support" icon="headset" href="mailto:support@xloud.tech" color="#197560">
+    Open a support ticket with your volume ID and error message
+  </Card>
+  <Card title="Admin Troubleshooting" icon="shield" href="/services/storage/admin-guide" color="#197560">
+    Administrators: service-level diagnostics and backend troubleshooting
+  </Card>
+  <Card title="User Guide" icon="book-open" href="/services/storage/user-guide" color="#197560">
+    Return to the Block Storage user guide for operational procedures
+  </Card>
+  <Card title="Quota Management (Admin)" icon="gauge" href="/services/storage/quotas" color="#197560">
+    Request quota increases from your administrator
+  </Card>
+</CardGroup>

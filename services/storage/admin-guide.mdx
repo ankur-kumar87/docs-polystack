@@ -1,0 +1,151 @@
+---
+title: "Block Storage Administration"
+description: "Configure and operate Xloud Block Storage — backends, volume types, storage tiers, quotas, encryption, and migration."
+sidebarTitle: "Admin Guide"
+mode: "wide"
+---
+
+import AdminWarning from '/snippets/admin-warning.mdx';
+
+<p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Overview</p>
+
+The Xloud Block Storage service delivers persistent block volumes to compute instances through a distributed architecture of API, scheduler, volume service, and backend driver components. As an administrator, you are responsible for configuring storage backends, defining volume types and QoS policies, managing storage tiers, enforcing project quotas, maintaining service health, and ensuring data security across your deployment.
+
+<AdminWarning />
+
+<Tabs>
+  <Tab title="XDeploy" icon="server">
+    Storage backends, backup configuration, and multi-backend setup are configured through XDeploy:
+
+    <Steps titleSize="h3">
+      <Step title="Open Configuration" icon="settings">
+        Navigate to **XDeploy → Configuration** and select the **Storage** tab.
+      </Step>
+      <Step title="Select storage backend" icon="database">
+        Select the storage backend for your deployment: Ceph RBD, LVM, NFS, iSCSI,
+        VMware VMDK, or Pure Storage. Configure backend-specific parameters such as
+        pool names, volume groups, or NFS share paths.
+      </Step>
+      <Step title="Configure backups" icon="archive">
+        Set the backup driver and target (Ceph, NFS, or object storage) in the backup
+        configuration section.
+      </Step>
+      <Step title="Save and deploy" icon="rocket">
+        Click **Save Configuration**, then navigate to **XDeploy → Operations** and
+        run a **Deploy** or **Reconfigure** for the Block Storage service.
+
+        <Check>Storage backends are configured and the volume service is operational.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    Configure storage backends by editing `cinder.conf` directly at
+    `/etc/xavs/config/cinder/cinder.conf`. See the individual backend guides below
+    for detailed configuration parameters.
+  </Tab>
+</Tabs>
+
+---
+
+<p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Service Components</p>
+
+| Component | Role |
+|-----------|------|
+| **Block Storage API** | RESTful endpoint on port 8776; sits behind the load balancer |
+| **Scheduler** | Selects the optimal backend for each volume operation using filters and weights |
+| **Volume Service** | Runs on each storage node; interfaces with the backend driver |
+| **Backup Service** | Manages backup creation and restoration to a separate backup target |
+| **Database** | Stores volume, snapshot, backup, and attachment metadata |
+
+---
+
+<p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Quick Start</p>
+
+For a new deployment, complete configuration in this order:
+
+<Steps titleSize="h3">
+  <Step title="Review the architecture" icon="workflow">
+    Understand the service components and request flows before configuring.
+    See [Service Architecture](/services/storage/architecture).
+  </Step>
+  <Step title="Configure storage backends" icon="database">
+    Register distributed storage (RBD), LVM, or NFS backends with the volume service.
+    See [Storage Backends](/services/storage/storage-backends).
+  </Step>
+  <Step title="Create volume types" icon="layers">
+    Define storage tiers and map them to backends. Configure QoS limits.
+    See [Volume Types & QoS](/services/storage/volume-types-admin).
+  </Step>
+  <Step title="Configure storage tiers" icon="stack">
+    Map NVMe, SSD, and HDD hardware classes to volume types and set the default.
+    See [Storage Tiers](/services/storage/storage-tiers).
+  </Step>
+  <Step title="Configure the backup service" icon="archive">
+    Point the backup service at an object storage or NFS target.
+    See [Backup Configuration](/services/storage/backup-config).
+  </Step>
+  <Step title="Apply security hardening" icon="shield">
+    Restrict volume type access, enforce minimums, and audit snapshots.
+    See [Security Hardening](/services/storage/security).
+  </Step>
+  <Step title="Set project quotas" icon="gauge">
+    Configure default and per-project storage limits.
+    See [Quota Management](/services/storage/quotas).
+  </Step>
+</Steps>
+
+---
+
+<p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Administration Guides</p>
+
+<CardGroup cols={4}>
+  <Card title="Service Architecture" icon="workflow" href="/services/storage/architecture" color="#197560">
+    Components, request flows, and high-availability deployment model
+  </Card>
+  <Card title="Storage Backends" icon="database" href="/services/storage/storage-backends" color="#197560">
+    Configure and verify RBD, LVM, and NFS backend drivers
+  </Card>
+  <Card title="Volume Types & QoS" icon="gauge" href="/services/storage/volume-types-admin" color="#197560">
+    Create volume types, set backend associations, and configure QoS limits
+  </Card>
+  <Card title="Storage Tiers" icon="layers" href="/services/storage/storage-tiers" color="#197560">
+    Map NVMe, SSD, and HDD hardware classes to volume types
+  </Card>
+  <Card title="Quota Management" icon="chart-bar" href="/services/storage/quotas" color="#197560">
+    Set global defaults and per-project storage limits
+  </Card>
+  <Card title="Volume Migration" icon="move" href="/services/storage/migration" color="#197560">
+    Migrate volumes between backends for rebalancing or hardware retirement
+  </Card>
+  <Card title="Backup Configuration" icon="archive" href="/services/storage/backup-config" color="#197560">
+    Configure backup drivers and targets for production data protection
+  </Card>
+  <Card title="Volume Encryption" icon="lock" href="/services/storage/encryption" color="#197560">
+    Enable LUKS at-rest encryption backed by the Key Management service
+  </Card>
+  <Card title="Security Hardening" icon="shield" href="/services/storage/security" color="#197560">
+    Access controls, snapshot visibility, audit logging, and security baseline
+  </Card>
+  <Card title="Troubleshooting" icon="wrench" href="/services/storage/admin-troubleshooting" color="#197560">
+    Service-level diagnostics for volume service, backends, and data operations
+  </Card>
+</CardGroup>
+
+---
+
+<p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Next Steps</p>
+
+<CardGroup cols={4}>
+  <Card title="Block Storage User Guide" icon="book-open" href="/services/storage/user-guide" color="#197560">
+    End-user workflows for creating, attaching, and managing volumes
+  </Card>
+  <Card title="Compute Admin Guide" icon="server" href="/services/compute/admin-guide" color="#197560">
+    Configure compute hosts, manage resources, and set compute quotas
+  </Card>
+  <Card title="CLI Setup" icon="terminal" href="/cli-setup" color="#197560">
+    Install the CLI for administrative block storage operations
+  </Card>
+  <Card title="Authentication" icon="key" href="/cli-setup" color="#197560">
+    Manage admin credentials and project access
+  </Card>
+</CardGroup>

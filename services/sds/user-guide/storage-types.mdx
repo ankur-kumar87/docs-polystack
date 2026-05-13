@@ -1,0 +1,186 @@
+---
+title: "Storage Types"
+description: "Understand block, object, and shared file storage in XSDS — capabilities, use cases, and how to choose the right interface for your workload."
+sidebarTitle: "Storage Types"
+---
+
+## Overview
+
+XSDS exposes three distinct storage interfaces from a single distributed platform.
+Each interface suits a different application pattern — selecting the right type for
+your workload is the first step to optimal performance and cost efficiency.
+
+<Note>
+  **Prerequisites**
+  - An active Xloud account with project access
+  - Familiarity with your application's I/O pattern (random vs sequential, latency vs throughput)
+</Note>
+
+---
+
+## Storage Interface Comparison
+
+| Interface | Protocol | Access Pattern | Typical Use Case |
+|-----------|----------|---------------|-----------------|
+| **Block Storage** | RBD / iSCSI | Random read/write, low latency | Instance boot disks, databases, OLTP |
+| **Object Storage** | S3-compatible HTTP | Large objects, high throughput | Backups, media files, data lakes |
+| **Shared File Storage** | NFS / SMB | Concurrent multi-client | Home directories, shared configs |
+
+---
+
+## Block Storage
+
+<Tabs>
+  <Tab title="Overview" icon="hard-drive">
+    Block storage volumes attach to Xloud Compute instances as persistent disks. Volumes
+    exist independently of instance lifecycle — data survives instance deletion and can
+    be re-attached to a different instance.
+
+    **Capabilities:**
+
+    | Capability | Details |
+    |-----------|---------|
+    | Hot-attach | Attach to running instances without rebooting |
+    | Online resize | Extend volume size without downtime (extend only) |
+    | Snapshots | Point-in-time copies for recovery or cloning |
+    | Encryption | At-rest encryption via the Xloud Key Management service |
+    | QoS | IOPS and throughput limits configurable via volume types |
+
+    <Tip>
+      Select a volume type that matches your workload's I/O profile. NVMe-backed types
+      suit latency-sensitive databases; HDD-backed types suit large sequential workloads
+      like backups and archives.
+    </Tip>
+  </Tab>
+  <Tab title="Best For" icon="circle-check">
+    Block storage is ideal when your workload requires:
+
+    - Exclusive read/write access from a single instance
+    - Predictable low-latency I/O (sub-millisecond for NVMe-backed volumes)
+    - POSIX-compliant file system on top of the volume (ext4, XFS, etc.)
+    - Database workloads: PostgreSQL, MySQL, MongoDB, Redis
+
+    See the [Xloud Block Storage guide](/services/storage/user-guide) for complete
+    volume lifecycle management procedures.
+  </Tab>
+</Tabs>
+
+---
+
+## Object Storage
+
+<Tabs>
+  <Tab title="Overview" icon="box">
+    Object storage provides an S3-compatible API for storing and retrieving unstructured
+    data — images, backups, logs, media files, and application artifacts — at any scale.
+
+    **Capabilities:**
+
+    | Capability | Details |
+    |-----------|---------|
+    | S3 API compatibility | Works with standard S3 clients, SDKs, and tools |
+    | Bucket ACLs | Per-bucket and per-object access control |
+    | Lifecycle policies | Automate object expiration and tiering |
+    | Object versioning | Retain multiple versions of objects for accidental-delete protection |
+    | Multi-part upload | Efficient upload for large files (> 100 MB) |
+    | Server-side encryption | Transparent encryption at write time |
+    | Static website hosting | Serve static content directly from buckets |
+
+    <Note>
+      Access credentials for object storage are separate from your Xloud Dashboard
+      credentials. Generate S3-compatible access keys from the Dashboard under
+      **Project → Object Store → Access Keys**.
+    </Note>
+  </Tab>
+  <Tab title="Best For" icon="circle-check">
+    Object storage is ideal when your workload requires:
+
+    - Storing large volumes of unstructured data (images, videos, documents, logs)
+    - Application integration via standard S3 SDK (boto3, AWS SDK, MinIO client)
+    - Multi-region data distribution and static content delivery
+    - Cost-efficient backup and archival with erasure-coded pools
+  </Tab>
+</Tabs>
+
+---
+
+## Shared File Storage
+
+<Tabs>
+  <Tab title="Overview" icon="folder-open">
+    Shared file storage provides a POSIX-compliant distributed file system accessible
+    from multiple instances simultaneously — suitable for home directories, shared
+    configuration, and workloads that require concurrent read/write access.
+
+    **Capabilities:**
+
+    | Capability | Details |
+    |-----------|---------|
+    | POSIX semantics | Full file system compliance including permissions and links |
+    | Multi-client access | Concurrent read/write from many instances at once |
+    | NFS and SMB gateways | Compatible with Linux and Windows clients |
+    | Per-directory quotas | Control storage consumption per share or directory |
+    | Directory snapshots | Point-in-time recovery at the directory level |
+
+    <Warning>
+      Shared file storage throughput is distributed across all connected clients. For
+      high-IOPS workloads requiring exclusive access, use a dedicated block volume
+      instead.
+    </Warning>
+  </Tab>
+  <Tab title="Best For" icon="circle-check">
+    Shared file storage is ideal when your workload requires:
+
+    - Concurrent read/write access from multiple instances simultaneously
+    - Legacy NFS-mounted application data directories
+    - Shared configuration files across a cluster of application nodes
+    - Collaborative workloads where multiple users write to the same directory tree
+  </Tab>
+</Tabs>
+
+---
+
+## Choosing the Right Type
+
+<AccordionGroup>
+  <Accordion title="My application is a relational database" icon="database">
+    Use **Block Storage**. Databases require low-latency random I/O and exclusive
+    access to their data files. Choose an NVMe or SSD-backed volume type for
+    production OLTP databases.
+  </Accordion>
+  <Accordion title="I need to store uploaded user files or media" icon="image">
+    Use **Object Storage**. Media files, documents, and user uploads benefit from
+    the S3 API's simplicity, scalability, and built-in lifecycle management. Applications
+    integrate via the S3 SDK — no mounting required.
+  </Accordion>
+  <Accordion title="Multiple instances need to read and write the same data" icon="users">
+    Use **Shared File Storage**. If your application tier requires a common data
+    directory accessible by all instances (e.g., a shared cache, log directory, or
+    configuration tree), shared file storage provides concurrent access with POSIX
+    semantics.
+  </Accordion>
+  <Accordion title="I need to store backups at low cost" icon="archive">
+    Use **Object Storage** with an erasure-coded pool. Erasure coding reduces storage
+    overhead to 1.33–1.5× compared to 3× for replicated storage, making it the most
+    cost-efficient option for backup and archival workloads where access is infrequent.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Access Methods" href="/services/sds/user-guide/access-methods" color="#197560">
+    Connect to each storage type — Dashboard, CLI, S3 API, and mount protocols
+  </Card>
+  <Card title="Data Protection" href="/services/sds/user-guide/data-protection" color="#197560">
+    Configure replication and erasure coding for each storage type
+  </Card>
+  <Card title="Snapshots" href="/services/sds/user-guide/snapshots" color="#197560">
+    Create and restore snapshots for block volumes and object buckets
+  </Card>
+  <Card title="Block Storage User Guide" href="/services/storage/user-guide" color="#197560">
+    Full volume lifecycle management — create, attach, extend, and back up volumes
+  </Card>
+</CardGroup>

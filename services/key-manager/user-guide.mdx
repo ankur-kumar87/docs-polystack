@@ -1,0 +1,76 @@
+---
+title: "Key Manager User Guide"
+description: "Manage secrets, containers, certificates, and ACLs in Xloud Key Manager. Securely store credentials, private keys, and TLS certificates for your cloud."
+sidebarTitle: "User Guide"
+mode: "wide"
+---
+
+import PrerequisitesAuth from '/snippets/prerequisites-auth.mdx';
+
+<p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Overview</p>
+
+Xloud Key Manager provides a centralized, encrypted store for secrets, certificates,
+and cryptographic keys used across your private cloud. Secrets stored in Key Manager
+are encrypted at rest and access-controlled independently of the resources that consume
+them.
+
+<PrerequisitesAuth />
+
+<Note>
+  Secrets stored in Key Manager are encrypted at rest. The secret payload is never
+  logged, echoed in API responses after creation, or exposed in plain text outside
+  of an explicit retrieve operation by an authorized caller.
+</Note>
+
+---
+
+<p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Topics in This Guide</p>
+
+<CardGroup cols={4}>
+  <Card title="Store Secrets" icon="vault" href="/services/key-manager/store-secrets" color="#197560">
+    Store passwords, API tokens, private keys, and binary payloads with type metadata
+  </Card>
+  <Card title="Containers" icon="package" href="/services/key-manager/containers" color="#197560">
+    Group related secrets into named bundles — certificate, RSA, and generic types
+  </Card>
+  <Card title="Certificates" icon="badge-check" href="/services/key-manager/certificates" color="#197560">
+    Store externally issued TLS certificates or order new ones through a CA plugin
+  </Card>
+  <Card title="Access Control (ACL)" icon="list-checks" href="/services/key-manager/acl" color="#197560">
+    Grant per-user or per-project read access to secrets and containers
+  </Card>
+  <Card title="Troubleshooting" icon="wrench" href="/services/key-manager/troubleshooting" color="#197560">
+    Resolve 403 errors, expired secrets, and Load Balancer TLS container issues
+  </Card>
+</CardGroup>
+
+---
+
+<p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Key Concepts</p>
+
+| Concept | Description |
+|---------|-------------|
+| **Secret** | An encrypted payload — passwords, API keys, private keys, certificates, or binary blobs |
+| **Container** | A named group of related secrets — commonly certificate + private key + CA chain |
+| **Order** | An async request to generate a key or issue a certificate through a CA plugin |
+| **ACL** | Per-secret or per-container permission rules for cross-user or cross-project access |
+| **Transport Key** | An RSA public key used to encrypt secrets before upload for zero-plaintext transmission |
+
+---
+
+<p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Next Steps</p>
+
+<CardGroup cols={4}>
+  <Card title="Key Manager Admin Guide" icon="shield-check" href="/services/key-manager/admin-guide" color="#197560">
+    Configure secret store backends, transport keys, and quotas
+  </Card>
+  <Card title="Load Balancer" icon="combine" href="/services/load-balancer/user-guide" color="#197560">
+    Use TLS certificate containers in HTTPS listener configuration
+  </Card>
+  <Card title="DNS User Guide" icon="globe" href="/services/dns/user-guide" color="#197560">
+    Configure DNSSEC with signing keys stored in Key Manager
+  </Card>
+  <Card title="Object Storage" icon="box" href="/services/object-storage/user-guide" color="#197560">
+    Encrypt object containers with customer-managed keys from Key Manager
+  </Card>
+</CardGroup>

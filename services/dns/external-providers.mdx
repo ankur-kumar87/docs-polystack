@@ -1,0 +1,417 @@
+---
+title: "External DNS Providers"
+description: "Configure Xloud DNS as a Service against external authoritative DNS backends — what's actively tested upstream, what's in tree but untested, and how to integrate enterprise DDI platforms."
+sidebarTitle: "External Providers"
+---
+
+import AdminWarning from '/snippets/admin-warning.mdx';
+import CliAuth from '/snippets/cli-auth.mdx';
+
+## Overview
+
+Xloud DNS as a Service uses Designate to manage DNS zones and records on behalf
+of tenants. Designate has a pluggable backend architecture: the Designate
+control plane handles tenant zones, while a backend driver propagates each
+change to the external authoritative DNS server.
+
+When a virtual machine is provisioned, Designate creates the matching A, PTR,
+and CNAME records in the tenant's assigned zone. If an external DNS backend is
+configured, the records are propagated to the external provider without manual
+intervention.
+
+<AdminWarning />
+
+<Note>
+  **Prerequisites**
+  - Administrator credentials with the `admin` role
+  - Network connectivity from the Designate control plane nodes to the
+    external DNS server's management interface
+  - Credentials, TSIG keys, or API tokens for the external DNS provider as
+    appropriate
+</Note>
+
+---
+
+## Supported Backends
+
+Designate ships several DNS server backend drivers. Two carry **Integrated**
+status — they run in continuous CI and are the recommended path for production.
+The rest are present in tree but officially **Untested** by upstream, which
+means there is no automated regression net; deploy them only after your own
+validation against your target version.
+
+| Backend | Status | Integration mechanism |
+|---------|:------:|----------------------|
+| **BIND9** | **Integrated** (CI-tested) | RFC 2136 dynamic updates |
+| **PowerDNS 4** | **Integrated** (CI-tested) | REST API (PowerDNS Authoritative Server 4.x or later) |
+| **Infoblox** | In tree, **Untested** | XFR (zone transfer) — refreshed to use the official Infoblox client |
+| **Akamai DNS v2** | In tree, **Untested** | XFR (zone transfer) |
+| **NS1 DNS** | In tree, **Untested** | XFR (zone transfer) |
+| **DynECT** | In tree, **Untested** | XFR (zone transfer) |
+| **NSD4** | In tree, **Untested** | XFR (zone transfer) |
+
+Reference: [Designate DNS Server Driver Support Matrix](https://docs.openstack.org/designate/latest/admin/support-matrix.html).
+
+<Warning>
+  *Untested* does not mean broken — it means upstream has no automated coverage.
+  Validate the target backend in a non-production environment before relying on
+  it in customer deployments.
+</Warning>
+
+---
+
+## Notes on commonly named providers
+
+### Infoblox
+
+In-tree backend, recently refreshed to use the official Infoblox client.
+Officially **Untested** in the upstream support matrix. Suitable for enterprises
+that want Infoblox to remain the authoritative DNS / DDI platform — but treat
+the integration as customer-validated, not upstream-certified.
+
+### Microsoft DNS / Active Directory DNS
+
+There is no in-tree Designate driver for Microsoft DNS. Two practical paths:
+
+1. **Front Designate with BIND9 or PowerDNS** as the integrated backend, then
+   configure a one-way zone-transfer or sync from BIND or PowerDNS into
+   Microsoft DNS using Microsoft's own zone-transfer support.
+2. **Build a custom Designate backend** that calls the Microsoft DNS PowerShell
+   cmdlets through WinRM — see
+   [Custom Backend Drivers](#custom-backend-drivers) below.
+
+### BlueCat
+
+BlueCat does **not** ship a Designate backend driver. BlueCat maintains a
+separate set of OpenStack integration components — see
+[BlueCat OpenStack Drivers](https://github.com/bluecatlabs/bluecat-openstack-drivers) —
+that integrate via Neutron IPAM and Nova/Neutron sync agents that route DNS
+records into BlueCat Address Manager (BAM). In a BlueCat-integrated
+deployment, the platform's DNS records flow through BAM and Designate is
+typically not used.
+
+### SolarWinds
+
+SolarWinds is a network and infrastructure **monitoring** suite, not an
+authoritative DNS server, so a Designate backend is not applicable. SolarWinds
+can receive DNS-related metrics and events from the platform via standard
+Prometheus / SNMP / syslog forwarders documented in the
+[Monitoring](/services/monitoring) guides.
+
+---
+
+## Architecture
+
+Designate's backend model separates the API and pool management layer from the
+DNS protocol layer. Each backend driver handles zone synchronization between
+Designate's internal state and the external authoritative server. Tenants
+interact only with Designate APIs — the backend synchronization is transparent.
+
+```
+Tenant → Designate API → Pool Manager → Backend Driver → External DNS Server
+                                             ↕
+                                    (zone create / record sync)
+```
+
+A **pool** groups one or more DNS backend targets with shared configuration.
+Each pool can contain multiple nameservers, and tenants can be assigned to
+specific pools based on project or zone type.
+
+---
+
+## Backend Configuration (CI-tested backends)
+
+All backend configuration lives in `designate.conf`. In XAVS deployments, this
+file is managed by Ansible — set parameters via XDeploy globals and run
+`xavs-ansible deploy --tags designate` to apply changes.
+
+<AccordionGroup>
+  <Accordion title="BIND9 — RFC 2136 dynamic updates" icon="globe">
+    BIND9 integration uses the standard DNS dynamic update protocol (RFC 2136).
+    A TSIG key authenticates updates from Designate to BIND.
+
+    **On the BIND server — generate a TSIG key:**
+
+    ```bash title="Generate TSIG key on the BIND server"
+    tsig-keygen -a HMAC-SHA256 designate-key
+    ```
+
+    Add the output to `/etc/bind/named.conf.keys` and configure the zone to
+    accept updates:
+
+    ```bash title="/etc/bind/named.conf — allow dynamic updates"
+    zone "example.com" {
+        type master;
+        file "/var/cache/bind/example.com.db";
+        allow-update { key designate-key; };
+    };
+    ```
+
+    **Designate configuration:**
+
+    ```ini title="designate.conf — BIND9 backend"
+    [backend:bind9]
+    host = 10.0.10.5
+    port = 53
+    tsig_key_name = designate-key
+    tsig_key_secret = <base64-encoded-key>
+    tsig_key_algorithm = HMAC-SHA256
+
+    [pool:default]
+    backends = bind9
+    nameservers = ns1.example.com
+    also_notifies = 10.0.10.5:53
+    ```
+  </Accordion>
+
+  <Accordion title="PowerDNS 4 — pdns4 driver" icon="server">
+    The `pdns4` driver targets PowerDNS Authoritative Server 4.x or later.
+
+    **PowerDNS server — enable the API in `pdns.conf`:**
+
+    ```ini title="pdns.conf — enable REST API"
+    api=yes
+    api-key=<your-api-key>
+    webserver=yes
+    webserver-address=0.0.0.0
+    webserver-port=8081
+    ```
+
+    **Designate configuration:**
+
+    ```ini title="designate.conf — PowerDNS backend"
+    [backend:pdns4]
+    host = 10.0.10.6
+    port = 8081
+    api_endpoint = http://10.0.10.6:8081
+    api_token = <your-api-key>
+
+    [pool:default]
+    backends = pdns4
+    nameservers = ns1.example.com
+    ```
+  </Accordion>
+</AccordionGroup>
+
+<Tip>
+  In-tree backends marked *Untested* (Infoblox, Akamai v2, NS1, DynECT, NSD4)
+  follow the same `designate.conf` pattern — refer to the upstream
+  [Designate documentation](https://docs.openstack.org/designate/latest/) for
+  per-driver configuration keys. Validate every option in a non-production
+  environment before relying on these in customer deployments.
+</Tip>
+
+---
+
+## Custom Backend Drivers
+
+If your enterprise DNS / DDI provider does not have an in-tree Designate
+backend — or you want closer integration with a vendor's REST API rather than
+relying on zone-transfer — you can develop a **custom backend driver**.
+Designate exposes a stable Python interface for plug-in drivers, so a custom
+driver lives outside the Designate codebase and is loaded at runtime.
+
+### When to build a custom driver
+
+- The vendor exposes a modern REST / WAPI / GraphQL management API and you
+  want native record creation rather than XFR-based propagation.
+- You need richer record types (DDI-managed ranges, vendor-specific
+  attributes) that XFR does not carry.
+- You want operational hooks (audit logging, change-control workflows,
+  approval gates) inside the driver itself.
+- The vendor's product (for example, Microsoft DNS, BlueCat) does not have an
+  in-tree Designate backend today and you want platform tenants to use their
+  Designate APIs unchanged.
+
+### What's involved
+
+A custom driver is a Python class that implements
+`designate.backend.base.Backend`, packaged as a setuptools entry point under
+the `designate.backend` group. The driver implements zone create / update /
+delete and record create / update / delete handlers, and uses the vendor's
+SDK or REST API to apply each change to the authoritative DNS provider.
+
+The driver is registered in `designate.conf` exactly like an in-tree backend
+(`backends = my-vendor-driver`), and Designate loads it at startup. There are
+no upstream-Designate code changes required.
+
+### Maintenance trade-off
+
+A custom driver is **customer-owned** — upstream Designate releases will not
+automatically validate against it. The integration must be re-tested at each
+Designate upgrade. Plan for a small recurring engineering investment in
+exchange for the closer integration.
+
+### Hybrid approach (often the most pragmatic)
+
+When a vendor doesn't fit cleanly into either *XFR-based in-tree backend* or
+*custom-driver*, a common middle ground is:
+
+1. Use **BIND9** or **PowerDNS 4** as the Designate-integrated backend
+   (full upstream CI coverage).
+2. Configure the enterprise DNS / DDI platform (Infoblox, Microsoft DNS,
+   BlueCat) to **pull zones from BIND or PowerDNS** via standard zone
+   transfer or via the vendor's own sync / gateway product.
+
+This keeps the platform on a CI-tested integration path and uses the vendor's
+own tooling for the leg of the path the vendor knows best.
+
+---
+
+## Zone Transfer to External Provider
+
+When a zone is created in Designate, the backend driver provisions it on the
+configured external DNS server. Zone transfers can also be initiated manually
+for bulk migration of existing zones.
+
+<Tabs>
+  <Tab title="Dashboard" icon="monitor">
+    <Steps titleSize="h3">
+      <Step title="Create a zone" icon="plus">
+        Navigate to **Network → DNS Zones** and click **Create Zone**.
+
+        Enter the zone name (e.g., `example.com.`), email, TTL, and select the
+        pool if multiple pools are configured.
+      </Step>
+      <Step title="Verify propagation" icon="circle-check">
+        After the zone reaches **Active** status, query the external DNS server
+        to confirm the zone is visible:
+
+        ```bash title="Query external DNS server for zone"
+        dig @10.0.10.5 SOA example.com.
+        ```
+      </Step>
+      <Step title="Add records" icon="edit">
+        Navigate to the zone and click **Create Record Set**. Records created
+        here are automatically propagated to the external backend.
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    <CliAuth />
+
+    ```bash title="Create a zone"
+    openstack zone create \
+      --email admin@example.com \
+      --ttl 300 \
+      example.com.
+    ```
+
+    ```bash title="Check zone status"
+    openstack zone show example.com.
+    ```
+
+    ```bash title="Add an A record"
+    openstack recordset create \
+      --records 10.0.1.100 \
+      --type A \
+      --ttl 300 \
+      example.com. \
+      web01.example.com.
+    ```
+
+    ```bash title="Verify propagation to external DNS"
+    dig @10.0.10.5 A web01.example.com.
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Pool Management
+
+Pools allow routing different zones or tenants to different DNS backends. For
+example, internal zones can be handled by BIND9 while external zones use
+PowerDNS or a vendor backend.
+
+```ini title="designate.conf — multiple pools"
+[pools]
+names = internal-pool,external-pool
+
+[pool:internal-pool]
+backends = bind9
+nameservers = ns1.internal.example.com,ns2.internal.example.com
+also_notifies = 10.0.10.5:53
+
+[pool:external-pool]
+backends = pdns4
+nameservers = ns1.example.com,ns2.example.com
+```
+
+```bash title="Create a zone in a specific pool"
+openstack zone create \
+  --email admin@example.com \
+  --attributes pool_id:<pool-uuid> \
+  external.example.com.
+```
+
+---
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Zone stuck in PENDING status" icon="clock">
+    **Cause**: Designate cannot reach the external backend, or authentication
+    failed.
+
+    **Resolution**:
+    - Verify network connectivity from the Designate control node to the
+      backend IP and port
+    - Check Designate worker logs: `docker logs designate_worker`
+    - Confirm credentials (API key, TSIG key, or password) are correct in
+      `designate.conf`
+  </Accordion>
+
+  <Accordion title="Records not appearing on external DNS server" icon="triangle-alert">
+    **Cause**: The zone may be active in Designate but the backend sync failed.
+
+    **Resolution**:
+    - Force a zone sync: `openstack zone sync <zone-name>`
+    - Check Designate producer and worker logs for backend errors
+    - Verify the external DNS server has the zone configured to accept updates
+      from the Designate source IP
+  </Accordion>
+
+  <Accordion title="BIND9 update refused — TSIG verification failure" icon="lock">
+    **Cause**: The TSIG key in `designate.conf` does not match the key
+    configured on the BIND9 server.
+
+    **Resolution**:
+    - Re-generate and re-sync the TSIG key on both BIND9 and Designate
+    - Confirm the key algorithm (`HMAC-SHA256`) matches on both sides
+    - Test manually: `nsupdate -k /etc/bind/designate.key`
+  </Accordion>
+
+  <Accordion title="Custom driver fails to load at startup" icon="circle-x">
+    **Cause**: The driver is not registered as a setuptools entry point under
+    the `designate.backend` group, or the Python package is not installed in
+    the Designate virtualenv.
+
+    **Resolution**:
+    - Verify the entry point: `pip show <your-driver-package>` should list it
+      under entry points
+    - Confirm the driver class implements every abstract method of
+      `designate.backend.base.Backend`
+    - Restart `designate-worker` and `designate-producer` after installing or
+      updating the driver
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Backend Configuration" href="/services/dns/backend-config" color="#197560">
+    Full reference for Designate backend driver options and pool configuration
+  </Card>
+  <Card title="Pool Management" href="/services/dns/pool-management" color="#197560">
+    Manage multiple backend pools for routing zones to different DNS providers
+  </Card>
+  <Card title="DNS Security" href="/services/dns/security" color="#197560">
+    Configure TSIG keys, DNSSEC, and zone access policies
+  </Card>
+  <Card title="Designate Support Matrix (upstream)" href="https://docs.openstack.org/designate/latest/admin/support-matrix.html" color="#197560">
+    Authoritative upstream list of in-tree backends and their CI test status
+  </Card>
+</CardGroup>

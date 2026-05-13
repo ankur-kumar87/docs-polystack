@@ -1,0 +1,136 @@
+---
+title: "Retention Policies"
+description: "Configure XIMP metric and log retention periods to balance historical depth against storage costs for raw, downsampled, and log data."
+sidebarTitle: "Retention"
+---
+
+import AdminWarning from '/snippets/admin-warning.mdx';
+
+## Overview
+
+Retention policies control how long XIMP stores metric, log, and flow data. Longer
+retention enables deeper historical analysis and incident review; shorter retention
+reduces storage costs. Downsampled metric retention provides long-term trend data
+at a fraction of the storage cost of raw metrics.
+
+<AdminWarning />
+
+<Note>
+  **Prerequisites**
+  - Administrator credentials with the `admin` role
+  - Confirmation from compliance and operations teams on required retention periods before reducing existing values
+</Note>
+
+---
+
+## Recommended Retention Settings
+
+| Data Type | Recommended Retention | Storage Impact | Notes |
+|-----------|----------------------|----------------|-------|
+| Metrics (raw, 30s resolution) | 30 days | ~2 GB per node per month | Full resolution for recent incidents |
+| Metrics (5-min downsampled) | 1 year | ~200 MB per node per month | Medium-term trend analysis |
+| Metrics (1-hour downsampled) | 3 years | ~20 MB per node per month | Long-term capacity planning |
+| Logs | 90 days | Varies by log verbosity | Incident review and audit |
+| Flow data | 30 days | ~5 GB per Gbps per month | Network forensics |
+
+---
+
+## Configuring Retention
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    Navigate to **Monitor Center > Monitoring** (Retention, admin view) and configure
+    retention for each data type.
+
+    1. Select the data type (Metrics Raw, Metrics Downsampled, Logs, Flows)
+    2. Enter the retention duration (e.g., `30d`, `90d`, `1y`)
+    3. Click **Apply**
+
+    <Warning>
+      Reducing retention periods deletes historical data immediately and irreversibly.
+      Confirm with compliance and operations teams before shortening any retention window.
+      Data deleted by retention policy cannot be recovered.
+    </Warning>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="View current retention policies"
+    ximp retention list
+    ```
+
+    ```bash title="Set raw metric retention"
+    ximp retention set \
+      --type metrics-raw \
+      --duration 30d
+    ```
+
+    ```bash title="Set log retention"
+    ximp retention set \
+      --type logs \
+      --duration 90d
+    ```
+
+    ```bash title="Set flow data retention"
+    ximp retention set \
+      --type flows \
+      --duration 30d
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Downsampling Configuration
+
+Downsampling aggregates raw metric points into lower-resolution summaries at configurable
+intervals. This enables long-term retention at a fraction of the storage cost.
+
+| Downsampling Level | Resolution | Applied After | Storage vs Raw |
+|-------------------|-----------|---------------|---------------|
+| Level 1 | 5 minutes | 7 days | ~10× reduction |
+| Level 2 | 1 hour | 30 days | ~120× reduction |
+
+<Note>
+  Downsampled data retains statistical aggregates: min, max, sum, count, and average.
+  Exact per-second values are not recoverable after the raw data retention period expires.
+  Ensure raw retention is long enough for the typical incident investigation window.
+</Note>
+
+Configure downsampling rules in **Monitor Center > Monitoring** (Downsampling, admin view).
+
+---
+
+## Compliance Retention Requirements
+
+For regulatory compliance, consult the following minimum retention guidelines:
+
+| Regulation | Minimum Log Retention | Notes |
+|------------|----------------------|-------|
+| ISO 27001 | 1 year | Security events and access logs |
+| SOC 2 Type II | 1 year | Covers audit period plus review buffer |
+| PCI DSS | 1 year (3 months online) | Transaction-related system logs |
+| HIPAA | 6 years | Healthcare system access logs |
+
+<Tip>
+  Set XIMP log retention to match your most demanding regulatory requirement. Storage
+  cost for log data is typically dominated by verbosity — reduce log levels to `WARNING`
+  on non-critical services to reduce volume without losing important events.
+</Tip>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Log Collection" href="/services/monitoring/admin-guide/log-collection" color="#197560">
+    Control log ingestion volume by configuring which services are collected
+  </Card>
+  <Card title="Architecture" href="/services/monitoring/admin-guide/architecture" color="#197560">
+    Understand storage layer sizing for your retention requirements
+  </Card>
+  <Card title="Security" href="/services/monitoring/admin-guide/security" color="#197560">
+    Access controls for retention policy management
+  </Card>
+  <Card title="Troubleshooting" href="/services/monitoring/admin-guide/troubleshooting" color="#197560">
+    Diagnose storage pressure caused by high-cardinality metrics or high log volume
+  </Card>
+</CardGroup>

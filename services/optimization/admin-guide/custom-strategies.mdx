@@ -1,0 +1,164 @@
+---
+title: "Custom Strategies"
+description: "Implement and deploy custom Xloud Optimization strategy plugins — extend the Decision Engine with proprietary optimization algorithms for specialized."
+sidebarTitle: "Custom Strategies"
+---
+
+## Overview
+
+The Optimization supports custom optimization strategies through a Python plugin
+interface. A custom strategy implements the `BaseStrategy` class, defines its own
+goal association, and is registered via Python entry points. Custom strategies enable
+specialized optimization logic for non-standard cluster topologies, proprietary metric
+sources, or regulatory compliance placement requirements.
+
+<Note>
+  Custom strategies are deployed as Python packages on the controller node running the
+  Decision Engine. A Decision Engine restart is required after installing a new strategy.
+</Note>
+
+---
+
+## Strategy Interface
+
+Custom strategies inherit from `watcher.decision_engine.strategy.strategies.base.BaseStrategy`
+and must implement three methods:
+
+```python title="Custom strategy skeleton"
+from watcher.decision_engine.strategy.strategies import base
+
+class MyCustomStrategy(base.BaseStrategy):
+    """Placement strategy for specialized workloads."""
+
+    NAME = "my_custom_strategy"
+    DISPLAY_NAME = "My Custom Strategy"
+    GOAL_NAME = "server_consolidation"  # Associate with an existing goal
+
+    def pre_execute(self):
+        """Called before the main analysis — validate data sources."""
+        pass
+
+    def do_execute(self, audit):
+        """Main analysis loop — build the action plan."""
+        cluster_model = self.compute_model
+        for host in cluster_model.compute_nodes.values():
+            if self._is_underutilized(host):
+                self._migrate_instances_from(host)
+
+    def post_execute(self):
+        """Called after analysis — cleanup."""
+        pass
+
+    def _is_underutilized(self, host):
+        used_vcpu = host.vcpus - host.free_disk_gb  # Example metric
+        return used_vcpu / host.vcpus < 0.15
+
+    def _migrate_instances_from(self, source_host):
+        for instance in self.compute_model.mapping.get_node_instances(source_host):
+            self.solution.add_action(
+                action_type="migrate",
+                input_parameters={
+                    "source_node": source_host.hostname,
+                    "destination_node": self._find_target_host(instance),
+                    "migration_type": "live"
+                }
+            )
+```
+
+---
+
+## Register the Strategy
+
+Add the strategy to the Python package entry points:
+
+```ini title="setup.cfg"
+[entry_points]
+watcher_strategies =
+    my_custom_strategy = mypackage.strategies:MyCustomStrategy
+```
+
+Build and install the package:
+
+```bash title="Install custom strategy package"
+pip install -e /path/to/mypackage
+```
+
+---
+
+## Deploy to the Decision Engine Container
+
+```bash title="Copy strategy package into container"
+docker cp /path/to/mypackage/ watcher_decision_engine:/opt/mypackage/
+docker exec watcher_decision_engine pip install /opt/mypackage/
+```
+
+```bash title="Restart Decision Engine"
+docker restart watcher_decision_engine
+```
+
+```bash title="Verify strategy is registered"
+watcher strategy list
+```
+
+The custom strategy should appear in the list with its `NAME` value.
+
+---
+
+## Associate with a Goal
+
+Custom strategies must be associated with an existing goal or a new goal created for
+the purpose:
+
+```bash title="List available goals"
+watcher goal list
+```
+
+If a new goal is needed, register it alongside the strategy entry point:
+
+```ini title="setup.cfg"
+[entry_points]
+watcher_goals =
+    my_custom_goal = mypackage.goals:MyCustomGoal
+
+watcher_strategies =
+    my_custom_strategy = mypackage.strategies:MyCustomStrategy
+```
+
+---
+
+## Test the Custom Strategy
+
+```bash title="Run an audit with the custom strategy"
+watcher audit create \
+  --goal server_consolidation \
+  --strategy my_custom_strategy \
+  --name custom-strategy-test
+```
+
+```bash title="Monitor audit progress"
+watcher audit show custom-strategy-test
+```
+
+```bash title="Review generated actions"
+watcher actionplan list \
+  --audit <audit-uuid>
+```
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Strategy Configuration" href="/services/optimization/admin-guide/strategy-config" color="#197560">
+    Configure tuning parameters for built-in and custom strategies.
+  </Card>
+  <Card title="Data Sources" href="/services/optimization/admin-guide/data-sources" color="#197560">
+    Connect the metric sources your custom strategy uses.
+  </Card>
+  <Card title="Architecture" href="/services/optimization/admin-guide/architecture" color="#197560">
+    Review the Decision Engine plugin loading mechanism.
+  </Card>
+  <Card title="Troubleshooting" href="/services/optimization/admin-guide/troubleshooting" color="#197560">
+    Diagnose custom strategy import and registration errors.
+  </Card>
+</CardGroup>

@@ -1,0 +1,181 @@
+---
+title: "Floating IP Addresses"
+description: "Allocate, associate, and release floating IPs for external access to Xloud Compute instances using the Dashboard or CLI."
+sidebarTitle: "Floating IPs"
+---
+
+import PrerequisitesAuth from '/snippets/prerequisites-auth.mdx';
+
+## Overview
+
+Floating IPs provide external access to instances running on private networks. A floating
+IP maps a publicly routable address to an instance's private port via NAT on the router.
+You can associate, disassociate, and reassign floating IPs without downtime.
+
+<PrerequisitesAuth />
+
+<Note>
+  A router with an external gateway must be connected to the instance's network before
+  floating IPs can be associated. See [Routers](/services/networking/routers).
+</Note>
+
+---
+
+## Allocate a Floating IP
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Navigate to Floating IPs">
+        Navigate to **Network > Floating IPs** in the sidebar. Click **Allocate IP**.
+      </Step>
+      <Step title="Configure the allocation">
+        | Field | Type | Required | Description |
+        |-------|------|----------|-------------|
+        | **Network** | Dropdown | Yes | Select the external network to allocate from |
+        | **Owned Subnet** | Dropdown | No | Optionally select a specific subnet within the external network |
+        | **Floating IP Address** | Text | No | Request a specific IP (shown after subnet selection, when not batch) |
+        | **Description** | Text area | No | Label the IP's intended use |
+        | **Batch Allocate** | Checkbox | No | Toggle to allocate multiple IPs at once |
+        | **Count** | Number | If batch enabled | Number of IPs to allocate (default: 2) |
+
+        <Note>
+          Administrators see an additional **Project** selector to allocate IPs
+          for other projects. If QoS is enabled on the platform, a **QoS Policy**
+          selector also appears for all users.
+        </Note>
+      </Step>
+      <Step title="Allocate">
+        Click **Confirm**. The floating IP appears in the list with status **Down**
+        (not yet associated with an instance).
+
+        <Check>Floating IP allocated and ready for association.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Source credentials"
+    source openrc.sh
+    ```
+
+    ```bash title="Allocate floating IP from external network"
+    openstack floating ip create public
+    ```
+
+    Replace `public` with the name of your external network.
+  </Tab>
+</Tabs>
+
+---
+
+## View Floating IPs
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    Navigate to **Network > Floating IPs**. The list shows:
+
+    | Column | Description |
+    |--------|-------------|
+    | **ID/Floating IP** | The allocated public address (clickable to view details) |
+    | **Description** | Optional description text |
+    | **Associated Resource** | Instance or port bound to this IP (if associated) |
+    | **Status** | Available, Pending, Active, Error, or Down |
+    | **Created At** | Allocation timestamp |
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="List all floating IPs"
+    openstack floating ip list
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Associate with an Instance
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Open the Associate dialog">
+        On the floating IP row, click **Associate** (available when status is
+        `Down` or `Available`).
+      </Step>
+      <Step title="Select the target">
+        Select the instance port to associate with from the fixed IP table.
+        Ports that are not routable to the external network show a reason label.
+
+        Click **Confirm**.
+
+        <Check>The floating IP status changes to **Active** and shows the associated instance.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    <CodeGroup>
+    ```bash title="Associate floating IP to instance"
+    openstack server add floating ip <INSTANCE> <FLOATING_IP>
+    ```
+    ```bash title="Associate to specific fixed IP"
+    openstack server add floating ip \
+      --fixed-ip-address <FIXED_IP> \
+      <INSTANCE> <FLOATING_IP>
+    ```
+    </CodeGroup>
+  </Tab>
+</Tabs>
+
+---
+
+## Disassociate a Floating IP
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    On the floating IP row, click **Disassociate** (available when status is `Active`).
+    Confirm the action. The IP returns to `Down` status and can be reassigned.
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Remove floating IP from instance"
+    openstack server remove floating ip <INSTANCE> <FLOATING_IP>
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Release a Floating IP
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    Click the **More** dropdown on the floating IP row and select **Release**.
+    The IP is returned to the external network pool.
+
+    <Danger>
+      Releasing a floating IP is permanent. If you release a static IP that DNS
+      records or external systems reference, those references will break immediately.
+    </Danger>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Release floating IP"
+    openstack floating ip delete <FLOATING_IP_ID>
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Routers" href="/services/networking/routers" color="#197560">
+    Set up the external gateway required for floating IP routing
+  </Card>
+  <Card title="Security Groups" href="/services/networking/security-groups" color="#197560">
+    Allow inbound traffic on the floating IP's port
+  </Card>
+  <Card title="Create a Network" href="/services/networking/create-network" color="#197560">
+    Provision the internal network for your instances
+  </Card>
+  <Card title="Launch an Instance" href="/services/compute/launch-instance" color="#197560">
+    Create an instance to associate the floating IP with
+  </Card>
+</CardGroup>

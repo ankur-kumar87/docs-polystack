@@ -1,0 +1,311 @@
+---
+title: "User Center"
+description: "Manage your Xloud account from the Dashboard — profile, password, two-factor authentication, sign-in activity, and application credentials."
+sidebarTitle: "User Center"
+---
+
+## Overview
+
+User Center is the self-service hub for your own Xloud account. From here you can update
+your profile, change your password, enable or manage two-factor authentication (2FA), and
+create application credentials for automation. Every page in User Center affects only
+your account — nothing here changes cloud resources for other users.
+
+<Note>
+  **Prerequisites**
+  - An active Xloud account — sign in to the [Xloud Dashboard](/services/dashboard)
+  - An authenticator app on your phone (for 2FA): Google Authenticator, Microsoft
+    Authenticator, Authy, 1Password, or any standard TOTP app
+</Note>
+
+---
+
+## Video Walkthrough
+
+<iframe
+  className="w-full aspect-video rounded-xl"
+  src="https://www.youtube.com/embed/7BLwyAtKPjs"
+  title="How to Set Up 2FA and User Center on Xloud"
+  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+  allowFullScreen
+></iframe>
+
+---
+
+## Open User Center
+
+<Steps titleSize="h3">
+  <Step title="Open the profile menu" icon="user">
+    Click your avatar or name in the **top-right corner** of the Xloud Dashboard.
+  </Step>
+  <Step title="Pick User Center" icon="circle-user">
+    Select **User Center** from the dropdown. The overview page loads with your avatar,
+    roles, role/domain/project stats, and quick-edit buttons.
+  </Step>
+</Steps>
+
+---
+
+## User Center Overview
+
+The landing page shows everything about your account at a glance.
+
+| Section | What's there |
+|---------|--------------|
+| **Header** | Avatar (click to change), display name, email, role tags |
+| **Stat row** | Number of Roles, Domains, and Projects you belong to |
+| **Account Details** | Username, Email, Phone, Real Name, Job Title, Department, User ID, Current Project |
+| **Roles & Security** | My Roles, Domain, Project ID, Account Status |
+
+Two action buttons sit at the bottom of the Account Details card:
+
+- **Edit Profile** → opens Profile Settings
+- **Security (2FA)** → opens the Security page
+
+<Tip>
+  Click your avatar to upload a custom profile image. It will be used across the entire
+  Dashboard.
+</Tip>
+
+---
+
+## Edit Profile Settings
+
+The **Profile Settings** page has two tabs for self-service account edits.
+
+### Profile Tab
+
+Fill in your personal information — these fields help teammates identify you in
+multi-user projects.
+
+| Field | Notes |
+|-------|-------|
+| **First Name** | Up to 64 characters |
+| **Last Name** | Up to 64 characters |
+| **Phone** | Any standard format, up to 20 characters |
+| **Job Title** | Up to 128 characters |
+| **Department** | Up to 128 characters |
+
+Click **Save** to persist changes.
+
+### Security Tab
+
+The Security tab contains three cards: **Two-Factor Authentication**, **Change Password**,
+and **Sign-in activity**.
+
+#### Two-Factor Authentication card
+
+Shows your current 2FA status — **Enabled** or **Not Enabled**. Click **Setup Two-Factor
+Authentication** (when not enabled) or **Manage 2FA Settings** (when enabled) to jump to
+the dedicated Security page covered [below](#two-factor-authentication-2-fa).
+
+#### Change Password card
+
+<Steps titleSize="h3">
+  <Step title="Enter your current password" icon="key">
+    Type your existing password in the **Current Password** field.
+  </Step>
+  <Step title="Enter the new password" icon="lock">
+    Fill in **New Password** (minimum 8 characters) and **Confirm New Password**. The
+    two values must match.
+  </Step>
+  <Step title="Click Change Password" icon="check">
+    Click **Change Password** to apply. You stay signed in on the current device.
+  </Step>
+</Steps>
+
+#### Sign-in activity card
+
+Lists your current session and up to 10 recent active sessions on your account. Each
+entry shows:
+
+| Column | What it shows |
+|--------|--------------|
+| **IP address** | Where the session signed in from (a green **This session** tag marks the current one) |
+| **User agent** | Browser / OS string (trimmed to the first 80 characters) |
+| **Signed in** | Relative time since sign-in |
+| **Expires** | When the session will expire |
+
+The top of the card shows when your current session started and when the previous sign-in
+happened — useful for spotting unexpected sign-ins.
+
+---
+
+## Two-Factor Authentication (2FA)
+
+Two-Factor Authentication adds a second verification step to every sign-in — a rotating
+6-digit code from your authenticator app, on top of your password. It is the single
+biggest thing you can do to protect your account from stolen-password attacks.
+
+<Info>
+  Xloud supports any standard **TOTP** (Time-based One-Time Password) authenticator app:
+  Google Authenticator, Microsoft Authenticator, Authy, 1Password, Aegis, and others.
+</Info>
+
+### Check 2FA Status
+
+Open **User Center → Security (2FA)**. The page shows one of two states:
+
+| State | Meaning |
+|-------|---------|
+| **Not enabled** (blue Info alert) | Your account is password-only. Click **Enable 2FA** to set it up. |
+| **Enabled** (green Success alert) | 2FA is active. The alert shows when it was enabled, when it was last used, and how many unused recovery codes you have left. |
+
+### Enable 2FA
+
+<Steps titleSize="h3">
+  <Step title="Click Enable 2FA" icon="shield">
+    On the **Security** page, click the blue **Enable 2FA** button. The Dashboard
+    navigates to a dedicated enrollment page.
+  </Step>
+  <Step title="Install an authenticator app" icon="smartphone">
+    Install an authenticator app on your phone — Google Authenticator, Microsoft
+    Authenticator, Authy, 1Password, or Aegis all work.
+  </Step>
+  <Step title="Scan the QR code" icon="qr-code">
+    The page shows a QR code and a **Manual key** below it. Open the authenticator
+    app, tap **Add** or **+**, and either scan the QR or paste the manual key.
+
+    The app starts generating fresh 6-digit codes every 30 seconds.
+  </Step>
+  <Step title="Verify the code" icon="check">
+    Type the current 6-digit code from the app into the **6-digit code** field on the
+    Dashboard, then click **Verify & Enable**.
+  </Step>
+  <Step title="Save your recovery codes" icon="download">
+    The Dashboard shows **10 one-time recovery codes**. **You will not see these codes
+    again.** Click **Download as .txt** or **Copy to clipboard** and store them somewhere
+    safe (password manager, printed copy, encrypted note). Each code can be used once
+    to sign in if you lose access to your authenticator.
+
+    <Warning>
+      If you lose both your authenticator app and your recovery codes, your
+      administrator will need to reset 2FA on your account.
+    </Warning>
+
+    Click **I've saved them** to close the dialog.
+
+    <Check>The Security page now shows a green "Enabled" alert with the enrollment timestamp.</Check>
+  </Step>
+</Steps>
+
+### Sign In with 2FA
+
+After enabling 2FA, every sign-in asks for a 6-digit code in addition to your password.
+Open your authenticator app, read the current code, and type it in. Codes rotate every
+30 seconds — if the current code expires, just wait for the next one.
+
+<Tip>
+  If you lose access to your authenticator, click **Use a recovery code** on the sign-in
+  screen and enter one of the 10 codes you saved when you enrolled.
+</Tip>
+
+<Warning>
+  Using a recovery code to sign in **automatically disables 2FA** on your account. The
+  Dashboard shows a prominent banner asking you to re-enroll your authenticator as soon
+  as possible.
+</Warning>
+
+### Regenerate Recovery Codes
+
+If you have used some recovery codes or suspect they have been exposed, you can mint a
+fresh set of 10.
+
+<Steps titleSize="h3">
+  <Step title="Open the Security page" icon="shield-check">
+    **User Center → Security (2FA)** (2FA must already be enabled).
+  </Step>
+  <Step title="Click Regenerate recovery codes" icon="rotate-cw">
+    Click **Regenerate recovery codes** on the green status card.
+  </Step>
+  <Step title="Confirm with a current 6-digit code" icon="key">
+    Enter the current code from your authenticator and click **Regenerate**.
+
+    <Warning>
+      Any previously saved codes will stop working immediately. Save the new set the
+      same way you did at enrollment.
+    </Warning>
+  </Step>
+</Steps>
+
+### Disable 2FA
+
+<Steps titleSize="h3">
+  <Step title="Click Disable 2FA" icon="shield-off">
+    On the Security page, click the red **Disable 2FA** button.
+  </Step>
+  <Step title="Confirm with a code" icon="key">
+    Enter a current **6-digit code** from your authenticator, or click **Use a
+    recovery code instead** and enter one of your saved recovery codes.
+  </Step>
+  <Step title="Click Disable" icon="check">
+    Click **Disable**. Future sign-ins use password only until you re-enable 2FA.
+
+    <Warning>
+      Disabling 2FA weakens your account's security. Only do this when you are about
+      to re-enroll with a new authenticator device.
+    </Warning>
+  </Step>
+</Steps>
+
+---
+
+## Application Credentials
+
+Application credentials are long-lived API tokens for scripts and automation. They can
+optionally be scoped to a subset of roles and have an expiry date.
+
+Open **User Center → Application Credentials** to create, view, and revoke your
+credentials.
+
+<Card title="Application Credentials Guide" icon="key" href="/services/identity/application-credentials" color="#197560">
+  Full walkthrough on creating, using, and revoking application credentials
+</Card>
+
+---
+
+## Common Tasks
+
+<AccordionGroup>
+  <Accordion title="Set a profile picture" icon="camera">
+    Open **User Center**, click your avatar in the header, pick an image, and save. The
+    avatar updates across the Dashboard without a sign-out.
+  </Accordion>
+  <Accordion title="Change your password" icon="lock">
+    **User Center → Edit Profile → Security** tab → **Change Password** card. Enter your
+    current password, then the new one twice, and click **Change Password**.
+  </Accordion>
+  <Accordion title="Turn on 2FA for your account" icon="shield">
+    **User Center → Security (2FA)** → **Enable 2FA** → scan the QR in your authenticator
+    → verify the 6-digit code → download the 10 recovery codes and store them safely.
+  </Accordion>
+  <Accordion title="Check where you are signed in from" icon="monitor">
+    **User Center → Edit Profile → Security** tab → **Sign-in activity** card. Review the
+    list of active sessions, their source IP addresses, and last sign-in time. If you
+    see a session you do not recognize, change your password immediately.
+  </Accordion>
+  <Accordion title="Recover access if you lost your phone" icon="alert-triangle">
+    At the sign-in prompt, click **Use a recovery code** and enter one of the 10 codes
+    you saved during enrollment. This signs you in AND disables 2FA — re-enroll on your
+    new phone as soon as possible.
+
+    If you also lost your recovery codes, contact your administrator — only an
+    administrator can reset 2FA on your behalf.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Related Topics
+
+<CardGroup cols={3}>
+  <Card title="Multi-Factor Authentication" href="/services/identity/multi-factor-auth" color="#197560">
+    Technical reference for TOTP MFA — includes CLI-based enrollment
+  </Card>
+  <Card title="Application Credentials" href="/services/identity/application-credentials" color="#197560">
+    Long-lived API tokens for scripts and CI pipelines
+  </Card>
+  <Card title="Access & Security" href="/services/dashboard/user-guide/access-security" color="#197560">
+    RBAC, keypairs, and other access controls on the Dashboard
+  </Card>
+</CardGroup>

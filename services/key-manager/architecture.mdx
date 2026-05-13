@@ -1,0 +1,103 @@
+---
+title: "Key Manager Architecture"
+description: "Understand the Xloud Key Manager service topology — API layer, worker service, metadata database, secret store backends, and CA plugin integration."
+sidebarTitle: "Architecture"
+---
+
+## Overview
+
+The Key Manager service separates the API layer from the secret store backend, allowing
+the encryption backend to be swapped or scaled independently. Secret payloads are never
+stored in the metadata database — only encrypted references. The actual ciphertext
+resides exclusively in the configured secret store backend.
+
+---
+
+## Service Topology
+
+```mermaid
+graph TD
+    Client["API Client / Service"] --> API["Key Manager API\n:9311"]
+    API --> SVC["Key Manager Worker"]
+    SVC --> DB[("Metadata DB\n(secret references, ACLs)")]
+    SVC --> Store["Secret Store Backend"]
+
+    subgraph "Secret Store Options"
+        Store --> Simple["Simple Crypto\n(software AES)"]
+        Store --> PKCS11["PKCS#11 HSM\n(hardware)"]
+        Store --> KMIP["KMIP Server\n(enterprise KMS)"]
+    end
+
+    SVC --> Plugin["CA Plugin\n(cert issuance)"]
+    Plugin --> LocalCA["Local CA"]
+    Plugin --> ExtCA["External CA\n(ACME / EJBCA)"]
+```
+
+---
+
+## Component Descriptions
+
+| Component | Role | Port |
+|-----------|------|------|
+| **Key Manager API** | REST API for secrets, containers, orders, ACLs | 9311 |
+| **Key Manager Worker** | Orchestrates secret lifecycle and CA plugin communication | Internal |
+| **Metadata DB** | Stores secret references, container metadata, ACLs — no secret payloads | Internal |
+| **Secret Store Backend** | Stores encrypted secret ciphertext | Varies by backend |
+| **CA Plugin** | Integrates with Certificate Authorities for automated certificate issuance | Internal |
+
+---
+
+## Secret Storage Flow
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant API as Key Manager API
+    participant Worker as Key Manager Worker
+    participant DB as Metadata DB
+    participant Store as Secret Store Backend
+
+    User->>API: POST /v1/secrets {payload: "secret", type: "passphrase"}
+    API->>Worker: Encrypt and store secret
+    Worker->>Store: Store encrypted ciphertext
+    Store-->>Worker: Storage reference
+    Worker->>DB: Store secret metadata + reference
+    DB-->>Worker: Secret UUID
+    Worker-->>API: Secret href
+    API-->>User: 201 Created {secret_ref: "https://.../secrets/<uuid>"}
+```
+
+---
+
+## Security Separation
+
+<Info>
+  The metadata database contains only encrypted references and ACL metadata — never
+  plaintext secret payloads. Even if the metadata database is compromised, secret
+  payloads cannot be extracted without also compromising the secret store backend.
+</Info>
+
+| Data | Location | Contains |
+|------|----------|---------|
+| Secret metadata | Metadata DB | Name, type, content type, expiration, ACLs |
+| Secret payload | Secret store backend | Encrypted ciphertext only |
+| Encryption keys | Secret store backend | Master wrapping keys (HSM) or key files (simple) |
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Backend Configuration" href="/services/key-manager/backend-config" color="#197560">
+    Configure simple crypto, PKCS#11, and KMIP backends
+  </Card>
+  <Card title="Secret Stores" href="/services/key-manager/secret-stores" color="#197560">
+    Manage multiple backends and per-project store assignments
+  </Card>
+  <Card title="Security" href="/services/key-manager/security" color="#197560">
+    Harden the Key Manager service and protect master keys
+  </Card>
+  <Card title="Troubleshooting" href="/services/key-manager/admin-troubleshooting" color="#197560">
+    Diagnose and resolve Key Manager platform issues
+  </Card>
+</CardGroup>

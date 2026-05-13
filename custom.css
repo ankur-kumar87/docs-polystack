@@ -1,0 +1,4 @@
+/* Increase card border width */
+.card {
+  border-width: 2px !important;
+}

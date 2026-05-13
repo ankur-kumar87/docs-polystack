@@ -1,0 +1,1009 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "theme": "almond",
+  "name": "Docs",
+  "colors": {
+    "primary": "#197560",
+    "light": "#3F8F7E",
+    "dark": "#197560"
+  },
+  "favicon": "/images/favicon.ico",
+  "icons": {
+    "library": "lucide"
+  },
+  "interaction": {
+    "drilldown": false
+  },
+  "banner": {
+    "content": "XAVS 2025.1 LTS, XPCI 2025.1, XDeploy 2025.1-beta & XOS 3.1 are now available! [See what's new \u2192](/changelog)",
+    "dismissible": true
+  },
+  "homepage": "introduction",
+  "css": "/custom.css",
+  "navigation": {
+    "groups": [
+      {
+        "group": "Getting Started",
+        "icon": "rocket",
+        "root": "introduction",
+        "pages": [
+          "cli-setup",
+          "deployment/index"
+        ]
+      },
+      {
+        "group": "API Reference",
+        "icon": "code",
+        "root": "api-reference/index",
+        "pages": [
+          "api-reference/authentication",
+          "api-reference/compute-api",
+          "api-reference/storage-api",
+          "api-reference/networking-api"
+        ]
+      },
+      {
+        "group": "Products",
+        "icon": "package",
+        "root": "products/index",
+        "pages": [
+          {
+            "group": "Infrastructure",
+            "icon": "boxes",
+            "pages": [
+              "products/xavs",
+              "products/xpci",
+              "products/xhci"
+            ]
+          },
+          {
+            "group": "Virtualization",
+            "icon": "server",
+            "pages": [
+              "products/xos"
+            ]
+          },
+          {
+            "group": "Storage",
+            "icon": "database",
+            "pages": [
+              "products/xsds",
+              "products/xnas",
+              "products/xnexus"
+            ]
+          },
+          {
+            "group": "Operations",
+            "icon": "activity",
+            "pages": [
+              "products/ximp",
+              "products/xdr",
+              "products/xms",
+              "products/xinsight"
+            ]
+          }
+        ]
+      },
+      {
+        "group": "Core Services",
+        "icon": "layers",
+        "pages": [
+          {
+            "group": "Compute",
+            "icon": "server",
+            "root": "services/compute",
+            "pages": [
+              {
+                "group": "User Guide",
+                "pages": [
+                  "services/compute/availability-zones",
+                  "services/compute/launch-instance",
+                  "services/compute/cloud-init",
+                  "services/compute/security-groups",
+                  "services/compute/server-groups",
+                  "services/compute/manage-ips",
+                  "services/compute/resize-instance",
+                  "services/compute/live-resize",
+                  "services/compute/reboot-instance",
+                  "services/compute/rescue-instance",
+                  "services/compute/snapshots",
+                  "services/compute/instance-rollback",
+                  "services/compute/block-device-mapping",
+                  "services/compute/clone-instance",
+                  "services/compute/vm-templates",
+                  "services/compute/instance-tagging"
+                ],
+                "root": "services/compute/user-guide",
+                "icon": "book-open"
+              },
+              {
+                "group": "Admin Guide",
+                "pages": [
+                  "services/compute/architecture",
+                  "services/compute/hypervisor",
+                  "services/compute/compute-hosts",
+                  "services/compute/flavors",
+                  "services/compute/quotas",
+                  "services/compute/scheduling",
+                  "services/compute/live-migration",
+                  "services/compute/console-access",
+                  "services/compute/security-hardening",
+                  "services/compute/live-resize-admin",
+                  "services/compute/vtpm-secure-boot",
+                  "services/compute/advanced-features",
+                  "services/compute/bare-metal",
+                  "services/compute/troubleshooting"
+                ],
+                "root": "services/compute/admin-guide",
+                "icon": "shield"
+              },
+              "services/compute/cli-reference"
+            ]
+          },
+          {
+            "group": "Block Storage",
+            "icon": "hard-drive",
+            "root": "services/storage/index",
+            "pages": [
+              {
+                "group": "User Guide",
+                "root": "services/storage/user-guide",
+                "pages": [
+                  "services/storage/create-volume",
+                  "services/storage/attach-volume",
+                  "services/storage/extend-volume",
+                  "services/storage/snapshots",
+                  "services/storage/backups",
+                  "services/storage/file-level-restore",
+                  "services/storage/third-party-backup",
+                  "services/storage/volume-transfers",
+                  "services/storage/volume-types",
+                  "services/storage/troubleshooting"
+                ],
+                "icon": "book-open"
+              },
+              {
+                "group": "Admin Guide",
+                "root": "services/storage/admin-guide",
+                "pages": [
+                  "services/storage/architecture",
+                  "services/storage/storage-backends",
+                  "services/storage/external-storage",
+                  "services/storage/thin-provisioning",
+                  "services/storage/backup-backends",
+                  "services/storage/qos",
+                  "services/storage/volume-types-admin",
+                  "services/storage/storage-tiers",
+                  "services/storage/quotas",
+                  "services/storage/migration",
+                  "services/storage/backup-config",
+                  "services/storage/encryption",
+                  "services/storage/security",
+                  "services/storage/admin-troubleshooting"
+                ],
+                "icon": "shield"
+              },
+              "services/storage/cli-reference"
+            ]
+          },
+          {
+            "group": "Networking",
+            "icon": "network",
+            "root": "services/networking/index",
+            "pages": [
+              {
+                "group": "User Guide",
+                "root": "services/networking/user-guide",
+                "pages": [
+                  "services/networking/create-network",
+                  "services/networking/subnets",
+                  "services/networking/routers",
+                  "services/networking/floating-ips",
+                  "services/networking/security-groups",
+                  "services/networking/dns-config",
+                  "services/networking/network-topology",
+                  "services/networking/vpn",
+                  "services/networking/troubleshooting"
+                ],
+                "icon": "book-open"
+              },
+              {
+                "group": "Admin Guide",
+                "root": "services/networking/admin-guide",
+                "pages": [
+                  "services/networking/architecture",
+                  "services/networking/provider-networks",
+                  "services/networking/network-agents",
+                  "services/networking/dhcp",
+                  "services/networking/l3-routing",
+                  "services/networking/ipam",
+                  "services/networking/qos",
+                  "services/networking/quotas",
+                  "services/networking/security",
+                  "services/networking/admin-troubleshooting"
+                ],
+                "icon": "shield"
+              },
+              "services/networking/cli-reference"
+            ]
+          },
+          {
+            "group": "Images",
+            "icon": "disc",
+            "root": "services/images/index",
+            "pages": [
+              {
+                "group": "User Guide",
+                "root": "services/images/user-guide",
+                "pages": [
+                  "services/images/upload-image",
+                  "services/images/create-snapshot",
+                  "services/images/share-images",
+                  "services/images/image-properties",
+                  "services/images/image-formats",
+                  "services/images/troubleshooting",
+                  "services/images/get-images",
+                  "services/images/image-requirements",
+                  "services/images/modify-images",
+                  "services/images/convert-formats"
+                ],
+                "icon": "book-open"
+              },
+              {
+                "group": "Admin Guide",
+                "root": "services/images/admin-guide",
+                "pages": [
+                  "services/images/architecture",
+                  "services/images/storage-backends",
+                  "services/images/image-templates",
+                  "services/images/image-import",
+                  "services/images/metadata",
+                  "services/images/image-cache",
+                  "services/images/quotas",
+                  "services/images/image-security",
+                  "services/images/admin-troubleshooting"
+                ],
+                "icon": "shield"
+              },
+              "services/images/cli-reference"
+            ]
+          },
+          {
+            "group": "Orchestration",
+            "icon": "workflow",
+            "root": "services/orchestration/index",
+            "pages": [
+              {
+                "group": "User Guide",
+                "root": "services/orchestration/user-guide",
+                "pages": [
+                  "services/orchestration/getting-started",
+                  "services/orchestration/template-guide",
+                  "services/orchestration/resources",
+                  "services/orchestration/stacks",
+                  "services/orchestration/autoscaling",
+                  "services/orchestration/troubleshooting"
+                ],
+                "icon": "book-open"
+              },
+              {
+                "group": "Admin Guide",
+                "root": "services/orchestration/admin-guide",
+                "pages": [
+                  "services/orchestration/architecture",
+                  "services/orchestration/configuration",
+                  "services/orchestration/scaling",
+                  "services/orchestration/security",
+                  "services/orchestration/admin-troubleshooting"
+                ],
+                "icon": "shield"
+              },
+              "services/orchestration/cli-reference"
+            ]
+          },
+          {
+            "group": "Dashboard",
+            "icon": "gauge",
+            "root": "services/dashboard/index",
+            "pages": [
+              {
+                "group": "User Guide",
+                "root": "services/dashboard/user-guide",
+                "pages": [
+                  "services/dashboard/user-guide/user-center",
+                  "services/dashboard/user-guide/global-search",
+                  "services/dashboard/user-guide/instances",
+                  "services/dashboard/user-guide/volumes",
+                  "services/dashboard/user-guide/networks",
+                  "services/dashboard/user-guide/images",
+                  "services/dashboard/user-guide/object-containers",
+                  "services/dashboard/user-guide/access-security"
+                ],
+                "icon": "book-open"
+              },
+              {
+                "group": "Admin Guide",
+                "root": "services/dashboard/admin-guide",
+                "pages": [
+                  "services/dashboard/admin-guide/session-storage",
+                  "services/dashboard/admin-guide/projects-users",
+                  "services/dashboard/admin-guide/images",
+                  "services/dashboard/admin-guide/flavors",
+                  "services/dashboard/admin-guide/volumes",
+                  "services/dashboard/admin-guide/quotas",
+                  "services/dashboard/admin-guide/host-aggregates"
+                ],
+                "icon": "shield"
+              }
+            ]
+          },
+          {
+            "group": "Identity & Access",
+            "icon": "fingerprint",
+            "root": "services/identity/index",
+            "pages": [
+              {
+                "group": "User Guide",
+                "root": "services/identity/user-guide",
+                "pages": [
+                  "services/identity/projects",
+                  "services/identity/users",
+                  "services/identity/roles",
+                  "services/identity/application-credentials",
+                  "services/identity/multi-factor-auth",
+                  "services/identity/troubleshooting"
+                ],
+                "icon": "book-open"
+              },
+              {
+                "group": "Admin Guide",
+                "root": "services/identity/admin-guide",
+                "pages": [
+                  "services/identity/architecture",
+                  "services/identity/auth-backends",
+                  "services/identity/domain-management",
+                  "services/identity/token-config",
+                  "services/identity/service-catalog",
+                  "services/identity/federation",
+                  "services/identity/policy-management",
+                  "services/identity/extended-rbac",
+                  "services/identity/security",
+                  "services/identity/admin-troubleshooting"
+                ],
+                "icon": "shield"
+              },
+              "services/identity/cli-reference"
+            ]
+          }
+        ]
+      },
+      {
+        "group": "Other Services",
+        "icon": "grid-2x2",
+        "pages": [
+          {
+            "group": "Load Balancer",
+            "icon": "combine",
+            "root": "services/load-balancer",
+            "pages": [
+              {
+                "group": "User Guide",
+                "root": "services/load-balancer/user-guide",
+                "pages": [
+                  "services/load-balancer/create-lb",
+                  "services/load-balancer/listeners",
+                  "services/load-balancer/pools",
+                  "services/load-balancer/health-monitors",
+                  "services/load-balancer/floating-ip",
+                  "services/load-balancer/troubleshooting"
+                ],
+                "icon": "book-open"
+              },
+              {
+                "group": "Admin Guide",
+                "root": "services/load-balancer/admin-guide",
+                "pages": [
+                  "services/load-balancer/lb-architecture",
+                  "services/load-balancer/provider-drivers",
+                  "services/load-balancer/flavor-profiles",
+                  "services/load-balancer/lb-quotas",
+                  "services/load-balancer/lb-monitoring",
+                  "services/load-balancer/lb-security",
+                  "services/load-balancer/lb-troubleshooting"
+                ],
+                "icon": "shield"
+              },
+              "services/load-balancer/cli-reference"
+            ]
+          },
+          {
+            "group": "DNS",
+            "icon": "globe",
+            "root": "services/dns",
+            "pages": [
+              {
+                "group": "User Guide",
+                "root": "services/dns/user-guide",
+                "pages": [
+                  "services/dns/create-zone",
+                  "services/dns/manage-records",
+                  "services/dns/record-types",
+                  "services/dns/reverse-dns",
+                  "services/dns/troubleshooting"
+                ],
+                "icon": "book-open"
+              },
+              {
+                "group": "Admin Guide",
+                "root": "services/dns/admin-guide",
+                "pages": [
+                  "services/dns/architecture",
+                  "services/dns/backend-config",
+                  "services/dns/external-providers",
+                  "services/dns/zone-transfers",
+                  "services/dns/pool-management",
+                  "services/dns/quotas",
+                  "services/dns/security",
+                  "services/dns/admin-troubleshooting"
+                ],
+                "icon": "shield"
+              },
+              "services/dns/cli-reference"
+            ]
+          },
+          {
+            "group": "Key Manager",
+            "icon": "lock",
+            "root": "services/key-manager",
+            "pages": [
+              {
+                "group": "User Guide",
+                "root": "services/key-manager/user-guide",
+                "pages": [
+                  "services/key-manager/store-secrets",
+                  "services/key-manager/containers",
+                  "services/key-manager/certificates",
+                  "services/key-manager/acl",
+                  "services/key-manager/troubleshooting"
+                ],
+                "icon": "book-open"
+              },
+              {
+                "group": "Admin Guide",
+                "root": "services/key-manager/admin-guide",
+                "pages": [
+                  "services/key-manager/architecture",
+                  "services/key-manager/backend-config",
+                  "services/key-manager/secret-stores",
+                  "services/key-manager/transport-keys",
+                  "services/key-manager/quotas",
+                  "services/key-manager/security",
+                  "services/key-manager/admin-troubleshooting"
+                ],
+                "icon": "shield"
+              },
+              "services/key-manager/cli-reference"
+            ]
+          },
+          {
+            "group": "Object Storage",
+            "icon": "box",
+            "root": "services/object-storage",
+            "pages": [
+              {
+                "group": "User Guide",
+                "root": "services/object-storage/user-guide",
+                "pages": [
+                  "services/object-storage/create-container",
+                  "services/object-storage/upload-objects",
+                  "services/object-storage/access-control",
+                  "services/object-storage/versioning",
+                  "services/object-storage/large-objects",
+                  "services/object-storage/temp-urls",
+                  "services/object-storage/troubleshooting"
+                ],
+                "icon": "book-open"
+              },
+              {
+                "group": "Admin Guide",
+                "root": "services/object-storage/admin-guide",
+                "pages": [
+                  "services/object-storage/architecture",
+                  "services/object-storage/storage-policies",
+                  "services/object-storage/ring-management",
+                  "services/object-storage/replication",
+                  "services/object-storage/quotas",
+                  "services/object-storage/security",
+                  "services/object-storage/monitoring",
+                  "services/object-storage/admin-troubleshooting"
+                ],
+                "icon": "shield"
+              },
+              "services/object-storage/cli-reference"
+            ]
+          },
+          {
+            "group": "Software-Defined Storage",
+            "icon": "database",
+            "root": "services/sds/index",
+            "pages": [
+              {
+                "group": "User Guide",
+                "root": "services/sds/user-guide/storage-types",
+                "pages": [
+                  "services/sds/user-guide/access-methods",
+                  "services/sds/user-guide/data-protection",
+                  "services/sds/user-guide/performance",
+                  "services/sds/user-guide/snapshots",
+                  "services/sds/user-guide/troubleshooting"
+                ],
+                "icon": "book-open"
+              },
+              {
+                "group": "Admin Guide",
+                "root": "services/sds/admin-guide/architecture",
+                "pages": [
+                  "services/sds/admin-guide/cluster-management",
+                  "services/sds/admin-guide/pool-management",
+                  "services/sds/admin-guide/crush-maps",
+                  "services/sds/admin-guide/storage-tiers",
+                  "services/sds/admin-guide/capacity-planning",
+                  "services/sds/admin-guide/monitoring",
+                  "services/sds/admin-guide/security",
+                  "services/sds/admin-guide/troubleshooting"
+                ],
+                "icon": "shield"
+              },
+              "services/sds/cli-reference"
+            ]
+          },
+          {
+            "group": "Monitoring (XIMP)",
+            "icon": "activity",
+            "root": "services/monitoring/index",
+            "pages": [
+              {
+                "group": "User Guide",
+                "root": "services/monitoring/user-guide/dashboards",
+                "pages": [
+                  "services/monitoring/user-guide/metrics-alerts",
+                  "services/monitoring/user-guide/log-analytics",
+                  "services/monitoring/user-guide/activity-log",
+                  "services/monitoring/user-guide/network-monitoring",
+                  "services/monitoring/user-guide/alert-rules",
+                  "services/monitoring/user-guide/troubleshooting"
+                ],
+                "icon": "book-open"
+              },
+              {
+                "group": "Admin Guide",
+                "root": "services/monitoring/admin-guide/architecture",
+                "pages": [
+                  "services/monitoring/admin-guide/agent-config",
+                  "services/monitoring/admin-guide/metric-endpoints",
+                  "services/monitoring/admin-guide/log-collection",
+                  "services/monitoring/admin-guide/alert-channels",
+                  "services/monitoring/admin-guide/ddos-protection",
+                  "services/monitoring/admin-guide/retention",
+                  "services/monitoring/admin-guide/security",
+                  "services/monitoring/admin-guide/troubleshooting"
+                ],
+                "icon": "shield"
+              }
+            ]
+          },
+          {
+            "group": "Disaster Recovery",
+            "icon": "rotate-ccw",
+            "root": "services/disaster-recovery/index",
+            "pages": [
+              {
+                "group": "User Guide",
+                "root": "services/disaster-recovery/user-guide/protection-plans",
+                "pages": [
+                  "services/disaster-recovery/user-guide/failover",
+                  "services/disaster-recovery/user-guide/failback",
+                  "services/disaster-recovery/user-guide/test-dr",
+                  "services/disaster-recovery/user-guide/troubleshooting"
+                ],
+                "icon": "book-open"
+              },
+              {
+                "group": "Admin Guide",
+                "root": "services/disaster-recovery/admin-guide/architecture",
+                "pages": [
+                  "services/disaster-recovery/admin-guide/replication-config",
+                  "services/disaster-recovery/admin-guide/recovery-plans",
+                  "services/disaster-recovery/admin-guide/dr-automation",
+                  "services/disaster-recovery/admin-guide/monitoring",
+                  "services/disaster-recovery/admin-guide/compliance",
+                  "services/disaster-recovery/admin-guide/security",
+                  "services/disaster-recovery/admin-guide/troubleshooting"
+                ],
+                "icon": "shield"
+              }
+            ]
+          },
+          {
+            "group": "Instance HA",
+            "icon": "heart-pulse",
+            "root": "services/instance-ha/index",
+            "pages": [
+              {
+                "group": "User Guide",
+                "root": "services/instance-ha/user-guide/how-it-works",
+                "pages": [
+                  "services/instance-ha/user-guide/protection-segments",
+                  "services/instance-ha/user-guide/recovery-workflows",
+                  "services/instance-ha/user-guide/monitoring-status",
+                  "services/instance-ha/user-guide/vm-moves",
+                  "services/instance-ha/user-guide/troubleshooting"
+                ],
+                "icon": "book-open"
+              },
+              {
+                "group": "Admin Guide",
+                "root": "services/instance-ha/admin-guide/architecture",
+                "pages": [
+                  "services/instance-ha/admin-guide/failover-segments",
+                  "services/instance-ha/admin-guide/host-monitors",
+                  "services/instance-ha/admin-guide/instance-monitors",
+                  "services/instance-ha/admin-guide/notification-drivers",
+                  "services/instance-ha/admin-guide/recovery-methods",
+                  "services/instance-ha/admin-guide/engine-config",
+                  "services/instance-ha/admin-guide/security",
+                  "services/instance-ha/admin-guide/troubleshooting"
+                ],
+                "icon": "shield"
+              },
+              "services/instance-ha/cli-reference"
+            ]
+          },
+          {
+            "group": "Kubernetes (K8SaaS)",
+            "icon": "container",
+            "root": "services/kubernetes/index",
+            "pages": [
+              {
+                "group": "User Guide",
+                "root": "services/kubernetes/user-guide/cluster-templates",
+                "pages": [
+                  "services/kubernetes/user-guide/deploy-cluster",
+                  "services/kubernetes/user-guide/scale-cluster",
+                  "services/kubernetes/user-guide/access-cluster",
+                  "services/kubernetes/user-guide/node-groups",
+                  "services/kubernetes/user-guide/cluster-upgrades",
+                  "services/kubernetes/user-guide/troubleshooting"
+                ],
+                "icon": "book-open"
+              },
+              {
+                "group": "Admin Guide",
+                "root": "services/kubernetes/admin-guide/architecture",
+                "pages": [
+                  "services/kubernetes/admin-guide/cluster-drivers",
+                  "services/kubernetes/admin-guide/template-management",
+                  "services/kubernetes/admin-guide/quotas",
+                  "services/kubernetes/admin-guide/certificates",
+                  "services/kubernetes/admin-guide/container-runtime",
+                  "services/kubernetes/admin-guide/network-drivers",
+                  "services/kubernetes/admin-guide/monitoring",
+                  "services/kubernetes/admin-guide/security",
+                  "services/kubernetes/admin-guide/troubleshooting"
+                ],
+                "icon": "shield"
+              },
+              "services/kubernetes/cli-reference"
+            ]
+          },
+          {
+            "group": "Resource Optimizer",
+            "icon": "trending-up",
+            "root": "services/optimization/index",
+            "pages": [
+              {
+                "group": "User Guide",
+                "root": "services/optimization/user-guide/optimization-goals",
+                "pages": [
+                  "services/optimization/user-guide/run-audit",
+                  "services/optimization/user-guide/action-plans",
+                  "services/optimization/user-guide/execute-actions",
+                  "services/optimization/user-guide/audit-history",
+                  "services/optimization/user-guide/troubleshooting"
+                ],
+                "icon": "book-open"
+              },
+              {
+                "group": "Admin Guide",
+                "root": "services/optimization/admin-guide/architecture",
+                "pages": [
+                  "services/optimization/admin-guide/strategy-config",
+                  "services/optimization/admin-guide/data-sources",
+                  "services/optimization/admin-guide/custom-strategies",
+                  "services/optimization/admin-guide/scheduling",
+                  "services/optimization/admin-guide/action-policies",
+                  "services/optimization/admin-guide/compute-integration",
+                  "services/optimization/admin-guide/security",
+                  "services/optimization/admin-guide/troubleshooting"
+                ],
+                "icon": "shield"
+              },
+              "services/optimization/cli-reference"
+            ]
+          },
+          {
+            "group": "Migration (XMS)",
+            "icon": "truck",
+            "root": "services/migration/index",
+            "pages": [
+              {
+                "group": "User Guide",
+                "root": "services/migration/user-guide",
+                "pages": [
+                  "services/migration/user-guide/register-source",
+                  "services/migration/user-guide/discover-workloads",
+                  "services/migration/user-guide/preflight",
+                  "services/migration/user-guide/cold-migration",
+                  "services/migration/user-guide/warm-migration",
+                  "services/migration/user-guide/cutover",
+                  "services/migration/user-guide/post-migration",
+                  "services/migration/user-guide/troubleshooting"
+                ],
+                "icon": "book-open"
+              },
+              {
+                "group": "Admin Guide",
+                "root": "services/migration/admin-guide",
+                "pages": [
+                  "services/migration/admin-guide/architecture",
+                  "services/migration/admin-guide/prerequisites",
+                  "services/migration/admin-guide/source-credentials",
+                  "services/migration/admin-guide/network-ports",
+                  "services/migration/admin-guide/storage-backends",
+                  "services/migration/admin-guide/capacity-planning",
+                  "services/migration/admin-guide/troubleshooting"
+                ],
+                "icon": "shield"
+              },
+              "services/migration/cli-reference"
+            ]
+          }
+        ]
+      },
+      {
+        "group": "Security",
+        "icon": "shield",
+        "root": "security/index",
+        "pages": [
+          {
+            "group": "Xloud SIEM",
+            "root": "security/xloud-siem",
+            "pages": [
+              "security/wazuh",
+              "security/lynis",
+              "security/openscap"
+            ]
+          },
+          "security/infrastructure",
+          "security/vm-security",
+          "security/api-security",
+          "security/data-security",
+          "security/network-security",
+          "security/compliance",
+          "security/hardening-guide"
+        ]
+      },
+      {
+        "group": "Deployment",
+        "icon": "play",
+        "root": "deployment/index",
+        "pages": [
+          "deployment/xdeploy-key",
+          "deployment/bootstrap",
+          "deployment/hosts",
+          "deployment/configuration",
+          "deployment/advanced-config",
+          "deployment/images",
+          "deployment/operations",
+          "deployment/management",
+          "deployment/cloud-fleet",
+          "deployment/xsds",
+          "deployment/cluster-license"
+        ]
+      },
+      {
+        "group": "Integrations",
+        "icon": "plug",
+        "root": "integrations/index",
+        "pages": [
+          "integrations/terraform",
+          "integrations/ansible",
+          "integrations/prometheus",
+          "integrations/grafana",
+          "integrations/wazuh"
+        ]
+      },
+      {
+        "group": "Video Tutorials",
+        "icon": "play",
+        "root": "videos/index",
+        "pages": [
+          "videos/compute",
+          "videos/storage",
+          "videos/networking",
+          "videos/security",
+          "videos/monitoring"
+        ]
+      }
+    ],
+    "global": {
+      "anchors": [
+        {
+          "anchor": "What's New",
+          "href": "/updates",
+          "icon": "newspaper"
+        },
+        {
+          "anchor": "Admin Guide",
+          "href": "/admin-guide",
+          "icon": "shield"
+        },
+        {
+          "anchor": "User Guide",
+          "href": "/user-guide",
+          "icon": "book-open"
+        },
+        {
+          "anchor": "Release Notes",
+          "href": "/changelog",
+          "icon": "layers"
+        },
+        {
+          "anchor": "Manage License",
+          "href": "https://license.xloud.tech",
+          "icon": "key"
+        }
+      ]
+    }
+  },
+  "logo": "/images/Xloud Docs.svg",
+  "navbar": {
+    "links": [
+      {
+        "label": "Contact Sales",
+        "href": "mailto:sales@xloud.tech"
+      },
+      {
+        "label": "Support",
+        "href": "mailto:support@xloud.tech"
+      }
+    ],
+    "primary": {
+      "type": "button",
+      "label": "Dashboard",
+      "href": "https://xloud.tech"
+    }
+  },
+  "contextual": {
+    "options": [
+      "copy",
+      "chatgpt",
+      "claude",
+      "cursor",
+      "mcp"
+    ]
+  },
+  "footer": {
+    "links": [
+      {
+        "title": "Company",
+        "items": [
+          {
+            "label": "About Us",
+            "href": "https://xloud.tech/about"
+          },
+          {
+            "label": "Contact Us",
+            "href": "https://xloud.tech/contact"
+          },
+          {
+            "label": "Knowledge Base",
+            "href": "https://xloud.tech/knowledgeBase/getting-started"
+          }
+        ],
+        "header": "Company"
+      },
+      {
+        "title": "Solutions",
+        "items": [
+          {
+            "label": "XIMP - Infrastructure Monitoring",
+            "href": "https://xloud.tech/XIMP"
+          },
+          {
+            "label": "XAVS - Advanced Virtualization",
+            "href": "https://xloud.tech/xavs"
+          },
+          {
+            "label": "XHCI - Hyperconverged Infrastructure",
+            "href": "https://xloud.tech/hyperconverged"
+          },
+          {
+            "label": "XDR - Disaster Recovery",
+            "href": "https://xloud.tech/disaster-recovery"
+          },
+          {
+            "label": "XSDS - Software Defined Storage",
+            "href": "https://xloud.tech/ceph"
+          }
+        ],
+        "header": "Solutions"
+      },
+      {
+        "title": "Products",
+        "items": [
+          {
+            "label": "XNAS - NAS Storage",
+            "href": "https://xloud.tech/xnas"
+          },
+          {
+            "label": "XHCI - Hyperconverged Infrastructure",
+            "href": "https://xloud.tech/hyperconverged"
+          },
+          {
+            "label": "XNexus - Unified Storage",
+            "href": "https://xloud.tech/xnexus"
+          }
+        ],
+        "header": "Products"
+      },
+      {
+        "title": "Legal",
+        "items": [
+          {
+            "label": "Privacy Policy",
+            "href": "https://xloud.tech/privacy-policy"
+          },
+          {
+            "label": "Terms & Conditions",
+            "href": "https://xloud.tech/terms-and-conditions"
+          },
+          {
+            "label": "Legal",
+            "href": "https://xloud.tech/legal"
+          },
+          {
+            "label": "Refund and Cancellation Policy",
+            "href": "https://xloud.tech/refund-and-cancellation-policy"
+          }
+        ],
+        "header": "Company Policies"
+      }
+    ],
+    "socials": {
+      "linkedin": "https://linkedin.com/company/xloud",
+      "instagram": "https://instagram.com/xloudtech",
+      "x": "https://x.com/xloudtech",
+      "youtube": "https://youtube.com/@xloudtech",
+      "website": "https://xloud.tech/"
+    }
+  },
+  "background": {
+    "decoration": "gradient"
+  },
+  "fonts": {
+    "heading": {
+      "family": "Gilroy",
+      "source": "/resources/Gilroy-ExtraBold/Gilroy-ExtraBold.woff2",
+      "format": "woff2",
+      "weight": 800
+    },
+    "body": {
+      "family": "Tenorite",
+      "source": "/resources/Tenorite Regular/Tenorite Regular.woff2",
+      "format": "woff2",
+      "weight": 400
+    }
+  },
+  "description": "Build, operate, and optimize your XAVS environment with our documentation. Find step-by-step walkthroughs, administrative guides, API and CLI references, release updates, and troubleshooting resources."
+}

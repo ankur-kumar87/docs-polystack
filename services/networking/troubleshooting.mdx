@@ -1,0 +1,226 @@
+---
+title: "Networking Troubleshooting"
+description: "Diagnose and resolve common networking issues in Xloud Cloud Platform — connectivity failures, floating IP problems, DHCP errors, and MTU mismatches."
+sidebarTitle: "Troubleshooting"
+---
+
+import CliAuth from '/snippets/cli-auth.mdx';
+
+## Overview
+
+This guide covers the most common networking issues encountered in Xloud Cloud Platform
+and provides step-by-step resolution procedures. Each scenario includes diagnostic
+commands and remediation steps that you can apply from the Dashboard or CLI.
+
+<Note>
+  **Prerequisites**
+  - CLI configured with valid credentials
+  - Access to the **Xloud Dashboard** for instance console access
+</Note>
+
+---
+
+## Diagnostic Quick Reference
+
+Before working through individual scenarios, run these commands to gather a complete
+picture of your networking state:
+
+```bash title="Check overall network resource status"
+openstack network list
+openstack subnet list
+openstack router list
+openstack network agent list
+```
+
+```bash title="Check instance network attachment"
+openstack server show my-instance -f json | grep -E "addresses|security_groups"
+```
+
+---
+
+## Common Issues
+
+<AccordionGroup>
+  <Accordion title="Instance has no network connectivity" icon="wifi-off">
+    **Cause**: Missing router interface, DHCP failure, or security group blocking traffic.
+
+    **Resolution**:
+
+    1. Verify the instance received a DHCP-assigned IP:
+       ```bash title="Check instance IP assignments"
+       openstack server show my-instance -f json | grep addresses
+       ```
+    2. Confirm the subnet has a router interface:
+       ```bash title="List router interfaces"
+       openstack router port list main-router
+       ```
+    3. Check the security group allows the expected traffic:
+       ```bash title="List ingress rules for security group"
+       openstack security group rule list --ingress web-sg
+       ```
+    4. Verify the DHCP agent is alive:
+       ```bash title="Check DHCP agent status"
+       openstack network agent list --agent-type dhcp
+       ```
+
+    <Tip>
+      Use the Dashboard console (VNC) under **Compute > Instances** and use the Console action to
+      check whether the instance received an IP from inside the guest OS. A valid IP confirms
+      DHCP is working and the issue is at the network or security group layer.
+    </Tip>
+  </Accordion>
+
+  <Accordion title="Floating IP is unreachable" icon="globe">
+    **Cause**: Missing association, router has no external gateway, or the security group
+    is missing an ingress rule for the required port.
+
+    **Resolution**:
+
+    1. Confirm the floating IP is associated:
+       ```bash title="Show floating IP status"
+       openstack floating ip show 203.0.113.45
+       ```
+       The `port_id` field must be non-empty and `status` must be `ACTIVE`.
+    2. Verify the router has an external gateway:
+       ```bash title="Show router gateway"
+       openstack router show main-router -f json | grep external_gateway_info
+       ```
+    3. Check the security group assigned to the instance allows the port you are
+       connecting on (e.g., TCP 22 for SSH, TCP 80 for HTTP):
+       ```bash title="List security group rules"
+       openstack security group rule list --ingress <sg-name>
+       ```
+    4. Ping the floating IP from outside to confirm basic reachability:
+       ```bash title="Test ICMP reachability"
+       ping -c 4 203.0.113.45
+       ```
+  </Accordion>
+
+  <Accordion title="DHCP not assigning addresses" icon="server">
+    **Cause**: DHCP agent is down, DHCP is disabled on the subnet, or the allocation
+    pool is exhausted.
+
+    **Resolution**:
+
+    1. Confirm DHCP is enabled on the subnet:
+       ```bash title="Check subnet DHCP status"
+       openstack subnet show app-subnet -f json | grep enable_dhcp
+       ```
+    2. Check the allocation pool is not exhausted:
+       ```bash title="List ports consuming addresses"
+       openstack port list --network app-network
+       ```
+       Compare the count against your pool size (a `/24` provides 253 usable addresses).
+    3. Verify the DHCP agent is alive:
+       ```bash title="List DHCP agents"
+       openstack network agent list --agent-type dhcp
+       ```
+       If the agent shows `Alive: False`, contact your administrator to restart the
+       agent service. See the [Network Agent Management](/services/networking/network-agents) guide.
+  </Accordion>
+
+  <Accordion title="MTU mismatch causing packet fragmentation" icon="split">
+    **Cause**: VXLAN encapsulation adds a 50-byte overhead. If instances use the default
+    MTU of 1500, large packets are fragmented silently, degrading throughput and causing
+    application-level timeouts.
+
+    **Resolution**:
+
+    Update the network MTU to account for encapsulation overhead:
+    ```bash title="Set VXLAN-appropriate MTU on network"
+    openstack network set app-network --mtu 1450
+    ```
+    Instances receive the updated MTU via DHCP option 26 on next renewal. For
+    immediate effect, set the MTU manually on the guest OS:
+    ```bash title="Set MTU on Linux guest"
+    ip link set eth0 mtu 1450
+    ```
+
+    <Info>
+      For VXLAN networks, Xloud recommends an MTU of `1450`. For VLAN networks backed
+      by jumbo-frame-capable switches, you may use up to `9000`.
+    </Info>
+  </Accordion>
+
+  <Accordion title="Security group rules not taking effect" icon="shield">
+    **Cause**: The security group is not assigned to the instance, or the rule was
+    added to the wrong group.
+
+    **Resolution**:
+
+    1. List security groups assigned to the instance:
+       ```bash title="Show instance security groups"
+       openstack server show my-instance -f json | grep security_groups
+       ```
+    2. List rules in the expected group:
+       ```bash title="Show all rules in group"
+       openstack security group rule list web-sg
+       ```
+    3. If the group is not assigned, add it:
+       ```bash title="Assign security group to instance"
+       openstack server add security group my-instance web-sg
+       ```
+
+    <Check>Rules take effect immediately without a restart — re-test connectivity after adding the group.</Check>
+  </Accordion>
+
+  <Accordion title="Router not forwarding traffic after failover" icon="route">
+    **Cause**: HA router VRRP failover completed but the new master has not programmed
+    floating IP NAT rules correctly.
+
+    **Resolution**:
+
+    1. Check the router HA state:
+       ```bash title="Show router HA fields"
+       openstack router show ha-router -f json | grep -E "ha|status"
+       ```
+    2. List L3 agents for the router and confirm exactly one is active:
+       ```bash title="List L3 agents handling the router"
+       openstack network agent list --router ha-router
+       ```
+    3. Trigger rescheduling by toggling the router admin state:
+       ```bash title="Reschedule router"
+       openstack router set ha-router --disable
+       openstack router set ha-router --enable
+       ```
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Useful Diagnostic Commands
+
+```bash title="Show all ports on a network"
+openstack port list --network app-network
+```
+
+```bash title="Show port details including fixed IP and security groups"
+openstack port show <port-id>
+```
+
+```bash title="List all floating IPs in the project"
+openstack floating ip list
+```
+
+```bash title="Show network agent heartbeat timestamps"
+openstack network agent list --long
+```
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Network Agent Management" href="/services/networking/network-agents" color="#197560">
+    Monitor and manage SDN agents when diagnostic commands show agent failures
+  </Card>
+  <Card title="Network Security Groups" href="/services/networking/security-groups" color="#197560">
+    Review and update firewall rules to resolve connectivity issues
+  </Card>
+  <Card title="Routers and Gateways" href="/services/networking/routers" color="#197560">
+    Verify and correct router configuration for floating IP and NAT issues
+  </Card>
+  <Card title="DHCP Configuration" href="/services/networking/dhcp" color="#197560">
+    Administer DHCP agents for IP assignment troubleshooting
+  </Card>
+</CardGroup>

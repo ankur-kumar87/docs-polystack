@@ -1,0 +1,209 @@
+---
+title: "Block Storage Security Hardening"
+description: "Harden Xloud Block Storage with volume type access controls, minimum volume size policies, snapshot visibility management, and audit logging configuration."
+sidebarTitle: "Security Hardening"
+---
+
+import AdminWarning from '/snippets/admin-warning.mdx';
+import CliAuth from '/snippets/cli-auth.mdx';
+
+## Overview
+
+Xloud Block Storage provides several hardening controls that restrict unauthorized access to sensitive storage resources, limit resource abuse, and maintain an auditable record of storage operations. Apply these controls after completing the initial service configuration to meet compliance and security baseline requirements.
+
+<AdminWarning />
+
+<Note>
+  **Prerequisites**
+  - Administrator credentials with the `admin` role
+  - Volume types and backends already configured
+  - CLI authenticated via `source openrc.sh`
+</Note>
+
+---
+
+## Security Controls Overview
+
+| Control | Purpose | Impact |
+|---------|---------|--------|
+| **Volume type access restriction** | Limit sensitive types (encrypted, high-performance) to specific projects | Prevents unauthorized access to premium tiers |
+| **Minimum volume size** | Require a minimum GiB per volume | Reduces storage fragmentation |
+| **Snapshot visibility** | Prevent public snapshots | Stops data leakage across project boundaries |
+| **Volume encryption** | At-rest protection via LUKS | Protects data on stolen or decommissioned hardware |
+| **Audit logging** | API request logging | Provides evidence for compliance audits |
+
+---
+
+## Restrict Volume Type Access
+
+By default, volume types are accessible to all projects. Restrict sensitive or
+high-performance types to specific authorized projects:
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Navigate to Volume Types" icon="compass">
+        Navigate to
+        **Storage > Volume Types** (admin view).
+      </Step>
+      <Step title="Make the type private">
+        Create the volume type with the **Public** checkbox unchecked, or use the
+        CLI to change an existing type to private.
+      </Step>
+      <Step title="Grant access to authorized projects">
+        On the volume type row, click the **More** dropdown and select **Manage Access**.
+        Select the authorized projects and click **Confirm**.
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    <Steps titleSize="h3">
+      <Step title="Authenticate" icon="key">
+        <CliAuth />
+      </Step>
+      <Step title="Make the type private" icon="lock">
+        ```bash title="Restrict volume type to specific projects"
+        openstack volume type set --private <type-name>
+        ```
+      </Step>
+      <Step title="Grant access to specific projects" icon="users">
+        ```bash title="Add project access"
+        openstack volume type access add \
+          --project <project-id> \
+          <type-name>
+        ```
+      </Step>
+      <Step title="Verify access list" icon="circle-check">
+        ```bash title="List projects with access"
+        openstack volume type access list <type-name>
+        ```
+
+        <Check>Volume type restricted — only authorized projects can create volumes of this type.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+</Tabs>
+
+---
+
+## Enforce Minimum Volume Size
+
+Prevent creation of many small volumes that fragment storage capacity and inflate volume
+counts against quota:
+
+```bash title="Set minimum volume size for a project"
+openstack quota set \
+  --per-volume-gigabytes 10 \
+  <project-id>
+```
+
+A value of `10` requires every volume to be at least 10 GiB. Adjust based on your
+workload profile. Set globally with `--class default` to apply to all new projects:
+
+```bash title="Set global minimum volume size"
+openstack quota set \
+  --per-volume-gigabytes 5 \
+  --class default
+```
+
+---
+
+## Manage Snapshot Visibility
+
+Snapshots can be set to `public`, making them visible and accessible to all projects.
+Audit and restrict public snapshots to prevent unintended data exposure:
+
+```bash title="List public snapshots across all projects"
+openstack volume snapshot list --all-projects \
+  --property visibility=public
+```
+
+```bash title="Make a public snapshot private"
+openstack volume snapshot set --private <snapshot-id>
+```
+
+<Warning>
+  Public snapshots expose volume data to all projects in your deployment. Audit public
+  snapshots regularly and make them private unless cross-project sharing is explicitly
+  required.
+</Warning>
+
+---
+
+## Enable Volume Encryption
+
+Configure at-rest encryption on sensitive volume types to protect data on storage media.
+Encryption is transparent to users — all I/O is encrypted/decrypted at the hypervisor
+layer without application changes.
+
+Refer to the [Volume Encryption](/services/storage/encryption) guide for full
+configuration instructions.
+
+---
+
+## Audit Logging
+
+The Block Storage service logs all API requests including volume creation, deletion,
+attachment, and snapshot operations. Review service logs via XDeploy for security audits.
+
+<AccordionGroup>
+  <Accordion title="Key events to audit" icon="eye">
+    | Event | Log Pattern | Security Significance |
+    |-------|-------------|----------------------|
+    | Volume deletion | `DELETE /volumes/<id>` | Data destruction |
+    | Volume type creation | `POST /types` | New storage tier added |
+    | Snapshot made public | `PUT /snapshots/<id>` with `visibility=public` | Potential data exposure |
+    | Quota increase | `PUT /os-quota-sets/<project>` | Resource limit change |
+    | Volume migration | `POST /volumes/<id>/action` | Data movement |
+  </Accordion>
+
+  <Accordion title="Enable debug logging (temporary)" icon="terminal">
+    Enable verbose API logging on the Block Storage service for detailed audit trails:
+
+    Access the volume service configuration via XDeploy and add `debug = True` to the
+    `[DEFAULT]` section. Apply configuration changes and restart the service.
+
+    <Warning>
+      Debug logging is verbose and generates significant log volume. Enable only during
+      active security audits and disable promptly when finished.
+    </Warning>
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Security Checklist
+
+<AccordionGroup>
+  <Accordion title="Deployment security baseline" icon="shield" defaultOpen>
+    Verify the following after initial Block Storage deployment:
+
+    - [ ] All encrypted volume types are set to private and scoped to authorized projects
+    - [ ] Public snapshot count is zero (or justified exceptions documented)
+    - [ ] Minimum volume size configured per project to prevent fragmentation
+    - [ ] Volume encryption enabled for any compliance-sensitive data tiers
+    - [ ] Key Management service deployed with HA for encrypted volume availability
+    - [ ] Service logs reviewed for anomalous patterns after first week of operation
+    - [ ] Storage backend credentials (keyring files) have `0600` permissions on disk
+    - [ ] Backup target credentials stored in `passwords.yml` (not in configuration files)
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Volume Encryption" href="/services/storage/encryption" color="#197560">
+    Configure LUKS-based at-rest encryption for volume types
+  </Card>
+  <Card title="Quota Management" href="/services/storage/quotas" color="#197560">
+    Enforce storage limits to prevent resource exhaustion
+  </Card>
+  <Card title="Volume Types & QoS" href="/services/storage/volume-types-admin" color="#197560">
+    Restrict volume type access to authorized projects
+  </Card>
+  <Card title="Admin Guide" href="/services/storage/admin-guide" color="#197560">
+    Return to the Block Storage administration overview
+  </Card>
+</CardGroup>

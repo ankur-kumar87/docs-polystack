@@ -1,0 +1,200 @@
+---
+title: "Networking Admin Troubleshooting"
+description: "Diagnose and resolve Xloud Networking infrastructure issues — downed agents, VXLAN tunnel failures, HA router failover problems, and MTU mismatches."
+sidebarTitle: "Troubleshooting"
+---
+
+import AdminWarning from '/snippets/admin-warning.mdx';
+import CliAuth from '/snippets/cli-auth.mdx';
+
+## Overview
+
+This guide covers infrastructure-level networking issues that require administrator
+access to diagnose and resolve — agent failures, VXLAN tunnel connectivity, HA router
+failover, and MTU configuration across the physical underlay.
+
+<AdminWarning />
+
+<Note>
+  **Prerequisites**
+  - Admin credentials sourced from `openrc.sh`
+  - SSH access to compute and network nodes
+  - XDeploy access for agent restarts
+</Note>
+
+---
+
+## Diagnostic Quick Reference
+
+```bash title="Overview agent health across the cluster"
+openstack network agent list --long
+```
+
+```bash title="List agents by host"
+openstack network agent list -f value -c Host -c Binary -c Alive | sort
+```
+
+```bash title="Show all routers with HA state"
+openstack router list --all-projects -f json | grep -E '"id"|"ha"|"status"'
+```
+
+---
+
+## Common Issues
+
+<AccordionGroup>
+  <Accordion title="Agent is down or showing stale heartbeat" icon="activity">
+    **Cause**: The agent process has crashed, the host is unreachable, or the message
+    bus is not delivering heartbeats.
+
+    **Resolution**:
+
+    1. Identify the affected host:
+       ```bash title="List agents with heartbeat timestamps"
+       openstack network agent list --long
+       ```
+    2. SSH to the affected host and check the agent service:
+       ```bash title="Check L2 agent (Linux bridge)"
+       sudo systemctl status neutron-linuxbridge-agent
+       ```
+       ```bash title="Check agent container logs"
+       sudo docker logs neutron_openvswitch_agent --tail 100
+       ```
+    3. Restart the agent via XDeploy:
+       ```bash title="Redeploy networking agents"
+       xavs-ansible deploy --tags neutron
+       ```
+
+    <Tip>
+      After restarting, allow up to 30 seconds for the agent to re-register and send
+      a heartbeat. Verify with `openstack network agent list --long`.
+    </Tip>
+  </Accordion>
+
+  <Accordion title="VXLAN tunnel failures between compute nodes" icon="layers">
+    **Cause**: MTU mismatch, firewall blocking UDP 4789, or misconfigured tunnel
+    endpoint IPs.
+
+    **Resolution**:
+
+    1. Verify UDP 4789 (VXLAN) is reachable between compute nodes:
+       ```bash title="Test VXLAN port reachability"
+       nc -uvz <remote-compute-ip> 4789
+       ```
+    2. Confirm tunnel endpoint IPs:
+       ```bash title="Show L2 agent configuration including tunnel IP"
+       openstack network agent list --agent-type ovs --long
+       ```
+       The `Configuration` field shows `tunnel_types` and `local_ip`.
+    3. Verify the physical interface MTU accommodates VXLAN overhead:
+       ```bash title="Check physical interface MTU"
+       ip link show eth0 | grep mtu
+       ```
+       For VXLAN, the physical MTU must be at least `1550` to carry 1500-byte tenant
+       frames with 50-byte encapsulation overhead.
+  </Accordion>
+
+  <Accordion title="MTU mismatch causing application-level failures" icon="split">
+    **Cause**: Tenant network MTU exceeds the physical network capacity after
+    VXLAN encapsulation overhead.
+
+    **Resolution**:
+
+    1. Set the correct MTU on the affected tenant network:
+       ```bash title="Update network MTU"
+       openstack network set app-network --mtu 1450
+       ```
+    2. The DHCP agent automatically pushes the updated MTU to new instances via
+       DHCP option 26. Existing instances need a manual update or DHCP renewal:
+       ```bash title="Set MTU on Linux guest"
+       ip link set eth0 mtu 1450
+       ```
+
+    <Info>
+      MTU recommendations: VXLAN networks = `1450`, VLAN networks = `1500`,
+      jumbo-frame VLAN = up to `9000` (requires switch support end-to-end).
+    </Info>
+  </Accordion>
+
+  <Accordion title="HA router not recovering after L3 agent failure" icon="route">
+    **Cause**: VRRP failover completed but the new master has not programmed
+    floating IP NAT rules, or the failover did not complete.
+
+    **Resolution**:
+
+    1. Check the HA state across L3 agents:
+       ```bash title="Show router HA status"
+       openstack router show ha-router -f json | grep -E "ha|status"
+       ```
+    2. List L3 agents for the router — confirm one is `active`:
+       ```bash title="List L3 agents for the router"
+       openstack network agent list --router ha-router
+       ```
+    3. If stuck, trigger rescheduling by toggling admin state:
+       ```bash title="Reschedule the HA router"
+       openstack router set ha-router --disable
+       openstack router set ha-router --enable
+       ```
+    4. Check L3 agent logs on network nodes for VRRP negotiation errors:
+       ```bash title="View L3 agent logs"
+       sudo docker logs neutron_l3_agent --tail 200
+       ```
+
+    <Tip>
+      A long VRRP keepalive timeout (default ~3 seconds, dead interval ~10 seconds)
+      can cause a 10–30 second outage before the standby takes over. Tune the VRRP
+      timers in XDeploy if faster failover is required.
+    </Tip>
+  </Accordion>
+
+  <Accordion title="Provider network ports not binding" icon="plug">
+    **Cause**: Physical network mapping misconfiguration or the L2 agent on the
+    compute node does not have the bridge mapped.
+
+    **Resolution**:
+
+    1. Verify the bridge mapping on the affected compute node:
+       ```bash title="Check bridge mapping in L2 agent config"
+       openstack network agent show <l2-agent-id> -f json | grep bridge_mappings
+       ```
+    2. Confirm the bridge exists on the host:
+       ```bash title="Check bridge on compute node"
+       ssh xloud@<compute-node> "ip link show br-ex"
+       ```
+    3. If the bridge is missing, redeploy the networking configuration:
+       ```bash title="Redeploy networking"
+       xavs-ansible deploy --tags neutron
+       ```
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Log Locations
+
+| Service | Log Location |
+|---------|-------------|
+| Networking API | `docker logs neutron_server` |
+| L2 Agent (SDN) | `docker logs neutron_openvswitch_agent` |
+| L3 Agent | `docker logs neutron_l3_agent` |
+| DHCP Agent | `docker logs neutron_dhcp_agent` |
+| Metadata Agent | `docker logs neutron_metadata_agent` |
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Network Agent Management" href="/services/networking/network-agents" color="#197560">
+    Manage agent enable/disable state and monitor health
+  </Card>
+  <Card title="L3 Router Configuration" href="/services/networking/l3-routing" color="#197560">
+    Configure HA and DVR to prevent the issues described in this guide
+  </Card>
+  <Card title="Provider Networks" href="/services/networking/provider-networks" color="#197560">
+    Verify provider network configuration if port bindings are failing
+  </Card>
+  <Card title="User Troubleshooting" href="/services/networking/troubleshooting" color="#197560">
+    Tenant-facing connectivity and floating IP troubleshooting
+  </Card>
+</CardGroup>

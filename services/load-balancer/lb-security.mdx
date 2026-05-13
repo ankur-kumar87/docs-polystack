@@ -1,0 +1,164 @@
+---
+title: "Load Balancer Security"
+description: "Restrict management plane access, manage TLS certificate lifecycle, and audit quota usage for Xloud Load Balancer security hardening."
+sidebarTitle: "Security"
+---
+
+import AdminWarning from '/snippets/admin-warning.mdx';
+
+## Overview
+
+Securing the Xloud Load Balancer infrastructure protects both the management plane
+(controller-to-appliance communication) and the data plane (client traffic). This guide
+covers network isolation of the management plane, appliance TLS certificate lifecycle,
+quota auditing, and access log configuration.
+
+<AdminWarning />
+
+---
+
+## Management Plane Isolation
+
+The load balancing management network carries control traffic between the controller
+and appliances. This network must be isolated from tenant and provider networks to
+prevent unauthorized appliance access.
+
+<Steps titleSize="h3">
+  <Step title="Assign a dedicated management network" icon="network">
+    The management network should use a non-routable CIDR not reachable from tenant
+    networks or the internet. Configure in XDeploy globals:
+    ```yaml title="Load balancer management network"
+    octavia_management_network: lb-management-net
+    octavia_management_subnet: lb-management-subnet
+    ```
+  </Step>
+  <Step title="Apply security group rules" icon="shield">
+    The management security group should allow only the controller IP to reach
+    appliance management ports:
+    - TCP 9443 — appliance API (controller → appliance only)
+    - UDP 5555 — health manager heartbeat (bidirectional)
+    ```bash title="Verify management security group rules"
+    openstack security group rule list octavia-management-sg
+    ```
+  </Step>
+  <Step title="Verify network isolation" icon="circle-check">
+    Confirm tenant instances cannot reach the management network CIDR:
+    ```bash title="Test management network isolation"
+    # From a tenant instance — should be unreachable
+    ping <management-network-cidr-first-ip>
+    ```
+    <Check>Ping should fail — management network is not routable from tenant networks.</Check>
+  </Step>
+</Steps>
+
+---
+
+## TLS Certificate Lifecycle
+
+Appliances use TLS certificates for secure controller-to-appliance communication.
+Monitor and rotate certificates before expiry.
+
+```bash title="Check all appliance certificate expiration dates"
+openstack loadbalancer amphora list \
+  -c id -c cert_expiration -c status \
+  --sort-column cert_expiration
+```
+
+For appliances with certificates expiring within 30 days:
+```bash title="Trigger certificate rotation via failover"
+openstack loadbalancer amphora failover <amphora-id>
+```
+
+<Note>
+  Certificate rotation via failover replaces the appliance with a fresh instance using
+  a new certificate. In ACTIVE_STANDBY topology, this is non-disruptive. In SINGLE
+  topology, expect a brief interruption.
+</Note>
+
+---
+
+## Quota Auditing
+
+Regularly review quota consumption to identify projects with unusual resource usage:
+
+```bash title="Audit all project quotas"
+openstack loadbalancer quota list --all-projects
+```
+
+```bash title="Find projects using more than 80% of their load balancer quota"
+openstack loadbalancer quota list --all-projects -f json | python3 -c "
+import json, sys
+quotas = json.load(sys.stdin)
+for q in quotas:
+    lbs = q.get('in_use_loadbalancer', 0)
+    limit = q.get('loadbalancer', 10)
+    if limit > 0 and lbs / limit >= 0.8:
+        print(f'{lbs}/{limit} LBs  {q[\"project_id\"]}')
+"
+```
+
+Investigate projects consuming unusually high member or listener counts — this may
+indicate misconfigured applications creating excessive resources or resource leaks.
+
+---
+
+## Access Log Configuration
+
+Configure load balancer access logs to forward to your centralized logging platform.
+Access logs capture source IPs, request URIs, response codes, and latency — essential
+data for compliance auditing and security incident investigation.
+
+```yaml title="Enable access logging in XDeploy globals"
+octavia_enable_access_log: "yes"
+octavia_access_log_facility: LOG_LOCAL0
+```
+
+Apply:
+```bash title="Apply access log configuration"
+xavs-ansible deploy --tags octavia
+```
+
+<Tip>
+  Store load balancer access logs in Xloud Object Storage for long-term retention.
+  A retention policy of 90 days satisfies most compliance frameworks.
+</Tip>
+
+---
+
+## Security Checklist
+
+<AccordionGroup>
+  <Accordion title="Management network isolated" icon="network" defaultOpen>
+    Verify the management network CIDR is not reachable from tenant instances or external networks.
+  </Accordion>
+  <Accordion title="Appliance certificates valid" icon="shield">
+    All appliances have `cert_expiration` dates more than 30 days in the future.
+  </Accordion>
+  <Accordion title="Quota limits configured" icon="gauge">
+    All projects have explicit quota limits set — none are using unlimited defaults
+    in a multi-tenant environment.
+  </Accordion>
+  <Accordion title="Access logs forwarded" icon="file-text">
+    Access logs are configured and flowing to the centralized logging platform.
+    Verify by creating a test load balancer and checking for log entries.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Monitoring" href="/services/load-balancer/lb-monitoring" color="#197560">
+    Set up proactive alerts for certificate expiry and appliance health.
+  </Card>
+  <Card title="Quotas" href="/services/load-balancer/lb-quotas" color="#197560">
+    Configure per-project resource limits to prevent over-consumption.
+  </Card>
+  <Card title="Admin Troubleshooting" href="/services/load-balancer/lb-troubleshooting" color="#197560">
+    Resolve security-related configuration and access failures.
+  </Card>
+  <Card title="Architecture" href="/services/load-balancer/lb-architecture" color="#197560">
+    Review the management and data plane boundaries for security design.
+  </Card>
+</CardGroup>

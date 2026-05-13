@@ -1,0 +1,353 @@
+---
+title: "Migration Troubleshooting"
+description: "Diagnose and recover from common failures across source registration, discovery, preflight, migration, cutover, and post-migration."
+sidebarTitle: "Troubleshooting"
+---
+
+## Overview
+
+Migration is a pipeline that touches a source hypervisor API, a storage
+back-end, a guest operating system, and an Xloud project. A failure at any
+stage produces an event on the failed job. This page maps the most common
+symptoms to the underlying cause and the fix.
+
+<Tip>
+  Every XMS migration job exposes a live event stream. Start every
+  investigation by reading the events — most failures report the root cause
+  as a typed event before the job transitions to `Failed`.
+</Tip>
+
+---
+
+## Source Registration
+
+<AccordionGroup>
+  <Accordion title="Test connection fails with TLS error" icon="shield-alert">
+    **Symptom**: **Test Connection** returns an SSL or TLS error when saving a
+    new vSphere source.
+
+    **Cause**: The source uses a self-signed certificate or a certificate
+    chain that is not trusted by XMS.
+
+    **Fix**:
+    - For production: install the source's CA chain into the XMS trust store,
+      then re-test
+    - For lab use only: disable **Verify TLS** on the source — not recommended
+      for production environments
+  </Accordion>
+  <Accordion title="Test connection fails with authentication error" icon="key">
+    **Symptom**: Endpoint reachable, but the returned error says the
+    credentials are invalid.
+
+    **Cause**: The username format is wrong, the password is wrong, or the
+    account is locked in the source directory service.
+
+    **Fix**:
+    - Use `administrator@vsphere.local` (or your SSO domain) for vCenter
+    - Use `root` or a local ESXi account for standalone ESXi
+    - Re-enter the password — XMS does not echo a stored password on edit
+    - Check the source directory service for account lockout
+  </Accordion>
+  <Accordion title="Save succeeds but the environment stays Disconnected" icon="plug">
+    **Symptom**: The environment saves but the status is **Disconnected** in
+    the list.
+
+    **Cause**: XMS cannot reach the endpoint from the path used by the
+    background refresh. The save-time test uses the same network path.
+
+    **Fix**:
+    - Confirm the source endpoint is reachable from the XMS service
+    - Check any firewall between XMS and the source — vSphere API is 443
+    - Re-run **Test Connection** from the environment details drawer
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Discovery
+
+<AccordionGroup>
+  <Accordion title="Discovery returns zero VMs" icon="circle-slash">
+    **Symptom**: Discovery completes but no VMs appear in the inventory.
+
+    **Cause**: The vSphere account registered on the source has no read
+    permission on any object inside the datacenter scope.
+
+    **Fix**:
+    - Confirm the account has at least read permission at the datacenter
+      level (or whichever scope you pinned the environment to)
+    - Re-run discovery and watch the progress counter
+  </Accordion>
+  <Accordion title="Discovery hangs on a specific host" icon="clock">
+    **Symptom**: Progress stalls when XMS reaches a specific ESXi host.
+
+    **Cause**: The host is in a degraded state or has an open vSphere API
+    session limit.
+
+    **Fix**:
+    - From vSphere, confirm the host is connected and not in maintenance mode
+      for an unexpected reason
+    - Cancel discovery, wait for the stale session to clear, then re-run
+  </Accordion>
+  <Accordion title="Inventory missing fields (OS, IP, hostname)" icon="triangle-alert">
+    **Symptom**: Discovered VMs have no guest OS, hostname, or IP addresses.
+
+    **Cause**: VMware Tools is not installed on the source guest, or the tools
+    daemon is not running.
+
+    **Fix**:
+    - Install or start VMware Tools on the source guest
+    - Re-run discovery — the hypervisor fields (firmware, disks, NICs) are
+      always populated, only guest-level fields need tools
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Preflight
+
+<AccordionGroup>
+  <Accordion title="Unsupported guest OS" icon="triangle-alert">
+    **Symptom**: Preflight blocks a VM with an "unsupported guest OS" check.
+
+    **Cause**: The guest identifier returned by vSphere does not match the
+    Xloud guest catalog — either the guest is truly unsupported or the guest
+    identifier has not been updated after an OS upgrade on the source.
+
+    **Fix**:
+    - Upgrade or reinstall the guest to a supported version, or
+    - On the source, update the VM's guest OS identifier to match the
+      installed guest, then re-run preflight
+  </Accordion>
+  <Accordion title="Raw Device Mapping detected" icon="triangle-alert">
+    **Symptom**: Preflight blocks a VM with an RDM disk.
+
+    **Cause**: XMS migrates virtual disks, not LUN-level device mappings.
+
+    **Fix**: Convert the RDM to a standard VMFS-backed disk on the source
+    before migrating.
+  </Accordion>
+  <Accordion title="CBT not enabled for warm migration" icon="shield-alert">
+    **Symptom**: Warm migration is blocked because Changed Block Tracking is
+    not enabled on the source.
+
+    **Cause**: CBT was never turned on for this VM.
+
+    **Fix**: Use the **Enable CBT** action on the preflight result. XMS writes
+    the configuration change through the vSphere API. Re-run preflight.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Cold Migration
+
+<AccordionGroup>
+  <Accordion title="Export phase fails with connection reset" icon="network">
+    **Symptom**: The export phase starts, transfers some data, then fails with
+    a connection reset or transport error.
+
+    **Cause**: The network path between XMS and the source dropped mid-transfer,
+    or the source closed the disk transport session.
+
+    **Fix**:
+    - Confirm the network path between XMS and the source is stable
+    - Re-submit the migration — cold migration restarts from the beginning of
+      the export
+  </Accordion>
+  <Accordion title="Inspect phase fails to detect guest" icon="eye-off">
+    **Symptom**: Inspect phase reports an unknown or unsupported guest layout.
+
+    **Cause**: The guest has a non-standard partition layout, a damaged
+    partition table, or an encrypted root that XMS cannot unlock.
+
+    **Fix**:
+    - Repair the partition table on the source before migrating
+    - For encrypted roots, remove the encryption or provide the key through
+      the guest fixes configuration
+  </Accordion>
+  <Accordion title="Guest fixes phase fails" icon="wrench">
+    **Symptom**: VirtIO driver injection or boot loader repair fails.
+
+    **Cause**: The guest filesystem is corrupted, or the boot loader on the
+    source was already broken before migration.
+
+    **Fix**:
+    - Repair the source boot loader first, then re-submit migration
+    - For Windows, confirm the boot configuration database is present
+    - For Linux, confirm GRUB is installed and readable
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Warm Migration
+
+<AccordionGroup>
+  <Accordion title="Incremental sync transfers too much data" icon="trending-up">
+    **Symptom**: Incremental syncs are running long and transferring more data
+    than expected for the sync interval.
+
+    **Cause**: CBT was reset on the source (snapshot removal, host reboot,
+    storage vMotion), forcing a full re-read on the next sync.
+
+    **Fix**:
+    - This is self-healing — one incremental sync will transfer everything
+      and subsequent syncs will return to normal
+    - Avoid taking or removing snapshots on the source mid-migration
+  </Accordion>
+  <Accordion title="Warm job stuck in Syncing" icon="clock">
+    **Symptom**: A warm job has been in **Syncing** for far longer than the
+    previous syncs took.
+
+    **Cause**: Network path congestion, slow source disks, or an open disk
+    transport session that has not closed.
+
+    **Fix**:
+    - Let the sync finish if the progress counter is still advancing
+    - If progress is fully stalled, pause and resume the job — XMS re-opens
+      the disk transport session
+  </Accordion>
+  <Accordion title="Lag keeps growing" icon="triangle-alert">
+    **Symptom**: The **Lag** column keeps growing and the scheduled
+    incrementals do not keep up with source churn.
+
+    **Cause**: The cadence is too slow for the churn rate, or the network path
+    cannot sustain the incremental throughput.
+
+    **Fix**:
+    - Increase sync cadence (daily → hourly → every 15 minutes)
+    - Trigger **Sync Now** manually to catch up
+    - If network path is the bottleneck, move the migration to a window with
+      more available bandwidth
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Cutover
+
+<AccordionGroup>
+  <Accordion title="Source refuses graceful shutdown" icon="power">
+    **Symptom**: Cutover waits on the source power-off phase longer than
+    expected.
+
+    **Cause**: The guest is not responding to ACPI shutdown, typically because
+    a process is holding the shutdown or guest tools are not running.
+
+    **Fix**:
+    - XMS falls back to hard power off after the configured timeout
+    - To avoid the wait, log in to the source before cutover and quiesce
+      in-flight workloads
+  </Accordion>
+  <Accordion title="Guest fixes fails on cutover" icon="wrench">
+    **Symptom**: Guest conversion fails after the final delta sync.
+
+    **Cause**: The source filesystem was modified in a way that breaks guest
+    conversion — typically a partial update applied mid-migration.
+
+    **Fix**:
+    - Do not apply operating-system updates on the source during an active
+      warm migration
+    - If the fix path is unclear, submit a cold migration from the same
+      source to replace the warm target volume
+  </Accordion>
+  <Accordion title="Target instance boots to error" icon="triangle-alert">
+    **Symptom**: Target instance reaches power-on but the guest fails to boot
+    cleanly.
+
+    **Cause**: A driver, boot loader, or filesystem issue that did not surface
+    during guest fixes.
+
+    **Fix**: See the Post-Migration section below — target-side boot issues
+    are handled the same way regardless of whether the job was cold or warm.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Post-Migration
+
+<AccordionGroup>
+  <Accordion title="Linux guest drops to recovery mode" icon="terminal">
+    **Symptom**: Guest reaches a `(initramfs)` or rescue shell instead of a
+    normal login.
+
+    **Cause**: GRUB is looking for old device names or the initramfs is
+    missing required VirtIO modules.
+
+    **Fix**:
+    1. Boot into the guest rescue shell (from the instance console)
+    2. Mount the root filesystem
+    3. Regenerate the initramfs to include VirtIO modules
+    4. Update the GRUB configuration
+    5. Reboot
+  </Accordion>
+  <Accordion title="Windows guest BSOD with INACCESSIBLE_BOOT_DEVICE" icon="monitor">
+    **Symptom**: Windows bluescreens early in boot with
+    `INACCESSIBLE_BOOT_DEVICE`.
+
+    **Cause**: The `viostor` driver was installed but the boot-start service
+    is not enabled, so Windows cannot load the driver before mounting the
+    system disk.
+
+    **Fix**:
+    1. Attach the target volume to a rescue Windows instance
+    2. Enable the `viostor` service at boot (registry service start type = 0)
+    3. Detach and boot the original target instance
+  </Accordion>
+  <Accordion title="Guest network interface missing" icon="network">
+    **Symptom**: The guest boots, but the expected interface is absent.
+
+    **Cause**: The guest persisted the old interface name or MAC and is
+    confused by the new virtual hardware.
+
+    **Fix**:
+    - Linux: remove persistent network rules (for example, NetworkManager
+      keyfiles pinned to the old MAC), then reboot
+    - Windows: remove the hidden ghost adapter from Device Manager and
+      re-detect
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Collecting Diagnostics
+
+When a failure is not covered by this guide, collect the following before
+opening a support request:
+
+<Steps titleSize="h3">
+  <Step title="Job ID and timestamps" icon="clipboard">
+    Copy the job ID, creation time, failure time, and failed phase from the
+    job details panel.
+  </Step>
+  <Step title="Full event stream" icon="list">
+    Export or copy the full event stream from the job details panel. The
+    stream shows every phase transition and the typed error event.
+  </Step>
+  <Step title="Source environment snapshot" icon="server">
+    Record the source environment type (vCenter or standalone ESXi), version,
+    build, and the guest OS as reported by discovery.
+  </Step>
+  <Step title="Target project and quota" icon="folder">
+    Record the target project, flavor, volume type, and any quota warnings
+    visible in the Xloud Dashboard at the time of failure.
+  </Step>
+</Steps>
+
+---
+
+## Next Steps
+
+<CardGroup cols={3}>
+  <Card title="User Guide" href="/services/migration/user-guide" color="#197560">
+    Return to the migration user guide hub
+  </Card>
+  <Card title="Admin Guide" href="/services/migration/admin-guide" color="#197560">
+    Operator-facing setup, prerequisites, and capacity planning
+  </Card>
+  <Card title="CLI Reference" href="/services/migration/cli-reference" color="#197560">
+    Full command-line reference for the xms CLI
+  </Card>
+</CardGroup>

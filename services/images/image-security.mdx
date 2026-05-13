@@ -1,0 +1,177 @@
+---
+title: "Image Service Security"
+description: "Configure image signing, property protections, and public image access controls for Xloud Image Service."
+sidebarTitle: "Security"
+---
+
+import AdminWarning from '/snippets/admin-warning.mdx';
+
+## Overview
+
+The Xloud Image Service security configuration covers three areas: image signature
+verification (preventing tampered images from being launched), property protections
+(preventing unauthorized modification of critical metadata fields), and public image
+access controls (restricting who can publish images to the global catalog).
+
+<AdminWarning />
+
+---
+
+## Image Signing and Verification
+
+Xloud Image Service supports image signature verification using certificates stored in
+Xloud Key Management. When enabled, the compute service verifies the image signature
+before launching an instance, preventing tampered images from being used.
+
+<Steps titleSize="h3">
+  <Step title="Generate a signing key and certificate" icon="key">
+    Store the certificate in Xloud Key Management:
+    ```bash title="Create a certificate container in Key Management"
+    openstack secret store \
+      --name image-signing-cert \
+      --payload-content-type "application/pkix-cert" \
+      --payload "$(cat signing-cert.pem | base64)"
+    ```
+    Note the `Secret href` — this is the `<CERT_UUID>`.
+  </Step>
+  <Step title="Upload image with signature" icon="shield-check">
+    ```bash title="Upload image with signature metadata"
+    openstack image create \
+      --disk-format qcow2 \
+      --container-format bare \
+      --file ubuntu-24.04.qcow2 \
+      --property img_signature="<BASE64_SIGNATURE>" \
+      --property img_signature_certificate_uuid="<CERT_UUID>" \
+      --property img_signature_hash_method="SHA-256" \
+      --property img_signature_key_type="RSA-PSS" \
+      ubuntu-24.04-signed
+    ```
+  </Step>
+  <Step title="Enable verification in Compute" icon="settings">
+    Configure the compute service to verify image signatures before launching:
+    ```yaml title="Compute service: enable image signature verification"
+    nova_verify_glance_signatures: "true"
+    ```
+    Deploy after configuring:
+    ```bash title="Apply compute configuration"
+    xavs-ansible deploy --tags nova
+    ```
+    <Check>
+      The compute service now rejects instances launched from images with invalid or
+      missing signatures when verification is enforced.
+    </Check>
+  </Step>
+</Steps>
+
+<Tip>
+  Enable signature verification enforcement via the compute service policy to ensure
+  only signed images from your approved certificate authority can be launched.
+</Tip>
+
+---
+
+## Property Protections
+
+Property protections prevent unauthorized users from modifying sensitive image
+properties — such as signature fields or hardware requirements — after upload.
+
+<Steps titleSize="h3">
+  <Step title="Create the property protections configuration" icon="file-code">
+    ```ini title="/etc/xavs/glance/property-protections.conf"
+    [x-image-meta-property-img_signature]
+    create = admin
+    read = @
+    update = admin
+    delete = admin
+
+    [x-image-meta-property-xloud_base_image]
+    create = admin
+    read = @
+    update = admin
+    delete = admin
+
+    [x-image-meta-property-hw_firmware_type]
+    create = @
+    read = @
+    update = admin
+    delete = admin
+    ```
+  </Step>
+  <Step title="Apply the configuration" icon="upload">
+    ```bash title="Redeploy glance configuration"
+    xavs-ansible deploy --tags glance
+    ```
+    <Check>Property protections are active. Non-admin users cannot modify protected properties.</Check>
+  </Step>
+</Steps>
+
+---
+
+## Public Image Access Controls
+
+Only users with the `admin` role can mark images as `public`. Enforce this via policy to prevent
+accidental or malicious exposure of proprietary images organization-wide.
+
+Verify the policy is active:
+```bash title="Check publicize_image policy"
+openstack registered limit list | grep publicize
+```
+
+If the policy needs tightening, add an override:
+```yaml title="/etc/xavs/glance/policy.yaml — restrict public image creation"
+"publicize_image": "role:admin"
+"deactivate_image": "role:admin"
+"reactivate_image": "role:admin"
+```
+
+Apply:
+```bash title="Apply policy override"
+xavs-ansible deploy --tags glance
+```
+
+---
+
+## Security Checklist
+
+<AccordionGroup>
+  <Accordion title="Signature verification enabled" icon="shield-check" defaultOpen>
+    Verify that image signature verification is enforced in the compute service
+    policy. Test by attempting to launch an unsigned image — it should be rejected.
+  </Accordion>
+  <Accordion title="Property protections configured" icon="lock">
+    Confirm that signature-related properties (`img_signature*`) and platform properties
+    (`xloud_base_image`, `hw_firmware_type`) require admin to modify.
+  </Accordion>
+  <Accordion title="Public image access restricted to admins" icon="eye">
+    Verify that non-admin users cannot set images to `public` visibility.
+    Test with a project-member account: `openstack image set --public <image-id>`
+    should return a policy violation error.
+  </Accordion>
+  <Accordion title="Audit public and community images" icon="search">
+    Regularly audit the public image catalog:
+    ```bash title="List all public images"
+    openstack image list --public --all-projects \
+      -c name -c owner -c status -c updated_at
+    ```
+    Remove or deactivate any images that should not be publicly accessible.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Admin Troubleshooting" href="/services/images/admin-troubleshooting" color="#197560">
+    Diagnose signature verification failures and policy enforcement issues.
+  </Card>
+  <Card title="Quotas" href="/services/images/quotas" color="#197560">
+    Combine security controls with quota enforcement for complete image governance.
+  </Card>
+  <Card title="Identity Admin Guide" href="/services/identity/admin-guide" color="#197560">
+    Manage the authentication policies governing image service access.
+  </Card>
+  <Card title="Metadata" href="/services/images/metadata" color="#197560">
+    Define structured property schemas that work with property protection rules.
+  </Card>
+</CardGroup>

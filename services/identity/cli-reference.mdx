@@ -1,0 +1,373 @@
+---
+title: "Identity & Access CLI Reference"
+description: "Complete openstack CLI commands for managing projects, users, roles, groups, domains, application credentials, and tokens in Xloud Identity."
+sidebarTitle: "CLI Reference"
+---
+
+## Overview
+
+The `openstack` identity commands manage projects, users, roles, groups, domains, application credentials, and authentication tokens. Admin-scoped commands require the `admin` role.
+
+<Note>
+  **Prerequisites**
+  - CLI installed and authenticated — see [CLI Setup](/cli-setup)
+  - Admin role required for user, project, role, and domain management
+  - Source your `openrc.sh` before running admin commands
+</Note>
+
+---
+
+## Projects
+
+<CodeGroup>
+```bash title="List projects"
+openstack project list
+openstack project list --domain Default
+```
+
+```bash title="Create project"
+openstack project create \
+  --domain Default \
+  --description "Production workloads" \
+  my-project
+```
+
+```bash title="Show project"
+openstack project show my-project
+```
+
+```bash title="Rename project"
+openstack project set my-project --name new-project-name
+```
+
+```bash title="Enable / disable project"
+openstack project set --enable my-project
+openstack project set --disable my-project
+```
+
+```bash title="Delete project"
+openstack project delete my-project
+```
+</CodeGroup>
+
+---
+
+## Users
+
+<CodeGroup>
+```bash title="List users"
+openstack user list
+openstack user list --domain Default
+```
+
+```bash title="Create user"
+openstack user create \
+  --domain Default \
+  --password-prompt \
+  --email user@example.com \
+  john.doe
+```
+
+```bash title="Create user with project"
+openstack user create \
+  --project my-project \
+  --password PASSWORD \
+  john.doe
+```
+
+```bash title="Show user"
+openstack user show john.doe
+```
+
+```bash title="Update user name and email"
+openstack user set john.doe \
+  --name john.smith \
+  --email john.smith@example.com
+```
+
+```bash title="Set password"
+openstack user set --password-prompt john.doe
+```
+
+```bash title="Enable / disable user"
+openstack user set --enable john.doe
+openstack user set --disable john.doe
+```
+
+```bash title="Delete user"
+openstack user delete john.doe
+```
+</CodeGroup>
+
+<Warning>
+  Before deleting a user account, remove all role assignments for that user. A user with active role assignments cannot be deleted.
+</Warning>
+
+---
+
+## Roles
+
+<CodeGroup>
+```bash title="List all roles"
+openstack role list
+```
+
+```bash title="Show role details"
+openstack role show member
+```
+
+```bash title="Create a custom role"
+openstack role create network-operator
+```
+
+```bash title="Create a domain-scoped role"
+openstack role create --domain my-domain billing-reader
+```
+
+```bash title="Delete a role"
+openstack role delete network-operator
+```
+</CodeGroup>
+
+---
+
+## Role Assignments
+
+<CodeGroup>
+```bash title="Assign role to user on a project"
+openstack role add \
+  --user john.doe \
+  --project my-project \
+  member
+```
+
+```bash title="Assign role to user at domain scope"
+openstack role add \
+  --user john.doe \
+  --domain my-domain \
+  member
+```
+
+```bash title="Assign role to a group on a project"
+openstack role add \
+  --group operators \
+  --project my-project \
+  member
+```
+
+```bash title="List all role assignments (with names)"
+openstack role assignment list --names
+```
+
+```bash title="List assignments for a specific user"
+openstack role assignment list \
+  --user john.doe \
+  --names
+```
+
+```bash title="List assignments on a project"
+openstack role assignment list \
+  --project my-project \
+  --names
+```
+
+```bash title="Remove role from user on a project"
+openstack role remove \
+  --user john.doe \
+  --project my-project \
+  member
+```
+
+```bash title="Remove group role assignment"
+openstack role remove \
+  --group operators \
+  --project my-project \
+  member
+```
+</CodeGroup>
+
+---
+
+## Implied Roles (Role Hierarchies)
+
+Implied roles let a "prior" role automatically grant an "implied" role. Assignment is one-directional — prior → implied only.
+
+<CodeGroup>
+```bash title="Create an implied role rule"
+openstack implied role create admin --implied-role member
+```
+
+```bash title="List all implied role rules"
+openstack implied role list
+```
+
+```bash title="Delete an implied role rule"
+openstack implied role delete admin --implied-role member
+```
+</CodeGroup>
+
+---
+
+## Domains
+
+<CodeGroup>
+```bash title="List domains"
+openstack domain list
+```
+
+```bash title="Create domain"
+openstack domain create \
+  --description "Engineering department" \
+  engineering
+```
+
+```bash title="Show domain"
+openstack domain show engineering
+```
+
+```bash title="Enable / disable domain"
+openstack domain set --enable engineering
+openstack domain set --disable engineering
+```
+
+```bash title="Delete domain"
+openstack domain delete engineering
+```
+</CodeGroup>
+
+---
+
+## Groups
+
+<CodeGroup>
+```bash title="List groups"
+openstack group list
+```
+
+```bash title="Create group"
+openstack group create \
+  --domain Default \
+  --description "Cloud operators" \
+  operators
+```
+
+```bash title="Add user to group"
+openstack group add user operators john.doe
+```
+
+```bash title="Check group membership"
+openstack group contains user operators john.doe
+```
+
+```bash title="List users in group"
+openstack group list --user john.doe
+```
+
+```bash title="Remove user from group"
+openstack group remove user operators john.doe
+```
+
+```bash title="Delete group"
+openstack group delete operators
+```
+</CodeGroup>
+
+---
+
+## Application Credentials
+
+<CodeGroup>
+```bash title="List application credentials"
+openstack application credential list
+```
+
+```bash title="Create application credential"
+openstack application credential create \
+  --role member \
+  --description "CI/CD pipeline credential" \
+  ci-pipeline
+```
+
+```bash title="Create with expiry"
+openstack application credential create \
+  --role member \
+  --expiration "2026-12-31T00:00:00" \
+  temp-credential
+```
+
+```bash title="Create with restricted access rules"
+openstack application credential create \
+  --role member \
+  --access-rules '[{"service": "compute", "method": "GET", "path": "/v2.1/servers"}]' \
+  readonly-compute
+```
+
+```bash title="Show application credential"
+openstack application credential show ci-pipeline
+```
+
+```bash title="Delete application credential"
+openstack application credential delete ci-pipeline
+```
+</CodeGroup>
+
+---
+
+## Tokens
+
+<CodeGroup>
+```bash title="Issue a token"
+openstack token issue
+```
+
+```bash title="Issue a token (project-scoped)"
+openstack token issue \
+  --os-project-name my-project \
+  --os-domain-name Default
+```
+
+```bash title="Revoke a token"
+openstack token revoke <token-id>
+```
+</CodeGroup>
+
+---
+
+## Service Catalog & Endpoints
+
+<CodeGroup>
+```bash title="List all endpoints"
+openstack endpoint list
+```
+
+```bash title="List public endpoints only"
+openstack endpoint list --interface public
+```
+
+```bash title="Show endpoint details"
+openstack endpoint show <endpoint-id>
+```
+
+```bash title="List registered services"
+openstack service list
+```
+</CodeGroup>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Roles & Role Assignments Guide" href="/services/identity/roles" color="#197560">
+    Create custom roles, build role hierarchies, and manage role assignments
+  </Card>
+  <Card title="Application Credentials Guide" href="/services/identity/application-credentials" color="#197560">
+    Create and manage non-interactive credentials for automation and CI/CD
+  </Card>
+  <Card title="Projects Guide" href="/services/identity/projects" color="#197560">
+    Manage projects, quotas, and membership
+  </Card>
+  <Card title="Policy Management" href="/services/identity/policy-management" color="#197560">
+    Define per-service policy rules for custom roles
+  </Card>
+</CardGroup>

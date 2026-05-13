@@ -1,0 +1,337 @@
+---
+title: "Instance Rollback"
+description: "Restore a running or stopped instance to a previous snapshot in place. The instance UUID, IP addresses, security groups, and metadata are preserved — only disk contents change."
+sidebarTitle: "Instance Rollback"
+---
+
+## Overview
+
+Instance Rollback restores a virtual machine to the exact disk state captured by
+one of its snapshots, **without** rebuilding the VM, changing its UUID, or
+disturbing its network identity. Floating IPs, fixed IPs, ports, security
+groups, key pair, flavor, and metadata are all preserved. Only the bytes on
+disk change.
+
+<Info>**Xloud-Developed** — In-place instance rollback is built by Xloud and ships with XAVS / XPCI on Xloud Distributed Storage (XSDS) backed clusters. It is the equivalent of VMware vSphere "Revert to Snapshot" and Proxmox "Rollback".</Info>
+
+<Note>
+  **Prerequisites**
+  - The instance is on **Xloud Distributed Storage (XSDS / Ceph RBD)**. Other
+    storage backends are rejected at pre-flight time.
+  - The instance is in `Active`, `Shutdown`, or `Error` state and has no other
+    operation in progress (no migration, no resize, no other rollback).
+  - At least one Instance Snapshot exists for the VM.
+  - Your project role permits rollback (`os_compute_api:xloud_rollback:rollback`).
+</Note>
+
+---
+
+## What Rollback Preserves vs Replaces
+
+<Tabs>
+  <Tab title="Preserved" icon="check">
+    | Item | Behaviour |
+    |---|---|
+    | Instance UUID | Same UUID before and after — automation, monitoring, and tags keep working. |
+    | Display name | Unchanged. |
+    | Flavor | Unchanged. |
+    | Floating IPs | Unchanged. |
+    | Fixed IPs and ports | Unchanged. |
+    | Security groups | Unchanged. |
+    | SSH key pair | Unchanged. |
+    | Server metadata, tags, descriptions | Unchanged. |
+    | Volume attachments and device names | Unchanged. |
+    | Snapshots taken **after** the rollback target | Still listed and still usable. |
+  </Tab>
+  <Tab title="Replaced" icon="rotate-ccw">
+    | Item | Behaviour |
+    |---|---|
+    | Root disk contents | Reverted to the snapshot's bytes. |
+    | Attached volume contents (if part of the snapshot) | Reverted to the snapshot's bytes. |
+    | Anything written **after** the snapshot was taken | Lost on rollback. |
+  </Tab>
+</Tabs>
+
+<Warning>
+  Rollback overwrites disk contents. Any data, configuration changes, or
+  database writes made **after** the target snapshot will be lost on the
+  reverted volumes. The rollback dialog requires you to acknowledge this
+  before submitting.
+</Warning>
+
+---
+
+## Two Differentiators
+
+### Safety Snapshot (automatic)
+
+Before any disk content is changed, the platform creates a per-volume Cinder
+snapshot of the **current** state. If the rollback turns out to be the wrong
+choice, you can revert again — this time to the safety snapshot — and recover
+the pre-rollback state.
+
+<Note>
+  Safety snapshots use copy-on-write at the storage layer, so they are
+  effectively instant and consume only the storage of changes written after
+  they are taken. They are named with the prefix `_xloud_safety_` and tagged
+  with metadata so administrators can identify and clean them up later.
+</Note>
+
+The safety snapshot is created by default. The dialog exposes a
+**Skip Safety Snapshot** checkbox; leaving it unchecked is recommended for any
+production VM. Disabling the safety snapshot is only appropriate when you are
+absolutely certain you do not need a recovery point — for example, lab
+instances with no important state.
+
+If the rollback fails partway through, the safety snapshot is **retained** so
+the platform or an administrator can recover the VM to its prior state.
+
+### Roll Back to ANY Snapshot, Not Only the Most Recent
+
+Most cloud platforms only let you revert to the latest snapshot, forcing you
+to delete newer snapshots first or to chain rollbacks one at a time. Xloud
+Instance Rollback works against any snapshot in the VM's history.
+
+<Tip>
+  You can take a snapshot today, take another tomorrow, take a third on the
+  weekend, and on Monday roll directly back to the **first** one. The newer
+  snapshots are not deleted, are not invalidated, and remain available for
+  cloning, exporting, or rolling back to in the future.
+</Tip>
+
+This works because the rollback runs at the storage layer rather than going
+through the standard volume-revert API path. The full snapshot tree is
+preserved on the underlying storage, so any snapshot is a valid target.
+
+---
+
+## Roll Back an Instance
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Open the rollback dialog">
+        Navigate to **Compute > Instance Snapshots**. Locate the snapshot you
+        want to roll back to. On the snapshot row, open the **More** menu and
+        select **Rollback**.
+
+        The dialog title is **Rollback Instance to Snapshot**. The action is
+        marked as destructive and the dialog will not close if you click
+        outside it — use **Cancel** or the close icon.
+      </Step>
+      <Step title="Wait for the pre-flight check">
+        The platform automatically resolves the source instance and runs a
+        pre-flight check. The dialog displays:
+
+        | Field | What it shows |
+        |-------|---------------|
+        | **Snapshot** | The snapshot that will be applied. |
+        | **Target Instance** | The VM that will be reverted (auto-detected). |
+        | **Pre-flight Check** | Backend type, number of volumes to revert, warnings, and errors. |
+        | **Supported Scope** | Notes that XSDS is required and the VM will be stopped briefly. |
+
+        <Note>
+          If the pre-flight check fails (for example, the storage backend is not
+          XSDS, or another operation is in progress on the VM), the dialog shows
+          a clear error and the **Confirm** button stays disabled. Transient
+          errors offer a **Retry** button.
+        </Note>
+      </Step>
+      <Step title="Choose post-rollback options">
+        | Field | Description |
+        |-------|-------------|
+        | **Power State After Rollback** | `Power on` (default) starts the VM after rollback completes. `Power off` leaves the VM stopped so you can inspect the disk before booting. |
+        | **Skip Safety Snapshot** | Leave unchecked (recommended). Tick only if you do not need a recovery point. |
+        | **Irreversible Action** | Tick to acknowledge the disk content will be replaced. Required to enable Confirm. |
+      </Step>
+      <Step title="Confirm and wait">
+        Click **Confirm**. The platform performs the rollback synchronously:
+
+        1. Creates a per-volume safety snapshot (unless skipped).
+        2. Stops the VM and waits for it to fully release the disk.
+        3. Reverts each volume to the chosen snapshot at the storage layer.
+        4. Restarts the VM if **Power on** was selected.
+
+        Typical end-to-end duration is **30–60 seconds** for small VMs. Larger
+        volumes take longer because the storage layer streams more data. The
+        dialog closes when the API returns success.
+
+        <Check>The instance returns to `Active` (or `Shutdown` if you chose Power off) with the same UUID, the same IP, and the disk contents from the chosen snapshot.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    Rollback is exposed as a Compute server action. There is no dedicated
+    `openstack` subcommand, so use the API directly with a token.
+
+    ```bash title="Source credentials"
+    source openrc.sh
+    ```
+
+    ```bash title="Set variables"
+    INSTANCE_ID=<your-instance-uuid>
+    SNAPSHOT_ID=<glance-image-uuid-of-the-instance-snapshot>
+    NOVA_URL=$(openstack endpoint list --service compute --interface public -f value -c URL | head -n1)
+    TOKEN=$(openstack token issue -c id -f value)
+    ```
+
+    ```bash title="Pre-flight check (dry run)"
+    curl -sS -X POST \
+      -H "X-Auth-Token: $TOKEN" \
+      -H "Content-Type: application/json" \
+      -d "{\"xloud-rollback-dry-run\": {\"snapshot_id\": \"$SNAPSHOT_ID\"}}" \
+      "$NOVA_URL/servers/$INSTANCE_ID/action" | jq .
+    ```
+
+    The response includes `can_rollback`, the detected `backend`, the list of
+    volumes that will be reverted, and any warnings or errors.
+
+    ```bash title="Execute rollback"
+    curl -sS -X POST \
+      -H "X-Auth-Token: $TOKEN" \
+      -H "Content-Type: application/json" \
+      -d "{
+        \"xloud-rollback\": {
+          \"snapshot_id\": \"$SNAPSHOT_ID\",
+          \"skip_safety_snapshot\": false,
+          \"power_state_after\": \"on\"
+        }
+      }" \
+      "$NOVA_URL/servers/$INSTANCE_ID/action" | jq .
+    ```
+
+    The call is synchronous and returns when the rollback is complete:
+
+    ```json
+    {
+      "xloud_rollback": {
+        "request_id": "req-...",
+        "instance_uuid": "...",
+        "snapshot_id": "...",
+        "state": "completed",
+        "volumes_reverted": [ { "volume_id": "...", "elapsed_seconds": 0.11 } ],
+        "safety_snapshot_ids": [ "..." ],
+        "duration_seconds": 27.3
+      }
+    }
+    ```
+
+    <Check>The response shows <code>state: completed</code> and includes the safety snapshot UUIDs.</Check>
+  </Tab>
+</Tabs>
+
+---
+
+## Recover From a Rollback
+
+If the rollback was not what you wanted, you can recover.
+
+<Steps titleSize="h3">
+  <Step title="Locate the safety snapshot">
+    Navigate to **Storage > Volume Snapshots**. Filter by the prefix
+    `_xloud_safety_`. Each safety snapshot is named with the rollback request
+    ID, the device name, and a timestamp, so you can correlate it with the
+    rollback you want to undo.
+  </Step>
+  <Step title="Roll back to the safety snapshot">
+    The safety snapshot is itself a Cinder snapshot of the volume. To use it
+    as a rollback target, take an Instance Snapshot of the VM **referencing
+    that safety state**, or contact your administrator who can perform the
+    same rollback procedure against the safety snapshot.
+
+    <Note>
+      Safety snapshots are retained until an administrator cleans them up.
+      They consume only the changed bytes (copy-on-write), so keeping them
+      around for a recovery window is cheap.
+    </Note>
+  </Step>
+</Steps>
+
+---
+
+## Pre-flight Errors and What They Mean
+
+<AccordionGroup>
+  <Accordion title="Storage backend requires Ceph RBD/XSDS">
+    The instance has at least one volume on a backend other than XSDS (for
+    example, a third-party iSCSI array). Instance Rollback v1 only supports
+    XSDS-backed volumes. Migrate the volume to XSDS or use snapshot-based
+    cloning to recover state.
+  </Accordion>
+  <Accordion title="Cannot determine source instance for this snapshot">
+    The snapshot's metadata does not contain a usable instance reference and
+    the boot volume's attachments could not be walked. This typically means
+    the original instance was deleted. Use **Create Instance From Snapshot**
+    to launch a new VM from the snapshot instead.
+  </Accordion>
+  <Accordion title="Another operation is in progress">
+    A migration, resize, snapshot, or another rollback is currently running
+    on the VM. Wait for it to complete and retry.
+  </Accordion>
+  <Accordion title="RBD image has active watchers; refusing rollback">
+    The VM did not fully release the disk before rollback was attempted. This
+    safety check prevents disk corruption from concurrent writers. The
+    platform retries on its own; if it persists, contact your administrator
+    — a stale libvirt session or a backup agent may be holding the disk.
+  </Accordion>
+  <Accordion title="Snapshot not found or not active">
+    The selected snapshot was deleted, is still uploading, or is in `Error`
+    state. Refresh the snapshot list and retry once the snapshot is `Active`.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## What Rollback Does Not Do
+
+| Out of scope (v1) | Why |
+|---|---|
+| Non-XSDS backends | Other backends do not expose the in-place revert primitive that makes the operation safe and instant. |
+| Hot rollback (running VM) | The VM is stopped automatically as part of the workflow. The disk cannot be reverted while a hypervisor is writing to it. |
+| Mixed backends in one VM | If any attached volume is not on XSDS, the entire rollback is rejected. No partial rollback. |
+| Bulk rollback across many VMs | Rollback is per-instance. |
+| Scheduled rollback | The action runs immediately when triggered. |
+
+---
+
+## How It Works Internally
+
+<Note>
+  This section is informational. End users do not need to understand it to use
+  the feature.
+</Note>
+
+For an Xloud Distributed Storage backed volume, a snapshot is a copy-on-write
+marker on the underlying object — it does **not** copy data. Rollback is a
+single storage-layer call that points the volume's "head" back at the chosen
+snapshot. After rollback:
+
+- The volume's database row is unchanged. The block storage service still
+  sees `status=in-use, attached`.
+- The volume attachment is unchanged.
+- Snapshots taken after the rollback target are **still preserved** on the
+  underlying storage.
+- Only the bytes inside the volume's image have moved back in time.
+
+Before issuing the rollback call, the platform checks that no hypervisor is
+still holding the volume open. If any "watcher" is detected, the rollback is
+refused — this prevents the corruption case where a writer is still active
+during a revert.
+
+For a deeper architecture overview, see [Compute Architecture](/services/compute/architecture).
+
+---
+
+## Next Steps
+
+<CardGroup cols={3}>
+  <Card title="Instance Snapshots" icon="camera" href="/services/compute/snapshots">
+    Capture VM state to create rollback points.
+  </Card>
+  <Card title="Clone Instance" icon="copy" href="/services/compute/clone-instance">
+    Create a new VM from an existing one without rolling back.
+  </Card>
+  <Card title="VM Templates" icon="layers" href="/services/compute/vm-templates">
+    Promote a known-good snapshot into a reusable template.
+  </Card>
+</CardGroup>

@@ -1,0 +1,225 @@
+---
+title: "Alert Channels"
+description: "Configure XIMP notification channels — email, webhook, PagerDuty, and Slack — and set up multi-tier escalation policies for critical infrastructure alerts."
+sidebarTitle: "Alert Channels"
+---
+
+import AdminWarning from '/snippets/admin-warning.mdx';
+
+## Overview
+
+Alert channels define how XIMP delivers notifications when alert rules fire. Channels
+must be configured before creating alert rules that reference them. This page covers
+creating and testing all supported channel types, and configuring escalation policies
+for critical alerts.
+
+<AdminWarning />
+
+<Tabs>
+  <Tab title="XDeploy" icon="server">
+    SMTP email alerts and webhook notifications can be configured directly in XDeploy:
+
+    <Steps titleSize="h3">
+      <Step title="Open Configuration" icon="settings">
+        Navigate to **XDeploy → Configuration** and select the **Monitoring** tab.
+      </Step>
+      <Step title="Configure alert channels" icon="bell">
+        Scroll to the **Alert Configuration** section and set the notification channels:
+
+        | Setting | Description |
+        |---------|-------------|
+        | **SMTP Server** | Mail server hostname and port |
+        | **SMTP From Address** | Sender email address for alert notifications |
+        | **SMTP Recipients** | Comma-separated recipient email addresses |
+        | **SMTP TLS Mode** | TLS encryption mode (STARTTLS or SSL) |
+        | **Webhook URL** | Endpoint URL for Slack, Microsoft Teams, or custom webhooks |
+      </Step>
+      <Step title="Test the channels" icon="flask-conical">
+        Use the **Test Email** and **Test Webhook** buttons to verify delivery before
+        saving. This sends a test notification to confirm connectivity and credentials.
+
+        <Tip>
+          Always test channels immediately after configuration. Discovering a broken
+          channel during a real incident delays response significantly.
+        </Tip>
+      </Step>
+      <Step title="Save and deploy" icon="rocket">
+        Click **Save Configuration**, then navigate to **XDeploy → Operations** and
+        run a **Reconfigure** for the monitoring services.
+
+        <Check>Alert channels are configured and tested.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    Alert channels can also be configured through the XIMP CLI and the Monitoring
+    Dashboard. See the sections below for channel-specific configuration.
+  </Tab>
+</Tabs>
+
+<Note>
+  **Prerequisites**
+  - Administrator credentials with the `admin` role
+  - SMTP, webhook, PagerDuty, or Slack credentials depending on the channel type
+</Note>
+
+---
+
+## Creating Alert Channels
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Navigate to Alert Channels" icon="bell">
+        Navigate to **Monitor Center > Monitoring** (Add Channel, admin view).
+      </Step>
+      <Step title="Configure the channel" icon="settings">
+        Select the channel type and complete the required fields:
+
+        | Channel Type | Required Fields |
+        |-------------|----------------|
+        | **Email** | SMTP server, port, from address, recipient list, TLS mode |
+        | **Webhook** | URL, HTTP method, optional Authorization header |
+        | **PagerDuty** | Integration key (from PagerDuty service), severity mapping |
+        | **Slack** | Incoming webhook URL, target channel name |
+        | **Teams** | Incoming webhook URL |
+      </Step>
+      <Step title="Test the channel" icon="flask-conical">
+        Click **Test** after saving to send a test notification. Verify delivery before
+        assigning the channel to production alert rules.
+
+        <Tip>
+          Use the **Test** button immediately after creating a channel. Discovering a
+          broken channel during a real incident delays response significantly.
+        </Tip>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="List configured channels"
+    ximp alert channel list
+    ```
+
+    ```bash title="Add email channel"
+    ximp alert channel create \
+      --name ops-email \
+      --type email \
+      --to ops-team@example.com \
+      --smtp smtp.example.com:587
+    ```
+
+    ```bash title="Add webhook channel"
+    ximp alert channel create \
+      --name ops-webhook \
+      --type webhook \
+      --url https://hooks.example.com/ximp \
+      --method POST
+    ```
+
+    ```bash title="Test a channel"
+    ximp alert channel test ops-webhook
+    ```
+
+    ```bash title="Delete a channel"
+    ximp alert channel delete ops-webhook
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Escalation Policies
+
+Configure multi-tier escalation for critical infrastructure alerts:
+
+<Steps titleSize="h3">
+  <Step title="Navigate to Escalation Policies" icon="arrow-up">
+    Navigate to **Monitor Center > Monitoring** (Escalation Policies, admin view).
+  </Step>
+  <Step title="Define escalation tiers" icon="layers">
+    | Tier | Trigger | Channel | Delay |
+    |------|---------|---------|-------|
+    | **Tier 1** | Alert fires | PagerDuty on-call | Immediate |
+    | **Tier 2** | Not acknowledged | Slack ops channel | 5 minutes |
+    | **Tier 3** | Still unacknowledged | Page on-call manager | 15 minutes |
+
+    <Warning>
+      Escalation policies only apply to alert rules with the policy assigned. Verify
+      every critical alert rule has an escalation policy — a rule without one stops
+      at Tier 1 and never escalates.
+    </Warning>
+  </Step>
+  <Step title="Assign to alert rules" icon="link">
+    Open the target alert rule and set the **Escalation Policy** field. The policy
+    applies to all future alert events for that rule.
+
+    <Check>Alert rule references the escalation policy. Future alert events will escalate per the configured tiers.</Check>
+  </Step>
+</Steps>
+
+---
+
+## Channel Configuration Reference
+
+<AccordionGroup>
+  <Accordion title="Email (SMTP)" icon="mail">
+    ```yaml title="Email channel configuration"
+    name: ops-email
+    type: email
+    smtp:
+      server: smtp.example.com
+      port: 587
+      username: ximp@example.com
+      password: <SMTP_PASSWORD>
+      tls: starttls
+    from: ximp@example.com
+    recipients:
+      - ops-team@example.com
+      - oncall@example.com
+    ```
+  </Accordion>
+  <Accordion title="PagerDuty" icon="bell">
+    ```yaml title="PagerDuty channel configuration"
+    name: pagerduty-oncall
+    type: pagerduty
+    integration_key: <PAGERDUTY_INTEGRATION_KEY>
+    severity_mapping:
+      critical: critical
+      warning: warning
+      info: info
+    ```
+
+    Generate the integration key in PagerDuty under **Services → Integrations → Add Integration → Events API v2**.
+  </Accordion>
+  <Accordion title="Slack" icon="message-square">
+    ```yaml title="Slack channel configuration"
+    name: slack-ops
+    type: slack
+    webhook_url: https://hooks.slack.com/services/T.../B.../...
+    channel: "#ops-alerts"
+    username: "XIMP Alerts"
+    icon_emoji: ":alert:"
+    ```
+
+    Generate the webhook URL in Slack under **Apps → Incoming Webhooks → Add to Slack**.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Metrics & Alerts (User Guide)" href="/services/monitoring/user-guide/metrics-alerts" color="#197560">
+    How users create alert rules that reference these channels
+  </Card>
+  <Card title="Alert Rules (Advanced)" href="/services/monitoring/user-guide/alert-rules" color="#197560">
+    Silence rules, inhibition, and escalation policy usage
+  </Card>
+  <Card title="Security" href="/services/monitoring/admin-guide/security" color="#197560">
+    Dashboard access control and credential management
+  </Card>
+  <Card title="Troubleshooting" href="/services/monitoring/admin-guide/troubleshooting" color="#197560">
+    Diagnose channel delivery failures and SMTP connectivity issues
+  </Card>
+</CardGroup>

@@ -1,0 +1,312 @@
+---
+title: "Roles & Role Assignments"
+description: "Create custom roles, assign them to users and groups on projects or domains, and build role hierarchies with implied roles in Xloud Identity."
+sidebarTitle: "Roles"
+---
+
+## Overview
+
+<iframe
+  className="w-full aspect-video rounded-xl"
+  src="https://www.youtube.com/embed/1usSEDeZDWw"
+  title="How to Manage RBAC Permissions on Xloud Dashboard"
+  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+  allowFullScreen
+></iframe>
+
+Roles are the foundation of Xloud's role-based access control (RBAC) system. A role grants a set of permissions and is always assigned in the context of a **user + project** (or **user + domain**) pair. Xloud ships three built-in roles — `admin`, `member`, and `reader` — and supports creating custom roles to match your organizational requirements.
+
+<Note>
+  **Prerequisites**
+  - CLI authenticated with admin credentials — see [CLI Setup](/cli-setup)
+  - Dashboard: logged in as an admin user
+  - To create or modify roles you need the `admin` role on the system scope
+</Note>
+
+---
+
+## Built-in Roles
+
+Xloud ships three standard roles that cascade via implied role inheritance:
+
+| Role | Permissions | Typical Assignment |
+|------|------------|-------------------|
+| `admin` | Full API access including administrative endpoints | Cloud operators, service accounts |
+| `member` | Project-scoped create, read, update, delete | Regular project members |
+| `reader` | Project-scoped read-only access | Auditors, monitoring service accounts |
+
+<Info>
+  **Implied role hierarchy**: `admin` implies `member`, and `member` implies `reader`. Assigning `admin` automatically grants all three sets of permissions. You do not need to assign all three roles separately.
+</Info>
+
+---
+
+## List and View Roles
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    Navigate to **Identity > Roles** (admin view) to see all available roles, their IDs, and whether they are domain-scoped.
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    <CodeGroup>
+    ```bash title="List all roles"
+    openstack role list
+    ```
+
+    ```bash title="Show role details"
+    openstack role show member
+    ```
+
+    ```bash title="List all role assignments (with names)"
+    openstack role assignment list --names
+    ```
+
+    ```bash title="List assignments for a specific user"
+    openstack role assignment list \
+      --user john.doe \
+      --names
+    ```
+
+    ```bash title="List assignments on a specific project"
+    openstack role assignment list \
+      --project my-project \
+      --names
+    ```
+    </CodeGroup>
+  </Tab>
+</Tabs>
+
+---
+
+## Create a Custom Role
+
+Custom roles let you create named access tiers beyond the three built-in roles. The role itself is just a name — its effective permissions are defined in each service's `policy.yaml` file.
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Open Roles" icon="list">
+        Navigate to **Identity > Roles** (admin view) and click **Create Role**.
+      </Step>
+      <Step title="Name the role" icon="tag">
+        Enter a descriptive name such as `network-operator` or `image-uploader`. Role names are case-sensitive.
+
+        <Tip>
+          Use lowercase, hyphen-separated names (e.g., `billing-reader`, `vpc-admin`) to stay consistent with the built-in role naming convention.
+        </Tip>
+      </Step>
+      <Step title="Save and assign" icon="check">
+        Click **Confirm**. The new role is created and available to assign to users. Its permissions are still `{}` (no extra access) until you add policy rules in each service.
+
+        <Check>The role appears in **Identity > Roles** (admin view) with a new UUID.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Create a custom role"
+    openstack role create network-operator
+    ```
+
+    ```bash title="Create a domain-scoped role"
+    openstack role create --domain my-domain billing-reader
+    ```
+
+    ```bash title="Verify the role was created"
+    openstack role show network-operator
+    ```
+
+    <Tip>
+      After creating the role, define its permissions in the relevant service policy files. See [Policy Management](/services/identity/policy-management) for how to map role names to API operations.
+    </Tip>
+  </Tab>
+</Tabs>
+
+---
+
+## Assign Roles
+
+Role assignments always connect a **principal** (user or group) to a **scope** (project or domain).
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Open project members" icon="folder">
+        Navigate to **Identity > Projects** (admin view), select the project, and click the **Manage User** action (More dropdown).
+      </Step>
+      <Step title="Add the user" icon="user-plus">
+        Click **Add Member**, search for the user, select the desired role, and click **Add**.
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    <CodeGroup>
+    ```bash title="Assign role to a user on a project"
+    openstack role add \
+      --user john.doe \
+      --project my-project \
+      member
+    ```
+
+    ```bash title="Assign admin role on a project"
+    openstack role add \
+      --user alice \
+      --project ops-project \
+      admin
+    ```
+
+    ```bash title="Assign role to a user at domain scope"
+    openstack role add \
+      --user john.doe \
+      --domain my-domain \
+      member
+    ```
+
+    ```bash title="Assign role to a group on a project"
+    openstack role add \
+      --group operators \
+      --project my-project \
+      member
+    ```
+
+    ```bash title="Verify the assignment"
+    openstack role assignment list \
+      --user john.doe \
+      --project my-project \
+      --names
+    ```
+    </CodeGroup>
+  </Tab>
+</Tabs>
+
+<Warning>
+  A user with **no role on a project** cannot access that project at all — not even read-only. Always assign at least the `reader` role for users who need visibility into a project.
+</Warning>
+
+---
+
+## Remove Role Assignments
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    Navigate to **Identity > Projects** (admin view) > **Manage User** action, find the user, and click **Remove Role**.
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    <CodeGroup>
+    ```bash title="Remove a role from a user on a project"
+    openstack role remove \
+      --user john.doe \
+      --project my-project \
+      member
+    ```
+
+    ```bash title="Remove group role assignment"
+    openstack role remove \
+      --group operators \
+      --project my-project \
+      member
+    ```
+
+    ```bash title="Verify removal"
+    openstack role assignment list \
+      --user john.doe \
+      --project my-project \
+      --names
+    ```
+    </CodeGroup>
+  </Tab>
+</Tabs>
+
+<Warning>
+  Before deleting a user account, remove all of their role assignments. A user cannot be deleted while they hold active role assignments on projects or domains.
+</Warning>
+
+---
+
+## Implied Roles (Role Hierarchies)
+
+Implied roles (also called role inference rules) let you build role hierarchies where assigning one role automatically grants another. This keeps assignments simple while enabling fine-grained permission structures.
+
+<Info>
+  **Direction matters**: Role inference is one-directional. If `admin` implies `member`, assigning `admin` grants both — but assigning `member` does **not** grant `admin`.
+</Info>
+
+<CodeGroup>
+```bash title="Create an implied role rule (admin implies member)"
+openstack implied role create admin --implied-role member
+```
+
+```bash title="List all implied role rules"
+openstack implied role list
+```
+
+```bash title="Delete an implied role rule"
+openstack implied role delete admin --implied-role member
+```
+</CodeGroup>
+
+### Use Case: Fine-Grained Service Roles
+
+You can create service-specific sub-roles and have the `member` role imply all of them:
+
+```bash title="Create service-specific sub-roles"
+openstack role create compute-member
+openstack role create network-member
+openstack role create volume-member
+```
+
+```bash title="Have member imply all service sub-roles"
+openstack implied role create member --implied-role compute-member
+openstack implied role create member --implied-role network-member
+openstack implied role create member --implied-role volume-member
+```
+
+Now assigning `member` to a user automatically grants compute, network, and volume access — while you can still assign individual sub-roles for more granular control.
+
+---
+
+## Delete a Role
+
+<Warning>
+  Deleting a role removes it from the system but does **not** clean up existing role assignments. Any user previously assigned the deleted role loses that access silently. Audit assignments before deleting.
+</Warning>
+
+```bash title="List assignments before deleting (sanity check)"
+openstack role assignment list --names | grep my-custom-role
+```
+
+```bash title="Delete the role"
+openstack role delete my-custom-role
+```
+
+---
+
+## Custom Roles and Service Policies
+
+A custom role is just a name until you define what it can do in each service's policy file. Xloud uses `policy.yaml` (or `policy.json`) files in each service container to map role names to allowed API operations.
+
+See [Policy Management](/services/identity/policy-management) for the full guide on creating per-service policy overrides for your custom roles.
+
+**Quick example** — restrict Compute flavor creation to a custom `compute-admin` role:
+
+```yaml title="/etc/xavs/nova/policy.yaml"
+"os_compute_api:os-flavor-manage:create": "role:compute-admin"
+```
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Policy Management" href="/services/identity/policy-management" color="#197560">
+    Define what each role can do in Nova, Glance, Cinder, and other services via policy.yaml overrides
+  </Card>
+  <Card title="Projects" href="/services/identity/projects" color="#197560">
+    Create projects and manage the project hierarchy that roles are assigned within
+  </Card>
+  <Card title="Users" href="/services/identity/users" color="#197560">
+    Create users and manage their project memberships
+  </Card>
+  <Card title="Domain Management" href="/services/identity/domain-management" color="#197560">
+    Organize projects and users into domains with independent namespaces
+  </Card>
+</CardGroup>

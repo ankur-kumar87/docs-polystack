@@ -1,0 +1,208 @@
+---
+title: "Quota Management"
+description: "Configure and manage Xloud Block Storage quotas per project. Set global defaults, override per-project limits, and monitor quota usage across your deployment."
+sidebarTitle: "Quota Management"
+---
+
+import AdminWarning from '/snippets/admin-warning.mdx';
+import CliAuth from '/snippets/cli-auth.mdx';
+
+## Overview
+
+Storage quotas limit the total volumes, snapshots, backups, and capacity that each project can consume. Quotas prevent runaway resource consumption in multi-tenant deployments and ensure fair capacity distribution. Default limits apply to all new projects; per-project overrides allow specific projects to receive higher or lower limits.
+
+<AdminWarning />
+
+<Note>
+  **Prerequisites**
+  - Administrator credentials with the `admin` role
+  - Project IDs for per-project quota adjustments
+</Note>
+
+---
+
+## Default Quota Values
+
+| Quota | Default | Description |
+|-------|---------|-------------|
+| `volumes` | 10 | Maximum number of volumes per project |
+| `gigabytes` | 1,000 | Maximum total volume capacity (GiB) per project |
+| `snapshots` | 10 | Maximum number of snapshots per project |
+| `backups` | 10 | Maximum number of backups per project |
+| `backup_gigabytes` | 1,000 | Maximum backup storage capacity (GiB) per project |
+| `per_volume_gigabytes` | -1 | Maximum size of a single volume (-1 = unlimited) |
+
+---
+
+## View Quota Usage
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="View global defaults" icon="compass">
+        Navigate to
+        **Storage > Volume Types** (admin view). The **Volume Quotas** section shows the global
+        default limits applied to all new projects.
+      </Step>
+      <Step title="View project-specific usage" icon="gauge">
+        Navigate to **Identity > Projects** (admin view). Select a project, then click
+        **Edit Quota** to see the current limits and usage for that project.
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    <Steps titleSize="h3">
+      <Step title="Authenticate" icon="key">
+        <CliAuth />
+      </Step>
+      <Step title="Show quota for a specific project" icon="gauge">
+        ```bash title="Show quota usage for a project"
+        openstack quota show <project-id-or-name>
+        ```
+
+        The output shows current limits and usage for all resource types including
+        `volumes`, `gigabytes`, `snapshots`, `backups`, and `backup_gigabytes`.
+      </Step>
+      <Step title="Show quota for the current project" icon="gauge">
+        ```bash title="Show current project quota"
+        openstack quota show
+        ```
+      </Step>
+    </Steps>
+  </Tab>
+</Tabs>
+
+---
+
+## Update Project Quotas
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Navigate to Projects" icon="compass">
+        Navigate to **Identity > Projects** (admin view) and select the target project.
+      </Step>
+      <Step title="Modify quotas" icon="edit">
+        Click **Edit Quota**. Adjust the volume, gigabytes, snapshot, and backup
+        limits as required. Click **Confirm**.
+
+        <Warning>
+          Reducing a quota below the project's current usage does not reclaim resources.
+          Existing volumes and snapshots are unaffected, but no new resources can be
+          created until usage drops below the new limit.
+        </Warning>
+      </Step>
+      <Step title="Verify" icon="circle-check">
+        Return to **Edit Quota** for the project and confirm the new limits are applied.
+
+        <Check>Quota updated — new limits take effect immediately for future operations.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    <Steps titleSize="h3">
+      <Step title="Update storage quotas for a project" icon="edit">
+        ```bash title="Set volume quotas for a project"
+        openstack quota set \
+          --volumes 50 \
+          --gigabytes 5000 \
+          --snapshots 50 \
+          --backups 20 \
+          --backup-gigabytes 2000 \
+          <project-id-or-name>
+        ```
+      </Step>
+      <Step title="Set per-volume size limit" icon="ruler">
+        ```bash title="Enforce minimum volume size"
+        openstack quota set \
+          --per-volume-gigabytes 10 \
+          <project-id-or-name>
+        ```
+
+        Setting `per-volume-gigabytes=10` requires every volume to be at least 10 GiB,
+        reducing fragmentation on the backend.
+      </Step>
+      <Step title="Verify" icon="circle-check">
+        ```bash title="Confirm new quota values"
+        openstack quota show <project-id-or-name>
+        ```
+
+        <Check>New quota limits visible and active for the project.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+</Tabs>
+
+---
+
+## Update Global Default Quotas
+
+Global defaults apply to all new projects. Updating them does not affect projects that
+already have explicit quota overrides.
+
+```bash title="Set global default quotas"
+openstack quota set \
+  --volumes 20 \
+  --gigabytes 2000 \
+  --snapshots 20 \
+  --class default
+```
+
+---
+
+## Remove Per-Project Quota Override
+
+To revert a project to the global defaults, delete its quota override:
+
+```bash title="Delete project quota override"
+openstack quota delete <project-id-or-name>
+```
+
+The project reverts to the global default values immediately.
+
+---
+
+## Quota Planning Guidelines
+
+<AccordionGroup>
+  <Accordion title="Calculating appropriate gigabyte quotas" icon="calculator">
+    To size quotas appropriately, estimate:
+    1. Average volume size per instance (typically 50–200 GiB for boot + data)
+    2. Number of instances expected in the project
+    3. Snapshot overhead (typically 10–30% of volume data for active snapshots)
+    4. Growth buffer (20–50% headroom)
+
+    Example: A project running 10 instances with 100 GiB average volumes, 20% snapshot
+    overhead, and 30% growth buffer:
+    `(10 × 100) + (1000 × 0.20) + (1200 × 0.30) = 1000 + 200 + 360 = 1,560 GiB`
+  </Accordion>
+
+  <Accordion title="Monitoring quota consumption across projects" icon="gauge">
+    Regularly audit quota usage to identify projects approaching their limits:
+
+    ```bash title="List all project quotas"
+    openstack quota list --detail
+    ```
+
+    Review projects approaching 80% of their `gigabytes` or `volumes` quota — either clean up unused resources or increase the quota proactively.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Volume Types & QoS" href="/services/storage/volume-types-admin" color="#197560">
+    Control per-volume IOPS and throughput with QoS policies
+  </Card>
+  <Card title="Security Hardening" href="/services/storage/security" color="#197560">
+    Restrict volume type access and enforce security policies
+  </Card>
+  <Card title="Admin Guide" href="/services/storage/admin-guide" color="#197560">
+    Return to the Block Storage administration overview
+  </Card>
+  <Card title="Troubleshooting (Admin)" href="/services/storage/admin-troubleshooting" color="#197560">
+    Diagnose and resolve service-level Block Storage issues
+  </Card>
+</CardGroup>

@@ -1,0 +1,139 @@
+---
+title: "Manage IP Addresses"
+description: "Associate and disassociate floating IPs to provide external access to Xloud Compute instances using the Dashboard or CLI."
+sidebarTitle: "IP Addresses"
+---
+
+## Overview
+
+Instances receive fixed IP addresses from their attached networks automatically. To make
+an instance reachable from external networks, associate a floating IP address from a
+public IP pool. Floating IPs can be moved between instances as needed.
+
+<Note>
+  **Prerequisites**
+  - An instance with at least one fixed IP address
+  - A floating IP pool configured by your administrator
+  - An external network with available floating IPs
+</Note>
+
+---
+
+## Associate a Floating IP
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Open the Associate Floating IP dialog">
+        Navigate to **Compute > Instances**. Click the **More** dropdown on the
+        instance row, then select **Associate Floating IP** under the
+        **Related Resources** group.
+
+        <Note>
+          This action is available when the instance has at least one fixed IP
+          that is not already associated with a floating IP. It is not available
+          on the admin page or when the instance is in `Error` status.
+        </Note>
+      </Step>
+      <Step title="Select the fixed IP">
+        The dialog shows:
+
+        | Field | Description |
+        |-------|-------------|
+        | **Instance** | Current instance name (read-only) |
+        | **Fixed IP** | Select the instance port/interface to associate the floating IP with |
+
+        The fixed IP table shows available ports with their network, subnet, and
+        current IP information. Ports that already have a floating IP or are on
+        unreachable subnets are indicated with reason labels.
+      </Step>
+      <Step title="Select a floating IP">
+        Choose an available floating IP from the pool, or allocate a new one.
+
+        Click **Confirm** to associate the floating IP.
+
+        <Check>The floating IP appears in the instance's IP addresses list.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Source credentials"
+    source openrc.sh
+    ```
+
+    <CodeGroup>
+    ```bash title="List available floating IPs"
+    openstack floating ip list --status DOWN
+    ```
+    ```bash title="Create a new floating IP (if none available)"
+    openstack floating ip create <EXTERNAL_NETWORK>
+    ```
+    ```bash title="Associate floating IP to instance"
+    openstack server add floating ip <INSTANCE_ID> <FLOATING_IP>
+    ```
+    ```bash title="Associate to a specific fixed IP"
+    openstack server add floating ip \
+      --fixed-ip-address <FIXED_IP> \
+      <INSTANCE_ID> <FLOATING_IP>
+    ```
+    </CodeGroup>
+  </Tab>
+</Tabs>
+
+---
+
+## Disassociate a Floating IP
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Open the Disassociate dialog">
+        Navigate to **Compute > Instances**. Click the **More** dropdown on the
+        instance row, then select **Disassociate Floating Ip** under the
+        **Related Resources** group.
+
+        <Note>
+          This action is only available when the instance has at least one
+          associated floating IP.
+        </Note>
+      </Step>
+      <Step title="Select the floating IP to remove">
+        | Field | Description |
+        |-------|-------------|
+        | **Instance** | Current instance name (read-only) |
+        | **Address** | Select the floating IP to disassociate from the dropdown |
+
+        Click **Confirm**. The floating IP is released from the instance but
+        remains allocated to your project for future use.
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Remove floating IP from instance"
+    openstack server remove floating ip <INSTANCE_ID> <FLOATING_IP>
+    ```
+
+    ```bash title="Release floating IP back to pool (optional)"
+    openstack floating ip delete <FLOATING_IP_ID>
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Security Groups" href="/services/compute/security-groups" color="#197560">
+    Configure firewall rules to allow traffic on the floating IP
+  </Card>
+  <Card title="Floating IPs" href="/services/networking/floating-ips" color="#197560">
+    Manage floating IP pools and allocations at the network level
+  </Card>
+  <Card title="Launch an Instance" href="/services/compute/launch-instance" color="#197560">
+    Create a new instance with network configuration
+  </Card>
+  <Card title="Troubleshooting" href="/services/compute/troubleshooting" color="#197560">
+    Resolve floating IP association failures
+  </Card>
+</CardGroup>

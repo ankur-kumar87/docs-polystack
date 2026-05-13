@@ -1,0 +1,77 @@
+---
+title: "XMS — Xloud Migration Suite"
+description: "Agentless workload migration from multiple source platforms to Xloud with pre-migration assessment and incremental sync."
+icon: "truck"
+sidebarTitle: "XMS"
+mode: "wide"
+---
+
+XMS (Xloud Migration Suite) is Xloud's agentless workload migration platform — supporting V2V migrations from VMware vSphere, Hyper-V, Nutanix AHV, AWS EC2, Azure, KVM/libvirt, and other source platforms with pre-migration assessment and incremental sync.
+
+<CardGroup cols={2}>
+  <Card title="Migration Service Docs" icon="book-open" href="/services/migration" color="#197560">
+    Full user guide, admin guide, and CLI reference for the Migration service
+  </Card>
+  <Card title="Contact Xloud" icon="phone" href="https://xloud.tech/contact" color="#197560">
+    Talk to the Xloud team about migration planning and licensing
+  </Card>
+</CardGroup>
+
+---
+
+## Key Capabilities
+
+<Info>**Xloud-Developed** — XMS is developed by Xloud.</Info>
+
+<CardGroup cols={2}>
+  <Card title="Multi-Platform Sources" icon="server">
+    VMware vSphere, Microsoft Hyper-V, Nutanix AHV, AWS EC2, Microsoft Azure, KVM/libvirt, Proxmox VE, oVirt/RHV, GCP Compute, and Oracle Cloud.
+  </Card>
+  <Card title="Pre-Migration Assessment" icon="chart-line">
+    Readiness assessment across compute, storage, network, and driver dimensions. Each workload receives a Ready, Conditional, or Not Ready verdict with specific risk flags.
+  </Card>
+  <Card title="Incremental Sync" icon="rotate-cw">
+    Changed Block Tracking (CBT) minimizes data transfer. Only modified blocks are replicated, reducing cutover downtime to minutes.
+  </Card>
+  <Card title="Automatic Conversion" icon="cpu">
+    VirtIO driver injection, boot loader adjustment, and VMware Tools removal applied automatically during image conversion — no manual guest preparation.
+  </Card>
+</CardGroup>
+
+---
+
+## Migration Workflow
+
+<Steps titleSize="h3">
+  <Step title="Discovery" icon="search">
+    Agentless scan of source environment — inventories all VMs, disks, networks, and dependencies.
+  </Step>
+  <Step title="Assessment" icon="chart-bar">
+    Pre-migration readiness assessment. Each workload receives a Ready, Conditional, or Not Ready verdict with specific risk flags.
+  </Step>
+  <Step title="Incremental Sync" icon="rotate-cw">
+    Initial full copy followed by incremental delta syncs using Changed Block Tracking.
+  </Step>
+  <Step title="Cutover" icon="play">
+    Final sync, source VM shutdown, automatic driver injection and boot loader repair, target VM start.
+  </Step>
+  <Step title="Validation" icon="check">
+    Post-migration checks. Source VM preserved for a rollback window (typically 7-30 days per your change management policy) before decommissioning.
+  </Step>
+</Steps>
+
+---
+
+## Related Products
+
+<CardGroup cols={3}>
+  <Card title="XPCI" icon="cloud" href="/products/xpci" color="#197560">
+    XMS migrates workloads into the XPCI private cloud platform
+  </Card>
+  <Card title="XIMP" icon="activity" href="/products/ximp" color="#197560">
+    Monitor migrated workloads with XIMP infrastructure monitoring
+  </Card>
+  <Card title="Contact Sales" icon="phone" href="https://xloud.tech/contact" color="#197560">
+    Talk to the Xloud team about migration planning and licensing
+  </Card>
+</CardGroup>

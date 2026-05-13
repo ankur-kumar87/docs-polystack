@@ -1,0 +1,206 @@
+---
+title: "Routers and Gateways"
+description: "Create L3 routers to connect subnets and provide external gateway access. Manage interfaces, SNAT, and floating IP routing."
+sidebarTitle: "Routers"
+---
+
+import PrerequisitesAuth from '/snippets/prerequisites-auth.mdx';
+
+## Overview
+
+Routers connect subnets within your project and provide external gateway access for
+floating IP NAT and outbound internet connectivity. Each router can connect multiple
+subnets and optionally attach to an external network for public access.
+
+<PrerequisitesAuth />
+
+---
+
+## Create a Router
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Navigate to Routers">
+        Navigate to **Network > Routers** in the sidebar. Click **Create Router**.
+      </Step>
+      <Step title="Configure the router">
+        | Field | Type | Required | Description |
+        |-------|------|----------|-------------|
+        | **Name** | Text | Yes | Router display name |
+        | **Description** | Text area | No | Optional notes |
+        | **Availability Zone Hints** | Multi-select table | No | Pin to specific availability zones |
+        | **Options: Open External Gateway** | Checkbox | No | Toggle to attach an external gateway |
+        | **External Gateway** | Select table | Required if gateway enabled | Choose the provider/public network for internet access |
+
+        <Tip>
+          Selecting an external network sets the router's default gateway and enables
+          NAT for floating IP allocation. Leave unchecked for purely internal routing
+          between project subnets.
+        </Tip>
+      </Step>
+      <Step title="Create the router">
+        Click **Confirm**. The router appears in the list.
+
+        <Check>Router shows status **Active** with the external gateway (if configured).</Check>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Source credentials"
+    source openrc.sh
+    ```
+
+    <CodeGroup>
+    ```bash title="Create router with external gateway"
+    openstack router create main-router \
+      --external-gateway public
+    ```
+    ```bash title="Create internal-only router"
+    openstack router create internal-router
+    ```
+    </CodeGroup>
+  </Tab>
+</Tabs>
+
+---
+
+## View Routers
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    Navigate to **Network > Routers**. The list shows:
+
+    | Column | Description |
+    |--------|-------------|
+    | **ID/Name** | Router identifier (clickable to view details) |
+    | **Status** | Active or Error |
+    | **Open External Gateway** | Whether an external gateway is attached (Yes/No) |
+    | **External Network** | Name of the external network (with link) |
+    | **External Fixed IP** | IP address on the external network |
+    | **Created At** | Creation timestamp |
+
+    Filter by **Name** or **Status**.
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    <CodeGroup>
+    ```bash title="List routers"
+    openstack router list
+    ```
+    ```bash title="Show router details"
+    openstack router show main-router
+    ```
+    </CodeGroup>
+  </Tab>
+</Tabs>
+
+---
+
+## Manage Router Interfaces
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    Click a router name to open the detail page. The **Interfaces** tab shows all
+    connected subnets and ports.
+
+    | Column | Description |
+    |--------|-------------|
+    | **Port ID** | Interface port identifier |
+    | **Bind Resource** | Instance link (if applicable) |
+    | **Owned Network** | Network this interface belongs to |
+    | **MAC Address** | Hardware address |
+    | **Status** | Active or Down |
+
+    **Connect a Subnet**: Click the **More** dropdown on the router row and select
+    **Connect Subnet**. Choose the subnet to attach.
+
+    **Disconnect a Subnet**: Click the **More** dropdown and select
+    **Disconnect Subnet**. Choose the subnet to remove.
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    <CodeGroup>
+    ```bash title="Add subnet interface to router"
+    openstack router add subnet main-router app-subnet
+    ```
+    ```bash title="Remove subnet interface"
+    openstack router remove subnet main-router app-subnet
+    ```
+    ```bash title="List router ports"
+    openstack port list --router main-router
+    ```
+    </CodeGroup>
+  </Tab>
+</Tabs>
+
+---
+
+## Manage External Gateway
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    From the router row's **More** dropdown:
+
+    | Action | When Available | Description |
+    |--------|---------------|-------------|
+    | **Set Gateway** | No external gateway attached | Attach an external network |
+    | **Close Gateway** | External gateway attached | Remove the external gateway |
+    | **Enable SNAT** | Gateway attached, SNAT disabled | Enable source NAT for outbound traffic |
+    | **Disable SNAT** | Gateway attached, SNAT enabled | Disable source NAT |
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    <CodeGroup>
+    ```bash title="Set external gateway"
+    openstack router set --external-gateway public main-router
+    ```
+    ```bash title="Remove external gateway"
+    openstack router unset --external-gateway main-router
+    ```
+    ```bash title="Enable SNAT"
+    openstack router set --enable-snat main-router
+    ```
+    ```bash title="Disable SNAT"
+    openstack router set --disable-snat main-router
+    ```
+    </CodeGroup>
+  </Tab>
+</Tabs>
+
+---
+
+## Delete a Router
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    Click the **More** dropdown on the router row and select **Delete**.
+
+    <Danger>
+      All subnet interfaces must be disconnected before a router can be deleted.
+      Disconnect all subnets first, then delete the router.
+    </Danger>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Remove interfaces then delete"
+    openstack router remove subnet main-router app-subnet
+    openstack router delete main-router
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Floating IPs" href="/services/networking/floating-ips" color="#197560">
+    Allocate public IPs and associate them with instances via this router
+  </Card>
+  <Card title="Create a Network" href="/services/networking/create-network" color="#197560">
+    Provision networks and subnets to connect to this router
+  </Card>
+  <Card title="Security Groups" href="/services/networking/security-groups" color="#197560">
+    Control traffic with per-port firewall rules
+  </Card>
+  <Card title="VPN" href="/services/networking/vpn" color="#197560">
+    Create IPsec site-to-site VPN tunnels through this router
+  </Card>
+</CardGroup>

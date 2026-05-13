@@ -1,0 +1,344 @@
+---
+title: "Hypervisor Configuration"
+description: "Configure the native hypervisor driver for Xloud Compute. Covers image formats, CPU modes, backing storage, nested virtualization, and performance tuning."
+sidebarTitle: "Hypervisor"
+---
+
+## Overview
+
+Xloud Compute uses a native hypervisor as its default virtualization layer, managed through the libvirt driver. The native hypervisor provides hardware-assisted virtualization on x86, ARM, and POWER architectures, delivering near-bare-metal performance for virtual machine workloads.
+
+The libvirt driver translates Xloud Compute API requests into hypervisor operations on each compute node. Understanding these configuration options helps you tune workload placement, CPU topology, storage performance, and security posture.
+
+<Note>
+  **Prerequisites**
+  - Administrator access to the Xloud platform and XDeploy
+  - Compute nodes running XOS with `libvirt` and `qemu-kvm` installed
+  - Verify hardware virtualization support: `grep -o 'vmx\|svm' /proc/cpuinfo | head -1`
+</Note>
+
+---
+
+## Supported Image Formats
+
+The following disk image formats are supported by the native hypervisor driver. The format is detected automatically from the image metadata stored in the Xloud Image Service.
+
+| Format | Name | Description | Recommended Use |
+|--------|------|-------------|-----------------|
+| `raw` | Raw disk image | Flat binary representation of disk contents. No overhead from format features. | Maximum I/O performance, RBD-backed volumes |
+| `qcow2` | QEMU Copy-on-Write v2 | Supports snapshots, compression, and copy-on-write. More flexible than raw. | Local storage, development environments |
+| `qed` | QEMU Enhanced Disk | Optimized for sparse images with faster lookup tables than qcow2. | Legacy workloads; qcow2 is preferred for new deployments |
+| `vmdk` | VMware Disk | VMware-compatible format. Supported for import/migration scenarios. | VM migrations from VMware environments |
+
+<Tip>
+  For production deployments using XSDS (distributed storage) as the storage backend, use `raw` format images. The distributed storage layer handles copy-on-write natively, making qcow2 overhead unnecessary and counterproductive.
+</Tip>
+
+---
+
+## Hardware Requirements
+
+<Tabs>
+  <Tab title="x86 / x86_64" icon="microchip">
+    x86 is the primary supported architecture for Xloud Compute.
+
+    **CPU Requirements**
+    - Intel VT-x (`vmx` flag in `/proc/cpuinfo`) or AMD-V (`svm` flag)
+    - For optimal performance: Intel VT-d or AMD-Vi (IOMMU) for PCI passthrough
+
+    **Verification**
+    ```bash title="Check virtualization support"
+    grep -oE 'vmx|svm' /proc/cpuinfo | sort -u
+    ```
+    ```bash title="Check IOMMU (for PCI passthrough)"
+    dmesg | grep -i iommu
+    ```
+
+    **BIOS/UEFI Settings**
+    - Enable **Intel VT-x / AMD-V** in BIOS
+    - Enable **Intel VT-d / AMD-Vi** if PCI passthrough is required
+    - Enable **Hyper-Threading** for improved vCPU density (optional)
+
+    <Check>Both `vmx` or `svm` flag and IOMMU should be present for full feature support.</Check>
+  </Tab>
+  <Tab title="ARM / AArch64" icon="cpu">
+    ARM 64-bit (AArch64) is supported for compute nodes running compatible hardware.
+
+    **CPU Requirements**
+    - ARMv8-A or later with hardware virtualization extensions (EL2)
+    - PSCI firmware support for CPU hotplug operations
+
+    **Verification**
+    ```bash title="Check ARM virtualization support"
+    grep -i 'Features' /proc/cpuinfo | grep -i asimd
+    ```
+
+    <Warning>
+      Not all ARM platforms support all hypervisor features. Verify your hardware's EL2 support before deploying production workloads.
+    </Warning>
+  </Tab>
+  <Tab title="POWER / ppc64le" icon="zap">
+    IBM POWER (ppc64le) is supported with the native hypervisor driver for POWER.
+
+    **CPU Requirements**
+    - POWER8 or later for full hardware virtualization
+    - POWER7 supports paravirtualized mode (reduced performance)
+
+    **Verification**
+    ```bash title="Check POWER virtualization mode"
+    grep -i 'platform' /proc/cpuinfo
+    ```
+
+    <Note>Full hardware virtualization on POWER requires bare-metal POWER hardware — nested virtualization is not supported in this mode.</Note>
+  </Tab>
+</Tabs>
+
+---
+
+## Backing Storage Options
+
+The hypervisor driver supports multiple backing storage configurations for instance disks. The backing storage determines how ephemeral instance disks are stored on compute nodes.
+
+| Storage Type | Description | Pros | Cons |
+|-------------|-------------|------|------|
+| **QCOW** (local) | qcow2 files on compute node local storage | Simple setup, copy-on-write snapshots | No live migration, no fault tolerance |
+| **Flat** (raw local) | Raw image files on compute node local storage | Maximum local I/O performance | No live migration, no fault tolerance |
+| **LVM** | Logical volumes on compute node volume groups | Better I/O than file-backed, thin provisioning | Complex setup, no live migration |
+| **RBD** (XSDS) | Distributed block device via network | Live migration, fault tolerance, snapshots | Requires XSDS distributed storage cluster |
+
+<Warning>
+  Local storage backends (QCOW, Flat, LVM) do not support live migration. Use RBD-backed storage when live migration between compute nodes is required.
+</Warning>
+
+The storage backend is configured per compute node in the Nova configuration, managed by XDeploy via the xavs-ansible deployment playbooks.
+
+---
+
+## CPU Configuration Modes
+
+The CPU mode controls how CPU features and topology are presented to virtual machines. This affects live migration compatibility and performance.
+
+| CPU Mode | Description | Live Migration | Performance | Use Case |
+|----------|-------------|:--------------:|:-----------:|----------|
+| `host-passthrough` | Exposes exact host CPU model and all features | Requires identical CPUs | Best | Homogeneous clusters, bare-metal benchmarks |
+| `host-model` | Snapshots the host CPU model at VM launch | Restricted to similar CPUs | Near-native | Clusters with similar CPU generations |
+| `custom` | Specifies an explicit baseline CPU model | Cross-generation compatible | Reduced | Mixed-CPU clusters, live migration across generations |
+| `none` | QEMU default — minimal feature set | Compatible | Lowest | Legacy compatibility only; not recommended |
+
+<Tip>
+  For mixed-CPU clusters (e.g., nodes with Intel Icelake and Cascadelake CPUs), use `cpu_mode = custom` with a common baseline model such as `Cascadelake-Server-noTSX`. This ensures live migration succeeds across all nodes in the cluster.
+</Tip>
+
+### Configuring CPU Mode
+
+CPU mode is set in the Nova compute configuration, which XDeploy manages via `globals.d` overrides:
+
+```yaml title="/etc/xavs/globals.d/_50_compute.yml"
+nova_cpu_mode: "custom"
+nova_cpu_model: "Cascadelake-Server-noTSX"
+```
+
+Apply the change with:
+
+```bash title="Apply compute configuration"
+xavs-ansible deploy -t nova
+```
+
+---
+
+## Nested Virtualization
+
+Nested virtualization allows virtual machines to run their own hypervisors (e.g., for CI/CD pipelines, hypervisor testing, or running Kubernetes with virtualization-backed nodes).
+
+### Enabling Nested Virtualization
+
+<Steps titleSize="h3">
+  <Step title="Enable on the host kernel" icon="terminal">
+    Load the hypervisor module with nested support enabled:
+
+    <CodeGroup>
+    ```bash title="Intel"
+    echo "options kvm_intel nested=1" | sudo tee /etc/modprobe.d/kvm-nested.conf
+    sudo modprobe -r kvm_intel && sudo modprobe kvm_intel
+    ```
+    ```bash title="AMD"
+    echo "options kvm_amd nested=1" | sudo tee /etc/modprobe.d/kvm-nested.conf
+    sudo modprobe -r kvm_amd && sudo modprobe kvm_amd
+    ```
+    </CodeGroup>
+  </Step>
+  <Step title="Verify nested support is active" icon="circle-check">
+    ```bash title="Verify nested virtualization"
+    cat /sys/module/kvm_intel/parameters/nested   # Should return Y or 1
+    cat /sys/module/kvm_amd/parameters/nested     # AMD alternative
+    ```
+    <Check>Output should be `Y` or `1` confirming nested virtualization is enabled.</Check>
+  </Step>
+  <Step title="Set CPU mode to host-passthrough" icon="settings">
+    Nested VMs require the host CPU feature flags to be visible inside the VM. Set `cpu_mode = host-passthrough` in the Nova configuration, or use `host-model` if cross-node migration is needed.
+
+    ```yaml title="globals.d override for nested virtualization"
+    nova_cpu_mode: "host-passthrough"
+    ```
+  </Step>
+</Steps>
+
+<Warning>
+  **Nested Virtualization Limitations**
+
+  - Performance is significantly reduced compared to first-level VMs due to double emulation overhead
+  - Live migration of nested VMs may not be supported depending on the inner hypervisor
+  - Not recommended for production workloads — use dedicated bare-metal nodes for performance-sensitive nested environments
+  - `host-passthrough` CPU mode restricts live migration to nodes with identical physical CPUs
+</Warning>
+
+---
+
+## Performance Tuning
+
+### VHostNet
+
+VHostNet offloads virtio-net packet processing from QEMU user-space to the kernel, significantly reducing CPU overhead for network-intensive workloads.
+
+```bash title="Verify VHostNet is loaded"
+lsmod | grep vhost_net
+```
+
+VHostNet is enabled by default on XOS. No additional configuration is required.
+
+### CPU Pinning
+
+For latency-sensitive workloads, pin instance vCPUs to dedicated physical cores to eliminate CPU scheduler jitter. See the [Advanced Features](/services/compute/advanced-features) guide for CPU pinning configuration.
+
+### Huge Pages
+
+Configure huge page memory backing for memory-intensive or NUMA-sensitive workloads. Huge pages reduce TLB pressure and improve memory throughput. See the [Advanced Features](/services/compute/advanced-features) guide for huge page setup.
+
+---
+
+## Capabilities
+
+<CardGroup cols={2}>
+  <Card title="Advanced Features" icon="wand" href="/services/compute/advanced-features" color="#197560">
+    CPU pinning, huge pages, NUMA topology, GPU passthrough, and SR-IOV configuration
+  </Card>
+  <Card title="Live Migration" icon="arrow-right-left" href="/services/compute/live-migration" color="#197560">
+    Configure and execute live migrations between compute nodes
+  </Card>
+  <Card title="Compute Architecture" icon="layers" href="/services/compute/architecture" color="#197560">
+    Understand the full Xloud Compute architecture and service components
+  </Card>
+  <Card title="Security Hardening" icon="shield" href="/services/compute/security-hardening" color="#197560">
+    Hypervisor-level security configuration and CIS compliance hardening
+  </Card>
+</CardGroup>
+
+---
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="VMs fail to start: hypervisor not available" icon="triangle-alert">
+    **Cause**: Hardware virtualization is disabled in BIOS or the hypervisor kernel module is not loaded.
+
+    **Resolution**:
+    ```bash title="Check hypervisor module status"
+    lsmod | grep kvm
+    ```
+    ```bash title="Load hypervisor modules manually"
+    sudo modprobe kvm
+    sudo modprobe kvm_intel   # or kvm_amd for AMD CPUs
+    ```
+    If the module fails to load, enable VT-x/AMD-V in the server BIOS and reboot.
+  </Accordion>
+
+  <Accordion title="Live migration fails: 'guest CPU doesn't match specification'" icon="arrow-right-left">
+    **Cause**: The source and destination compute nodes have incompatible CPU models. This commonly occurs in mixed-CPU clusters when `host-model` or `host-passthrough` is used.
+
+    **Resolution**: Switch to `custom` CPU mode with a common baseline:
+    ```yaml title="globals.d fix"
+    nova_cpu_mode: "custom"
+    nova_cpu_model: "Cascadelake-Server-noTSX"
+    ```
+    Apply with `xavs-ansible deploy -t nova` on all nodes, then retry the migration.
+  </Accordion>
+
+  <Accordion title="Poor disk I/O performance on RBD-backed instances" icon="hard-drive">
+    **Cause**: qcow2 format images are being used with XSDS distributed storage, adding unnecessary copy-on-write overhead.
+
+    **Resolution**: Use `raw` format for all images on XSDS-backed deployments. Convert existing images:
+    ```bash title="Convert qcow2 to raw"
+    openstack image create \
+      --disk-format raw \
+      --container-format bare \
+      --file <(qemu-img convert -f qcow2 -O raw source.qcow2 /dev/stdout) \
+      my-raw-image
+    ```
+  </Accordion>
+
+  <Accordion title="Nested VMs fail to start inside a guest" icon="boxes">
+    **Cause**: The host compute node does not have nested virtualization enabled, or the CPU mode does not expose virtualization feature flags to the guest.
+
+    **Resolution**:
+    1. Verify nested support: `cat /sys/module/kvm_intel/parameters/nested`
+    2. Confirm the instance is using a flavor with `hw:cpu_mode=host-passthrough` or equivalent
+    3. Verify the guest OS can see the virtualization flag: `grep -c vmx /proc/cpuinfo` from inside the VM
+  </Accordion>
+
+  <Accordion title="libvirtd not running on compute node" icon="server">
+    **Cause**: The `libvirtd` service failed to start or crashed.
+
+    **Resolution**:
+    ```bash title="Check libvirtd status"
+    sudo systemctl status libvirtd
+    sudo journalctl -u libvirtd -n 50
+    ```
+    Common causes include AppArmor policy conflicts and missing QEMU binaries. Review the journal output for the specific error and consult the Xloud support portal.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Heterogeneous Hardware Support
+
+<Info>**Xloud-Developed** — Heterogeneous hardware support is a core capability of XAVS / XPCI.</Info>
+
+Xloud supports mixing different hardware configurations within a single cluster -- no hardware homogeneity required.
+
+<CardGroup cols={2}>
+  <Card title="Mixed Node Types" icon="server">
+    Run converged (compute+storage), compute-only, and storage-heavy nodes in the same cluster. Each node contributes its resources to the shared pool.
+  </Card>
+  <Card title="Mixed CPU Generations" icon="microchip">
+    Intel and AMD processors of different generations coexist. CPU feature masking ensures live migration compatibility across generations. See [CPU Feature Masking](/services/compute/advanced-features).
+  </Card>
+  <Card title="Mixed Storage Media" icon="hard-drive">
+    NVMe, SSD, and HDD drives in the same cluster. CRUSH device classes auto-detect media type per device and route data to the correct tier. See [Storage Tiers](/services/storage/storage-tiers).
+  </Card>
+  <Card title="Varying RAM Capacities" icon="hard-drive">
+    Nodes with different RAM sizes -- no configuration needed. The scheduler tracks per-host capacity independently and places instances on hosts with sufficient resources.
+  </Card>
+</CardGroup>
+
+<Tip>
+  Use **Host Aggregates** to group nodes by capability (e.g., GPU hosts, high-memory hosts) and restrict specific flavors to specific hardware groups. See [Scheduling](/services/compute/scheduling).
+</Tip>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Advanced Features" href="/services/compute/advanced-features" color="#197560">
+    Configure CPU pinning, huge pages, and GPU passthrough for specialized workloads
+  </Card>
+  <Card title="Live Migration" href="/services/compute/live-migration" color="#197560">
+    Set up and execute live migrations across compute nodes
+  </Card>
+  <Card title="Compute Admin Guide" href="/services/compute/admin-guide" color="#197560">
+    Full administrator reference for the Xloud Compute service
+  </Card>
+  <Card title="XAVS Product" href="/products/xavs" color="#197560">
+    Learn about the full XAVS Advanced Virtualization Suite
+  </Card>
+</CardGroup>

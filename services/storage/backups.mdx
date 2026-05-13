@@ -1,0 +1,271 @@
+---
+title: "Volume Backups"
+description: "Create full and incremental backups of block storage volumes. Covers backup creation, incremental strategy, and restore."
+sidebarTitle: "Backups"
+---
+
+import CliAuth from '/snippets/cli-auth.mdx';
+
+## Overview
+
+Volume backups write a complete copy of volume data to a separate backup target — typically an object storage bucket — providing protection against storage cluster failure. Unlike snapshots, backups are stored independently of the source volume and can survive the loss of the primary storage cluster. Backups support a full + incremental strategy to minimize storage usage and backup time after the initial full copy.
+
+<Note>
+  **Prerequisites**
+  - The backup service must be enabled and configured by your administrator
+  - Sufficient backup storage quota (`openstack quota show`)
+  - The source volume must exist (attached or detached)
+</Note>
+
+---
+
+## Snapshot vs Backup
+
+| Feature | Snapshot | Backup |
+|---------|----------|--------|
+| Storage location | Same cluster as source | Separate backup target |
+| Creation time | Seconds | Minutes (data copy) |
+| Incremental support | Implicit (copy-on-write) | Yes — after first full backup |
+| Survives cluster failure | No | Yes |
+| Restore time | Seconds | Minutes |
+| Long-term retention | Limited by cluster capacity | Yes |
+| Use case | Fast checkpoints, cloning | Disaster recovery, compliance archival |
+
+<Tip>
+  Combine both strategies: use [snapshots](/services/storage/snapshots) for frequent
+  short-term checkpoints and backups for weekly full copies plus daily incrementals
+  to a separate target.
+</Tip>
+
+---
+
+## Create a Full Backup
+
+<iframe
+  className="w-full aspect-video rounded-xl"
+  src="https://www.youtube.com/embed/S2r3F4fbp5Q"
+  title="How to Create and Restore Volume Backups on Xloud"
+  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+  allowFullScreen
+></iframe>
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Navigate to Volumes" icon="compass">
+        Navigate to
+        **Storage > Volumes**.
+      </Step>
+      <Step title="Create backup" icon="archive">
+        Click the **More** dropdown and select **Data Protection > Create Backup** on the target volume.
+        Provide a name and select **Full Backup** from the backup mode radio buttons
+        (default for the first backup). Click **Confirm**.
+
+        <Note>
+          A full backup copies all data from the volume. Duration depends on volume size
+          and available backup bandwidth — expect 1–5 minutes per 10 GiB for typical
+          workloads.
+        </Note>
+      </Step>
+      <Step title="Monitor progress" icon="activity">
+        Navigate to **Storage > Volume Backups**. The backup status transitions
+        through `creating` → `available`.
+
+        <Check>Backup status shows **Available** — full backup complete.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    <Steps titleSize="h3">
+      <Step title="Authenticate" icon="key">
+        <CliAuth />
+      </Step>
+      <Step title="Create a full backup" icon="archive">
+        ```bash title="Create full backup"
+        openstack volume backup create \
+          --name weekly-full-2026-03-18 \
+          --description "Weekly full backup" \
+          <volume-name-or-id>
+        ```
+      </Step>
+      <Step title="Verify backup status" icon="circle-check">
+        ```bash title="Check backup status"
+        openstack volume backup show weekly-full-2026-03-18 -c status -c size
+        ```
+
+        Expected: `status = available`
+
+        <Check>Full backup created and available for restore.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+</Tabs>
+
+---
+
+## Create an Incremental Backup
+
+After a full backup exists, incremental backups copy only the blocks that changed since
+the last backup — significantly reducing backup time and storage usage.
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Create incremental backup" icon="layers">
+        Click the **More** dropdown and select **Data Protection > Create Backup** on the target volume.
+        Provide a name and select **Increment Backup** from the backup mode
+        radio buttons. Click **Confirm**.
+
+        <Tip>
+          Incremental backups depend on the existence of a previous backup for the same
+          volume. If no previous backup exists, the backup service automatically creates
+          a full backup instead.
+        </Tip>
+      </Step>
+      <Step title="Verify" icon="circle-check">
+        Navigate to **Storage > Volume Backups** and confirm the new backup appears
+        with status **Available**.
+
+        <Check>Incremental backup complete — only changed blocks were copied.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    <Steps titleSize="h3">
+      <Step title="Create incremental backup" icon="layers">
+        ```bash title="Create incremental backup"
+        openstack volume backup create \
+          --name daily-incr-2026-03-18 \
+          --incremental \
+          <volume-name-or-id>
+        ```
+      </Step>
+      <Step title="List all backups for a volume" icon="list">
+        ```bash title="List backups"
+        openstack volume backup list --volume <volume-name-or-id>
+        ```
+
+        <Check>Incremental backup available alongside the full backup chain.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+</Tabs>
+
+---
+
+## Restore from a Backup
+
+<Warning>
+  Restoring a backup to an **existing volume** overwrites that volume's data. Select
+  **New Volume** to restore to a fresh volume and verify data integrity before
+  overwriting the original.
+</Warning>
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Navigate to Backups" icon="compass">
+        Navigate to **Storage > Volume Backups**.
+      </Step>
+      <Step title="Restore the backup">
+        Click the **More** dropdown and select **Restore** on the target backup.
+
+        The dialog shows the source volume name and status. The backup is restored
+        to the **original volume** it was created from.
+
+        <Warning>
+          The source volume must be in `Available` or `In-use` status for restore.
+          If the volume is in-use, all attached instances must be shut off before
+          restoring.
+        </Warning>
+
+        Click **Confirm** to start the restore.
+      </Step>
+      <Step title="Verify" icon="circle-check">
+        The restored volume appears in the Volumes list with status **Available**.
+        [Attach it](/services/storage/attach-volume) and verify the data before
+        making any changes.
+
+        <Check>Volume restored from backup and ready for use.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    <Steps titleSize="h3">
+      <Step title="List available backups" icon="list">
+        ```bash title="List backups"
+        openstack volume backup list
+        ```
+      </Step>
+      <Step title="Restore to a new volume" icon="rotate-ccw">
+        ```bash title="Restore backup to new volume"
+        openstack volume backup restore \
+          --name restored-from-backup-2026-03-18 \
+          <backup-id>
+        ```
+      </Step>
+      <Step title="Verify the restored volume" icon="circle-check">
+        ```bash title="Check restored volume"
+        openstack volume show restored-from-backup-2026-03-18 -c status -c size
+        ```
+
+        <Check>Status `available` — backup restored to a new volume.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+</Tabs>
+
+---
+
+## Backup Retention Strategy
+
+<AccordionGroup>
+  <Accordion title="Recommended retention schedule" icon="calendar">
+    For production volumes, Xloud recommends:
+
+    | Frequency | Type | Retention |
+    |-----------|------|-----------|
+    | Weekly | Full backup | Keep 4 (1 month) |
+    | Daily | Incremental | Keep 7 (1 week) |
+    | Pre-change | Full backup | Keep until change is verified stable |
+
+    Adjust retention to match your RTO/RPO requirements and backup quota limits.
+  </Accordion>
+
+  <Accordion title="Cleaning up old backups" icon="trash">
+    List and delete outdated backups to free quota:
+
+    ```bash title="List all backups with dates"
+    openstack volume backup list --long
+    ```
+
+    ```bash title="Delete a backup"
+    openstack volume backup delete <backup-id>
+    ```
+
+    <Warning>
+      Deleting a backup from a backup chain (full + incrementals) may invalidate
+      dependent incremental backups. Delete incrementals before deleting the full backup
+      they depend on.
+    </Warning>
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Volume Snapshots" href="/services/storage/snapshots" color="#197560">
+    Complement backups with fast point-in-time snapshots for short-term recovery
+  </Card>
+  <Card title="Backup Configuration (Admin)" href="/services/storage/backup-config" color="#197560">
+    Configure the backup service driver and target for your environment
+  </Card>
+  <Card title="Attach / Detach" href="/services/storage/attach-volume" color="#197560">
+    Attach a restored volume and verify its data
+  </Card>
+  <Card title="Quota Management (Admin)" href="/services/storage/quotas" color="#197560">
+    Manage backup quota limits across projects
+  </Card>
+</CardGroup>

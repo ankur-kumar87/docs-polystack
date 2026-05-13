@@ -1,0 +1,170 @@
+---
+title: "Certificate Management"
+description: "Store externally issued TLS certificates and order new certificates through CA plugins in Xloud Key Manager. Manage the full certificate lifecycle from."
+sidebarTitle: "Certificates"
+---
+
+import PrerequisitesAuth from '/snippets/prerequisites-auth.mdx';
+
+## Overview
+
+Xloud Key Manager supports two certificate workflows: storing externally issued
+certificates from your existing CA, and ordering certificates through a configured
+CA plugin for automated issuance. Both workflows produce a certificate container
+that can be consumed by the Load Balancer service for HTTPS termination.
+
+<PrerequisitesAuth />
+
+---
+
+## Store an Existing Certificate
+
+Use this workflow when you have an externally issued certificate (Let's Encrypt, DigiCert,
+your enterprise CA, etc.) and want to store it in Key Manager.
+
+<Steps titleSize="h3">
+  <Step title="Store the certificate secret">
+    ```bash title="Store the X.509 certificate"
+    openstack secret store \
+      --name app-tls-cert \
+      --secret-type certificate \
+      --payload-content-type "application/pkix-cert" \
+      --payload-content-encoding base64 \
+      --payload "$(base64 -w 0 certificate.pem)"
+    ```
+  </Step>
+  <Step title="Store the private key secret">
+    ```bash title="Store the private key"
+    openstack secret store \
+      --name app-tls-key \
+      --secret-type private \
+      --payload-content-type "application/pkcs8" \
+      --payload-content-encoding base64 \
+      --payload "$(base64 -w 0 private_key.pem)"
+    ```
+  </Step>
+  <Step title="Store the CA chain (recommended)">
+    ```bash title="Store CA chain"
+    openstack secret store \
+      --name app-ca-chain \
+      --secret-type certificate \
+      --payload-content-type "application/pkix-cert" \
+      --payload-content-encoding base64 \
+      --payload "$(base64 -w 0 ca-chain.pem)"
+    ```
+  </Step>
+  <Step title="Create a certificate container">
+    ```bash title="Bundle into certificate container"
+    openstack secret container create \
+      --name app-tls-bundle \
+      --type certificate \
+      --secret "certificate=<cert-href>" \
+      --secret "private_key=<key-href>" \
+      --secret "intermediates=<ca-chain-href>"
+    ```
+
+    <Check>Container is ready to reference in Load Balancer HTTPS listener configuration.</Check>
+  </Step>
+</Steps>
+
+---
+
+## Order a Certificate
+
+Certificate orders automate issuance through a Certificate Authority plugin configured
+by your administrator.
+
+<Tabs>
+  <Tab title="Create an order" icon="clipboard-list">
+    ```bash title="Create a certificate order"
+    openstack secret order create certificate \
+      --name app-cert-order \
+      --algorithm rsa \
+      --bit-length 2048 \
+      --subject-dn "CN=app.example.com,O=Example Corp,C=US"
+    ```
+
+    ```bash title="Check order status"
+    openstack secret order show <order-href>
+    ```
+
+    When the order status reaches `ACTIVE`, retrieve the issued certificate container:
+
+    ```bash title="Get the issued certificate container"
+    openstack secret order show <order-href> -c container_ref
+    ```
+
+    <Info>
+      Certificate order availability depends on your platform's CA plugin configuration.
+      Contact your administrator to verify which CA backends are enabled.
+    </Info>
+  </Tab>
+  <Tab title="List and manage orders" icon="list">
+    <CodeGroup>
+    ```bash title="List all certificate orders"
+    openstack secret order list
+    ```
+    ```bash title="Show order detail"
+    openstack secret order show <order-href>
+    ```
+    ```bash title="Delete an order"
+    openstack secret order delete <order-href>
+    ```
+    </CodeGroup>
+  </Tab>
+</Tabs>
+
+---
+
+## Certificate Lifecycle Management
+
+| Stage | Action | Notes |
+|-------|--------|-------|
+| **Issuance** | Store or order via CA plugin | Creates certificate + key secrets |
+| **Deployment** | Create container, reference in Load Balancer | Bundles cert + key + chain |
+| **Monitoring** | Track expiration date externally | Key Manager sends no alerts |
+| **Renewal** | Store new certificate, update container | Update Load Balancer reference |
+| **Revocation** | Delete old secrets after transition | Update all service references first |
+
+<Tip>
+  Set calendar reminders at 60 days, 30 days, and 7 days before certificate expiration.
+  Renew the certificate and update the Load Balancer listener reference at least 14 days
+  before expiry to allow for propagation and testing.
+</Tip>
+
+---
+
+## Verify a Certificate
+
+```bash title="Retrieve certificate and check expiry"
+openstack secret get <cert-href> --payload | \
+  openssl x509 -noout -dates -subject
+```
+
+```bash title="Verify certificate matches private key"
+openstack secret get <cert-href> --payload > /tmp/cert.pem
+openstack secret get <key-href> --payload > /tmp/key.pem
+diff <(openssl x509 -noout -modulus -in /tmp/cert.pem | md5sum) \
+     <(openssl rsa -noout -modulus -in /tmp/key.pem | md5sum)
+```
+
+<Check>If both `md5sum` values match, the certificate and private key are a valid pair.</Check>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Containers" href="/services/key-manager/containers" color="#197560">
+    Bundle certificates into containers for Load Balancer use
+  </Card>
+  <Card title="ACL" href="/services/key-manager/acl" color="#197560">
+    Control which users and services can access certificate secrets
+  </Card>
+  <Card title="Store Secrets" href="/services/key-manager/store-secrets" color="#197560">
+    Store other secret types alongside certificates
+  </Card>
+  <Card title="Troubleshooting" href="/services/key-manager/troubleshooting" color="#197560">
+    Resolve certificate container and order issues
+  </Card>
+</CardGroup>

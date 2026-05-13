@@ -1,0 +1,106 @@
+---
+title: "Remote Console Access"
+description: "Access instances via browser-based VNC console from the Dashboard. Use for out-of-band management and boot-time debugging."
+sidebarTitle: "Console Access"
+---
+
+## Overview
+
+The Xloud Dashboard provides browser-based VNC console access to instances. The console
+opens in a new browser tab and provides direct keyboard and mouse interaction with the
+guest OS — useful for troubleshooting network issues, configuring instances that cannot
+be reached via SSH, or observing the boot process.
+
+<Note>
+  **Prerequisites**
+  - An instance in `Active` status
+  - The instance must not be a bare metal instance
+  - A modern web browser with JavaScript enabled
+</Note>
+
+---
+
+## Open the Console
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Navigate to Instances">
+        Navigate to **Compute > Instances** in the sidebar.
+      </Step>
+      <Step title="Open the console">
+        Click the **Console** action on the instance row — this is the **first
+        action** (directly visible button, not under the More dropdown).
+
+        A confirmation dialog appears. Click **Confirm** to open the VNC console
+        in a new browser tab.
+
+        <Note>
+          The Console action is only available for instances in `Active` status.
+          Bare metal instances do not support VNC console access.
+        </Note>
+      </Step>
+      <Step title="Interact with the instance">
+        The console provides full keyboard and mouse input. Use it to:
+
+        - Log in to the guest OS when SSH is unavailable
+        - Observe boot messages and GRUB configuration
+        - Debug network configuration issues
+        - Access Windows instances via the graphical interface
+
+        <Tip>
+          For Windows instances, the VNC console provides RDP-like graphical access
+          directly in the browser without requiring a separate RDP client.
+        </Tip>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Source credentials"
+    source openrc.sh
+    ```
+
+    ```bash title="Get VNC console URL"
+    openstack console url show <INSTANCE_ID>
+    ```
+
+    Open the returned URL in a browser to access the VNC console.
+
+    ```bash title="View serial console log"
+    openstack console log show <INSTANCE_ID> | tail -50
+    ```
+
+    <Tip>
+      Use the serial console log to review boot messages and diagnose startup
+      issues without opening a VNC session.
+    </Tip>
+  </Tab>
+</Tabs>
+
+---
+
+## Instance Detail — Logs Tab
+
+The instance detail page includes a **Logs** tab that displays the serial console
+output. Navigate to **Compute > Instances**, click the instance name, and select
+the **Logs** tab. This provides the same information as `openstack console log show`
+without needing CLI access.
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Launch an Instance" href="/services/compute/launch-instance" color="#197560">
+    Create a new instance with the appropriate configuration
+  </Card>
+  <Card title="Manage IP Addresses" href="/services/compute/manage-ips" color="#197560">
+    Configure floating IPs for SSH access alongside console
+  </Card>
+  <Card title="Reboot an Instance" href="/services/compute/reboot-instance" color="#197560">
+    Restart an unresponsive instance before using the console
+  </Card>
+  <Card title="Troubleshooting" href="/services/compute/troubleshooting" color="#197560">
+    Resolve console connection issues and black screens
+  </Card>
+</CardGroup>

@@ -1,0 +1,123 @@
+---
+title: "DNS Security"
+description: "Harden Xloud DNS infrastructure — restrict zone transfers, protect zone apex records, manage DNSSEC signing keys, and audit DNS API access."
+sidebarTitle: "Security"
+---
+
+import AdminWarning from '/snippets/admin-warning.mdx';
+
+## Overview
+
+DNS security protects zone integrity, prevents unauthorized data exposure, and maintains
+the chain of trust for DNSSEC-signed zones. This guide covers the key hardening areas
+for platform administrators.
+
+<AdminWarning />
+
+---
+
+## Hardening Guidelines
+
+<AccordionGroup>
+  <Accordion title="Restrict zone transfer recipients" icon="lock" defaultOpen>
+    Zone transfers expose complete zone data to the recipient. Enforce the principle of
+    least privilege:
+
+    - Create transfer requests only for specific target projects — never use open transfers
+    - Set short expiration windows on transfer requests (24 hours maximum)
+    - Audit accepted transfers monthly:
+      ```bash title="Audit zone transfers"
+      openstack zone transfer accept list --all-projects
+      ```
+    - Revoke transfer requests immediately after they are no longer needed:
+      ```bash title="Delete a transfer request"
+      openstack zone transfer request delete <transfer-id>
+      ```
+  </Accordion>
+
+  <Accordion title="Protect zone apex records" icon="shield">
+    SOA and NS records at the zone apex define authoritative authority. Unauthorized
+    modification redirects queries to attacker-controlled nameservers:
+
+    - Review NS record changes in audit logs after each deployment
+    - Restrict zone modification to named service accounts — avoid using personal
+      credentials for automated DNS management
+    - Enable API rate limiting to prevent bulk zone modification attacks
+    - Separate read-only reporter roles from write-capable automation accounts
+  </Accordion>
+
+  <Accordion title="DNSSEC key management" icon="key">
+    DNSSEC signing protects DNS responses from tampering and spoofing. Signing keys
+    are stored in Xloud Key Manager:
+
+    - Store Zone Signing Keys (ZSK) and Key Signing Keys (KSK) as secrets in Key Manager
+    - Rotate ZSKs every 90 days; KSKs annually
+    - Maintain DS records at the parent zone registrar to complete the chain of trust
+    - Test DNSSEC validation after key rotation:
+      ```bash title="Validate DNSSEC chain"
+      dig @<resolver-ip> example.com. A +dnssec
+      ```
+
+    <Tip>
+      Use Xloud Key Manager's expiration feature to track ZSK and KSK rotation schedules.
+      Set expiration dates on signing keys and build a rotation workflow triggered before
+      expiry.
+    </Tip>
+  </Accordion>
+
+  <Accordion title="Audit DNS API access" icon="file-text">
+    All DNS API requests are logged. Configure log forwarding to your centralized
+    logging platform to retain audit records for:
+
+    - Zone creation and deletion events
+    - Record set modifications with before/after values
+    - Zone transfer requests and acceptances
+    - Quota changes and project assignments
+
+    <Tip>
+      Store DNS audit logs in Xloud Object Storage with a minimum 1-year retention policy
+      to satisfy compliance requirements for DNS change auditing.
+    </Tip>
+  </Accordion>
+
+  <Accordion title="Network access controls" icon="network">
+    The DNS API should not be exposed to untrusted networks:
+
+    - Bind the DNS API to the internal management network only
+    - Configure firewall rules limiting port 9001 access to authorized hosts
+    - Apply HAProxy frontend ACLs to restrict source IPs if the API is load-balanced
+    - Enable HTTPS on the DNS API endpoint — never manage zones over plain HTTP
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Security Checklist
+
+| Control | Status | Notes |
+|---------|--------|-------|
+| Zone transfers target-specific | Verify quarterly | Check `openstack zone transfer accept list --all-projects` |
+| DNSSEC ZSK rotated | Every 90 days | Store keys in Key Manager with expiration |
+| DNSSEC KSK rotated | Annually | Update DS record at registrar after rotation |
+| DNS API over HTTPS | Always | Verify HAProxy SSL termination config |
+| Audit logs forwarded | Continuous | 1-year minimum retention |
+| API rate limiting enabled | Platform-wide | Prevent bulk zone modification attacks |
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Zone Transfers" href="/services/dns/zone-transfers" color="#197560">
+    Manage and audit zone transfer requests
+  </Card>
+  <Card title="Key Manager" href="/services/key-manager/admin-guide" color="#197560">
+    Store and rotate DNSSEC signing keys
+  </Card>
+  <Card title="Quotas" href="/services/dns/quotas" color="#197560">
+    Enforce per-project DNS resource limits
+  </Card>
+  <Card title="Admin Troubleshooting" href="/services/dns/admin-troubleshooting" color="#197560">
+    Diagnose security-related DNS service issues
+  </Card>
+</CardGroup>

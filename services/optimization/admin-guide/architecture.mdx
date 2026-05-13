@@ -1,0 +1,173 @@
+---
+title: "Optimization Architecture"
+description: "Understand the Xloud Optimization architecture — Decision Engine, strategy plugins, data collectors, Planner, and Applier component roles and."
+sidebarTitle: "Architecture"
+---
+
+## Overview
+
+The Xloud Optimization is composed of three collaborating services: the API and
+Decision Engine (analysis), the Planner (action plan generation), and the Applier (execution).
+Understanding the architecture helps administrators tune the system, diagnose failures,
+and integrate custom data sources or strategies.
+
+<Warning>
+  This guide requires administrator privileges. Changes to strategy configuration and
+  data source settings affect all ongoing and future audits platform-wide.
+</Warning>
+
+---
+
+## Component Diagram
+
+```mermaid
+graph TD
+    subgraph Input
+        DS1[Telemetry / Prometheus<br/>CPU, RAM, Temperature]
+        DS2[Compute API<br/>Host inventory, VM placement]
+    end
+
+    subgraph Decision Engine
+        DE[Decision Engine]
+        STR[Strategy Plugins]
+        SCORER[Efficiency Scorer]
+    end
+
+    subgraph Planning
+        PL[Planner]
+        AP[(Action Plan DB)]
+    end
+
+    subgraph Execution
+        APP[Applier]
+        WF[Workflow Engine<br/>Taskflow]
+        NOVA[Xloud Compute API<br/>Live Migration]
+    end
+
+    DS1 -->|Metrics| DE
+    DS2 -->|Cluster state| DE
+    DE -->|Select strategy| STR
+    STR -->|Evaluate placements| SCORER
+    SCORER -->|Recommended actions| PL
+    PL --> AP
+    AP -->|Started by operator| APP
+    APP -->|Start via| WF
+    WF -->|Migrate instances| NOVA
+```
+
+---
+
+## Components
+
+<AccordionGroup>
+  <Accordion title="Decision Engine" icon="cpu" defaultOpen>
+    The analytical core. On each audit, the Decision Engine:
+    1. Collects the cluster data model from the Compute API (host inventory, VM placement)
+    2. Fetches time-series metrics from configured data sources (Prometheus, Telemetry)
+    3. Selects the strategy plugin for the requested goal
+    4. Runs the strategy algorithm to identify suboptimal placements
+    5. Passes the resulting recommended actions to the Planner
+
+    Deployed as: `watcher_decision_engine` container on controller nodes.
+  </Accordion>
+  <Accordion title="Planner" icon="clipboard-list">
+    Receives the recommended action set from the Decision Engine and applies dependency
+    ordering — ensuring migrations that depend on free capacity from an earlier migration
+    execute in the correct sequence.
+
+    The Planner is embedded in the Decision Engine container and does not run as a
+    separate service.
+  </Accordion>
+  <Accordion title="Applier" icon="play">
+    Executes approved action plans through a Taskflow workflow engine. The Applier:
+    - Processes actions in priority order
+    - Handles retries for transient failures
+    - Updates action state in the database in real time
+    - Halts execution on non-retriable failures
+
+    Deployed as: `watcher_applier` container on controller nodes.
+  </Accordion>
+  <Accordion title="API" icon="code">
+    Exposes the REST API used by the Dashboard and CLI to create audits, view action
+    plans, and execute or cancel plans.
+
+    Deployed as: `watcher_api` container on controller nodes.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Deployment Topology
+
+<Tree>
+  <Tree.Folder name="Controller Nodes" defaultOpen>
+    <Tree.File name="watcher_api — REST API" />
+    <Tree.File name="watcher_decision_engine — Analysis + Planner" />
+    <Tree.File name="watcher_applier — Plan execution" />
+  </Tree.Folder>
+</Tree>
+
+---
+
+## Data Flow: Audit to Execution
+
+```mermaid
+sequenceDiagram
+    participant OP as Operator
+    participant API as Watcher API
+    participant DE as Decision Engine
+    participant DB as Watcher DB
+    participant APP as Applier
+    participant NOVA as Xloud Compute
+
+    OP->>API: Create audit (goal: consolidation)
+    API->>DB: Store audit (state: PENDING)
+    API->>DE: Dispatch audit task
+    DE->>DE: Collect cluster model + metrics
+    DE->>DE: Apply strategy algorithm
+    DE->>DB: Store action plan (state: RECOMMENDED)
+    DB->>OP: Notify — action plan ready
+    OP->>API: Start action plan
+    API->>APP: Dispatch execution task
+    APP->>NOVA: POST /servers/{id}/action (live-migration)
+    NOVA-->>APP: Migration complete
+    APP->>DB: Update action (state: SUCCEEDED)
+    APP->>DB: Update plan (state: SUCCEEDED)
+```
+
+---
+
+## Service Configuration File
+
+```bash title="Configuration file location"
+cat /etc/xavs/watcher/watcher.conf
+```
+
+Key sections:
+
+| Section | Purpose |
+|---------|---------|
+| `[DEFAULT]` | Service identity, RPC transport, action plan expiry |
+| `[watcher_cluster_data_model_collectors]` | Data source configuration |
+| `[watcher_strategies.*]` | Per-strategy tuning parameters |
+| `[keystone_authtoken]` | Xloud Identity authentication |
+| `[database]` | Database connection |
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Strategy Configuration" href="/services/optimization/admin-guide/strategy-config" color="#197560">
+    Configure and tune optimization strategy plugins.
+  </Card>
+  <Card title="Data Sources" href="/services/optimization/admin-guide/data-sources" color="#197560">
+    Connect Prometheus and Telemetry data sources to the Decision Engine.
+  </Card>
+  <Card title="Scheduling" href="/services/optimization/admin-guide/scheduling" color="#197560">
+    Automate recurring audits with audit templates and schedules.
+  </Card>
+  <Card title="Security" href="/services/optimization/admin-guide/security" color="#197560">
+    Configure RBAC and service account credentials for the Optimization.
+  </Card>
+</CardGroup>

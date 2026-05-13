@@ -1,0 +1,73 @@
+---
+title: "Block Storage"
+description: "Persistent block storage volumes for Xloud Compute instances."
+icon: "hard-drive"
+sidebarTitle: "Block Storage"
+mode: "wide"
+---
+
+Durable, high-performance block storage volumes that attach to your Xloud Compute instances and persist independently of instance lifecycle.
+
+<Card title="XSDS — Software-Defined Storage" icon="external-link" href="https://xloud.tech/ceph" color="#197560" horizontal>
+  Product details, hardware compatibility, and datasheet on xloud.tech
+</Card>
+
+---
+
+<p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Block Storage</p>
+
+<CardGroup cols={2}>
+  <Card title="User Guide" icon="book-open" href="/services/storage/user-guide" color="#197560">
+    Create, attach, detach, and resize volumes. Manage snapshots, backups, and volume transfers. Step-by-step workflows for both Dashboard and CLI.
+  </Card>
+  <Card title="Admin Guide" icon="settings" href="/services/storage/admin-guide" color="#197560">
+    Configure storage backends, define volume types and QoS policies, manage storage tiers, set quotas, and maintain the block storage service.
+  </Card>
+  <Card title="CLI Reference" icon="terminal" href="/services/storage/cli-reference" color="#197560">
+    `openstack volume` commands for creating, managing, and querying volumes and snapshots from the command line.
+  </Card>
+  <Card title="XSDS Product Page" icon="external-link" href="https://xloud.tech/ceph" color="#197560">
+    Distributed storage architecture, supported hardware, performance benchmarks, and licensing information.
+  </Card>
+</CardGroup>
+
+---
+
+<p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Key Capabilities</p>
+
+<CardGroup cols={2}>
+  <Card title="Persistent Volumes" icon="hard-drive" href="/services/storage/create-volume" color="#197560">
+    Volumes exist independently of instances — data survives instance deletion, restart, and migration.
+  </Card>
+  <Card title="Live Resize" icon="expand" href="/services/storage/extend-volume" color="#197560">
+    Extend volume capacity online without detaching or rebooting the attached instance.
+  </Card>
+  <Card title="Snapshots & Backups" icon="copy" href="/services/storage/snapshots" color="#197560">
+    Point-in-time crash-consistent snapshots and incremental backups to protect critical data.
+  </Card>
+  <Card title="Storage Tiers" icon="layers" href="/services/storage/storage-tiers" color="#197560">
+    NVMe, SSD, and HDD-backed volume types with defined IOPS and throughput guarantees for every workload class.
+  </Card>
+  <Card title="Volume Encryption" icon="lock" href="/services/storage/encryption" color="#197560">
+    Transparent at-rest encryption backed by the Xloud Key Management service — no application changes required.
+  </Card>
+  <Card title="Cross-Project Transfers" icon="arrow-right-arrow-left" href="/services/storage/volume-transfers" color="#197560">
+    Transfer volume ownership between projects with a secure token-based handoff workflow.
+  </Card>
+</CardGroup>
+
+---
+
+<p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Related Services</p>
+
+<CardGroup cols={3}>
+  <Card title="Xloud Compute" icon="server" href="/services/compute" color="#197560">
+    Virtual machine instances that consume block storage volumes as persistent disks
+  </Card>
+  <Card title="Xloud Networking" icon="network" color="#197560">
+    Virtual networks and floating IPs used alongside compute and storage resources
+  </Card>
+  <Card title="Xloud Distributed Storage" icon="database" href="https://xloud.tech/ceph" color="#197560">
+    The distributed storage backend that powers block, object, and file storage
+  </Card>
+</CardGroup>

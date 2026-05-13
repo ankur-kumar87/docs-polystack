@@ -1,0 +1,191 @@
+---
+title: "Live vCPU & RAM Scaling"
+description: "Increase or decrease vCPU and RAM on a running instance with no downtime using the Xloud Dashboard's Resource Adjustment dialog."
+sidebarTitle: "Live vCPU/RAM Scaling"
+---
+
+## Overview
+
+Live vCPU and RAM scaling lets you adjust the compute resources of a **running instance
+without rebooting**. Changes take effect immediately while the instance continues
+serving traffic. The Dashboard provides a slider-based dialog for intuitive scaling
+within the bounds configured on the instance's flavor.
+
+<Info>**Xloud-Developed** — Bidirectional CPU hotplug (add AND remove vCPUs) and combined memory scaling (balloon + DIMM + virtio-mem) are developed by Xloud and ship with XAVS / XPCI.</Info>
+
+<Note>
+  **Prerequisites**
+  - Instance must be in `Active` status
+  - The instance must not be locked
+  - The flavor must have hot-add enabled (`hw:cpu_min` or `hw:mem_min` extra specs) — if you do not see **Adjust Resources** in the actions menu, the flavor does not support live scaling
+</Note>
+
+---
+
+## Scale vCPU or RAM
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Open the Resource Adjustment dialog">
+        Navigate to **Compute > Instances**. Click the **More** dropdown on
+        the instance row, then select **Adjust Resources** under the
+        **Configuration Update** group.
+
+        <Note>
+          This action only appears for instances in `Active` status whose flavor
+          has hot-add enabled. If you do not see it, contact your administrator
+          to configure a hot-add-enabled flavor.
+        </Note>
+      </Step>
+      <Step title="Adjust resources with sliders">
+        The dialog shows the current state and adjustment controls:
+
+        | Field | Description |
+        |-------|-------------|
+        | **Instance** | Instance name (read-only) |
+        | **Current Info** | Current vCPU count and memory allocation (read-only) |
+        | **vCPUs** | Slider input — drag or type to set between minimum and maximum vCPUs |
+        | **Memory (GiB)** | Slider input — adjust between minimum and maximum memory in 0.25 GiB steps |
+        | **Make permanent** | Checkbox — persist the configuration after a soft reboot (default: checked) |
+
+        The dialog fetches the live instance status to determine the current and
+        allowed resource ranges. Color-coded hints indicate the scaling method:
+
+        | Color | Meaning |
+        |-------|---------|
+        | Green | virtio-mem — fully adjustable in both directions |
+        | Yellow | No balloon driver detected — limited memory scaling |
+        | Blue | DIMM hotplug information |
+
+        <Tip>
+          The vCPU slider step aligns to the CPU thread count configured in the
+          flavor. For example, with 2 threads per core, vCPUs adjust in steps of 2.
+        </Tip>
+      </Step>
+      <Step title="Apply the change">
+        Click **Confirm**. The change takes effect immediately — no reboot required.
+
+        <Warning>
+          Scaling **down** RAM while applications are using it may cause
+          out-of-memory events inside the guest. Check application memory usage
+          before reducing RAM.
+        </Warning>
+      </Step>
+      <Step title="Verify inside the instance">
+        SSH into the instance and confirm the new resources:
+
+        ```bash title="Check vCPU count"
+        lscpu | grep "^CPU(s):"
+        ```
+
+        ```bash title="Check available RAM"
+        free -h
+        ```
+
+        <Check>The guest OS shows the updated vCPU count and memory — live scaling applied successfully with zero downtime.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Source credentials"
+    source openrc.sh
+    ```
+
+    Live resource adjustment uses the Xloud-developed Nova API extension. The
+    `openstack` CLI does not have a native command for this operation.
+
+    <CodeGroup>
+    ```bash title="Check current live resource status"
+    curl -s -H "X-Auth-Token: $TOKEN" \
+      "$NOVA_ENDPOINT/v2.1/servers/<INSTANCE_ID>/xloud-status" | python3 -m json.tool
+    ```
+    ```bash title="Adjust vCPU count"
+    curl -X POST -H "X-Auth-Token: $TOKEN" \
+      -H "Content-Type: application/json" \
+      -d '{"current_vcpus": 4}' \
+      "$NOVA_ENDPOINT/v2.1/os-xloud-adjust/<INSTANCE_ID>"
+    ```
+    ```bash title="Adjust memory (in MB)"
+    curl -X POST -H "X-Auth-Token: $TOKEN" \
+      -H "Content-Type: application/json" \
+      -d '{"current_memory_mb": 8192}' \
+      "$NOVA_ENDPOINT/v2.1/os-xloud-adjust/<INSTANCE_ID>"
+    ```
+    ```bash title="Adjust both simultaneously"
+    curl -X POST -H "X-Auth-Token: $TOKEN" \
+      -H "Content-Type: application/json" \
+      -d '{"current_vcpus": 4, "current_memory_mb": 8192}' \
+      "$NOVA_ENDPOINT/v2.1/os-xloud-adjust/<INSTANCE_ID>"
+    ```
+    </CodeGroup>
+  </Tab>
+</Tabs>
+
+---
+
+## Comparison: Live Scaling vs. Flavor Resize
+
+| | **Live vCPU/RAM Scaling** | **Flavor Resize** |
+|---|---|---|
+| **Downtime** | None — instance stays running | Reboot required |
+| **Scope** | vCPU and RAM only | vCPU, RAM, and disk |
+| **Direction** | Up or down within flavor envelope | Up or down (disk: up only) |
+| **Confirmation step** | No — instant | Yes — must confirm or revert |
+| **Dashboard action** | More > Configuration Update > Adjust Resources | More > Configuration Update > Resize |
+| **Use case** | Responding to live load changes | Permanent tier change |
+
+---
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Adjust Resources not visible in the menu" defaultOpen>
+    The instance's flavor does not have live scaling enabled. The flavor must have
+    `hw:cpu_min` or `hw:mem_min` extra specs set. Contact your administrator to
+    configure a hot-add-enabled flavor, or resize to a flavor that supports it.
+  </Accordion>
+  <Accordion title="Scaling request rejected">
+    The requested value is outside the allowed range. The minimum and maximum are
+    determined by the flavor's `hw:cpu_min` / `hw:mem_min` (minimum) and the flavor's
+    vCPUs / RAM (maximum). Try a value within the slider range.
+  </Accordion>
+  <Accordion title="Guest OS does not show new vCPUs">
+    On older Linux kernels (before 4.15), new CPUs may need to be brought online manually:
+
+    ```bash title="Bring hotplugged CPUs online"
+    for cpu in /sys/devices/system/cpu/cpu*/online; do echo 1 > $cpu; done
+    ```
+
+    Modern kernels (4.15+) bring CPUs online automatically.
+  </Accordion>
+  <Accordion title="Memory change has no effect">
+    The guest OS memory balloon driver may not be loaded. Check inside the guest:
+
+    ```bash title="Check balloon driver"
+    lsmod | grep virtio_balloon
+    ```
+
+    If not loaded: `modprobe virtio_balloon` and add `virtio_balloon` to `/etc/modules`
+    for persistence.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Admin: Enable Live Scaling" href="/services/compute/live-resize-admin" color="#197560">
+    Configure flavors with hot-add extra specs and resource bounds
+  </Card>
+  <Card title="Resize Instance" href="/services/compute/resize-instance" color="#197560">
+    Standard flavor resize — change vCPU, RAM, and disk with a reboot
+  </Card>
+  <Card title="Flavors" href="/services/compute/flavors" color="#197560">
+    View available flavors and their hot-add capabilities
+  </Card>
+  <Card title="Launch an Instance" href="/services/compute/launch-instance" color="#197560">
+    Create an instance with a hot-add-enabled flavor
+  </Card>
+</CardGroup>

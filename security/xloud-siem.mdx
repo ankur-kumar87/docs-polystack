@@ -1,0 +1,296 @@
+---
+title: "Xloud SIEM"
+description: "Unified security operations on Xloud Platform — Wazuh, Lynis, and OpenSCAP in a single Security Posture view with live Alerts in Monitor Center."
+sidebarTitle: "Xloud SIEM"
+mode: "wide"
+---
+
+<Info>**Xloud-Developed** — Xloud SIEM is the integrated Security Information and Event Management layer built into the Xloud Platform. It stitches together Wazuh, Lynis, and OpenSCAP into a single dashboard surface and correlates findings against your actual cluster inventory.</Info>
+
+## What is Xloud SIEM?
+
+Xloud SIEM is the integrated security operations layer on the Xloud Platform. It runs
+three independent scanners in parallel — **Wazuh** for host intrusion detection,
+**Lynis** for OS-level auditing, and **OpenSCAP** for CIS / STIG compliance — and surfaces
+the combined results in two Dashboard views:
+
+- **Security Posture** — a single pane for agent inventory, vulnerabilities, alerts,
+  compliance scores, encryption status, and microsegmentation.
+- **Alerts** — active security and infrastructure alerts with rules, history, and
+  silences.
+
+<CardGroup cols={3}>
+  <Card title="Wazuh (HIDS)" icon="shield-alert" href="/security/wazuh" color="#197560">
+    Host intrusion detection, file integrity, vulnerability assessment, and rule-based
+    threat correlation across every VM.
+  </Card>
+  <Card title="Lynis" icon="list-checks" href="/security/lynis" color="#197560">
+    300+ on-host security audits with a hardening index score per node and prioritized
+    remediation guidance.
+  </Card>
+  <Card title="OpenSCAP" icon="clipboard-check" href="/security/openscap" color="#197560">
+    SCAP-based compliance scanning — CIS Benchmarks, DISA STIGs, PCI-DSS, HIPAA, ANSSI
+    profiles with pass/fail reports.
+  </Card>
+</CardGroup>
+
+<Note>
+  **Prerequisites** — Xloud SIEM requires Wazuh to be enabled on the cluster
+  (XDeploy → Security → HIDS). When Wazuh is disabled, **Monitor Center → Security Posture**
+  shows an empty state asking you to enable it.
+</Note>
+
+---
+
+## Video Walkthrough
+
+<iframe
+  className="w-full aspect-video rounded-xl"
+  src="https://www.youtube.com/embed/DWf7YdSXV1w"
+  title="How to Review Security Posture on Xloud"
+  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+  allowFullScreen
+></iframe>
+
+---
+
+## The Two Dashboard Views
+
+Everything Xloud SIEM exposes in the Dashboard lives in **Monitor Center** (admin view only):
+
+| Page | What it shows |
+|------|---------------|
+| **Security Posture** | Agent fleet, live alerts, CIS compliance %, vulnerability CVEs, volume encryption status, security-group risk scoring, and cluster health — all in 8 tabs |
+| **Alerts** | Active Alerts, Alert Rules, History, and Silences — unified for both infrastructure (Prometheus) and security (Wazuh) sources |
+
+<Warning>
+  Both pages are in the **administrator view only**. Open the Dashboard as an admin and
+  expand **Monitor Center** to reach them.
+</Warning>
+
+---
+
+## Security Posture — 8 Tabs
+
+The Security Posture page is the headline view for Xloud SIEM. Every tab aggregates data
+across the cluster and links back to raw Wazuh, Lynis, or OpenSCAP output.
+
+<AccordionGroup>
+  <Accordion title="1. Overview" icon="gauge">
+    Four top cards show **Active Agents** (active/total), **Cluster Nodes** with manager
+    version, **CIS Compliance** as a single %, and **Manager** type. Below that: per-agent
+    SCA chart, multi-layer compliance bar chart (Lynis vs OpenSCAP vs Wazuh SCA), and two
+    stacked progress views for Lynis Hardening Index and OpenSCAP CIS Score per node.
+  </Accordion>
+  <Accordion title="2. Agents" icon="users">
+    Table of every deployed Wazuh agent with ID, Name, IP, Status (active, disconnected,
+    pending, never connected), OS, Version, SCA score %, Groups, and Last Seen timestamp.
+    Filterable by Name and Status.
+  </Accordion>
+  <Accordion title="3. Alerts" icon="bell">
+    Live stream of Wazuh alerts filtered by time window (1h / 6h / 24h / 3d / 7d) and
+    minimum severity (All 3+ / Medium 5+ / High 8+ / Critical 12+). Columns: Time,
+    Severity tag, Rule ID, Description, Agent, Source IP.
+  </Accordion>
+  <Accordion title="4. Compliance" icon="clipboard-check">
+    Per-node matrix combining **Lynis Score** (out of 100), Warnings, Suggestions,
+    **OpenSCAP** %, pass/fail counts, and **Wazuh SCA** %. Click **Why?** on any row to
+    open a modal listing the exact Lynis findings — warnings and suggestions with test
+    IDs and remediation text.
+  </Accordion>
+  <Accordion title="5. Encryption" icon="lock">
+    Lists every instance with encryption status — Encrypted (all volumes), Unencrypted,
+    or No volumes. Shows each attached volume with its encryption flag and size, so you
+    can spot mixed-state VMs immediately.
+  </Accordion>
+  <Accordion title="6. Microsegmentation" icon="network">
+    Four sub-tabs for the micro-segmentation view:
+    - **Security Groups** — every project security group with rule count, ingress / egress
+      counts, a risk score (0-100) with color bar, risk level tag, Wide-Open flag, and
+      suggested fixes.
+    - **Flow Map** — allowed VM-to-VM flows listing Source VM, Destination VM, Protocol,
+      Ports, and Via Security Group.
+    - **VM Mapping** — each instance with its Status, Host, IPs, attached Security Groups,
+      and Tags.
+    - **Tag Groups** — resources clustered by tag, showing Resource Type, Tag, Count, and
+      up to 5 example resources per group.
+  </Accordion>
+  <Accordion title="7. Vulnerabilities" icon="bug">
+    Six counter cards (Total CVEs, Critical, High, Medium, Low, Solved) plus a severity
+    donut and a "Vulnerabilities by Agent" bar chart. Searchable CVE table with columns:
+    CVE, Severity, Package, Version, Agent, Status, Description.
+  </Accordion>
+  <Accordion title="8. Cluster" icon="server">
+    Wazuh cluster topology — Cluster Status, Manager version, Cluster Nodes (master vs
+    worker count), and Total Agents. Two donut charts break down node types and agent
+    status. Bottom table lists each cluster node with Name, Type, Version, IP, and Status.
+  </Accordion>
+</AccordionGroup>
+
+<Tip>
+  The top-right **Export Report** button downloads a CSV snapshot of the entire Security
+  Posture view. The **Wazuh Dashboard** button opens the native Wazuh UI in a new tab for
+  deeper investigation.
+</Tip>
+
+---
+
+## Alerts — Unified Security and Infrastructure View
+
+The **Alerts** page (**Monitor Center → Alerts**) consolidates every alert into one
+interface, regardless of source:
+
+| Tab | Purpose |
+|-----|---------|
+| **Active Alerts** | Currently firing alerts with a **Security** tag (Wazuh-sourced) or **Infrastructure** tag (Prometheus-sourced), severity (critical / warning / info), and context |
+| **Alert Rules** | View and edit the rules driving each alert — thresholds, evaluation intervals, notification channels |
+| **History** | Historical alert timeline for audit, incident reviews, and trend analysis |
+| **Silences** | Active silences that suppress noisy alerts during maintenance windows |
+
+<Info>
+  Wazuh-detected threats and infrastructure metric alerts (Prometheus) land in the same
+  table, so operators get a single place to triage events — no tool switching.
+</Info>
+
+---
+
+## For Users
+
+Most Xloud users interact with Xloud SIEM indirectly — their VMs are scanned
+automatically by the platform's security suite. If you are a non-admin user:
+
+<CardGroup cols={2}>
+  <Card title="See what's scanned on your VMs" icon="eye" color="#197560">
+    Ask your administrator for a Security Posture export. Every VM's compliance score,
+    encryption status, and live alerts are captured in the report.
+  </Card>
+  <Card title="Run a manual audit" icon="play" color="#197560">
+    If you need an ad-hoc Lynis or OpenSCAP run inside a VM you own, see the
+    [Lynis](/security/lynis) and [OpenSCAP](/security/openscap) user guides for
+    self-service commands.
+  </Card>
+</CardGroup>
+
+---
+
+## For Administrators
+
+Xloud SIEM is designed to work out of the box once Wazuh is enabled at deploy time.
+Typical admin workflows:
+
+<Steps titleSize="h3">
+  <Step title="Enable Xloud SIEM at deploy time" icon="toggle-right">
+    In XDeploy → Configuration → Monitoring & Logging, toggle **Enable Security Suite**.
+    The suite activates Wazuh (HIDS), Lynis (auditing), and OpenSCAP (compliance) on every
+    cluster node.
+  </Step>
+  <Step title="Deploy agents to tenant VMs" icon="server">
+    Use the bundled `xavs-ansible` role to mass-deploy Wazuh agents across projects. See
+    the [Wazuh](/security/wazuh) page for the exact command and options.
+  </Step>
+  <Step title="Review Security Posture daily" icon="clipboard-list">
+    Open **Monitor Center → Security Posture**, review the Overview tab for trend
+    changes, and drill into any node with falling compliance scores using the **Why?**
+    link in the Compliance tab.
+  </Step>
+  <Step title="Triage alerts in real time" icon="bell">
+    Use **Monitor Center → Alerts → Active Alerts**. The Security tag isolates
+    Wazuh-originated threats from infrastructure noise.
+  </Step>
+  <Step title="Export for audit or compliance reviews" icon="download">
+    Use the **Export Report** button on Security Posture to produce a timestamped CSV
+    snapshot of the cluster's full security state.
+  </Step>
+</Steps>
+
+---
+
+## How the Three Scanners Differ
+
+Each scanner attacks a different attack surface — they are complementary, not redundant.
+
+| Capability | Wazuh | Lynis | OpenSCAP |
+|------------|:-----:|:-----:|:--------:|
+| Agent-based live monitoring | Yes | — | — |
+| On-host audit script | — | Yes | Yes |
+| Real-time alerts | Yes | — | — |
+| File integrity monitoring | Yes | — | — |
+| CVE / vulnerability scanning | Yes | — | — |
+| Hardening index score | Partial | Yes | — |
+| CIS Benchmark profiles | Yes | Partial | Yes |
+| DISA STIG / PCI-DSS profiles | — | — | Yes |
+| MITRE ATT&CK mapping | Yes | — | — |
+| XML / HTML compliance reports | — | — | Yes |
+
+Together they give you defense-in-depth: Wazuh watches for active attacks, Lynis catches
+misconfiguration drift, OpenSCAP proves regulatory conformance.
+
+---
+
+## Tool Deep-Dives
+
+<CardGroup cols={3}>
+  <Card title="Wazuh" icon="shield-alert" href="/security/wazuh" color="#197560">
+    Architecture, agent deployment via Ansible or manual steps, detection rules, File
+    Integrity Monitoring configuration, and the Wazuh Dashboard.
+  </Card>
+  <Card title="Lynis" icon="list-checks" href="/security/lynis" color="#197560">
+    How the script runs, score interpretation, warnings vs suggestions, per-node and
+    fleet-wide sweeps, and remediation workflows.
+  </Card>
+  <Card title="OpenSCAP" icon="clipboard-check" href="/security/openscap" color="#197560">
+    Available profiles (CIS L1 / L2, PCI-DSS, HIPAA, ANSSI, STIG), how to run a scan,
+    reading the XML/HTML reports, and applying the remediation playbooks.
+  </Card>
+</CardGroup>
+
+---
+
+## Common Tasks
+
+<AccordionGroup>
+  <Accordion title="Check cluster-wide CIS compliance in 30 seconds" icon="clock">
+    Open **Monitor Center → Security Posture → Overview**. The top-row **CIS Compliance**
+    card shows the cluster-wide average across all scanned agents.
+  </Accordion>
+  <Accordion title="Find out why one node's compliance score dropped" icon="trending-down">
+    In the **Compliance** tab, locate the node and click **Why?** next to its row. A modal
+    lists every Lynis warning and suggestion with test IDs and remediation text.
+  </Accordion>
+  <Accordion title="Spot unencrypted volumes across the fleet" icon="lock-open">
+    Open the **Encryption** tab. Any instance tagged **Unencrypted** has at least one
+    volume without encryption enabled.
+  </Accordion>
+  <Accordion title="Find high-risk security groups" icon="triangle-alert">
+    Open the **Microsegmentation → Security Groups** tab. Sort by Risk Score descending.
+    Groups tagged **Wide-Open** are the most urgent to review.
+  </Accordion>
+  <Accordion title="Export a snapshot for audit" icon="file-text">
+    Click **Export Report** on any Security Posture tab. The download is a timestamped CSV
+    with agent, compliance, and vulnerability data for the entire cluster.
+  </Accordion>
+  <Accordion title="Investigate a live Wazuh alert" icon="search">
+    In **Security Posture → Alerts**, expand the row to see the rule description and source
+    IP. Click **Wazuh Dashboard** in the top-right to jump to the native UI for deeper
+    forensic queries.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Wazuh Deep Dive" icon="shield-alert" href="/security/wazuh" color="#197560">
+    Architecture, agent deployment, ruleset, File Integrity Monitoring
+  </Card>
+  <Card title="Lynis Deep Dive" icon="list-checks" href="/security/lynis" color="#197560">
+    Run audits, interpret the hardening index, fleet sweeps
+  </Card>
+  <Card title="OpenSCAP Deep Dive" icon="clipboard-check" href="/security/openscap" color="#197560">
+    Compliance profiles, scan commands, report formats, remediation
+  </Card>
+  <Card title="Compliance and Auditing" icon="gavel" href="/security/compliance" color="#197560">
+    SOC 2, ISO 27001, HIPAA, PCI-DSS, GDPR frameworks at the platform level
+  </Card>
+</CardGroup>

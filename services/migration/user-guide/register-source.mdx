@@ -1,0 +1,170 @@
+---
+title: "Register a VMware Source"
+description: "Add a vCenter Server or standalone ESXi host to XMS as a migration source so its virtual machines become discoverable from the Xloud Dashboard."
+sidebarTitle: "Register Source"
+---
+
+## Overview
+
+Before XMS can discover or migrate workloads, you must register the source
+vSphere environment as an **environment** in the Migration panel. An environment
+stores the endpoint URL, credentials, and optional scope (datacenter) used for
+every subsequent discovery and migration job against that source.
+
+<Tip>
+  In the Dashboard, source VMware endpoints are called **Environments**. In the
+  CLI, the same objects are called **sources** (`xms source create`, `xms source list`).
+  Both refer to the same registered endpoints.
+</Tip>
+
+<Note>
+  **Prerequisites**
+  - An active Xloud account with permission to use the Migration panel
+  - A reachable vCenter Server or standalone ESXi host
+  - A vSphere account with at least read permission for inventory discovery
+    and snapshot, disk read, and Changed Block Tracking permissions for
+    migration (see the **Required Permissions** table below)
+  - The fingerprint or CA chain of the source if you choose to verify TLS
+</Note>
+
+---
+
+## Register from the Dashboard
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Open the Migration panel" icon="truck">
+        Sign in to the **Xloud Dashboard** and navigate to **Migration → Environments**.
+        Click **Add Environment** and choose **VMware vSphere** as the platform.
+      </Step>
+      <Step title="Enter connection details" icon="plug">
+        | Field | Description |
+        |-------|-------------|
+        | **Environment Name** | Friendly name for the source (e.g., `prod-vcenter`, `edge-esxi-01`) |
+        | **Host** | Hostname or IP of the vCenter Server or standalone ESXi host |
+        | **Port** | `443` (default) |
+        | **Username** | vSphere account (e.g., `administrator@vsphere.local` for vCenter, `root` for standalone ESXi) |
+        | **Password** | vSphere account password |
+        | **Datacenter** | Optional — restrict discovery to a single datacenter |
+        | **Verify TLS** | Enable for production; disable only for lab or self-signed certificates |
+      </Step>
+      <Step title="Test the connection" icon="flask-conical">
+        Click **Test Connection**. XMS opens a vSphere API session, fetches the
+        product name and build number, and closes the session. A green check
+        confirms the endpoint, credentials, and TLS options are valid.
+
+        <Check>Connection test returns the remote product name and build.</Check>
+      </Step>
+      <Step title="Save the environment" icon="save">
+        Click **Save**. The environment appears in the **Environments** list
+        with status `Connected` and the detected vSphere version.
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    Register a VMware source with the `xms` CLI:
+
+    ```bash
+    xms source create \
+      --name prod-vcenter \
+      --platform vmware \
+      --host vcenter.example.com \
+      --port 443 \
+      --username 'administrator@vsphere.local' \
+      --password-stdin \
+      --verify-ssl
+    ```
+
+    Pass the password through `stdin` to keep it out of shell history. Use
+    `--datacenter <name>` to scope discovery and `--no-verify-ssl` only when
+    connecting to self-signed lab hosts.
+  </Tab>
+</Tabs>
+
+---
+
+## Required Permissions
+
+XMS needs the following vSphere privileges on the target inventory objects.
+Create a dedicated role and assign it to the XMS service account at the
+datacenter level for the cleanest setup.
+
+| Category | Privilege | Used By |
+|----------|-----------|---------|
+| **System** | System.Anonymous, System.Read, System.View | Session establishment and inventory read |
+| **VirtualMachine.Config** | DiskLease, ChangeTracking, Settings | Enabling CBT and reading disk configuration |
+| **VirtualMachine.Interact** | PowerOff, PowerOn, Reset | Cold migration source power control |
+| **VirtualMachine.State** | CreateSnapshot, RemoveSnapshot, RevertSnapshot | Warm migration CBT anchor snapshots |
+| **VirtualMachine.Provisioning** | DiskRandomAccess, DiskRandomRead | Disk export over vSphere API |
+| **Resource** | AssignVMToPool (target moves only) | Optional — only required for cross-cluster preparation |
+| **Global** | DisableMethods, EnableMethods | Optional — only required to guard against concurrent changes during cutover |
+
+<Tip>
+  A read-only account is enough to register the source and run discovery.
+  You can assign the higher-privilege role closer to the migration window
+  to limit blast radius.
+</Tip>
+
+---
+
+## Standalone ESXi vs vCenter
+
+<CardGroup cols={2}>
+  <Card title="vCenter" icon="server" color="#197560">
+    Preferred for production — one environment entry covers all clusters and
+    hosts, role-based access control is centralized, and vMotion and snapshots
+    are coordinated through vCenter.
+  </Card>
+  <Card title="Standalone ESXi" icon="hard-drive" color="#197560">
+    Supported for smaller sites and edge deployments. Use the host IP or FQDN
+    as the endpoint and `root` (or a local ESXi account) as the username.
+    Datacenter is auto-detected as `ha-datacenter`.
+  </Card>
+</CardGroup>
+
+---
+
+## Editing and Deleting Environments
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    From **Migration → Environments**, select a row to see the details drawer.
+    Available actions:
+
+    - **Edit** — update endpoint, credentials, or TLS verification
+    - **Test Connection** — re-run the connectivity check at any time
+    - **Delete** — remove the environment (only permitted when no active
+      migration jobs reference it)
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash
+    xms source list
+    xms source show prod-vcenter
+    xms source update prod-vcenter --password-stdin
+    xms source delete prod-vcenter
+    ```
+  </Tab>
+</Tabs>
+
+<Warning>
+  Changing the username or password of an active source invalidates any
+  in-flight discovery. Re-run discovery after updating credentials so the
+  inventory cache refreshes.
+</Warning>
+
+---
+
+## Next Steps
+
+<CardGroup cols={3}>
+  <Card title="Discover Workloads" href="/services/migration/user-guide/discover-workloads" color="#197560">
+    Inventory VMs and disks from the newly registered source
+  </Card>
+  <Card title="Preflight Assessment" href="/services/migration/user-guide/preflight" color="#197560">
+    Validate compatibility before submitting a migration
+  </Card>
+  <Card title="Admin — Source Credentials" href="/services/migration/admin-guide/source-credentials" color="#197560">
+    Credential storage, rotation, and least-privilege setup
+  </Card>
+</CardGroup>

@@ -1,0 +1,157 @@
+---
+title: "Volume Types and Storage Tiers"
+description: "Understand Xloud Block Storage volume types, storage performance tiers, and how to select the right tier for your workload requirements."
+sidebarTitle: "Volume Types"
+---
+
+import CliAuth from '/snippets/cli-auth.mdx';
+
+## Overview
+
+A <Tooltip tip="A named storage profile that maps to a specific backend, performance tier, and optional encryption policy">volume type</Tooltip> is the mechanism through which administrators expose storage tiers to users. Each type maps to a backend driver and optionally enforces I/O quality-of-service limits. When creating a volume, selecting the appropriate type ensures the data lands on the correct hardware and receives the expected performance characteristics.
+
+<Note>
+  **Prerequisites**
+  - Volume types are defined by your administrator
+  - Contact your administrator if the required type is not available in your project
+</Note>
+
+---
+
+## Storage Tiers
+
+Xloud Block Storage supports tiered storage configurations. Each tier corresponds to a
+hardware class with distinct performance characteristics:
+
+| Tier | Hardware | IOPS (4K Random) | Throughput | Best For |
+|------|---------|-----------------|------------|---------|
+| **NVMe** | PCIe NVMe SSDs | 100,000 – 1,000,000 | 3 – 14 GB/s | Transactional databases, low-latency caches, real-time analytics |
+| **SSD** | SATA/SAS SSDs | 10,000 – 100,000 | 500 MB/s – 2 GB/s | Web application data, instance boot disks, general-purpose workloads |
+| **Standard** | 7.2K/10K RPM HDDs | 150 – 500 | 100 – 300 MB/s | Archival storage, bulk data, infrequent access |
+
+<Tip>
+  Select the tier based on your workload's I/O profile — not just raw capacity.
+  Placing a high-transaction database on a Standard (HDD) type will result in
+  significant latency and throughput bottlenecks. Use NVMe for latency-sensitive
+  workloads and SSD for most application data.
+</Tip>
+
+---
+
+## View Available Volume Types
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    Volume types are visible when creating a volume. Navigate to **Storage > Volumes**
+    and click **Create Volume**. The **Volume Type** selection table in the create form
+    shows all types available to your project with their properties.
+
+    <Note>
+      There is no standalone Volume Types listing page for regular users. Volume types
+      are managed by administrators through the admin view at **Storage > Volume Types**.
+    </Note>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    <Steps titleSize="h3">
+      <Step title="Authenticate" icon="key">
+        <CliAuth />
+      </Step>
+      <Step title="List volume types" icon="list">
+        ```bash title="List all available volume types"
+        openstack volume type list --long
+        ```
+
+        ```bash title="Show details and extra specs for a type"
+        openstack volume type show <type-name>
+        ```
+
+        The `extra_specs` field shows backend-specific properties such as:
+        - `volume_backend_name` — routes volumes to the correct backend
+        - `capabilities:replication_enabled` — whether replication is enabled
+        - `qos` — associated QoS spec name
+      </Step>
+    </Steps>
+  </Tab>
+</Tabs>
+
+---
+
+## Select a Volume Type for Your Workload
+
+<AccordionGroup>
+  <Accordion title="Databases (MySQL, PostgreSQL, MongoDB)" icon="database">
+    **Recommended tier**: NVMe or SSD
+
+    Databases require consistent low-latency random I/O. NVMe is the preferred choice
+    for production databases with high transaction rates. SSD provides an acceptable
+    balance for development and staging environments.
+
+    | Database | Recommended Type | Rationale |
+    |----------|-----------------|-----------|
+    | MySQL / MariaDB (production) | `nvme` | High write IOPS for WAL and data pages |
+    | PostgreSQL (production) | `nvme` | Random read/write for shared_buffers and WAL |
+    | MongoDB | `ssd` | Mixed read/write, benefits from SSD caching |
+    | Development / staging | `ssd` | Cost-effective for lower traffic |
+  </Accordion>
+
+  <Accordion title="Web and Application Servers" icon="server">
+    **Recommended tier**: SSD
+
+    Web application data — configuration, assets, application state — requires moderate
+    IOPS with good throughput. SSD types deliver an optimal balance of performance and
+    cost for these workloads.
+  </Accordion>
+
+  <Accordion title="Archival and Bulk Storage" icon="archive">
+    **Recommended tier**: Standard (HDD)
+
+    Log archives, data warehouses, and infrequently accessed bulk storage do not
+    require high IOPS. Standard HDD-backed volumes provide large capacity at lower
+    cost per GiB.
+  </Accordion>
+
+  <Accordion title="Boot Disks (Instance Root Volumes)" icon="hard-drive">
+    **Recommended tier**: SSD
+
+    Instance boot volumes are read-intensively at startup and write-intensively during OS
+    operations. SSD provides the performance needed for fast boot times and responsive
+    OS operations.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Encryption-Enabled Types
+
+Some volume types have encryption configured by your administrator. Volumes created
+from an encrypted type are automatically encrypted at creation — no additional action
+is required from you.
+
+<Note>
+  Encrypted volume types require the Xloud Key Management service to be accessible.
+  If encryption is required for compliance, confirm with your administrator that an
+  encrypted type is available and that key management is configured for your environment.
+</Note>
+
+```bash title="Check if a volume type has encryption configured"
+openstack volume type show <type-name> -c encryption
+```
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Create a Volume" href="/services/storage/create-volume" color="#197560">
+    Create a volume using the appropriate type for your workload
+  </Card>
+  <Card title="Volume Types Admin" href="/services/storage/volume-types-admin" color="#197560">
+    Administrators: create types, set backend associations, and configure QoS
+  </Card>
+  <Card title="Storage Tiers (Admin)" href="/services/storage/storage-tiers" color="#197560">
+    Configure NVMe, SSD, and HDD tier mappings for your storage cluster
+  </Card>
+  <Card title="Encryption (Admin)" href="/services/storage/encryption" color="#197560">
+    Enable at-rest encryption on volume types using the key management service
+  </Card>
+</CardGroup>

@@ -1,0 +1,145 @@
+---
+title: "Image Formats"
+description: "Compare QCOW2, RAW, VHD, and VMDK image formats and choose the right one for your Xloud workloads."
+sidebarTitle: "Image Formats"
+---
+
+## Overview
+
+The Xloud Image Service supports multiple virtual disk formats. Selecting the right format
+affects launch performance, storage efficiency, and compatibility with your source
+environment. This guide compares supported formats, explains conversion workflows, and
+provides recommendations for common use cases.
+
+<Note>
+  **Prerequisites**
+  - Basic familiarity with virtual disk concepts
+  - `qemu-img` installed locally for format conversion (optional)
+</Note>
+
+---
+
+## Format Comparison
+
+| Format | Extension | Copy-on-Write | Compression | Best For |
+|--------|-----------|---------------|-------------|----------|
+| **QCOW2** | `.qcow2` | Yes | Yes | Default. General-purpose workloads, fast snapshot support. |
+| **RAW** | `.img`, `.raw` | No (storage-side) | No | Maximum performance on Ceph-backed storage. |
+| **VHD / VHDX** | `.vhd`, `.vhdx` | Fixed/Dynamic | — | Images migrated from Hyper-V. |
+| **VMDK** | `.vmdk` | Sparse/Flat | — | Images migrated from VMware. |
+
+---
+
+## Format Details
+
+<AccordionGroup>
+  <Accordion title="QCOW2 — Recommended" icon="layers" defaultOpen>
+    QCOW2 (QEMU Copy-On-Write v2) is the default and recommended format for Xloud.
+    It supports thin provisioning (only stores data that has been written), internal
+    snapshots, compression, and optional AES encryption.
+
+    | Property | Value |
+    |----------|-------|
+    | Extension | `.qcow2` |
+    | Copy-on-write | Yes |
+    | Compression | Yes |
+    | Maximum size | No limit |
+    | Best for | General-purpose workloads, fast launch times, snapshot workflows |
+
+    Create a new empty QCOW2 image:
+    ```bash title="Create empty 20GB QCOW2 image"
+    qemu-img create -f qcow2 my-disk.qcow2 20G
+    ```
+  </Accordion>
+
+  <Accordion title="RAW — Maximum Performance" icon="zap">
+    RAW images are unformatted disk dumps. There is zero overhead from the format layer.
+    When Xloud Distributed Storage (Ceph RBD) is the image and volume backend, RBD handles
+    copy-on-write natively — making RAW the optimal format.
+
+    | Property | Value |
+    |----------|-------|
+    | Extension | `.img` or `.raw` |
+    | Copy-on-write | No (handled by storage backend) |
+    | Compression | No |
+    | Best for | Performance-sensitive workloads on Ceph-backed storage |
+
+    <Tip>
+      On Ceph-backed deployments, instance launches from RAW images use zero-copy RBD clones
+      — resulting in near-instantaneous boot times regardless of image size.
+    </Tip>
+  </Accordion>
+
+  <Accordion title="VHD / VHDX — Hyper-V Migration" icon="arrow-right-left">
+    VHD and VHDX are the native disk formats for Microsoft Hyper-V. Import them directly
+    into Xloud when migrating workloads from a Hyper-V environment.
+
+    | Format | Source Platform | Notes |
+    |--------|----------------|-------|
+    | VHD | Hyper-V (Gen 1) | Fixed and dynamic VHDs supported |
+    | VHDX | Hyper-V (Gen 2) | Preferred format for Hyper-V 2012+ |
+
+    <Tip>
+      Convert VHD/VHDX to QCOW2 after import for optimal performance and Xloud snapshot support.
+    </Tip>
+  </Accordion>
+
+  <Accordion title="VMDK — VMware Migration" icon="server">
+    VMDK is the native disk format for VMware ESXi and Workstation. Import VMDKs directly
+    when migrating virtual machines from a VMware environment.
+
+    | Format | Notes |
+    |--------|-------|
+    | Sparse VMDK | Thin-provisioned. Import directly. |
+    | Flat VMDK | Pre-allocated. Larger file, no format overhead. |
+
+    <Tip>
+      Convert VMDKs to QCOW2 after import to enable Xloud snapshot and resize operations.
+    </Tip>
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Convert Between Formats
+
+Use `qemu-img` to convert images locally before upload:
+
+<CodeGroup>
+```bash title="VHD to QCOW2"
+qemu-img convert -f vpc -O qcow2 windows-server.vhd windows-server.qcow2
+```
+```bash title="VMDK to QCOW2"
+qemu-img convert -f vmdk -O qcow2 vm-disk.vmdk vm-disk.qcow2
+```
+```bash title="RAW to QCOW2"
+qemu-img convert -f raw -O qcow2 disk.img disk.qcow2
+```
+```bash title="QCOW2 to RAW"
+qemu-img convert -f qcow2 -O raw ubuntu.qcow2 ubuntu.img
+```
+</CodeGroup>
+
+Verify the converted image:
+```bash title="Verify converted image"
+qemu-img info disk.qcow2
+```
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Upload an Image" href="/services/images/upload-image" color="#197560">
+    Upload your converted image to the Xloud Image Service.
+  </Card>
+  <Card title="Image Properties" href="/services/images/image-properties" color="#197560">
+    Set hardware properties matching your image format and source platform.
+  </Card>
+  <Card title="Image Admin Guide — Storage Backends" href="/services/images/storage-backends" color="#197560">
+    Configure the storage backend where images are stored after upload.
+  </Card>
+  <Card title="Troubleshooting" href="/services/images/troubleshooting" color="#197560">
+    Resolve format-related launch failures and image upload errors.
+  </Card>
+</CardGroup>

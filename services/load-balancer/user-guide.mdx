@@ -1,0 +1,60 @@
+---
+title: "Load Balancer User Guide"
+description: "Create and manage load balancers, listeners, pools, health monitors, and floating IP assignments in Xloud."
+sidebarTitle: "User Guide"
+mode: "wide"
+---
+
+<p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Overview</p>
+
+Xloud Load Balancer distributes inbound application traffic across a pool of backend
+instances. Use the guides below to create load balancers, configure listeners and pools,
+set up health monitors, assign public floating IPs, and troubleshoot traffic issues.
+
+<CardGroup cols={4}>
+  <Card title="Create a Load Balancer" icon="plus-circle" href="/services/load-balancer/create-lb" color="#197560">
+    Provision a new load balancer with a listener, pool, and health monitor in a single workflow.
+  </Card>
+  <Card title="Listeners" icon="ear" href="/services/load-balancer/listeners" color="#197560">
+    Add HTTP, HTTPS, TCP, and UDP listeners to an existing load balancer.
+  </Card>
+  <Card title="Pools" icon="users" href="/services/load-balancer/pools" color="#197560">
+    Manage backend member pools and configure traffic distribution algorithms.
+  </Card>
+  <Card title="Health Monitors" icon="heart-pulse" href="/services/load-balancer/health-monitors" color="#197560">
+    Configure TCP, HTTP, and HTTPS health checks to automatically remove unhealthy members.
+  </Card>
+  <Card title="Floating IP Assignment" icon="globe" href="/services/load-balancer/floating-ip" color="#197560">
+    Expose your load balancer VIP on a public network using a floating IP.
+  </Card>
+  <Card title="Troubleshooting" icon="wrench" href="/services/load-balancer/troubleshooting" color="#197560">
+    Resolve provisioning failures, member health issues, and TLS handshake errors.
+  </Card>
+</CardGroup>
+
+---
+
+<p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Core Concepts</p>
+
+| Concept | Description |
+|---------|-------------|
+| **Load Balancer** | Top-level resource holding a virtual IP (VIP) on a chosen subnet |
+| **Listener** | Protocol and port definition. A load balancer supports multiple listeners |
+| **Pool** | Collection of backend members. Each listener routes to one default pool |
+| **Member** | A backend instance IP and port registered in a pool |
+| **Health Monitor** | Periodic probes that mark members UP or DOWN |
+| **L7 Policy** | HTTP routing rules — redirect, reject, or forward based on URL path or hostname |
+| **Flavor** | Appliance capacity profile selected at provisioning time |
+
+---
+
+<p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Next Steps</p>
+
+<CardGroup cols={4}>
+  <Card title="Load Balancer Admin Guide" icon="settings" href="/services/load-balancer/admin-guide" color="#197560">
+    Configure provider drivers, flavor profiles, quotas, and platform monitoring.
+  </Card>
+  <Card title="Xloud Key Manager" icon="lock" href="/services/key-manager" color="#197560">
+    Store TLS certificates for HTTPS listener termination.
+  </Card>
+</CardGroup>

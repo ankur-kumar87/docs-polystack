@@ -1,0 +1,153 @@
+---
+title: "Key Manager Admin Troubleshooting"
+description: "Diagnose and resolve platform-level Xloud Key Manager issues — backend connectivity failures, pending certificate orders, ACL propagation delays, and."
+sidebarTitle: "Troubleshooting"
+---
+
+import AdminWarning from '/snippets/admin-warning.mdx';
+
+## Overview
+
+This guide covers platform-level Key Manager issues that require administrator access.
+For user-facing issues such as 403 errors or expired secrets, see the
+[Key Manager Troubleshooting](/services/key-manager/troubleshooting) guide.
+
+<AdminWarning />
+
+---
+
+## Diagnostic Checklist
+
+```bash title="Check Key Manager container status"
+docker ps --filter name=barbican
+```
+
+```bash title="Verify Key Manager API is responding"
+openstack secret list --limit 1
+```
+
+```bash title="Check Key Manager API logs"
+docker logs barbican-api --tail 100
+```
+
+---
+
+## Platform Issues
+
+<AccordionGroup>
+  <Accordion title="Secret retrieval returns 500 Internal Server Error" icon="server" defaultOpen>
+    **Cause**: The secret store backend is unavailable — HSM connectivity lost,
+    KMIP server unreachable, or master key file inaccessible.
+
+    **Diagnosis**:
+    ```bash title="Check Key Manager worker logs for backend errors"
+    docker logs barbican-worker --tail 100 | grep -i "error\|backend\|connect"
+    ```
+
+    **Resolution by backend type**:
+
+    | Backend | Check | Resolution |
+    |---------|-------|------------|
+    | `simple_crypto` | Master key file readable | `ls -la /etc/xavs/key-manager/kek.conf` |
+    | `pkcs11` | HSM online and partition accessible | Verify HSM dashboard status |
+    | `kmip` | Network to KMIP server on port 5696 | `nc -zv <kmip-host> 5696` |
+  </Accordion>
+
+  <Accordion title="Certificate orders remain in PENDING indefinitely" icon="clock">
+    **Cause**: The CA plugin is unreachable or misconfigured.
+
+    **Diagnosis**:
+    ```bash title="Check order status and error detail"
+    openstack secret order show <order-href>
+    ```
+
+    Review the `error_status_code` and `error_reason` fields. Common causes:
+
+    - CA plugin service is not running — check container status via XDeploy
+    - Certificate subject DN contains invalid characters or fields rejected by the CA
+    - CA connectivity timeout — verify network access from Key Manager to the CA endpoint
+
+    ```bash title="Check CA plugin container"
+    docker ps --filter name=barbican
+    docker logs barbican-worker --tail 50 | grep -i "ca\|order\|cert"
+    ```
+  </Accordion>
+
+  <Accordion title="ACL not taking effect" icon="list-x">
+    **Cause**: ACL changes require a short propagation delay, or the caller is
+    authenticated under a different user identity than expected.
+
+    **Diagnosis**:
+    ```bash title="Verify ACL on the secret"
+    openstack acl get <secret-href>
+    ```
+
+    Confirm the user ID in the ACL matches the authenticated user's actual ID:
+    ```bash title="Get current user ID"
+    openstack token issue -c user_id -f value
+    ```
+
+    **Resolution**: If the user ID does not match, ensure the correct user identity
+    is being used in the API call. ACL entries reference user IDs, not usernames —
+    a renamed user retains the same ID.
+  </Accordion>
+
+  <Accordion title="Key Manager service fails to start" icon="server">
+    **Cause**: Database connectivity failure, missing master key file, or configuration
+    error preventing service initialization.
+
+    **Diagnosis**:
+    ```bash title="Check startup logs"
+    docker logs barbican-api --tail 200 | grep -i "error\|critical\|warn"
+    ```
+
+    Common startup failures:
+
+    | Error | Cause | Resolution |
+    |-------|-------|------------|
+    | `database not reachable` | DB host unreachable | Check DB container status |
+    | `No such file: kek.conf` | Master key file missing | Restore from backup or re-generate |
+    | `PKCS11 library not found` | HSM library missing | Verify library path in config |
+    | `KMIP connection refused` | KMIP server down | Check KMIP server connectivity |
+  </Accordion>
+
+  <Accordion title="High secret creation latency" icon="gauge">
+    **Cause**: The secret store backend is under load or the encryption operation is
+    slow (common with PKCS#11 HSM under high request rates).
+
+    **Resolution**:
+    - Check HSM health and current load from the HSM management interface
+    - Consider scaling Key Manager worker replicas via XDeploy to parallelize requests
+    - For KMIP backends, verify network latency to the KMIP server
+    - Review Key Manager worker logs for timeout or retry events
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Log Locations
+
+| Component | Log Command |
+|-----------|-------------|
+| Key Manager API | `docker logs barbican-api` |
+| Key Manager Worker | `docker logs barbican-worker` |
+| Key Manager Keystone Listener | `docker logs barbican-keystone-listener` |
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Key Manager Troubleshooting (User)" href="/services/key-manager/troubleshooting" color="#197560">
+    User-facing Key Manager issues — 403 errors, expired secrets, ACL problems
+  </Card>
+  <Card title="Backend Configuration" href="/services/key-manager/backend-config" color="#197560">
+    Verify and update secret store backend configuration
+  </Card>
+  <Card title="Architecture" href="/services/key-manager/architecture" color="#197560">
+    Understand component roles to narrow down failure scope
+  </Card>
+  <Card title="Security" href="/services/key-manager/security" color="#197560">
+    Security hardening to prevent recurrence
+  </Card>
+</CardGroup>

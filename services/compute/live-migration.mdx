@@ -1,0 +1,203 @@
+---
+title: "Live Migration"
+description: "Transfer running instances between hypervisor hosts with zero downtime. Covers cold migration, live migration, and block migration."
+sidebarTitle: "Live Migration"
+---
+
+import AdminWarning from '/snippets/admin-warning.mdx';
+
+## Overview
+
+Live migration moves a running instance from one compute host to another without
+shutting it down. Cold migration stops the instance, moves it, and restarts it on
+the target host. Both operations are administrator-only actions used for planned
+maintenance, load balancing, and hardware decommissioning.
+
+<AdminWarning />
+
+<Note>
+  **Prerequisites**
+  - Administrator access to the Xloud Dashboard (admin view)
+  - Shared storage between source and destination hosts (or block migration enabled)
+  - Compatible CPU architecture between hosts
+</Note>
+
+---
+
+## Migration Types
+
+| Type | Instance Status | Downtime | Use Case |
+|------|----------------|----------|----------|
+| **Live Migrate** | `Active` or `Paused` | None (zero downtime) | Planned maintenance, load balancing |
+| **Cold Migrate** | `Active` or `Shutoff` | Yes (reboot required) | Hardware replacement, when live migration fails |
+
+---
+
+## Live Migrate an Instance
+
+<iframe
+  className="w-full aspect-video rounded-xl"
+  src="https://www.youtube.com/embed/VGxqVVy4URA"
+  title="How to Live Migrate a VM on Xloud"
+  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+  allowFullScreen
+></iframe>
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Open the Live Migrate dialog">
+        Navigate to **Compute > Instances** in the admin sidebar. Click the **More**
+        dropdown on the instance row and select **Live Migrate**.
+
+        <Note>
+          Live Migrate is available for instances in `Active` or `Paused` status.
+          It is not available for bare metal instances. This action appears only
+          on the admin page.
+        </Note>
+      </Step>
+      <Step title="Select a destination host (optional)">
+        The dialog shows:
+
+        | Field | Description |
+        |-------|-------------|
+        | **Instance** | Instance name (read-only) |
+        | **Current Host** | The compute host currently running the instance (read-only) |
+        | **Destination Host** | Select a target hypervisor, or leave empty for scheduler auto-selection |
+        | **Block Migrate** | Checkbox — enable block migration for instances on local storage |
+
+        The host table shows available hypervisors. The current host and disabled
+        hosts are grayed out. Bare metal hypervisors are filtered from the list.
+
+        <Tip>
+          Leave the destination host empty to let the scheduler select the optimal
+          target based on available resources. Manually selecting a host is useful
+          when you need to place the instance on a specific node.
+        </Tip>
+      </Step>
+      <Step title="Start the migration">
+        Click **Confirm**. The instance status changes to `Migrating` during the
+        transfer and returns to `Active` on the new host when complete.
+
+        <Check>Instance is `Active` on the new host. Verify with the instance detail page.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Source credentials"
+    source openrc.sh
+    ```
+
+    <CodeGroup>
+    ```bash title="Live migrate (scheduler selects host)"
+    openstack server migrate --live-migration <INSTANCE_ID>
+    ```
+    ```bash title="Live migrate to specific host"
+    openstack server migrate --live-migration --host <TARGET_HOST> <INSTANCE_ID>
+    ```
+    ```bash title="Live migrate with block migration"
+    openstack server migrate --live-migration --block-migration <INSTANCE_ID>
+    ```
+    </CodeGroup>
+
+    ```bash title="Monitor migration status"
+    openstack server migration list --server <INSTANCE_ID>
+    ```
+
+    <Check>Migration status shows `completed`. Instance is `Active` on the new host.</Check>
+  </Tab>
+</Tabs>
+
+---
+
+## Server Group Affinity Is Honored
+
+Live migration respects the **affinity / anti-affinity policy** of any
+[server group](/services/compute/server-groups) the instance belongs to. The
+scheduler treats migration the same way it treats a launch:
+
+| Policy on the instance's server group | What live migration does |
+|--------------------------------------|--------------------------|
+| **affinity** | Picks a destination host that already runs the other instances in the group. If no such host has capacity, the migration fails with `NoValidHost` |
+| **anti-affinity** | Picks a destination host that does **not** already run another instance in the group. If every other host already runs a group member, the migration fails with `NoValidHost` |
+| **soft-affinity** | Prefers a destination host that already runs other group members; falls back to any available host if none has capacity |
+| **soft-anti-affinity** | Prefers a destination host with no other group members; falls back to any available host if no separate host is free |
+
+This holds for both Dashboard-initiated migrations and CLI-initiated migrations,
+and for both single-instance Live Migrate and Bulk Live Migrate. If you want to
+override the policy for a specific move, remove the instance from its server
+group first, migrate, and re-add it (no platform-supported way to bypass the
+policy in-place).
+
+<Tip>
+  When evacuating a host, use **Bulk Live Migrate** with the source host pre-set as
+  the filter. The scheduler picks destinations one at a time and re-evaluates the
+  server-group constraint for each move — so anti-affinity remains intact across
+  the whole evacuation.
+</Tip>
+
+---
+
+## Cold Migrate an Instance
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Open the Migrate dialog">
+        Navigate to **Compute > Instances** in the admin sidebar. Click the **More**
+        dropdown and select **Migrate**.
+
+        <Note>
+          Cold Migrate is available for instances in `Active` or `Shutoff` status.
+          Not available for bare metal instances. Admin-only action.
+        </Note>
+      </Step>
+      <Step title="Select a destination host (optional)">
+        | Field | Description |
+        |-------|-------------|
+        | **Instance** | Instance name (read-only) |
+        | **Current Host** | Current compute host (read-only) |
+        | **Destination Host** | Select a target, or leave empty for auto-selection |
+
+        Click **Confirm** to start the migration.
+      </Step>
+      <Step title="Confirm the migration">
+        After the cold migration completes, the instance enters `Verify Resize`
+        status. You must confirm or revert:
+
+        - **Confirm Resize or Migrate** — accept the migration
+        - **Revert Resize or Migrate** — move the instance back
+
+        <Check>Instance returns to `Active` on the new host after confirmation.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Cold migrate"
+    openstack server migrate <INSTANCE_ID>
+    ```
+
+    ```bash title="Confirm the migration"
+    openstack server migration confirm <INSTANCE_ID>
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Compute Hosts" href="/services/compute/compute-hosts" color="#197560">
+    Monitor hypervisor resources before and after migration
+  </Card>
+  <Card title="Availability Zones" href="/services/compute/availability-zones" color="#197560">
+    Understand zone boundaries for migration targets
+  </Card>
+  <Card title="Live vCPU/RAM Scaling" href="/services/compute/live-resize-admin" color="#197560">
+    Scale instance resources without migration
+  </Card>
+  <Card title="Troubleshooting" href="/services/compute/troubleshooting" color="#197560">
+    Resolve stuck or failed migrations
+  </Card>
+</CardGroup>

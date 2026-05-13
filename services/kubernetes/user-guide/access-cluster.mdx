@@ -1,0 +1,181 @@
+---
+title: "Access Your Kubernetes Cluster"
+description: "Download kubeconfig, configure kubectl, and verify access to your Xloud K8SaaS cluster — connect to the API server and validate node readiness."
+sidebarTitle: "Access Cluster"
+---
+
+## Overview
+
+After a cluster reaches `CREATE_COMPLETE` status, you connect to it using `kubectl`
+and the cluster's kubeconfig file. Xloud K8SaaS generates a unique certificate authority
+per cluster and embeds the cluster API server endpoint, CA certificate, and user
+credentials into the kubeconfig. This page covers downloading credentials, configuring
+`kubectl`, and verifying connectivity.
+
+<Note>
+  **Prerequisites**
+  - A cluster in `CREATE_COMPLETE` status
+  - `kubectl` installed locally ([install guide](https://kubernetes.io/docs/tasks/tools/))
+  - Network access from your machine to the cluster API server (port 6443)
+</Note>
+
+---
+
+## Download Cluster Credentials
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Navigate to the cluster" icon="compass">
+        Navigate to
+        **Container > Clusters**. Click your cluster name.
+      </Step>
+      <Step title="Download kubeconfig" icon="download">
+        On the cluster detail page, click **Download kubeconfig**. Save the file
+        (e.g., `prod-cluster-01-kubeconfig.yaml`) to your machine.
+      </Step>
+      <Step title="Configure kubectl" icon="terminal">
+        Set the `KUBECONFIG` environment variable to point to the downloaded file:
+
+        ```bash title="Set kubeconfig"
+        export KUBECONFIG=~/Downloads/prod-cluster-01-kubeconfig.yaml
+        ```
+      </Step>
+      <Step title="Verify access" icon="circle-check">
+        ```bash title="List cluster nodes"
+        kubectl get nodes
+        ```
+
+        All nodes should show `STATUS: Ready`.
+
+        <Check>kubectl is connected and all cluster nodes are Ready.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    <Steps titleSize="h3">
+      <Step title="Authenticate" icon="key">
+        ```bash title="Load credentials"
+        source openrc.sh
+        ```
+      </Step>
+      <Step title="Download kubeconfig" icon="download">
+        ```bash title="Save kubeconfig to ~/.kube/"
+        mkdir -p ~/.kube
+        openstack coe cluster config prod-cluster-01 \
+          --dir ~/.kube \
+          --force
+        ```
+
+        This writes the kubeconfig to `~/.kube/config` (or a named file in that directory).
+      </Step>
+      <Step title="Set kubeconfig path" icon="settings">
+        ```bash title="Export kubeconfig path"
+        export KUBECONFIG=~/.kube/config
+        ```
+      </Step>
+      <Step title="Verify connectivity" icon="circle-check">
+        ```bash title="Check cluster info"
+        kubectl cluster-info
+        ```
+
+        ```bash title="List all nodes"
+        kubectl get nodes -o wide
+        ```
+
+        Expected: all master and worker nodes show `STATUS: Ready`.
+
+        <Check>kubectl connects to the API server and all nodes are Ready.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+</Tabs>
+
+---
+
+## Manage Multiple Cluster Contexts
+
+If you access multiple clusters, use `kubectl` contexts to switch between them.
+
+```bash title="View all configured contexts"
+kubectl config get-contexts
+```
+
+```bash title="Switch to a specific cluster context"
+kubectl config use-context <context-name>
+```
+
+```bash title="Merge multiple kubeconfigs"
+export KUBECONFIG=~/.kube/cluster-01-config:~/.kube/cluster-02-config
+kubectl config view --merge --flatten > ~/.kube/config
+```
+
+---
+
+## API Server Endpoint
+
+The cluster API server endpoint is accessible via the master load balancer floating IP
+or directly via the master node floating IP (for single-master clusters).
+
+```bash title="Show API server endpoint"
+openstack coe cluster show prod-cluster-01 \
+  -f value -c api_address
+```
+
+<Info>
+  The API server listens on port 6443 (HTTPS). Ensure your workstation's network allows
+  outbound TCP to port 6443 on the cluster API server IP.
+</Info>
+
+---
+
+## Validation
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    Navigate to **Container > Clusters** and click your cluster. Verify:
+    - **Health Status**: `HEALTHY`
+    - All listed nodes show `STATUS: Ready`
+
+    <Check>Cluster is healthy and all nodes are ready to accept workloads.</Check>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Full node readiness check"
+    kubectl get nodes -o wide
+    ```
+
+    ```bash title="Check cluster component health"
+    kubectl get componentstatuses
+    ```
+
+    ```bash title="Deploy a test pod to verify scheduling"
+    kubectl run test-pod \
+      --image=nginx \
+      --restart=Never \
+      --rm \
+      -it \
+      -- echo "Cluster access confirmed"
+    ```
+
+    <Check>Test pod schedules, runs, and exits successfully.</Check>
+  </Tab>
+</Tabs>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Node Groups" href="/services/kubernetes/user-guide/node-groups" color="#197560">
+    Create specialized node pools and schedule workloads to specific groups.
+  </Card>
+  <Card title="Scale Cluster" href="/services/kubernetes/user-guide/scale-cluster" color="#197560">
+    Add or remove worker nodes from your cluster.
+  </Card>
+  <Card title="Cluster Upgrades" href="/services/kubernetes/user-guide/cluster-upgrades" color="#197560">
+    Upgrade your cluster to a newer Kubernetes version.
+  </Card>
+  <Card title="Troubleshooting" href="/services/kubernetes/user-guide/troubleshooting" color="#197560">
+    Resolve kubectl connectivity and node health issues.
+  </Card>
+</CardGroup>

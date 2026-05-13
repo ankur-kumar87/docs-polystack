@@ -1,0 +1,112 @@
+---
+title: "Load Balancer Provider Drivers"
+description: "View and configure load balancing provider drivers in Xloud to control the underlying appliance implementation."
+sidebarTitle: "Provider Drivers"
+---
+
+import AdminWarning from '/snippets/admin-warning.mdx';
+
+## Overview
+
+Provider drivers determine the underlying implementation used to create and manage load
+balancing appliances. The default provider is configured during XDeploy deployment.
+You can view available providers, inspect their capabilities, and allow users
+to select a specific provider at provisioning time.
+
+<AdminWarning />
+
+---
+
+## View Available Providers
+
+```bash title="List available load balancing providers"
+openstack loadbalancer provider list
+```
+
+Example output:
+```
++----------+---------------------+
+| name     | description         |
++----------+---------------------+
+| amphora  | Amphora provider    |
+| ovn      | OVN provider        |
++----------+---------------------+
+```
+
+```bash title="List provider capabilities"
+openstack loadbalancer provider capability list <provider-name>
+```
+
+The capabilities output lists supported protocols, algorithms, session persistence types,
+and feature flags (ACTIVE_STANDBY topology, L7 policies, TLS termination, etc.).
+
+---
+
+## Provider Comparison
+
+| Feature | Amphora | OVN |
+|---------|---------|-----|
+| Data plane | Instance-based appliance | OVN logical flows (no appliance instance) |
+| HA topology | ACTIVE_STANDBY supported | Built-in via OVN HA |
+| L7 routing | Full L7 policy support | Limited L7 support |
+| TLS termination | Supported | Supported |
+| Throughput | Limited by appliance instance size | Near line-rate (kernel-based) |
+| Appliance overhead | 1 instance per load balancer | No appliance instances |
+| Best for | Full-featured production LBs | High-throughput, simpler LBs |
+
+---
+
+## Configure Default Provider
+
+The default provider is set during XDeploy deployment via globals:
+
+```yaml title="XDeploy globals: set default load balancer provider"
+octavia_provider: "amphora"  # or "ovn"
+```
+
+Apply after changing:
+```bash title="Deploy load balancer configuration"
+xavs-ansible deploy --tags octavia
+```
+
+<Warning>
+  Changing the default provider affects all new load balancers. Existing load balancers
+  retain their original provider — they are not automatically migrated.
+</Warning>
+
+---
+
+## Specify Provider at Provisioning Time
+
+You can override the default provider when creating a load balancer:
+
+```bash title="Create load balancer with specific provider"
+openstack loadbalancer create \
+  --name my-lb \
+  --vip-subnet-id <subnet-id> \
+  --provider ovn
+```
+
+<Note>
+  Not all providers are available in all deployments. The available providers depend
+  on which drivers are deployed and configured by the platform administrator.
+</Note>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Flavor Profiles" href="/services/load-balancer/flavor-profiles" color="#197560">
+    Create capacity tiers that wrap provider-specific configuration for users.
+  </Card>
+  <Card title="Architecture" href="/services/load-balancer/lb-architecture" color="#197560">
+    Understand the controller-appliance model for the Amphora provider.
+  </Card>
+  <Card title="Monitoring" href="/services/load-balancer/lb-monitoring" color="#197560">
+    Monitor provider-specific appliance health and statistics.
+  </Card>
+  <Card title="Admin Troubleshooting" href="/services/load-balancer/lb-troubleshooting" color="#197560">
+    Resolve provider driver configuration and appliance provisioning issues.
+  </Card>
+</CardGroup>

@@ -1,0 +1,166 @@
+---
+title: "Compute Scheduling"
+description: "Configure host aggregates and availability zones in Xloud Compute to control how instances are placed across the cluster."
+sidebarTitle: "Scheduling"
+---
+
+import AdminWarning from '/snippets/admin-warning.mdx';
+
+## Overview
+
+The Xloud Compute scheduler determines which physical host runs each new instance.
+Administrators configure the scheduler behavior through host aggregates (logical
+groupings of hosts with shared properties) and availability zones (fault domains).
+The Dashboard provides management interfaces for both.
+
+<AdminWarning />
+
+<Note>
+  **Prerequisites**
+  - Administrator access to the Xloud Dashboard (admin view)
+</Note>
+
+---
+
+## Host Aggregates
+
+Host aggregates group compute hosts with shared characteristics (e.g., SSD storage,
+GPU hardware, high-memory nodes). The scheduler uses aggregate metadata to match
+instances with compatible hosts.
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    Navigate to **Compute > Host Aggregates** in the admin sidebar. The **Host Aggregate**
+    tab shows:
+
+    | Column | Description |
+    |--------|-------------|
+    | **Name** | Aggregate name |
+    | **Availability Zone** | Zone associated with this aggregate |
+    | **Hosts** | List of compute hosts in the aggregate |
+    | **Metadata** | Key-value properties (e.g., `ssd=true`) |
+    | **Created At** | Creation timestamp |
+
+    **Available actions**:
+
+    | Action | Location | Description |
+    |--------|----------|-------------|
+    | **Edit** | First row action | Change name and availability zone |
+    | **Manage Host** | More dropdown | Add or remove compute hosts from the aggregate |
+    | **Manage Metadata** | More dropdown | Set key-value metadata properties |
+    | **Delete** | More dropdown | Delete the aggregate |
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Source credentials"
+    source openrc.sh
+    ```
+
+    <CodeGroup>
+    ```bash title="List host aggregates"
+    openstack aggregate list
+    ```
+    ```bash title="Show aggregate details"
+    openstack aggregate show <AGGREGATE_NAME>
+    ```
+    </CodeGroup>
+  </Tab>
+</Tabs>
+
+---
+
+## Create a Host Aggregate
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Open the Create Aggregate dialog">
+        Navigate to **Compute > Host Aggregates**. Click **Create Host Aggregate**.
+      </Step>
+      <Step title="Configure the aggregate">
+        | Field | Type | Required | Description |
+        |-------|------|----------|-------------|
+        | **Name** | Text | Yes | Aggregate name |
+        | **Create New Availability Zone** | Radio (Yes/No) | Yes | Whether to create a new AZ or use existing |
+        | **Availability Zone** | Dropdown | Required if not creating new | Select existing zone |
+        | **New Availability Zone** | Text | Required if creating new | Name for the new zone |
+
+        Click **Confirm**.
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    <CodeGroup>
+    ```bash title="Create aggregate with existing zone"
+    openstack aggregate create --zone <ZONE_NAME> <AGGREGATE_NAME>
+    ```
+    ```bash title="Create aggregate with new zone"
+    openstack aggregate create --zone new-zone <AGGREGATE_NAME>
+    ```
+    ```bash title="Add hosts to aggregate"
+    openstack aggregate add host <AGGREGATE_NAME> <HOSTNAME>
+    ```
+    ```bash title="Set metadata"
+    openstack aggregate set --property ssd=true <AGGREGATE_NAME>
+    ```
+    </CodeGroup>
+  </Tab>
+</Tabs>
+
+---
+
+## Manage Hosts in an Aggregate
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    Click the **More** dropdown on an aggregate row and select **Manage Host**.
+
+    The dialog shows a multi-select table of all compute hosts (service: `nova-compute`).
+    Currently assigned hosts are pre-selected. Toggle hosts to add or remove them.
+
+    The table shows: Host, Availability Zone, Admin Status, State, Last Updated.
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    <CodeGroup>
+    ```bash title="Add host to aggregate"
+    openstack aggregate add host <AGGREGATE_NAME> <HOSTNAME>
+    ```
+    ```bash title="Remove host from aggregate"
+    openstack aggregate remove host <AGGREGATE_NAME> <HOSTNAME>
+    ```
+    </CodeGroup>
+  </Tab>
+</Tabs>
+
+---
+
+## Availability Zones
+
+The **Availability Zones** tab on the Host Aggregates page shows a read-only list
+of all configured zones. Zones are created through host aggregates — each aggregate
+can be associated with one availability zone.
+
+<Note>
+  Availability zones are a subset of host aggregates. Create an aggregate with a
+  zone name to define a new availability zone. See
+  [Availability Zones](/services/compute/availability-zones) for user-facing
+  documentation on zone selection during instance launch.
+</Note>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Compute Hosts" href="/services/compute/compute-hosts" color="#197560">
+    Monitor hypervisor resource utilization
+  </Card>
+  <Card title="Availability Zones" href="/services/compute/availability-zones" color="#197560">
+    Understand fault domains and zone placement
+  </Card>
+  <Card title="Live Migration" href="/services/compute/live-migration" color="#197560">
+    Move instances between hosts for maintenance
+  </Card>
+  <Card title="Flavors" href="/services/compute/flavors" color="#197560">
+    Create flavors with aggregate-matching extra specs
+  </Card>
+</CardGroup>

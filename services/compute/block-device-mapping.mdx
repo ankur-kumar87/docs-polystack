@@ -1,0 +1,164 @@
+---
+title: "Block Device Mapping"
+description: "Control how storage volumes are presented to Xloud Compute instances at launch. Configure boot-from-volume, system disks, data disks, and CD-ROM devices."
+sidebarTitle: "Block Devices"
+---
+
+## Overview
+
+Block device mapping controls how storage is attached to an instance at launch time.
+The Dashboard's Instance Create wizard provides a visual interface for configuring
+the system disk, additional data disks, and CD-ROM devices. Understanding these
+options helps you choose the right storage configuration for your workloads.
+
+<Note>
+  **Prerequisites**
+  - Block storage service enabled on the platform
+  - Available volume types configured by your administrator
+  - Sufficient volume and storage quota
+</Note>
+
+---
+
+## Storage Options in the Create Wizard
+
+The **Step 1 (Base Config)** of the Instance Create wizard provides these storage
+configuration options:
+
+### Boot Source and System Disk
+
+| Source | Boot From Volume | Result |
+|--------|-----------------|--------|
+| **Image** | Yes (default) | Creates a new persistent system disk from the image |
+| **Image** | No | Boots directly from image (ephemeral root disk — lost on delete) |
+| **Instance Snapshot** | Automatic | System disk configuration inherited from snapshot |
+| **Bootable Volume** | N/A | Boots from existing volume (count limited to 1) |
+
+<Warning>
+  Instances booted without a persistent volume (**Boot From Volume = No**) lose
+  their root disk when deleted. Always use boot-from-volume for production workloads
+  that need data persistence.
+</Warning>
+
+### System Disk Configuration
+
+When **Boot From Volume** is set to Yes, configure the system disk:
+
+| Field | Description |
+|-------|-------------|
+| **Volume Type** | Select from available storage backends (e.g., SSD, HDD tiers) |
+| **Size (GiB)** | Minimum is the largest of: flavor disk size, image minimum disk, and image size |
+| **Delete on Termination** | Whether to delete the boot volume when the instance is deleted |
+
+### Data Disks
+
+Click **Add Data Disks** to attach additional persistent volumes at launch. Each
+data disk has the same configuration options as the system disk (Volume Type, Size,
+Delete on Termination).
+
+<Tip>
+  Limit the number of attached disks to 16 or fewer for optimal I/O performance.
+  The dashboard shows a recommendation when adding data disks.
+</Tip>
+
+### CD-ROM Device
+
+The wizard supports attaching a CD-ROM device at launch time:
+
+| CD-ROM Source | Description |
+|--------------|-------------|
+| **None** | No CD-ROM attached (default) |
+| **Image** | Mount an image (e.g., ISO) as a virtual CD-ROM drive |
+| **Volume** | Mount an existing volume as a CD-ROM drive |
+
+<Info>
+  **Xloud-Developed** — The CD-ROM attachment feature in the instance create wizard
+  is developed by Xloud and ships with XAVS / XPCI.
+</Info>
+
+---
+
+## CLI Block Device Mapping
+
+<Tabs>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Source credentials"
+    source openrc.sh
+    ```
+
+    <CodeGroup>
+    ```bash title="Boot from image with persistent volume"
+    openstack server create \
+      --image <IMAGE_ID> \
+      --boot-from-volume 50 \
+      --flavor <FLAVOR> \
+      --network <NETWORK> \
+      my-instance
+    ```
+    ```bash title="Boot from existing volume"
+    openstack server create \
+      --volume <VOLUME_ID> \
+      --flavor <FLAVOR> \
+      --network <NETWORK> \
+      my-instance
+    ```
+    ```bash title="Advanced block device mapping"
+    openstack server create \
+      --block-device source=image,id=<IMAGE_ID>,dest=volume,size=50,bootindex=0,shutdown=remove \
+      --block-device source=blank,dest=volume,size=100,shutdown=preserve \
+      --flavor <FLAVOR> \
+      --network <NETWORK> \
+      my-instance
+    ```
+    </CodeGroup>
+
+    **Block device mapping parameters**:
+
+    | Parameter | Values | Description |
+    |-----------|--------|-------------|
+    | `source` | `image`, `volume`, `snapshot`, `blank` | Source type for the block device |
+    | `dest` | `volume`, `local` | Destination — persistent volume or ephemeral local disk |
+    | `id` | UUID | Source resource ID (for image, volume, or snapshot) |
+    | `size` | Integer (GiB) | Volume size |
+    | `bootindex` | `0` = boot, `-1` = non-boot | Boot order (`0` for system disk) |
+    | `shutdown` | `remove`, `preserve` | Delete behavior on instance termination |
+  </Tab>
+</Tabs>
+
+---
+
+## Volume Type Selection
+
+When creating system or data disks, the available volume types depend on your
+platform's storage backend configuration. Common tiers include:
+
+| Tier | Typical Backend | Use Case |
+|------|----------------|----------|
+| **SSD** | Ceph SSD pool or local NVMe | Databases, high-IOPS workloads |
+| **HDD** | Ceph HDD pool or NFS | Archival, log storage, bulk data |
+| **Default** | Platform default tier | General-purpose workloads |
+
+<Note>
+  Your administrator configures available volume types through
+  [XDeploy](/deployment). The volume types shown in the instance wizard
+  match those configured for the platform.
+</Note>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Launch an Instance" href="/services/compute/launch-instance" color="#197560">
+    Create an instance with the full 4-step wizard including disk configuration
+  </Card>
+  <Card title="Create a Volume" href="/services/storage/create-volume" color="#197560">
+    Pre-create volumes to attach as bootable or data disks
+  </Card>
+  <Card title="Volume Types" href="/services/storage/volume-types" color="#197560">
+    Understand available storage tiers and their characteristics
+  </Card>
+  <Card title="Instance Snapshots" href="/services/compute/snapshots" color="#197560">
+    Create snapshots of instances with their storage configuration
+  </Card>
+</CardGroup>

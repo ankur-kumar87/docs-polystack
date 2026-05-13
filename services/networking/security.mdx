@@ -1,0 +1,186 @@
+---
+title: "Network Security Hardening"
+description: "Harden Xloud Networking with port security, anti-spoofing, allowed address pairs, and default security group hardening for production environments."
+sidebarTitle: "Security Hardening"
+---
+
+import AdminWarning from '/snippets/admin-warning.mdx';
+import CliAuth from '/snippets/cli-auth.mdx';
+
+## Overview
+
+Xloud Networking enforces several layers of security at the virtual port level — MAC and
+IP anti-spoofing, stateful security groups, and port security policies. This guide covers
+administrator-level hardening steps to strengthen these controls for production
+deployments.
+
+<AdminWarning />
+
+<Note>
+  **Prerequisites**
+  - Admin credentials sourced from `openrc.sh`
+  - Familiarity with [security groups](/services/networking/security-groups) and
+    [provider networks](/services/networking/provider-networks)
+</Note>
+
+---
+
+## Port Security and Anti-Spoofing
+
+Port security enforces MAC and IP anti-spoofing rules on every virtual port. It is
+enabled by default on all networks. Disabling it is a security exception that should
+be documented and reviewed.
+
+<Tabs>
+  <Tab title="CLI" icon="terminal">
+    <Steps titleSize="h3">
+      <Step title="Verify port security is enabled" icon="shield">
+        ```bash title="Check port security on network"
+        openstack network show app-network -f json | grep port_security_enabled
+        ```
+        Output should show `"port_security_enabled": true`.
+      </Step>
+      <Step title="Check per-port security" icon="search">
+        ```bash title="Check port security on specific port"
+        openstack port show <port-id> -f json | grep port_security_enabled
+        ```
+      </Step>
+      <Step title="Disable port security for network appliances (exceptional)" icon="settings">
+        In rare cases, network appliances that use multiple source IPs (virtual firewalls,
+        load balancers, NAT devices) require port security to be disabled on their specific port:
+
+        ```bash title="Disable port security on a single port"
+        openstack port set <port-id> \
+          --no-security-group \
+          --disable-port-security
+        ```
+
+        <Danger>
+          Disabling port security removes all anti-spoofing enforcement on that port.
+          Apply this only to ports owned by trusted, administratively controlled devices.
+          Document the exception and review it quarterly.
+        </Danger>
+      </Step>
+    </Steps>
+  </Tab>
+</Tabs>
+
+---
+
+## Allowed Address Pairs
+
+Allowed address pairs permit a port to send and receive traffic using additional IP or
+MAC addresses beyond its primary assignment. Required for virtual IP scenarios such as
+keepalived, VRRP, and CARP.
+
+```bash title="Add allowed address pair to port"
+openstack port set <port-id> \
+  --allowed-address ip-address=192.168.10.200,mac-address=fa:16:3e:xx:xx:xx
+```
+
+```bash title="Add IP-only allowed address pair (any MAC)"
+openstack port set <port-id> \
+  --allowed-address ip-address=192.168.10.200
+```
+
+```bash title="List current allowed address pairs"
+openstack port show <port-id> -f json | grep allowed_address_pairs
+```
+
+<Tip>
+  For keepalived VIPs, add the virtual IP as an allowed address pair on all instances
+  that participate in the VRRP group. The active node uses the VIP; the standby holds
+  it in readiness without generating anti-spoofing violations.
+</Tip>
+
+---
+
+## Default Security Group Hardening
+
+The default security group Xloud Networking creates for each project allows all egress
+traffic and all inbound traffic from members of the same group. For production
+environments, harden this group by removing the permissive inbound rule.
+
+<Tabs>
+  <Tab title="CLI" icon="terminal">
+    <Steps titleSize="h3">
+      <Step title="List rules in the default group" icon="list">
+        ```bash title="List default security group rules"
+        openstack security group rule list default --ingress
+        ```
+      </Step>
+      <Step title="Identify the permissive same-group rule" icon="search">
+        Look for a rule with `Remote Security Group: default` and no protocol restriction.
+        This rule allows all traffic from instances in the same group.
+      </Step>
+      <Step title="Remove the permissive rule" icon="trash-2">
+        ```bash title="Delete the permissive rule"
+        openstack security group rule delete <rule-id>
+        ```
+
+        <Warning>
+          Modifying the default security group affects all instances in the project that
+          have not been assigned an explicit security group. Test in a non-production
+          project first, and verify that application-to-application traffic that relied
+          on this rule has an explicit rule in place.
+        </Warning>
+      </Step>
+    </Steps>
+  </Tab>
+</Tabs>
+
+---
+
+## Network-Level Security Checklist
+
+<AccordionGroup>
+  <Accordion title="Port security enabled on all networks" icon="shield">
+    ```bash title="Audit port security across all networks"
+    openstack network list -f value -c ID | xargs -I{} openstack network show {} -f json | grep -E '"id"|port_security_enabled'
+    ```
+    Any network showing `"port_security_enabled": false` should be reviewed.
+  </Accordion>
+
+  <Accordion title="No wildcard SSH rules in production" icon="lock">
+    ```bash title="Find security group rules allowing SSH from any IP"
+    openstack security group rule list --all-projects --protocol tcp --dst-port 22 --ingress | grep "0.0.0.0/0"
+    ```
+    Each result is a potential security risk. Work with project owners to restrict
+    these rules to management CIDRs or bastion host addresses.
+  </Accordion>
+
+  <Accordion title="Unused floating IPs released" icon="globe">
+    ```bash title="List DOWN (unassociated) floating IPs"
+    openstack floating ip list --all-projects --status DOWN
+    ```
+    Unused floating IPs consume addresses from the external pool. Coordinate with
+    project owners to release IPs that are no longer needed.
+  </Accordion>
+
+  <Accordion title="Router external gateways reviewed" icon="route">
+    ```bash title="List all routers with external gateways"
+    openstack router list --all-projects -f json | grep external_gateway_info
+    ```
+    Confirm each router's external gateway is intentional. Unintended gateways can
+    expose tenant networks to external routing.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Network Security Groups" href="/services/networking/security-groups" color="#197560">
+    User guide for creating and managing per-port firewall rules
+  </Card>
+  <Card title="Network Quotas" href="/services/networking/quotas" color="#197560">
+    Limit resource consumption to reduce attack surface
+  </Card>
+  <Card title="Provider Networks" href="/services/networking/provider-networks" color="#197560">
+    Control physical network access at the provider layer
+  </Card>
+  <Card title="Admin Troubleshooting" href="/services/networking/admin-troubleshooting" color="#197560">
+    Diagnose port security and anti-spoofing configuration issues
+  </Card>
+</CardGroup>

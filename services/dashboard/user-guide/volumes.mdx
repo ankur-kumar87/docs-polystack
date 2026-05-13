@@ -1,0 +1,70 @@
+---
+title: "Manage Volumes"
+description: "Create, attach, extend, snapshot, and back up block storage volumes through the Xloud Dashboard."
+sidebarTitle: "Volumes"
+---
+
+## Overview
+
+Block storage is managed under the **Storage** sidebar section with three pages:
+**Volumes**, **Volume Backups**, and **Volume Snapshots**.
+
+---
+
+## Create a Volume
+
+Navigate to **Storage > Volumes** and click **Create Volume**. The full-page form includes:
+
+| Field | Description |
+|-------|-------------|
+| **Available Zone** | Availability zone for the volume |
+| **Data Source Type** | Blank Volume, Image, or Snapshot |
+| **Volume Type** | Storage tier (select from available backends) |
+| **Capacity (GiB)** | Size with slider (quota-limited) |
+| **Name** | Volume display name |
+| **Description** | Optional notes |
+
+Footer shows **Count** (create multiple) and real-time **quota usage**.
+
+<Note>
+  For the complete field reference, see [Create a Volume](/services/storage/create-volume).
+</Note>
+
+---
+
+## Volume Actions
+
+**Edit** is the first (directly visible) row action. Other actions under **More**:
+
+| Group | Actions |
+|-------|---------|
+| **Data Protection** | Create Snapshot, Create Backup, Clone Volume |
+| **Instance Related** | Attach, Detach |
+| **Capacity & Type** | Extend Volume, Change Type |
+| **Transfer** | Create Transfer, Accept Transfer, Cancel Transfer |
+| — | Create Image, Create Instance, Set Bootable, Delete |
+
+---
+
+## Volume Detail
+
+Click a volume name. Three tabs: **Detail** (info + attachments), **Volume Backups** (backups from this volume), **Volume Snapshots** (snapshots of this volume).
+
+---
+
+## Detailed Guides
+
+<CardGroup cols={2}>
+  <Card title="Create a Volume" href="/services/storage/create-volume" color="#197560">
+    Full create form reference
+  </Card>
+  <Card title="Attach/Detach" href="/services/storage/attach-volume" color="#197560">
+    Instance attachment workflow
+  </Card>
+  <Card title="Snapshots" href="/services/storage/snapshots" color="#197560">
+    Volume snapshot management
+  </Card>
+  <Card title="Backups" href="/services/storage/backups" color="#197560">
+    Full and incremental backups
+  </Card>
+</CardGroup>

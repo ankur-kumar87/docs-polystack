@@ -1,0 +1,365 @@
+---
+title: "Monitoring Recovery Status"
+description: "Track Instance HA recovery events, review notification history, manage hosts, and monitor VM evacuations from the Xloud Dashboard and CLI."
+sidebarTitle: "Monitoring Status"
+---
+
+## Overview
+
+Xloud Instance HA logs every fault detection and recovery event as a notification.
+The Dashboard provides four dedicated pages for monitoring the entire HA lifecycle:
+**Segments**, **Hosts**, **Notifications**, and **VM Moves**. This page explains how
+to use each monitoring view.
+
+<Note>
+  **Prerequisites**
+  - An active Xloud account with project access
+  - Instance HA service enabled on the platform
+</Note>
+
+---
+
+## Notifications
+
+The Notifications page is the primary monitoring interface for recovery events.
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Navigate to Notifications">
+        Navigate to **Instance HA > Notifications** in the sidebar.
+      </Step>
+      <Step title="Review the notification list">
+        Each row represents one fault event.
+
+        | Column | Description |
+        |--------|-------------|
+        | **UUID** | Notification identifier (clickable to view details, copyable) |
+        | **Source Host** | UUID of the compute host that triggered the notification (copyable) |
+        | **Type** | Failure type as a colored tag |
+        | **Status** | Recovery status as a colored tag |
+        | **Generated Time** | When the fault was first detected |
+        | **Updated At** | Last status update timestamp |
+
+        **Notification types** (color-coded):
+
+        | Type | Color | Description |
+        |------|-------|-------------|
+        | **COMPUTE_HOST** | Red | Physical compute host failure |
+        | **VM** | Orange | Individual VM failure |
+        | **PROCESS** | Blue | Service process failure |
+        | **pacemaker** | Purple | Pacemaker cluster node failure |
+
+        **Notification statuses** (color-coded):
+
+        | Status | Color | Meaning |
+        |--------|-------|---------|
+        | **New** | Blue | Notification received; recovery queued |
+        | **Running** | Orange | Recovery workflow in progress |
+        | **Finished** | Green | All instances recovered successfully |
+        | **Error** | Red | Recovery encountered errors |
+        | **Failed** | Red | Recovery failed completely |
+        | **Ignored** | Grey | Segment disabled or duplicate suppressed |
+      </Step>
+      <Step title="Filter notifications">
+        Use the search/filter bar to narrow results:
+
+        | Filter | Type | Options |
+        |--------|------|---------|
+        | **Host** | Text | Source host UUID |
+        | **UUID** | Text | Notification UUID |
+        | **Status** | Dropdown | new, running, finished, error, failed |
+        | **Type** | Dropdown | COMPUTE_HOST, VM, PROCESS |
+      </Step>
+    </Steps>
+
+    <Note>
+      The Notifications page is read-only — there are no create, update, or delete
+      actions. Notifications are generated automatically by the HA engine.
+    </Note>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Source credentials"
+    source openrc.sh
+    ```
+
+    <CodeGroup>
+    ```bash title="List all notifications"
+    openstack notification list
+    ```
+    ```bash title="Filter by status"
+    openstack notification list --status error
+    ```
+    ```bash title="Show notification detail"
+    openstack notification show <notification-uuid>
+    ```
+    </CodeGroup>
+  </Tab>
+</Tabs>
+
+---
+
+## Notification Detail
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    Click a notification UUID in the list to open the detail page. The detail page
+    header shows the notification **Type** and **Status** as colored tags.
+
+    Two tabs are available:
+
+    **Detail tab** — Notification metadata:
+
+    | Section | Fields |
+    |---------|--------|
+    | **Notification Detail** (left card) | Notification UUID (copyable), Source Host (copyable), Type, Status, Generated Time, Created At, Updated At |
+    | **Payload** (right card) | Dynamic fields from the notification payload — shows all key-value pairs from the fault event data |
+
+    **Recovery Progress tab** — Real-time VM evacuation tracking:
+
+    | Field | Description |
+    |-------|-------------|
+    | **Summary** | Notification status, total VMs, succeeded count (green), failed count (red), circular progress indicator |
+    | **VM Evacuations table** | Per-VM status with source host, destination host, type, status icon, start/end time, error message |
+
+    **VM evacuation statuses**:
+
+    | Status | Color | Icon | Meaning |
+    |--------|-------|------|---------|
+    | Pending | Grey | Clock | Queued, not started |
+    | Running | Blue | Spinner | In progress |
+    | Succeeded | Green | Check | Successfully recovered |
+    | Failed | Red | Close | Failed — manual intervention needed |
+
+    <Tip>
+      When the notification is in **Running** status, the Recovery Progress tab
+      **auto-refreshes every 5 seconds**. A tag reading "Auto-refreshing every 5s"
+      is displayed. Watch VM evacuations complete in real time without manual page refresh.
+    </Tip>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Show full notification detail"
+    openstack notification show <notification-uuid>
+    ```
+
+    The output includes `source_host_uuid`, `type`, `generated_time`, `status`,
+    and the full payload with affected instance UUIDs.
+  </Tab>
+</Tabs>
+
+---
+
+## Hosts Monitoring
+
+The Hosts page provides a cross-segment view of all registered compute hosts.
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Navigate to Hosts">
+        Navigate to **Instance HA > Hosts** in the sidebar.
+      </Step>
+      <Step title="Review the host list">
+        All hosts across all segments are displayed in a single list.
+
+        | Column | Description |
+        |--------|-------------|
+        | **Name** | Host name (clickable to view details) |
+        | **UUID** | Unique host identifier |
+        | **Reserved** | Whether the host is a standby node (Yes/No) |
+        | **Type** | Host type identifier |
+        | **Control Attribute** | Monitoring attributes (SSH, IPMI, etc.) |
+        | **On Maintenance** | Whether the host is in maintenance mode (Yes/No) |
+        | **Failover Segment** | Link to the parent segment |
+      </Step>
+      <Step title="Filter hosts">
+        | Filter | Type |
+        |--------|------|
+        | **Segment ID** | Text — filter by parent segment |
+        | **Type** | Text — filter by host type |
+        | **On Maintenance** | Text — filter by maintenance status |
+        | **Reserved** | Text — filter by reserved status |
+      </Step>
+    </Steps>
+
+    **Host actions**:
+
+    | Action | Location | Description |
+    |--------|----------|-------------|
+    | **Update** | Row action (first button) | Edit host properties (reserved, type, control attributes, on maintenance) |
+    | **Delete** | More dropdown / batch | Remove host from its segment |
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    <CodeGroup>
+    ```bash title="List all hosts in a segment"
+    openstack segment host list <segment-uuid>
+    ```
+    ```bash title="Show host detail"
+    openstack segment host show <segment-uuid> <host-uuid>
+    ```
+    ```bash title="Update host maintenance mode"
+    openstack segment host update <segment-uuid> <host-uuid> \
+      --on-maintenance true
+    ```
+    </CodeGroup>
+  </Tab>
+</Tabs>
+
+---
+
+## Update a Host
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Open the Update dialog">
+        Navigate to **Instance HA > Hosts**. Click the **Update** action on a host row.
+      </Step>
+      <Step title="Edit host properties">
+        | Field | Type | Editable | Description |
+        |-------|------|----------|-------------|
+        | **Host Name** | Text (disabled) | No | Cannot be changed |
+        | **Reserved** | Toggle switch | Yes | Standby designation |
+        | **Type** | Text input | Yes | Host type identifier |
+        | **Control Attribute** | Text input | Yes | Monitoring attributes |
+        | **On Maintenance** | Toggle switch | Yes | Maintenance mode flag |
+
+        <Warning>
+          Setting **On Maintenance** to `Yes` prevents the host from being used as
+          an evacuation target. The host will also not trigger recovery notifications
+          while in maintenance mode.
+        </Warning>
+      </Step>
+      <Step title="Save">
+        Click **Confirm** to save the changes.
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    <CodeGroup>
+    ```bash title="Set host to reserved"
+    openstack segment host update <segment-uuid> <host-uuid> \
+      --reserved true
+    ```
+    ```bash title="Enable maintenance mode"
+    openstack segment host update <segment-uuid> <host-uuid> \
+      --on-maintenance true
+    ```
+    </CodeGroup>
+  </Tab>
+</Tabs>
+
+---
+
+## Host Detail Page
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    Click a host name in the Hosts list to open the detail page.
+
+    | Field | Description |
+    |-------|-------------|
+    | **UUID** | Unique host identifier |
+    | **Failover Segment** | Link to the parent segment |
+    | **Reserved** | Yes/No |
+    | **On Maintenance** | Yes/No |
+    | **Type** | Host type identifier |
+    | **Control Attribute** | Monitoring attributes |
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Show host detail"
+    openstack segment host show <segment-uuid> <host-uuid>
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## VM Moves
+
+The VM Moves page provides a consolidated view of all VM evacuations across all
+recent notifications.
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    Navigate to **Instance HA > VM Moves** in the sidebar.
+
+    | Column | Description |
+    |--------|-------------|
+    | **VM Name** | Instance name (falls back to UUID) |
+    | **Instance ID** | VM UUID (copyable, truncated) |
+    | **Notification** | Parent notification UUID (copyable, truncated) |
+    | **Source Host** | Failed compute host |
+    | **Destination Host** | Target recovery host, or `-` if pending |
+    | **Type** | Evacuation type (typically `evacuation`) |
+    | **Status** | Colored tag with icon (Succeeded/Failed/Running/Pending) |
+    | **Start Time** | When the evacuation started (default sort, descending) |
+    | **End Time** | When the evacuation completed, or `-` |
+    | **Message** | Error message if failed (red text), or `-` |
+
+    Click **Refresh** to reload the latest data.
+
+    <Note>
+      VM Moves is a read-only page that aggregates evacuations from up to 50 recent
+      notifications. No actions are available on individual VM moves.
+    </Note>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="List VM moves for a specific notification"
+    curl -s -H "X-Auth-Token: $TOKEN" \
+      "$MASAKARI_ENDPOINT/v1/notifications/<notification-uuid>/vmoves" \
+      | python3 -m json.tool
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Verify Instance Recovery
+
+After a recovery event, verify that each affected instance has returned to `ACTIVE` status.
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    Navigate to **Compute > Instances**. Check the instance status column.
+
+    Instances in a completed recovery show:
+    - **Status**: `ACTIVE`
+    - **Host**: Updated to the new compute host
+    - **Power State**: `Running`
+
+    <Check>All protected instances are `ACTIVE` on their new hosts after recovery completes.</Check>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="List instances and their current hosts"
+    openstack server list --all-projects \
+      -f table -c ID -c Name -c Status -c "OS-EXT-SRV-ATTR:host"
+    ```
+
+    ```bash title="Show a specific instance"
+    openstack server show <instance-id> \
+      -f value -c status -c "OS-EXT-SRV-ATTR:host"
+    ```
+
+    <Check>Instance is `ACTIVE` and the host field reflects the target recovery node.</Check>
+  </Tab>
+</Tabs>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Troubleshooting" href="/services/instance-ha/user-guide/troubleshooting" color="#197560">
+    Resolve failed notifications and manually recover instances
+  </Card>
+  <Card title="Recovery Workflows" href="/services/instance-ha/user-guide/recovery-workflows" color="#197560">
+    Understand the recovery stages, methods, and expected timelines
+  </Card>
+  <Card title="Protection Segments" href="/services/instance-ha/user-guide/protection-segments" color="#197560">
+    Create segments and manage host registrations
+  </Card>
+  <Card title="Instance HA Admin Guide" href="/services/instance-ha/admin-guide" color="#197560">
+    Configure recovery policies, monitors, and engine settings
+  </Card>
+</CardGroup>

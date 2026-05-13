@@ -1,0 +1,208 @@
+---
+title: "Cluster Management"
+description: "Monitor XSDS cluster health, manage service placement, add and remove OSDs, and perform day-to-day operational procedures."
+sidebarTitle: "Cluster Management"
+---
+
+import AdminWarning from '/snippets/admin-warning.mdx';
+
+## Overview
+
+Day-to-day cluster management involves monitoring health status, responding to warnings
+and errors, managing OSD lifecycle, and performing maintenance operations. This page
+covers the most common operational tasks for XSDS administrators.
+
+<AdminWarning />
+
+<Note>
+  **Prerequisites**
+  - Administrator credentials with the `admin` role
+  - SSH access to a cluster node running the management CLI
+  - Access to **XDeploy** (`https://connect.<your-domain>`)
+</Note>
+
+---
+
+## Monitoring Cluster Health
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    Navigate to **XDeploy → Storage → Cluster Health** for a graphical overview of
+    cluster status, OSD counts, capacity utilization, and active alerts.
+
+    | Health State | Meaning | Action Required |
+    |-------------|---------|----------------|
+    | `HEALTH_OK` | All components healthy, data fully replicated | None |
+    | `HEALTH_WARN` | Non-critical issue detected | Investigate and resolve |
+    | `HEALTH_ERR` | Critical issue — data may be at risk | Immediate attention required |
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    <Steps titleSize="h3">
+      <Step title="View cluster health summary" icon="heart-pulse">
+        ```bash title="Cluster health summary"
+        ceph status
+        ```
+      </Step>
+      <Step title="Investigate warnings" icon="search">
+        ```bash title="Detailed health report"
+        ceph health detail
+        ```
+
+        Review each warning entry. Common warnings are documented in the
+        [Troubleshooting](/services/sds/admin-guide/troubleshooting) guide.
+      </Step>
+      <Step title="View OSD status" icon="hard-drive">
+        ```bash title="OSD tree — placement and status"
+        ceph osd tree
+        ```
+
+        ```bash title="OSD utilization"
+        ceph osd df tree
+        ```
+
+        <Check>All OSDs show `up` and `in` status. OSDs showing `down` or `out` require investigation.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+</Tabs>
+
+---
+
+## Service Operations
+
+Common cluster management operations performed through XDeploy or the CLI.
+
+<Tabs>
+  <Tab title="Service Management" icon="settings">
+    ```bash title="List all cluster services"
+    ceph orch ls
+    ```
+
+    ```bash title="View service placement"
+    ceph orch ps
+    ```
+
+    ```bash title="Redeploy a specific service"
+    ceph orch redeploy <SERVICE_TYPE>.<SERVICE_ID>
+    ```
+
+    <Warning>
+      Always verify cluster health is `HEALTH_OK` before adding or removing OSDs.
+      Operations on an already-degraded cluster can cause data unavailability.
+    </Warning>
+  </Tab>
+  <Tab title="OSD Operations" icon="hard-drive">
+    ```bash title="Add an OSD on a new device"
+    ceph orch daemon add osd <HOST>:<DEVICE_PATH>
+    ```
+
+    ```bash title="Mark an OSD out (begin data evacuation)"
+    ceph osd out <OSD_ID>
+    ```
+
+    ```bash title="Remove an OSD after data evacuation"
+    ceph orch osd rm <OSD_ID>
+    ```
+
+    ```bash title="View OSD details"
+    ceph osd dump | grep "^osd\."
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## OSD Lifecycle Management
+
+<Steps titleSize="h3">
+  <Step title="Adding a new OSD" icon="plus">
+    Deploy new OSDs through XDeploy:
+    1. Navigate to **XDeploy → Storage → OSDs → Add OSD**
+    2. Select the target host and available device
+    3. XDeploy provisions and integrates the OSD into the cluster
+
+    Alternatively via CLI:
+    ```bash title="Add OSD on specific host and device"
+    ceph orch daemon add osd <HOSTNAME>:/dev/nvme1n1
+    ```
+
+    After adding, the cluster begins re-balancing data automatically.
+
+    <Tip>
+      Add OSDs in batches rather than one at a time. Adding multiple OSDs simultaneously
+      reduces the number of rebalancing cycles and recovers faster than sequential additions.
+    </Tip>
+  </Step>
+  <Step title="Removing a failed OSD" icon="trash">
+    ```bash title="Mark OSD out to trigger data recovery"
+    ceph osd out <OSD_ID>
+    ```
+
+    Monitor recovery progress:
+    ```bash title="Watch recovery progress"
+    watch ceph status
+    ```
+
+    Once recovery completes (`HEALTH_OK` with no active recovery), remove the OSD:
+    ```bash title="Remove the OSD from the cluster"
+    ceph osd purge <OSD_ID> --yes-i-really-mean-it
+    ```
+
+    <Warning>
+      Do not remove an OSD before recovery is complete. Removing an OSD during
+      active recovery on a degraded cluster risks data loss.
+    </Warning>
+  </Step>
+  <Step title="Replacing a failed disk" icon="refresh-cw">
+    After physically replacing the failed disk, redeploy the OSD through XDeploy:
+    1. Navigate to **XDeploy → Storage → OSDs → Replace OSD**
+    2. Select the host and the new device
+    3. XDeploy provisions the replacement OSD and the cluster begins rebalancing
+
+    <Check>New OSD shows `up in` in `ceph osd tree` and cluster returns to `HEALTH_OK`.</Check>
+  </Step>
+</Steps>
+
+---
+
+## Maintenance Mode
+
+Before performing maintenance on a storage node (firmware updates, hardware replacement,
+OS maintenance), set the cluster to maintenance mode to prevent false recovery triggers:
+
+```bash title="Enable maintenance mode for a node"
+ceph osd set noout
+ceph osd set norebalance
+```
+
+Perform your maintenance, then restore normal operation:
+
+```bash title="Disable maintenance mode"
+ceph osd unset noout
+ceph osd unset norebalance
+```
+
+<Warning>
+  Do not leave `noout` and `norebalance` flags set for extended periods. If an OSD
+  failure occurs while `noout` is set, the cluster will not re-replicate data to
+  compensate, increasing the risk of data loss.
+</Warning>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Pool Management" href="/services/sds/admin-guide/pool-management" color="#197560">
+    Create and configure storage pools for different workload types
+  </Card>
+  <Card title="CRUSH Maps" href="/services/sds/admin-guide/crush-maps" color="#197560">
+    Manage failure domains and device class routing
+  </Card>
+  <Card title="Capacity Planning" href="/services/sds/admin-guide/capacity-planning" color="#197560">
+    Monitor utilization and plan OSD additions before capacity is exhausted
+  </Card>
+  <Card title="Troubleshooting" href="/services/sds/admin-guide/troubleshooting" color="#197560">
+    Diagnose HEALTH_WARN states, OSD failures, and slow request issues
+  </Card>
+</CardGroup>

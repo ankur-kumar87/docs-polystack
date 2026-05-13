@@ -1,0 +1,160 @@
+---
+title: "Dashboards"
+description: "Navigate XIMP infrastructure dashboards, create custom views, and drill down into compute, storage, and network metrics."
+sidebarTitle: "Dashboards"
+---
+
+## Overview
+
+XIMP dashboards provide real-time and historical views of your environment across
+infrastructure, application, and network layers. Built-in dashboards cover the most
+common monitoring needs; custom dashboards let you build focused views for specific
+teams or services.
+
+<Note>
+  **Prerequisites**
+  - An active Xloud account with project access
+  - XIMP accessible from your Dashboard account (**Monitor Center** (admin view))
+</Note>
+
+<Warning>
+  Monitoring dashboards are accessed through the admin panel. You must have administrator privileges to view infrastructure-level metrics described in this section.
+</Warning>
+
+---
+
+## Built-In Dashboards
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Access the monitoring portal" icon="activity">
+        Navigate to
+        **Monitor Center** (admin view) to open the XIMP portal.
+      </Step>
+      <Step title="Select a dashboard" icon="layout-grid">
+        The **Home** view displays the default infrastructure overview dashboard. Use
+        the left panel to switch between:
+
+        | Dashboard | Shows |
+        |-----------|-------|
+        | **Infrastructure Overview** | CPU, memory, disk, and network utilization per node |
+        | **Compute Instances** | Per-instance metrics — vCPU usage, memory pressure, disk I/O |
+        | **Network** | Interface throughput, packet loss, connection counts |
+        | **Storage** | IOPS, throughput, latency, and capacity utilization by pool |
+        | **Applications** | Service-level latency, error rate, and throughput |
+        | **Security Events** | IDS alerts, failed auth attempts, anomaly detections |
+      </Step>
+      <Step title="Filter and zoom" icon="zoom-in">
+        Use the time range picker in the top-right corner to select a preset range
+        (Last 1h, Last 24h, Last 7d) or define a custom range. Click any panel to
+        drill down into more granular metrics.
+
+        <Tip>
+          Pin frequently-used dashboards to your home screen using the star icon in
+          the dashboard header. Pinned dashboards appear in the Quick Access bar.
+        </Tip>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    List available dashboards programmatically for automation or scripting:
+
+    ```bash title="List available dashboards"
+    ximp dashboard list
+    ```
+
+    ```bash title="Export a dashboard as JSON"
+    ximp dashboard export --name "Infrastructure Overview" \
+      --output infra-overview.json
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Creating Custom Dashboards
+
+<Steps titleSize="h3">
+  <Step title="Create a new dashboard" icon="plus">
+    Navigate to **Monitor Center > Monitoring** (admin view) and click **New Dashboard**. Enter a
+    name and optional description.
+  </Step>
+  <Step title="Add panels" icon="layout-grid">
+    Click **Add Panel** and select a visualization type:
+
+    | Type | Best For |
+    |------|---------|
+    | **Time Series** | CPU, memory, network metrics over time |
+    | **Gauge** | Current utilization percentage |
+    | **Bar Chart** | Comparing metrics across multiple hosts |
+    | **Table** | Tabular metric data with sorting and filtering |
+    | **Stat** | Single prominent value (e.g., uptime, total alerts) |
+    | **Heatmap** | Distribution of values over time |
+    | **Logs** | Embedded log panel for dashboard-level log visibility |
+  </Step>
+  <Step title="Configure the metric query" icon="search">
+    Define the data source and query for the panel. XIMP supports the native
+    metric query language for filtering by host, service, tag, or time range.
+
+    Example query for CPU utilization:
+    ```
+    xloud_compute_cpu_utilization{host="compute-node-01"}
+    ```
+
+    <Note>
+      Queries are not executed against external systems — all data flows through
+      XIMP's internal collection pipeline. No external API keys are required.
+    </Note>
+  </Step>
+  <Step title="Save and share" icon="share">
+    Click **Save Dashboard**. Use the **Share** button to generate a read-only
+    link for stakeholders who do not have monitoring portal access.
+
+    <Check>Dashboard is saved and visible to all project members in the Dashboards list.</Check>
+  </Step>
+</Steps>
+
+---
+
+## Dashboard Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Group by context" icon="layout" color="#197560">
+    Create separate dashboards for different audiences: an operations NOC dashboard
+    with health-at-a-glance panels, and a detailed engineering dashboard with deep
+    per-component metrics.
+  </Card>
+  <Card title="Use template variables" icon="code" color="#197560">
+    Add template variables (dropdown filters) to dashboards so a single dashboard
+    covers all hosts or services. Use `$host` or `$service` as query variables.
+  </Card>
+  <Card title="Set alert thresholds visually" icon="bell" color="#197560">
+    Add threshold lines to time-series panels to make alert levels visually obvious.
+    This helps operators recognize whether current values are within or outside
+    acceptable ranges at a glance.
+  </Card>
+  <Card title="Link to related dashboards" icon="link" color="#197560">
+    Add panel links that navigate to more detailed dashboards when an anomaly is
+    spotted. Click a high-CPU panel → open the detailed compute node dashboard.
+  </Card>
+</CardGroup>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Metrics & Alerts" href="/services/monitoring/user-guide/metrics-alerts" color="#197560">
+    Create alert rules that fire when dashboard metrics breach thresholds
+  </Card>
+  <Card title="Log Analytics" href="/services/monitoring/user-guide/log-analytics" color="#197560">
+    Add log panels to dashboards for correlated event visibility
+  </Card>
+  <Card title="Network Monitoring" href="/services/monitoring/user-guide/network-monitoring" color="#197560">
+    Explore network traffic panels and flow-based visualizations
+  </Card>
+  <Card title="Troubleshooting" href="/services/monitoring/user-guide/troubleshooting" color="#197560">
+    Diagnose missing metrics and dashboard data issues
+  </Card>
+</CardGroup>

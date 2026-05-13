@@ -1,0 +1,317 @@
+---
+title: "Storage API Reference"
+description: "Xloud Block Storage API (Cinder) overview, key endpoints, and examples for managing volumes, snapshots, backups, and volume types programmatically."
+sidebarTitle: "Storage API"
+---
+
+## Overview
+
+The Xloud Block Storage API provides programmatic management of persistent storage volumes, volume snapshots, volume backups, volume types, and QoS specifications. Volumes attach to compute instances as block devices — independent of instance lifecycle.
+
+<Note>
+  **Prerequisites**
+  - A valid project-scoped token from the [Identity API](/api-reference/authentication)
+  - Base URL: `https://api.<your-domain>/volume/v3`
+  - All operations are project-scoped unless using admin credentials
+</Note>
+
+---
+
+## Key Endpoints
+
+| Resource | Method | Endpoint | Description |
+|----------|--------|----------|-------------|
+| List volumes | GET | `/volumes` | List volumes in the current project |
+| Volume detail | GET | `/volumes/detail` | List volumes with full metadata |
+| Get volume | GET | `/volumes/{id}` | Get a specific volume |
+| Create volume | POST | `/volumes` | Create a new volume |
+| Extend volume | POST | `/volumes/{id}/action` | Extend volume size |
+| Delete volume | DELETE | `/volumes/{id}` | Delete a volume |
+| Attach volume | POST | `/volumes/{id}/action` | Reserve for attachment |
+| List snapshots | GET | `/snapshots` | List volume snapshots |
+| Create snapshot | POST | `/snapshots` | Create a volume snapshot |
+| Delete snapshot | DELETE | `/snapshots/{id}` | Delete a snapshot |
+| List backups | GET | `/backups` | List volume backups |
+| Create backup | POST | `/backups` | Create a volume backup |
+| Restore backup | POST | `/backups/{id}/restore` | Restore backup to a volume |
+| Volume types | GET | `/types` | List available volume types |
+| QoS specs | GET | `/qos-specs` | List QoS specifications (admin) |
+| Quotas | GET | `/os-quota-sets/{project_id}` | Show project storage quotas |
+
+---
+
+## Create a Volume
+
+<ParamField body="name" type="string">
+  Display name for the volume.
+</ParamField>
+
+<ParamField body="size" type="integer" required>
+  Volume size in gigabytes.
+</ParamField>
+
+<ParamField body="volume_type" type="string">
+  Volume type name or ID. Determines the storage backend and QoS policy.
+</ParamField>
+
+<ParamField body="availability_zone" type="string">
+  Target availability zone. Must match the compute availability zone to attach.
+</ParamField>
+
+<ParamField body="source_volid" type="string">
+  Clone from an existing volume by providing its ID.
+</ParamField>
+
+<ParamField body="snapshot_id" type="string">
+  Create from a snapshot by providing the snapshot ID.
+</ParamField>
+
+<ParamField body="metadata" type="object">
+  Key-value metadata pairs for custom tagging.
+</ParamField>
+
+<RequestExample>
+```bash title="cURL"
+curl -X POST https://api.<your-domain>/volume/v3/volumes \
+  -H "X-Auth-Token: $OS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "volume": {
+      "name": "db-data-01",
+      "size": 200,
+      "volume_type": "ssd-standard",
+      "availability_zone": "nova",
+      "metadata": {
+        "environment": "production",
+        "service": "mysql"
+      }
+    }
+  }'
+```
+```python title="Python"
+import requests
+
+volume = {
+    "volume": {
+        "name": "db-data-01",
+        "size": 200,
+        "volume_type": "ssd-standard",
+        "availability_zone": "nova",
+        "metadata": {"environment": "production"}
+    }
+}
+resp = requests.post(
+    "https://api.<your-domain>/volume/v3/volumes",
+    json=volume,
+    headers={"X-Auth-Token": token}
+)
+print(resp.json()["volume"]["id"])
+```
+</RequestExample>
+
+<ResponseExample>
+```json title="202 Accepted"
+{
+  "volume": {
+    "id": "c3d4e5f6-a7b8-9012-c3d4-e5f6a7b89012",
+    "name": "db-data-01",
+    "status": "creating",
+    "size": 200,
+    "volume_type": "ssd-standard",
+    "availability_zone": "nova",
+    "metadata": { "environment": "production" },
+    "created_at": "2026-03-18T10:00:00.000000",
+    "bootable": "false",
+    "encrypted": false
+  }
+}
+```
+</ResponseExample>
+
+---
+
+## Volume Operations
+
+<Tabs>
+  <Tab title="Attach / Detach" icon="link">
+    Volumes are attached to instances via the Compute API. The Storage API provides the `os-reserve` and `os-attach` actions for low-level attachment management.
+
+    ```bash title="Attach volume via Compute API (recommended)"
+    curl -X POST https://api.<your-domain>/compute/v2.1/servers/{server_id}/os-volume_attachments \
+      -H "X-Auth-Token: $OS_TOKEN" \
+      -H "Content-Type: application/json" \
+      -d '{
+        "volumeAttachment": {
+          "volumeId": "<volume-id>",
+          "device": "/dev/vdb"
+        }
+      }'
+    ```
+
+    ```bash title="Detach volume from instance"
+    curl -X DELETE \
+      "https://api.<your-domain>/compute/v2.1/servers/{server_id}/os-volume_attachments/{volume_id}" \
+      -H "X-Auth-Token: $OS_TOKEN"
+    ```
+
+    <Info>
+      Always detach a volume from the guest OS before issuing the API detach call to prevent filesystem corruption.
+    </Info>
+  </Tab>
+  <Tab title="Extend" icon="expand">
+    ```bash title="Extend volume to 400 GB"
+    curl -X POST https://api.<your-domain>/volume/v3/volumes/{id}/action \
+      -H "X-Auth-Token: $OS_TOKEN" \
+      -H "Content-Type: application/json" \
+      -d '{ "os-extend": { "new_size": 400 } }'
+    ```
+
+    <Warning>
+      Extending a volume only expands the block device. After extension, resize the filesystem from inside the guest OS (e.g., `resize2fs` for ext4, `xfs_growfs` for XFS).
+    </Warning>
+  </Tab>
+  <Tab title="Retype" icon="shuffle">
+    ```bash title="Change volume type (live migration)"
+    curl -X POST https://api.<your-domain>/volume/v3/volumes/{id}/action \
+      -H "X-Auth-Token: $OS_TOKEN" \
+      -H "Content-Type: application/json" \
+      -d '{
+        "os-retype": {
+          "new_type": "archive-hdd",
+          "migration_policy": "on-demand"
+        }
+      }'
+    ```
+
+    Set `migration_policy` to `on-demand` to migrate data immediately, or `never` to only change the type metadata without data migration.
+  </Tab>
+  <Tab title="Clone" icon="copy">
+    ```bash title="Clone an existing volume"
+    curl -X POST https://api.<your-domain>/volume/v3/volumes \
+      -H "X-Auth-Token: $OS_TOKEN" \
+      -H "Content-Type: application/json" \
+      -d '{
+        "volume": {
+          "name": "db-data-01-clone",
+          "size": 200,
+          "source_volid": "<source-volume-id>"
+        }
+      }'
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Snapshots
+
+```bash title="Create a volume snapshot"
+curl -X POST https://api.<your-domain>/volume/v3/snapshots \
+  -H "X-Auth-Token: $OS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "snapshot": {
+      "name": "db-data-01-snap-20260318",
+      "volume_id": "<volume-id>",
+      "force": false,
+      "metadata": { "backup_type": "daily" }
+    }
+  }'
+```
+
+```bash title="Create volume from snapshot"
+curl -X POST https://api.<your-domain>/volume/v3/volumes \
+  -H "X-Auth-Token: $OS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "volume": {
+      "name": "db-data-restored",
+      "snapshot_id": "<snapshot-id>",
+      "size": 200
+    }
+  }'
+```
+
+<Tip>
+  Set `force: true` in the snapshot request to snapshot a volume that is currently attached to a running instance. Ensure the filesystem is quiesced (via `sync` or application-level flush) before forcing a snapshot.
+</Tip>
+
+---
+
+## Backups
+
+Backups are stored in Xloud Object Storage and are independent of volume availability.
+
+```bash title="Create a full backup"
+curl -X POST https://api.<your-domain>/volume/v3/backups \
+  -H "X-Auth-Token: $OS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "backup": {
+      "name": "db-data-01-backup-20260318",
+      "volume_id": "<volume-id>",
+      "incremental": false,
+      "container": "volume-backups"
+    }
+  }'
+```
+
+```bash title="Create incremental backup (faster, less storage)"
+curl -X POST https://api.<your-domain>/volume/v3/backups \
+  -H "X-Auth-Token: $OS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "backup": {
+      "name": "db-data-01-incr-20260318",
+      "volume_id": "<volume-id>",
+      "incremental": true
+    }
+  }'
+```
+
+```bash title="Restore backup to a new volume"
+curl -X POST https://api.<your-domain>/volume/v3/backups/{backup_id}/restore \
+  -H "X-Auth-Token: $OS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "restore": {
+      "name": "db-data-01-restored"
+    }
+  }'
+```
+
+---
+
+## Volume Status Reference
+
+| Status | Description |
+|--------|-------------|
+| `creating` | Volume is being provisioned |
+| `available` | Ready to attach |
+| `in-use` | Currently attached to an instance |
+| `deleting` | Deletion in progress |
+| `extending` | Size extension in progress |
+| `retyping` | Volume type change in progress |
+| `backing-up` | Backup in progress |
+| `restoring-backup` | Backup restore in progress |
+| `error` | An error occurred — check volume events |
+| `error_deleting` | Deletion failed |
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Compute API" href="/api-reference/compute-api" color="#197560">
+    Attach volumes to compute instances via the Compute API
+  </Card>
+  <Card title="Networking API" href="/api-reference/networking-api" color="#197560">
+    Configure networks for your storage-backed instances
+  </Card>
+  <Card title="Storage QoS" href="/services/storage/qos" color="#197560">
+    Configure IOPS and throughput limits for volume types
+  </Card>
+  <Card title="Automation" href="/integrations/index" color="#197560">
+    Automate backup workflows with scripts and scheduling
+  </Card>
+</CardGroup>

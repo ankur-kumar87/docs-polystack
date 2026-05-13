@@ -1,0 +1,223 @@
+---
+title: "Modify Images"
+description: "Customize existing cloud images offline using virt-customize, guestfish, and guestmount before uploading to Xloud."
+sidebarTitle: "Modify Images"
+---
+
+## Overview
+
+Modifying a cloud image offline — before uploading — allows you to install packages,
+configure software, inject files, and set system parameters without needing to launch
+an instance. This approach produces consistent, repeatable golden images for deployment.
+All modifications are performed on a copy of the image using libguestfs tools.
+
+<Note>
+  **Prerequisites**
+  - A Linux workstation or build server with `libguestfs-tools` installed
+  - A base cloud image in QCOW2 or RAW format (see [Get Cloud Images](/services/images/get-images))
+  - Root or `sudo` access on the build host
+  - Sufficient disk space: at least 3x the image size for safe modification
+</Note>
+
+<Warning>
+  Always work on a copy of the image, not the original. If a modification fails or
+  produces an unusable image, the original remains intact.
+</Warning>
+
+---
+
+## Tools Reference
+
+| Tool | Purpose | Best For |
+|---|---|---|
+| **virt-customize** | Apply changes to an image non-interactively | Installing packages, running scripts, injecting files |
+| **guestfish** | Interactive filesystem shell for an image | Manual file edits, inspecting content, complex changes |
+| **guestmount** | Mount an image as a local directory | Interactive editing with standard filesystem tools |
+| **virt-sysprep** | Reset and generalize an image for distribution | Removing machine-specific data before capturing |
+
+---
+
+## Modify with virt-customize
+
+`virt-customize` applies changes to an image from the command line without mounting it.
+It is the fastest method for automatable, scripted modifications.
+
+<Steps titleSize="h3">
+  <Step title="Install libguestfs-tools" icon="download">
+    ```bash title="Install on Ubuntu / Debian"
+    apt-get update && apt-get install -y libguestfs-tools
+    ```
+    ```bash title="Install on CentOS / AlmaLinux / Rocky Linux"
+    dnf install -y libguestfs-tools
+    ```
+  </Step>
+  <Step title="Copy the base image" icon="copy">
+    ```bash title="Create a working copy of the image"
+    cp ubuntu-24.04-lts.qcow2 ubuntu-24.04-lts-custom.qcow2
+    ```
+  </Step>
+  <Step title="Install packages" icon="package">
+    Install software into the image using the native package manager:
+    ```bash title="Install packages with virt-customize"
+    virt-customize \
+      -a ubuntu-24.04-lts-custom.qcow2 \
+      --install nginx,curl,htop \
+      --update
+    ```
+    The `--update` flag runs a full package upgrade before installing the specified packages.
+  </Step>
+  <Step title="Inject an SSH key" icon="key">
+    Pre-authorize an SSH public key for the default user:
+    ```bash title="Inject SSH public key"
+    virt-customize \
+      -a ubuntu-24.04-lts-custom.qcow2 \
+      --ssh-inject ubuntu:file:/home/user/.ssh/id_ed25519.pub
+    ```
+  </Step>
+  <Step title="Run a configuration script" icon="terminal">
+    Execute a shell script inside the image to perform complex configuration:
+    ```bash title="Run a script inside the image"
+    virt-customize \
+      -a ubuntu-24.04-lts-custom.qcow2 \
+      --run-command 'systemctl enable nginx' \
+      --run-command 'echo "CUSTOM_IMAGE=true" >> /etc/environment'
+    ```
+  </Step>
+  <Step title="Set the root password" icon="lock">
+    <Warning>
+      Setting a root password is only appropriate for testing or emergency access images.
+      Production images should rely on SSH key injection via cloud-init.
+    </Warning>
+    ```bash title="Set a root password"
+    virt-customize \
+      -a ubuntu-24.04-lts-custom.qcow2 \
+      --root-password password:YourSecurePassword123
+    ```
+  </Step>
+</Steps>
+
+---
+
+## Modify with guestfish
+
+`guestfish` provides an interactive shell for directly editing files inside an image.
+Use it for one-off edits, configuration file changes, or inspecting image contents.
+
+<Steps titleSize="h3">
+  <Step title="Open the image in guestfish" icon="folder-open">
+    ```bash title="Open image in interactive mode"
+    guestfish --rw -a ubuntu-24.04-lts-custom.qcow2
+    ```
+    At the `><fs>` prompt, run:
+    ```text title="Mount the root filesystem"
+    ><fs> run
+    ><fs> list-filesystems
+    ><fs> mount /dev/sda1 /
+    ```
+  </Step>
+  <Step title="Edit a configuration file" icon="edit">
+    Use the `edit` command to open a file in your default editor:
+    ```text title="Edit a file inside the image"
+    ><fs> edit /etc/cloud/cloud.cfg
+    ```
+    Or write content directly with `write`:
+    ```text title="Write content to a file"
+    ><fs> write /etc/motd "Xloud Custom Image - $(date +%Y-%m)\n"
+    ```
+  </Step>
+  <Step title="Copy files into the image" icon="file-input">
+    Upload a local file into the image:
+    ```text title="Copy local file into the image"
+    ><fs> upload /local/path/custom-config.conf /etc/app/custom-config.conf
+    ```
+  </Step>
+  <Step title="Exit and close" icon="log-out">
+    ```text title="Exit guestfish"
+    ><fs> umount /
+    ><fs> exit
+    ```
+    <Check>Changes are written to the image file when guestfish exits.</Check>
+  </Step>
+</Steps>
+
+---
+
+## Mount with guestmount
+
+`guestmount` mounts the image filesystem as a local directory, enabling standard
+filesystem tools (`cp`, `vim`, `chmod`) to operate on image contents.
+
+<Steps titleSize="h3">
+  <Step title="Create a mount point" icon="folder-plus">
+    ```bash title="Create a temporary mount directory"
+    mkdir -p /mnt/image
+    ```
+  </Step>
+  <Step title="Mount the image" icon="hard-drive">
+    ```bash title="Mount the image read-write"
+    guestmount -a ubuntu-24.04-lts-custom.qcow2 -i --rw /mnt/image
+    ```
+    The `-i` flag auto-detects the root filesystem.
+  </Step>
+  <Step title="Make modifications" icon="edit">
+    The image contents are accessible as a regular directory:
+    ```bash title="Edit a file in the mounted image"
+    echo "net.ipv4.tcp_tw_reuse = 1" >> /mnt/image/etc/sysctl.d/99-custom.conf
+    cp /local/app/configs/* /mnt/image/etc/app/
+    chmod 640 /mnt/image/etc/app/*.conf
+    ```
+  </Step>
+  <Step title="Unmount when complete" icon="eject">
+    ```bash title="Unmount the image"
+    guestunmount /mnt/image
+    ```
+    <Check>All changes are written to the image file. Verify with `guestfish` if needed.</Check>
+  </Step>
+</Steps>
+
+---
+
+## Generalize with virt-sysprep
+
+Before distributing or uploading an image as a golden template, use `virt-sysprep` to
+remove machine-specific identifiers. This ensures each launched instance is treated as
+a fresh system rather than a clone of the build host.
+
+```bash title="Generalize the image for distribution"
+virt-sysprep \
+  -a ubuntu-24.04-lts-custom.qcow2 \
+  --operations defaults,-ssh-hostkeys \
+  --selinux-relabel
+```
+
+`virt-sysprep` removes:
+- Machine ID (`/etc/machine-id`)
+- Shell history files
+- Temporary files and package caches
+- Log files
+- NetworkManager connection caches
+
+<Tip>
+  Use `--operations defaults,-ssh-hostkeys` to keep cloud-init's SSH key regeneration
+  intact. The `-ssh-hostkeys` exclusion prevents virt-sysprep from removing keys that
+  cloud-init would regenerate anyway.
+</Tip>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Image Requirements" href="/services/images/image-requirements" color="#197560">
+    Verify your modified image meets all Xloud Compute compatibility requirements.
+  </Card>
+  <Card title="Convert Formats" href="/services/images/convert-formats" color="#197560">
+    Convert VMDK, VHD, or RAW images to QCOW2 after modification.
+  </Card>
+  <Card title="Upload an Image" href="/services/images/upload-image" color="#197560">
+    Upload the customized image to the Xloud Image Service.
+  </Card>
+  <Card title="Image Properties" href="/services/images/image-properties" color="#197560">
+    Tag uploaded images with OS metadata and hardware requirements.
+  </Card>
+</CardGroup>

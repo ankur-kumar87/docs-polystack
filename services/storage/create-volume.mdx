@@ -1,0 +1,212 @@
+---
+title: "Create a Volume"
+description: "Provision persistent block storage volumes in your Xloud project. Choose a data source, storage tier, and capacity using the Dashboard or CLI."
+sidebarTitle: "Create a Volume"
+---
+
+import PrerequisitesAuth from '/snippets/prerequisites-auth.mdx';
+
+## Overview
+
+Volumes are persistent block storage devices that can be attached to compute instances.
+They persist independently of the instance lifecycle — detach, reattach, snapshot, or
+transfer them between projects as needed.
+
+<PrerequisitesAuth />
+
+---
+
+## Data Source Types
+
+| Source | Description | Use Case |
+|--------|-------------|----------|
+| **Blank Volume** | Empty disk, no pre-existing data | Data disks, scratch storage |
+| **Image** | Pre-populated from an OS image | Bootable root disks, appliances |
+| **Snapshot** | Restored from a volume snapshot | Cloning data, test environments |
+
+---
+
+## Create a Volume
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Navigate to Volumes">
+        Navigate to **Storage > Volumes** in the sidebar. Click **Create Volume**.
+        The create form opens as a full page.
+      </Step>
+      <Step title="Select the data source">
+        Choose the **Data Source Type**:
+
+        | Option | Description |
+        |--------|-------------|
+        | **Blank Volume** | Creates an empty volume (default) |
+        | **Image** | Select an OS image to populate the volume |
+        | **Snapshot** | Select an existing volume snapshot to restore from |
+
+        When **Image** is selected, an image selection table appears with tabs organized
+        by OS distribution (CentOS, Ubuntu, Fedora, Windows, etc.).
+
+        When **Snapshot** is selected, a snapshot selection table appears showing available
+        snapshots with their size and status.
+      </Step>
+      <Step title="Select a volume type">
+        Choose the **Volume Type** from the available storage tiers. The table shows
+        all configured volume types with their properties.
+
+        <Tip>
+          If the volume type supports multi-attach (shared volumes), a note is displayed
+          indicating that the volume can be attached to multiple instances simultaneously.
+        </Tip>
+      </Step>
+      <Step title="Set the capacity">
+        Enter the **Capacity (GiB)** using the slider or input field.
+
+        - **Blank volume**: minimum 1 GiB
+        - **Image source**: minimum is the image's `min_disk` requirement
+        - **Snapshot source**: minimum is the snapshot's original size
+
+        The slider range is limited by your project's remaining volume capacity quota.
+        If quota is exhausted, the submit button is disabled.
+      </Step>
+      <Step title="Configure name and description">
+        | Field | Type | Required | Description |
+        |-------|------|----------|-------------|
+        | **Name** | Text | Yes | Volume display name |
+        | **Description** | Text area | No | Optional notes about the volume |
+      </Step>
+      <Step title="Set the availability zone (optional)">
+        Select an **Available Zone** from the dropdown. If not specified, the system
+        selects the default zone.
+
+        <Note>
+          The volume's availability zone should match the zone of the instance you
+          plan to attach it to.
+        </Note>
+      </Step>
+      <Step title="Create the volume">
+        The footer shows the **Count** field (default: 1) to create multiple identical
+        volumes in one operation. Real-time **quota usage** is displayed.
+
+        Click **Confirm**. The volume appears in the list with status **Creating**,
+        transitioning to **Available** when ready.
+
+        <Check>Volume status is **Available** — ready to attach to an instance.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Source credentials"
+    source openrc.sh
+    ```
+
+    <CodeGroup>
+    ```bash title="Create a blank volume"
+    openstack volume create \
+      --size 100 \
+      --type ssd \
+      --availability-zone nova \
+      my-data-volume
+    ```
+    ```bash title="Create a volume from image"
+    openstack volume create \
+      --size 50 \
+      --type ssd \
+      --image <IMAGE_ID> \
+      my-boot-volume
+    ```
+    ```bash title="Create a volume from snapshot"
+    openstack volume create \
+      --size 100 \
+      --snapshot <SNAPSHOT_ID> \
+      my-restored-volume
+    ```
+    ```bash title="Create multiple volumes"
+    for i in $(seq 1 3); do
+      openstack volume create --size 50 --type ssd data-disk-$i
+    done
+    ```
+    </CodeGroup>
+
+    ```bash title="Verify volume status"
+    openstack volume show my-data-volume -c status
+    ```
+
+    <Check>Status shows `available`.</Check>
+  </Tab>
+</Tabs>
+
+---
+
+## View Volumes
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    Navigate to **Storage > Volumes**. The list shows:
+
+    | Column | Description |
+    |--------|-------------|
+    | **ID/Name** | Volume identifier (clickable to view details) |
+    | **Size** | Capacity in GiB |
+    | **Status** | Available, In-use, Error, etc. |
+    | **Type** | Storage tier (volume type) |
+    | **Disk Tag** | Disk usage tag |
+    | **Attached To** | Instance name and device path (if attached) |
+    | **Bootable** | Whether the volume can be used as a boot disk |
+    | **Shared** | Whether multi-attach is enabled |
+    | **Created At** | Creation timestamp |
+
+    Filter by **Name** or **Status**.
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    <CodeGroup>
+    ```bash title="List all volumes"
+    openstack volume list
+    ```
+    ```bash title="Show volume details"
+    openstack volume show <VOLUME_ID>
+    ```
+    </CodeGroup>
+  </Tab>
+</Tabs>
+
+---
+
+## Volume Detail
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    Click a volume name to open the detail page. The header shows volume name,
+    description, shared status, current status, size, creation time, type, and
+    encryption status.
+
+    Three tabs are available:
+    - **Detail** — Base information, attachment details, source snapshot/image links
+    - **Volume Backups** — All backups created from this volume
+    - **Volume Snapshots** — All snapshots of this volume
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Show full volume details"
+    openstack volume show <VOLUME_ID>
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Attach a Volume" href="/services/storage/attach-volume" color="#197560">
+    Connect this volume to a compute instance
+  </Card>
+  <Card title="Volume Snapshots" href="/services/storage/snapshots" color="#197560">
+    Create point-in-time snapshots of your volumes
+  </Card>
+  <Card title="Volume Types" href="/services/storage/volume-types" color="#197560">
+    Understand available storage tiers
+  </Card>
+  <Card title="Extend a Volume" href="/services/storage/extend-volume" color="#197560">
+    Increase volume capacity without data loss
+  </Card>
+</CardGroup>

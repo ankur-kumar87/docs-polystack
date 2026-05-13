@@ -1,0 +1,165 @@
+---
+title: "Live vCPU & RAM Scaling"
+description: "Scale instance vCPU and memory in real-time without rebooting. Configure hot-add flavors and manage resource envelopes."
+sidebarTitle: "Live vCPU/RAM Scaling"
+---
+
+## Overview
+
+Live vCPU and RAM scaling adjusts an instance's compute resources while it is running —
+no reboot required. This is distinct from the standard resize operation, which requires
+a reboot. Live scaling uses a combination of CPU hotplug, memory balloon, DIMM hotplug,
+and virtio-mem to adjust resources within the bounds defined by the instance's flavor.
+
+<Info>
+  **Xloud-Developed** — Bidirectional CPU hotplug (add AND remove vCPUs) and
+  combined memory scaling (balloon + DIMM + virtio-mem) are developed by Xloud and
+  ship with XAVS / XPCI.
+</Info>
+
+<Note>
+  **Prerequisites**
+  - An instance in `Active` status with a hot-add-enabled flavor
+  - The flavor must have `hw:cpu_min` or `hw:mem_min` extra specs set
+  - The instance must not be locked
+</Note>
+
+---
+
+## Adjust Resources (Dashboard)
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Open the Resource Adjustment dialog">
+        Navigate to **Compute > Instances**. Click the **More** dropdown on the
+        instance row, then select **Adjust Resources** under the **Configuration
+        Update** group.
+
+        <Note>
+          This action is only available for instances in `Active` status whose
+          flavor has hot-add enabled (`hw:cpu_min` or `hw:mem_min` extra specs).
+          If the flavor does not support hot-add, this action does not appear.
+        </Note>
+      </Step>
+      <Step title="Adjust vCPU and memory">
+        The dialog shows:
+
+        | Field | Description |
+        |-------|-------------|
+        | **Instance** | Instance name (read-only) |
+        | **Current Info** | Current vCPU count and memory allocation (read-only) |
+        | **vCPUs** | Slider input — adjust between minimum and maximum vCPUs |
+        | **Memory (GiB)** | Slider input — adjust between minimum and maximum memory (0.25 GiB steps) |
+        | **Make permanent** | Checkbox — persist the configuration after a soft reboot (default: checked) |
+
+        The vCPU slider step aligns to the CPU thread count configured in the flavor.
+        The memory slider uses 0.25 GiB increments.
+
+        The dialog fetches the live instance status to determine current and
+        allowed resource ranges. Color-coded hints indicate the scaling method:
+
+        | Color | Meaning |
+        |-------|---------|
+        | Green | virtio-mem — fully adjustable in both directions |
+        | Yellow | No balloon driver detected — limited scaling |
+        | Blue | DIMM hotplug information |
+      </Step>
+      <Step title="Apply the adjustment">
+        Click **Confirm**. The resources are adjusted immediately while the
+        instance continues running.
+
+        <Check>
+          Instance vCPU and memory updated in real-time. Verify from the instance
+          detail page or by running `nproc` / `free -h` inside the guest.
+        </Check>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Source credentials"
+    source openrc.sh
+    ```
+
+    ```bash title="Check current live resource status"
+    openstack server show <INSTANCE_ID> -c "xloud-status"
+    ```
+
+    ```bash title="Adjust vCPU count"
+    curl -X POST -H "X-Auth-Token: $TOKEN" \
+      -H "Content-Type: application/json" \
+      -d '{"current_vcpus": 4}' \
+      "$NOVA_ENDPOINT/v2.1/os-xloud-adjust/<INSTANCE_ID>"
+    ```
+
+    ```bash title="Adjust memory"
+    curl -X POST -H "X-Auth-Token: $TOKEN" \
+      -H "Content-Type: application/json" \
+      -d '{"current_memory_mb": 8192}' \
+      "$NOVA_ENDPOINT/v2.1/os-xloud-adjust/<INSTANCE_ID>"
+    ```
+
+    <Note>
+      Live resource adjustment uses the Xloud-developed Nova API extension.
+      The `openstack` CLI does not have a native command for this operation.
+    </Note>
+  </Tab>
+</Tabs>
+
+---
+
+## Configure Hot-Add Flavors
+
+To enable live scaling, create flavors with hot-add parameters:
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    When creating a flavor (see [Flavor Management](/services/compute/flavors)),
+    enable the **Hot-Add** toggle in the **Step 1 (Params Setting)** section.
+    Configure:
+
+    | Field | Description |
+    |-------|-------------|
+    | **Enable Hot-Add** | Set to Yes |
+    | **Minimum CPU** | Starting vCPU count at boot (can scale up to flavor's max vCPUs) |
+    | **Minimum Memory (GiB)** | Starting memory at boot (can scale up to flavor's max memory) |
+
+    The instance boots with the minimum resources and can be scaled up to the
+    flavor's maximum without rebooting.
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Create a hot-add enabled flavor"
+    openstack flavor create \
+      --vcpus 8 --ram 16384 --disk 0 \
+      --public \
+      hotadd.large
+
+    openstack flavor set \
+      --property hw:cpu_min=2 \
+      --property hw:mem_min=4096 \
+      hotadd.large
+    ```
+
+    This creates a flavor where instances boot with 2 vCPUs / 4 GiB RAM and
+    can scale up to 8 vCPUs / 16 GiB RAM while running.
+  </Tab>
+</Tabs>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Resize an Instance" href="/services/compute/resize-instance" color="#197560">
+    Change flavors entirely (requires reboot) for capacity beyond hot-add range
+  </Card>
+  <Card title="Flavors" href="/services/compute/flavors" color="#197560">
+    Create and manage flavors with hot-add configuration
+  </Card>
+  <Card title="Launch an Instance" href="/services/compute/launch-instance" color="#197560">
+    Launch instances with hot-add enabled flavors
+  </Card>
+  <Card title="Troubleshooting" href="/services/compute/troubleshooting" color="#197560">
+    Resolve live scaling failures and balloon driver issues
+  </Card>
+</CardGroup>

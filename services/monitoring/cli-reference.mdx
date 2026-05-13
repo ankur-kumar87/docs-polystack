@@ -1,0 +1,105 @@
+---
+title: "Monitoring CLI Reference"
+description: "CLI commands for querying metrics, managing alert rules, and inspecting monitoring state in Xloud Infrastructure Monitoring Platform (XIMP)."
+sidebarTitle: "CLI Reference"
+---
+
+## Overview
+
+The Xloud monitoring platform (XIMP) is based on Prometheus and exposes a query API. Use the `curl`-based PromQL queries and the `openstack metric` commands to inspect resource metrics and alert state.
+
+<Note>
+  **Prerequisites**
+  - CLI installed and authenticated — see [CLI Setup](/cli-setup)
+  - Prometheus endpoint accessible (default: `http://<control-node>:9291`)
+  - Basic auth credentials for Prometheus API
+</Note>
+
+---
+
+## Query Metrics (PromQL)
+
+<CodeGroup>
+```bash title="Instant query"
+curl -s -u admin:<password> \
+  "http://<prometheus>:9291/api/v1/query?query=up" | jq .
+```
+
+```bash title="CPU usage per instance"
+curl -s -u admin:<password> \
+  'http://<prometheus>:9291/api/v1/query?query=avg(rate(node_cpu_seconds_total{mode!="idle"}[5m]))by(instance)' | jq .
+```
+
+```bash title="Memory usage"
+curl -s -u admin:<password> \
+  'http://<prometheus>:9291/api/v1/query?query=node_memory_MemAvailable_bytes/node_memory_MemTotal_bytes' | jq .
+```
+
+```bash title="Range query (last 1 hour, 5m step)"
+curl -s -u admin:<password> \
+  "http://<prometheus>:9291/api/v1/query_range?query=up&start=$(date -d '1 hour ago' +%s)&end=$(date +%s)&step=300" | jq .
+```
+</CodeGroup>
+
+---
+
+## Alertmanager
+
+<CodeGroup>
+```bash title="List active alerts"
+curl -s http://<alertmanager>:9093/api/v2/alerts | jq .
+```
+
+```bash title="List silences"
+curl -s http://<alertmanager>:9093/api/v2/silences | jq .
+```
+
+```bash title="Create silence (mute alert for 2 hours)"
+curl -s -X POST http://<alertmanager>:9093/api/v2/silences \
+  -H "Content-Type: application/json" \
+  -d '{
+    "matchers": [{"name": "alertname", "value": "HighCpuUsage", "isRegex": false}],
+    "startsAt": "'$(date -u +%Y-%m-%dT%H:%M:%SZ)'",
+    "endsAt": "'$(date -u -d '+2 hours' +%Y-%m-%dT%H:%M:%SZ)'",
+    "comment": "Maintenance window",
+    "createdBy": "admin"
+  }' | jq .
+```
+</CodeGroup>
+
+---
+
+## Ceilometer Metrics (Legacy)
+
+<CodeGroup>
+```bash title="List meters"
+openstack metric list
+```
+
+```bash title="List resources"
+openstack metric resource list
+```
+
+```bash title="Show resource metrics"
+openstack metric resource show <resource-id>
+```
+
+```bash title="Get metric measures"
+openstack metric measures show \
+  --resource-id <resource-id> \
+  cpu
+```
+</CodeGroup>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Metrics and Alerts Guide" href="/services/monitoring/user-guide/metrics-alerts" color="#197560">
+    Configure alert rules and notification channels
+  </Card>
+  <Card title="Prometheus Integration" href="/integrations/prometheus" color="#197560">
+    Connect external Prometheus to Xloud metrics
+  </Card>
+</CardGroup>

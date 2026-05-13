@@ -1,0 +1,344 @@
+---
+title: "Create a Windows VM from ISO"
+description: "Step-by-step guide to creating a Windows Server VM using ISO boot with VirtIO drivers on the Xloud platform."
+sidebarTitle: "Windows VM (ISO)"
+---
+
+## Overview
+
+This guide walks through creating a Windows Server virtual machine from an ISO image
+on the Xloud platform. Unlike Linux VMs that boot directly from pre-built cloud images,
+Windows installations require an interactive setup process with VirtIO driver injection
+for disk and network access.
+
+<Info>**Xloud-Developed** — ISO boot with CD-ROM attachment in the instance create wizard is developed by Xloud and ships with XAVS / XPCI.</Info>
+
+---
+
+## Prerequisites
+
+Before starting, ensure you have:
+
+<Note>
+  **Required Resources**
+  - A **Windows Server ISO** (e.g., Windows Server 2022, 2019) — uploaded to the Image Service
+  - A **VirtIO Windows drivers ISO** (`virtio-win.iso`) — contains storage and network drivers required by the platform
+  - A **network** available in your project with external connectivity
+  - A **flavor** with sufficient resources (minimum: 2 vCPUs, 4 GiB RAM, 40 GiB disk for Server 2022)
+</Note>
+
+### Upload the ISOs
+
+Both ISOs must be uploaded to the Image Service before creating the VM.
+
+<Steps titleSize="h3">
+  <Step title="Upload the Windows Server ISO">
+    Navigate to **Compute > Images** and click **Create Image**.
+
+    | Field | Value |
+    |-------|-------|
+    | **Name** | `windows-server-2022-iso` |
+    | **Upload Type** | Upload File |
+    | **File** | Select your Windows Server `.iso` file |
+    | **Disk Format** | ISO |
+    | **OS** | Windows |
+    | **OS Version** | 2022 (or your version) |
+    | **OS Admin** | Administrator |
+
+    Click **Confirm** and wait for status to reach **Active**.
+
+    For detailed instructions, see [Upload an Image](/services/images/upload-image).
+  </Step>
+  <Step title="Upload the VirtIO drivers ISO">
+    Create another image with the same process:
+
+    | Field | Value |
+    |-------|-------|
+    | **Name** | `virtio-win-drivers` |
+    | **Upload Type** | Upload File |
+    | **File** | Select `virtio-win.iso` |
+    | **Disk Format** | ISO |
+
+    Click **Confirm** and wait for **Active** status.
+  </Step>
+</Steps>
+
+---
+
+## Create the Windows VM
+
+<Steps titleSize="h3">
+  <Step title="Open the Create Instance wizard">
+    Navigate to **Compute > Instances** and click **Create Instance**.
+  </Step>
+
+  <Step title="Step 1 — Base Config">
+    Configure the boot source and storage:
+
+    **Available Zone** — Select your preferred zone.
+
+    **Flavor** — Select a flavor with at least 2 vCPUs, 4 GiB RAM.
+
+    **Start Source** — Select **Image** and choose your **Windows Server ISO**
+    (`windows-server-2022-iso`).
+
+    **Boot From Volume** — Select **Yes - Create a new system disk**.
+
+    **System Disk** — This will be the Windows C: drive.
+    - Select a volume type
+    - Set the size (minimum 40 GiB for Server 2022, recommended 80+ GiB)
+    - Set Delete on Termination based on your preference
+
+    <Tip>
+      You can add **Data Disks** here for additional drives (D:, E:, etc.),
+      or add them later after Windows is installed.
+    </Tip>
+
+    **CD-ROM Source** — Select **Image** and choose your **VirtIO drivers ISO**
+    (`virtio-win-drivers`). This mounts the VirtIO ISO as a CD-ROM drive so you
+    can load storage drivers during Windows setup.
+
+    <Warning>
+      The VirtIO drivers ISO is required. Without it, Windows cannot detect the
+      virtual disk during installation and the disk selection screen will be empty.
+    </Warning>
+  </Step>
+
+  <Step title="Step 2 — Network Config">
+    Select your **Network** and configure the **Security Group**.
+
+    <Note>
+      The network will not be usable during installation until you install the
+      VirtIO network driver post-installation. Connectivity comes after the
+      VirtIO guest tools are installed.
+    </Note>
+  </Step>
+
+  <Step title="Step 3 — System Config">
+    Enter a **Name** for the VM (e.g., `windows-server-2022`).
+
+    For **Login Type**, you can select either Keypair or Password — however, neither
+    will work until the guest agent is installed. You will set the Administrator
+    password during the Windows installation process.
+  </Step>
+
+  <Step title="Step 4 — Confirm and Launch">
+    Review the configuration and click **Confirm**.
+
+    The instance will boot from the Windows ISO with the VirtIO drivers ISO
+    mounted as a CD-ROM.
+  </Step>
+</Steps>
+
+---
+
+## Install Windows
+
+<Steps titleSize="h3">
+  <Step title="Open the VNC console">
+    Navigate to **Compute > Instances**. Click the **Console** action (first row
+    action) on your new instance to open the VNC console in a new browser tab.
+
+    The Windows Setup screen appears. Select your language, time, and keyboard
+    settings, then click **Install now**.
+  </Step>
+
+  <Step title="Enter product key and select edition">
+    Enter your Windows Server product key (or click "I don't have a product key"
+    for evaluation). Select the desired edition (Standard/Datacenter, Desktop
+    Experience or Core).
+  </Step>
+
+  <Step title="Select Custom installation">
+    On the installation type screen, select **Custom: Install Windows only (advanced)**.
+
+    The disk selection screen appears — **it will be empty** because Windows does
+    not have the VirtIO storage driver loaded yet.
+  </Step>
+
+  <Step title="Load the VirtIO storage driver">
+    <Steps titleSize="h4">
+      <Step title="Click Load driver">
+        On the empty disk selection screen, click **Load driver**, then click **Browse**.
+      </Step>
+      <Step title="Navigate to the VirtIO ISO">
+        Browse to the VirtIO CD-ROM drive (typically `E:\` or `D:\`). Navigate to:
+
+        ```
+        viostor\2k22\amd64\
+        ```
+
+        <Note>
+          The folder name matches your Windows version:
+          - Windows Server 2022: `viostor\2k22\amd64\`
+          - Windows Server 2019: `viostor\2k19\amd64\`
+          - Windows Server 2016: `viostor\2k16\amd64\`
+          - Windows 10/11: `viostor\w10\amd64\` or `viostor\w11\amd64\`
+        </Note>
+      </Step>
+      <Step title="Install the storage driver">
+        Select the **Red Hat VirtIO SCSI controller** driver and click **Next**.
+        The virtual disk now appears in the disk selection list.
+      </Step>
+    </Steps>
+  </Step>
+
+  <Step title="Select the disk and install">
+    Select the virtual disk (your System Disk) and click **Next**. Windows
+    installation proceeds normally. Wait for the installation to complete and
+    the VM to reboot.
+  </Step>
+
+  <Step title="Complete initial setup">
+    After reboot, set the **Administrator password** when prompted. Complete
+    the Windows Out-of-Box Experience (OOBE) setup.
+  </Step>
+</Steps>
+
+---
+
+## Post-Installation — Install VirtIO Guest Tools
+
+After Windows is installed, install the full VirtIO driver package to enable
+network access, performance optimization, and guest agent integration.
+
+<Steps titleSize="h3">
+  <Step title="Open the VirtIO ISO in Windows">
+    Inside the Windows VM (via VNC console), open **File Explorer** and navigate
+    to the VirtIO CD-ROM drive.
+  </Step>
+
+  <Step title="Run the VirtIO installer">
+    Locate and double-click **`virtio-win-gt-x64.exe`** in the root of the
+    VirtIO ISO.
+
+    This installs all platform drivers and the QEMU guest agent:
+    - **VirtIO network driver** — enables network connectivity
+    - **VirtIO balloon driver** — enables memory management
+    - **VirtIO serial driver** — enables console communication
+    - **QEMU guest agent** — enables password changes and other management operations from the Dashboard
+
+    Follow the installer prompts and click **Install**.
+
+    <Check>After installation, the VM should have network connectivity. Verify by
+    opening a browser or running `ipconfig` in Command Prompt.</Check>
+  </Step>
+
+  <Step title="Eject the ISOs">
+    Both the Windows ISO and VirtIO ISO are still mounted. To remove them:
+
+    **Shut down the VM** from inside Windows (Start > Shut Down).
+
+    Then in the Dashboard, navigate to **Compute > Instances**, click the instance
+    name, go to the **Volumes** tab. The ISO volumes appear as attached volumes.
+
+    For each ISO volume, click the **More** dropdown and select
+    **Instance Related > Detach** to remove it.
+
+    For detailed instructions, see [Detach a Volume](/services/storage/attach-volume#detach-a-volume).
+  </Step>
+</Steps>
+
+---
+
+## Optional — Generalize the Image with Sysprep
+
+If you want to use this Windows installation as a template for creating multiple
+VMs, generalize it with Sysprep. This removes machine-specific data (Administrator
+password, computer name, SIDs) so each deployment gets unique identifiers.
+
+<Warning>
+  Sysprep is a one-way operation. After generalization, the VM must be re-configured
+  on next boot (OOBE). Do not run Sysprep on a production VM you intend to keep using.
+</Warning>
+
+<Steps titleSize="h3">
+  <Step title="Run Sysprep">
+    Inside the Windows VM, open File Explorer and navigate to:
+
+    ```
+    C:\Windows\System32\Sysprep
+    ```
+
+    Double-click **`sysprep.exe`**.
+  </Step>
+
+  <Step title="Configure Sysprep options">
+    | Setting | Value |
+    |---------|-------|
+    | **System Cleanup Action** | Enter System Out-of-Box Experience (OOBE) |
+    | **Generalize** | Check this box |
+    | **Shutdown Options** | Shutdown |
+
+    Click **OK**. Sysprep runs and shuts down the VM automatically.
+  </Step>
+
+  <Step title="Create a reusable image from the disk">
+    After the VM shuts down, create an image from the system disk:
+
+    Navigate to **Storage > Volumes**. Find the system disk volume (the one
+    Windows was installed on). Click the **More** dropdown and select
+    **Data Protection > Create Image**.
+
+    Enter a name (e.g., `windows-server-2022-generalized`) and select the disk
+    format. Click **Confirm**.
+
+    The generalized Windows image is now available in **Compute > Images** for
+    launching new VMs without repeating the ISO installation process.
+
+    <Check>New VMs launched from this image will boot into the Windows OOBE,
+    prompting for a new Administrator password and computer name.</Check>
+  </Step>
+</Steps>
+
+Alternatively, you can create a [VM Template](/services/compute/vm-templates) from
+the instance to capture the full configuration (flavor, network, security groups)
+alongside the disk image.
+
+---
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Disk selection screen is empty during installation" defaultOpen>
+    The VirtIO storage driver is not loaded. Click **Load driver**, browse to the
+    VirtIO ISO drive, and navigate to the `viostor` folder for your Windows version.
+    If the VirtIO ISO is not mounted, you need to recreate the instance with the
+    CD-ROM source set to the VirtIO drivers image.
+  </Accordion>
+  <Accordion title="No network after Windows installation">
+    The VirtIO network driver is not installed. Open the VirtIO CD-ROM in File
+    Explorer and run `virtio-win-gt-x64.exe` to install all drivers including
+    the network adapter. After installation, run `ipconfig` to verify connectivity.
+  </Accordion>
+  <Accordion title="Cannot RDP to the Windows VM">
+    Ensure: (1) VirtIO guest tools are installed (network driver active),
+    (2) A floating IP is associated with the instance,
+    (3) Security group allows TCP port 3389 (RDP) inbound,
+    (4) Remote Desktop is enabled in Windows Settings > System > Remote Desktop.
+  </Accordion>
+  <Accordion title="Windows activation fails">
+    Ensure the VM has outbound internet access (floating IP or NAT through router)
+    to reach Microsoft activation servers. For KMS activation in air-gapped
+    environments, configure your organization's KMS server address.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="VM Templates" href="/services/compute/vm-templates" color="#197560">
+    Save this Windows VM as a reusable template
+  </Card>
+  <Card title="Clone an Instance" href="/services/compute/clone-instance" color="#197560">
+    Create an exact copy of the configured Windows VM
+  </Card>
+  <Card title="Security Groups" href="/services/networking/security-groups" color="#197560">
+    Allow RDP (port 3389) access to the Windows VM
+  </Card>
+  <Card title="Floating IPs" href="/services/networking/floating-ips" color="#197560">
+    Associate a public IP for external access
+  </Card>
+</CardGroup>

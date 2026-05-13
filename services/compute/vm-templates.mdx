@@ -1,0 +1,374 @@
+---
+title: "VM Templates"
+description: "Create reusable VM templates from instances. Deploy standardized environments with captured disk, flavor, and network configuration."
+sidebarTitle: "VM Templates"
+---
+
+## Overview
+
+VM Templates let you save a complete instance configuration — disk, flavor, network,
+security groups, and key pair — as a reusable template. Deploy templates to create
+standardized instances with consistent configurations across your projects.
+
+Templates appear in the dedicated **Compute > VM Templates** page, separate from
+regular images and snapshots.
+
+<Info>**Xloud-Developed** — VM Templates are developed by Xloud and ship with XAVS / XPCI.</Info>
+
+<Note>
+  **Prerequisites**
+  - An active instance to create a template from
+  - Sufficient image storage quota
+</Note>
+
+---
+
+## What a VM Template Is
+
+A VM Template is a **first-class template object surfaced in the Dashboard**,
+implemented on top of the Image Service with a `xloud_template=true` discriminator
+and captured config metadata. It is more than a snapshot used as a base image — it
+also carries the surrounding launch context.
+
+| Capability | VM Template | Snapshot used as base image |
+|------------|:-----------:|:---------------------------:|
+| **Version** field (e.g. `1.0`) | Yes | — |
+| **Category** field (Base OS, Web Server, Database, Application, Custom) | Yes | — |
+| **Captured flavor** (vCPU / RAM summary shown on the row) | Yes | — |
+| **Captured network**, **security groups**, **key pair** | Yes | — |
+| **Deploy** action that pre-fills the launch wizard from the captured config | Yes | — |
+| Lives on its own **Compute → VM Templates** page | Yes | — |
+| Just disk content for a future boot | — | Yes |
+
+A snapshot used as a base image gives you the disk only — the next launch needs
+flavor, network, security groups, and key pair to be re-chosen by hand. A VM
+Template captures the disk **and** the surrounding configuration, and its Deploy
+action re-applies all of it in one click.
+
+<Info>
+  **Implementation note** — under the hood, a VM Template is stored in the Image
+  Service like any other image, marked with `xloud_template=true` plus the captured
+  config metadata. Operators can list templates from the CLI with
+  `openstack image list --property xloud_template=true`. The same storage backend,
+  RBAC privileges, and quotas that apply to images apply to templates — there is
+  no separate subsystem to learn.
+</Info>
+
+---
+
+## View Templates
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    Navigate to **Compute > VM Templates** in the sidebar. The list shows all templates
+    in your project.
+
+    | Column | Description |
+    |--------|-------------|
+    | **Template Name** | Template identifier (clickable to view details) |
+    | **Description** | Optional template description |
+    | **Version** | Template version (e.g., `1.0`) |
+    | **Category** | Base OS, Web Server, Database, Application, or Custom |
+    | **Flavor** | Captured flavor name |
+    | **Configuration** | vCPUs / RAM summary |
+    | **Status** | Active, Saving, etc. |
+    | **Size** | Template image size |
+    | **Created At** | Creation timestamp |
+
+    Filter by **Name** or **Status**.
+
+    <Note>
+      Administrators see an additional **Project ID/Name** column and can view
+      templates across all projects.
+    </Note>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Source credentials"
+    source openrc.sh
+    ```
+
+    ```bash title="List all VM templates"
+    openstack image list --property xloud_template=true
+    ```
+
+    ```bash title="Show template details"
+    openstack image show <TEMPLATE_ID>
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Create a Template
+
+There are two ways to create a template:
+
+### From the VM Templates Page
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Open the Create Template dialog">
+        Navigate to **Compute > VM Templates** and click **Create Template**.
+      </Step>
+      <Step title="Select the source instance">
+        | Field | Type | Required | Description |
+        |-------|------|----------|-------------|
+        | **Source Instance** | Dropdown | Yes | Select an instance (`Active`, `Stopped`, `Shutoff`, or `Paused`) |
+        | **Template Name** | Text | Yes | Name for the template |
+        | **Version** | Text | Yes | Version string (default: `1.0`) |
+        | **Category** | Dropdown | No | Classification (default: `Custom`) |
+        | **Description** | Text area | No | Optional notes |
+        | **Delete Instance After Conversion** | Checkbox | No | Delete the source instance after template creation |
+
+        **Category options**:
+
+        | Category | Use Case |
+        |----------|----------|
+        | **Base OS** | Clean OS installations (Ubuntu, CentOS, Windows) |
+        | **Web Server** | Pre-configured web stacks (Nginx, Apache, etc.) |
+        | **Database** | Database servers (MySQL, PostgreSQL, MongoDB) |
+        | **Application** | Custom application stacks |
+        | **Custom** | General-purpose templates (default) |
+
+        <Warning>
+          If **Delete Instance After Conversion** is checked, the source instance
+          is permanently deleted after the template is created. This cannot be undone.
+        </Warning>
+      </Step>
+      <Step title="Create the template">
+        Click **Confirm**. The template appears in the list with status `Saving`,
+        transitioning to `Active` when the snapshot completes.
+
+        <Tip>
+          The template captures the full configuration: flavor, network, security
+          groups, key pair, and availability zone. When deploying from this template,
+          these settings are used as defaults.
+        </Tip>
+
+        <Check>Template status is `Active` — ready for deployment.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Source credentials"
+    source openrc.sh
+    ```
+
+    Template creation uses the Xloud-developed Nova API extension:
+
+    ```bash title="Create a template from an instance"
+    curl -X POST -H "X-Auth-Token: $TOKEN" \
+      -H "Content-Type: application/json" \
+      -d '{
+        "xloud-convert-template": {
+          "name": "ubuntu-web-template",
+          "version": "1.0",
+          "category": "web-server",
+          "description": "Ubuntu 24.04 with Nginx pre-configured",
+          "delete_instance": false
+        }
+      }' \
+      "$NOVA_ENDPOINT/v2.1/servers/<INSTANCE_ID>/action"
+    ```
+  </Tab>
+</Tabs>
+
+### From an Instance (Convert to Template)
+
+Navigate to **Compute > Instances**. Click the **More** dropdown on the instance row
+and select **Convert to Template** under the **Clone & Template** group. The form is
+the same as above except the source instance is pre-selected.
+
+<Note>
+  Convert to Template is available for instances in `Active`, `Stopped`, `Shutoff`,
+  or `Paused` status.
+</Note>
+
+---
+
+## Template Detail
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    Click a template name to open the detail page. Three info cards are displayed:
+
+    **Template Info**:
+
+    | Field | Description |
+    |-------|-------------|
+    | **Template Name** | Display name |
+    | **Version** | Version string |
+    | **Category** | Classification (Base OS, Web Server, etc.) |
+    | **Description** | Template description |
+    | **Source Instance** | Instance this template was created from (copyable) |
+    | **Created By** | User who created the template |
+    | **Template Created** | Creation timestamp |
+
+    **VM Configuration** (captured from the source instance):
+
+    | Field | Description |
+    |-------|-------------|
+    | **Flavor** | Original flavor name |
+    | **vCPUs** | CPU count |
+    | **RAM (MB)** | Memory allocation |
+    | **Disk (GB)** | Root disk size |
+    | **Network** | Network name |
+    | **Security Groups** | Comma-separated list |
+    | **Key Pair** | SSH key pair name |
+    | **Availability Zone** | Zone placement |
+
+    **Image Info** (underlying Glance image):
+
+    | Field | Description |
+    |-------|-------------|
+    | **Image ID** | UUID (copyable) |
+    | **Status** | Active, Saving, etc. |
+    | **Size** | Image file size |
+    | **Disk Format** | QCOW2, RAW, etc. |
+    | **Visibility** | Public, Private, or Shared |
+    | **Protected** | Yes/No |
+    | **Checksum** | Image checksum (copyable) |
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Show template metadata"
+    openstack image show <TEMPLATE_ID> -f json | python3 -c "
+    import sys, json
+    img = json.load(sys.stdin)
+    for k, v in sorted(img.items()):
+        if k.startswith('xloud_template_'):
+            print(f'{k}: {v}')
+    "
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Deploy a Template
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Select Deploy">
+        Navigate to **Compute > VM Templates**. Click the **More** dropdown on the
+        template row and select **Deploy**.
+      </Step>
+      <Step title="Name the new instance">
+        Enter a **Name** for the new instance. Click **Confirm**.
+
+        The wizard redirects to the Instance Create page with the template
+        pre-selected as the boot source image.
+
+        <Check>New instance created from the template with the captured configuration.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Launch instance from template"
+    openstack server create \
+      --image <TEMPLATE_ID> \
+      --flavor <FLAVOR> \
+      --network <NETWORK> \
+      --key-name <KEYPAIR> \
+      my-deployed-instance
+    ```
+
+    <Tip>
+      Use the flavor, network, and key pair captured in the template metadata
+      for consistent deployments:
+
+      ```bash title="Get template's captured config"
+      openstack image show <TEMPLATE_ID> -c properties -f json | python3 -c "
+      import sys, json
+      props = json.load(sys.stdin)['properties']
+      print(f'Flavor: {props.get(\"xloud_template_flavor_name\", \"N/A\")}')
+      print(f'Network: {props.get(\"xloud_template_network_name\", \"N/A\")}')
+      print(f'Keypair: {props.get(\"xloud_template_keypair\", \"N/A\")}')
+      "
+      ```
+    </Tip>
+  </Tab>
+</Tabs>
+
+---
+
+## Edit a Template
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    Click **Edit** (the first row action) on the template row. You can modify:
+
+    | Field | Description |
+    |-------|-------------|
+    | **Name** | Template display name |
+    | **Version** | Version string |
+    | **Category** | Template classification |
+    | **Description** | Template description (max 255 chars) |
+    | **Public** | Make visible to all projects (admin only) |
+    | **Protected** | Prevent accidental deletion |
+    | **Configuration fields** | Flavor, vCPUs, RAM, Disk, Network, Key Pair, AZ |
+
+    Click **Confirm** to save changes.
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Update template metadata"
+    openstack image set \
+      --property xloud_template_version="2.0" \
+      --property xloud_template_category="web-server" \
+      <TEMPLATE_ID>
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Delete a Template
+
+Click the **More** dropdown on the template row and select **Delete Template**.
+Templates with `Protected` enabled must have protection removed before deletion.
+
+Batch delete is available via checkboxes.
+
+<Danger>
+  Deleting a template permanently removes the underlying image. Instances previously
+  deployed from this template are not affected, but no new deployments can be made.
+</Danger>
+
+---
+
+## Manage Access (Admin Only)
+
+Administrators can share templates with specific projects via the **Manage Access**
+action in the More dropdown. This requires the template to have `Shared` visibility.
+
+---
+
+## Template Actions Summary
+
+| Action | Location | Description |
+|--------|----------|-------------|
+| **Edit** | First row action | Edit template name, version, category, configuration |
+| **Deploy** | More dropdown | Launch a new instance from the template |
+| **Delete** | More dropdown / batch | Delete the template |
+| **Manage Access** | More dropdown (admin) | Share with specific projects (requires Shared visibility) |
+| **Create Template** | Primary action (top) | Create a new template from an existing instance |
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Clone an Instance" href="/services/compute/clone-instance" color="#197560">
+    Create an exact copy of a running instance without templates
+  </Card>
+  <Card title="Instance Snapshots" href="/services/compute/snapshots" color="#197560">
+    Create point-in-time snapshots (simpler than templates)
+  </Card>
+  <Card title="Create an Instance" href="/services/compute/launch-instance" color="#197560">
+    Launch instances from the 4-step wizard
+  </Card>
+  <Card title="Image Management" href="/services/images/upload-image" color="#197560">
+    Upload and manage OS images
+  </Card>
+</CardGroup>

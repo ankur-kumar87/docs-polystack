@@ -1,0 +1,101 @@
+---
+title: "Reboot an Instance"
+description: "Perform hard or soft reboots on Xloud Compute instances using the Dashboard or CLI. Understand the difference between reboot types and when to use each."
+sidebarTitle: "Reboot Instance"
+---
+
+## Overview
+
+Rebooting an instance restarts the guest operating system. Xloud Compute supports
+two reboot types: **hard reboot** (equivalent to a power cycle) and **soft reboot**
+(sends an ACPI shutdown signal and restarts). Both are available as individual and
+batch operations.
+
+<Note>
+  **Prerequisites**
+  - An instance in `Active` or `Shutoff` status (hard reboot) or `Active` status (soft reboot)
+  - The instance must not be locked (unless you are an administrator)
+</Note>
+
+---
+
+## Reboot Types
+
+| Type | Status Required | Behavior | Use Case |
+|------|----------------|----------|----------|
+| **Hard Reboot** | `Active` or `Shutoff` | Immediate power cycle — equivalent to pressing the reset button | Unresponsive instance, frozen OS |
+| **Soft Reboot** | `Active` only | Graceful ACPI shutdown signal followed by restart | Routine restarts, applying config changes |
+
+<Tip>
+  Prefer **Soft Reboot** for routine restarts — it allows the OS to flush disk buffers
+  and cleanly shut down services. Use **Hard Reboot** only when the instance is
+  unresponsive to soft reboot.
+</Tip>
+
+<Note>
+  Soft Reboot is not available for bare metal instances.
+</Note>
+
+---
+
+## Reboot an Instance
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Navigate to Instances">
+        Navigate to **Compute > Instances** in the sidebar.
+      </Step>
+      <Step title="Select the reboot type">
+        Click the **More** dropdown on the instance row. Under **Instance Status**,
+        select either:
+
+        - **Reboot** — performs a hard reboot
+        - **Soft Reboot** — performs a graceful reboot
+
+        Confirm the action in the dialog.
+
+        <Note>
+          Both actions are available as batch operations. Select multiple instances
+          using checkboxes and choose **Reboot** or **Soft Reboot** from the batch
+          actions bar.
+        </Note>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Source credentials"
+    source openrc.sh
+    ```
+
+    <CodeGroup>
+    ```bash title="Hard reboot"
+    openstack server reboot --hard <INSTANCE_ID>
+    ```
+    ```bash title="Soft reboot"
+    openstack server reboot --soft <INSTANCE_ID>
+    ```
+    </CodeGroup>
+
+    <Check>Instance returns to `Active` status after reboot completes.</Check>
+  </Tab>
+</Tabs>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Resize an Instance" href="/services/compute/resize-instance" color="#197560">
+    Change the flavor of an instance (requires reboot)
+  </Card>
+  <Card title="Rescue an Instance" href="/services/compute/rescue-instance" color="#197560">
+    Boot from a rescue image to fix a broken OS
+  </Card>
+  <Card title="Instance Snapshots" href="/services/compute/snapshots" color="#197560">
+    Create a snapshot before performing maintenance
+  </Card>
+  <Card title="Troubleshooting" href="/services/compute/troubleshooting" color="#197560">
+    Resolve unresponsive instances and failed reboots
+  </Card>
+</CardGroup>

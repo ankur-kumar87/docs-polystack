@@ -1,0 +1,80 @@
+---
+title: "Object Storage Admin Guide"
+description: "Administer Xloud Object Storage — configure storage policies, manage rings, control replication, enforce quotas, secure the cluster, and monitor storage health."
+sidebarTitle: "Admin Guide"
+mode: "wide"
+---
+
+import AdminWarning from '/snippets/admin-warning.mdx';
+
+<p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Overview</p>
+
+This guide covers platform-level administration of the Xloud Object Storage service.
+Administrators design and manage storage policies that govern data placement and
+replication, maintain the consistent hash rings mapping objects to physical drives,
+monitor cluster health, enforce quotas, and apply security hardening across the proxy
+and storage tiers.
+
+<AdminWarning />
+
+---
+
+<p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Topics in This Guide</p>
+
+<CardGroup cols={4}>
+  <Card title="Architecture" icon="network" href="/services/object-storage/architecture" color="#197560">
+    Cluster topology — proxy tier, storage tier, and consistent hash ring mechanics
+  </Card>
+  <Card title="Storage Policies" icon="layers" href="/services/object-storage/storage-policies" color="#197560">
+    Design and manage data placement tiers using named storage policies
+  </Card>
+  <Card title="Ring Management" icon="refresh-cw" href="/services/object-storage/ring-management" color="#197560">
+    Add drives, adjust weights, rebalance rings, and distribute ring files to all nodes
+  </Card>
+  <Card title="Replication" icon="copy" href="/services/object-storage/replication" color="#197560">
+    Monitor replication health, check cluster consistency, and manage quarantined objects
+  </Card>
+  <Card title="Quotas" icon="gauge" href="/services/object-storage/quotas" color="#197560">
+    Enforce per-account and per-container storage limits
+  </Card>
+  <Card title="Security" icon="shield" href="/services/object-storage/security" color="#197560">
+    TLS enforcement, temp URL key rotation, audit logging, and cross-project ACL governance
+  </Card>
+  <Card title="Monitoring" icon="activity" href="/services/object-storage/monitoring" color="#197560">
+    Track cluster capacity, proxy metrics, replication latency, and quarantine counts
+  </Card>
+  <Card title="Troubleshooting" icon="wrench" href="/services/object-storage/admin-troubleshooting" color="#197560">
+    Diagnose 507 storage errors, proxy latency, and ring inconsistencies
+  </Card>
+</CardGroup>
+
+---
+
+<p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Prerequisites</p>
+
+<Note>
+  **Required before proceeding**
+  - Administrator credentials sourced via `openrc.sh`
+  - SSH access to storage nodes for ring management operations
+  - Access to XDeploy for service configuration changes
+  - Familiarity with distributed storage concepts (consistent hashing, replication zones)
+</Note>
+
+---
+
+<p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Next Steps</p>
+
+<CardGroup cols={4}>
+  <Card title="Object Storage User Guide" icon="book-open" href="/services/object-storage/user-guide" color="#197560">
+    Step-by-step instructions for managing containers and objects
+  </Card>
+  <Card title="Key Manager Admin Guide" icon="lock" href="/services/key-manager/admin-guide" color="#197560">
+    Configure encryption keys for server-side object storage encryption
+  </Card>
+  <Card title="Load Balancer Admin Guide" icon="combine" href="/services/load-balancer/admin-guide" color="#197560">
+    Place a load balancer in front of object storage proxy nodes
+  </Card>
+  <Card title="Identity" icon="fingerprint" href="/cli-setup" color="#197560">
+    Manage service accounts and RBAC policies for object storage access
+  </Card>
+</CardGroup>

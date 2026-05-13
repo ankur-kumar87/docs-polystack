@@ -1,0 +1,176 @@
+---
+title: "Domain Management"
+description: "Create and manage organizational domains with independent user namespaces and authentication backends in Xloud Identity."
+sidebarTitle: "Domain Management"
+---
+
+import AdminWarning from '/snippets/admin-warning.mdx';
+
+## Overview
+
+Domains provide administrative isolation between organizations, business units, or customers.
+Each domain has its own user namespace, and users in one domain cannot see users in another.
+A single domain can be configured with its own authentication backend (SQL, LDAP, or
+federation), making domains the fundamental multi-tenancy boundary in Xloud Identity.
+
+<AdminWarning />
+
+---
+
+## Domain Concepts
+
+| Concept | Description |
+|---------|-------------|
+| **Default domain** | Created automatically during deployment. Contains all initial admin users and projects. Cannot be deleted. |
+| **Custom domain** | Administrator-created domain for a business unit, customer, or organizational boundary. |
+| **Domain admin** | A user with the `admin` role scoped to the domain. Can manage users and projects within that domain only. |
+| **Domain backend** | Each domain can use a different authentication driver — one domain uses SQL, another uses LDAP. |
+
+---
+
+## Create a Domain
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Navigate to Domains" icon="building">
+        Log in with admin credentials. Navigate to **Identity > Domains** (admin view) and click
+        **Create Domain**.
+      </Step>
+      <Step title="Configure the domain" icon="settings">
+        | Field | Description |
+        |-------|-------------|
+        | **Name** | Unique identifier for the domain |
+        | **Description** | Purpose or owner of the domain |
+        | **Enabled** | Toggle on to allow user authentication |
+      </Step>
+      <Step title="Confirm creation" icon="circle-check">
+        Click **Confirm**.
+        <Check>The domain appears in **Identity > Domains** (admin view) with status Enabled.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Create a domain"
+    openstack domain create \
+      --description "Customer A organization" \
+      customer-a
+    ```
+
+    ```bash title="List all domains"
+    openstack domain list
+    ```
+
+    ```bash title="Show domain details"
+    openstack domain show customer-a
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Assign Domain Administrators
+
+As a domain administrator, you can manage users, projects, and groups within your domain without
+platform-level admin access.
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    On the domain row, click the **More** dropdown and select **Manage User**. Add a user
+    and assign the `admin` role to grant domain-level administration privileges.
+    <Check>The domain administrator can now manage users and projects within that domain.</Check>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Create a domain administrator user"
+    openstack user create \
+      --domain customer-a \
+      --password-prompt \
+      customer-a-admin
+    ```
+
+    ```bash title="Grant domain admin role"
+    openstack role add \
+      --domain customer-a \
+      --user customer-a-admin \
+      admin
+    ```
+
+    ```bash title="Verify the domain admin assignment"
+    openstack role assignment list \
+      --user customer-a-admin \
+      --domain customer-a \
+      --names
+    ```
+    <Check>The admin role assignment is visible for the domain scope.</Check>
+  </Tab>
+</Tabs>
+
+---
+
+## Disable and Delete Domains
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    Navigate to **Identity > Domains** (admin view), open the domain, and click **Edit**.
+    Toggle **Enabled** off to disable the domain. Disabled domains block all authentication
+    for every user in that domain.
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Disable a domain (blocks all authentication for domain users)"
+    openstack domain set --disable customer-a
+    ```
+
+    ```bash title="Delete a domain"
+    openstack domain delete customer-a
+    ```
+
+    <Warning>
+      Disabling a domain immediately blocks all authentication for every user in that
+      domain. All running instances and active sessions are unaffected until their
+      tokens expire. Deleting a domain permanently removes all users, projects, and
+      resources within it — this action cannot be undone.
+    </Warning>
+  </Tab>
+</Tabs>
+
+---
+
+## Per-Domain Authentication Backends
+
+Each domain can be assigned its own authentication driver. This enables a deployment
+where the Default domain uses SQL while a `corporate` domain uses LDAP:
+
+```yaml title="XDeploy globals: per-domain LDAP backend"
+keystone_domain_config:
+  corporate:
+    identity:
+      driver: ldap
+    ldap:
+      url: ldap://ldap.corp.example.com
+      user_tree_dn: ou=Users,dc=corp,dc=example,dc=com
+      user_id_attribute: sAMAccountName
+```
+
+Deploy after configuring:
+```bash title="Apply domain configuration"
+xavs-ansible deploy --tags keystone
+```
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Authentication Backends" href="/services/identity/auth-backends" color="#197560">
+    Configure LDAP and federation backends for domain authentication.
+  </Card>
+  <Card title="Service Catalog" href="/services/identity/service-catalog" color="#197560">
+    Manage endpoint registration across regions for all Xloud services.
+  </Card>
+  <Card title="Policy Management" href="/services/identity/policy-management" color="#197560">
+    Customize RBAC policies for domain-scoped administrative operations.
+  </Card>
+  <Card title="Security Hardening" href="/services/identity/security" color="#197560">
+    Apply security best practices for domain isolation and access controls.
+  </Card>
+</CardGroup>

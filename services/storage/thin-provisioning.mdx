@@ -1,0 +1,198 @@
+---
+title: "Thin and Thick Provisioning"
+description: "Configure thin and thick provisioning for Xloud Block Storage backends. Understand overcommit ratios, backend-specific settings, and capacity monitoring."
+sidebarTitle: "Provisioning"
+---
+
+import AdminWarning from '/snippets/admin-warning.mdx';
+import CliAuth from '/snippets/cli-auth.mdx';
+
+## Overview
+
+Xloud Block Storage supports both thin and thick provisioning models. Thin provisioning allocates storage capacity on demand — physical space is consumed only as data is written, not when the volume is created. Thick provisioning reserves the full volume capacity immediately at creation time. The provisioning behavior is controlled by the backend driver and the scheduler overcommit configuration.
+
+<AdminWarning />
+
+---
+
+## Thin vs Thick Comparison
+
+| Attribute | Thin Provisioning | Thick Provisioning |
+|-----------|-------------------|-------------------|
+| **Space allocated at creation** | No — space consumed as data is written | Yes — full size reserved immediately |
+| **Overcommit support** | Yes — allocate more than physical capacity | No — bounded by actual available space |
+| **Performance** | Comparable to thick once space is allocated | Predictable from the start |
+| **Risk** | Out-of-space if usage exceeds physical capacity | No overcommit risk |
+| **Supported backends** | Ceph RBD, LVM thin, NetApp, Pure Storage, HPE, Dell | LVM (default), some SAN arrays |
+| **Recommended for** | Multi-tenant clouds, variable-usage workloads | Latency-sensitive databases, predictable workloads |
+
+---
+
+## Backend Provisioning Support
+
+<AccordionGroup>
+  <Accordion title="Ceph RBD — thin by default" icon="database">
+    Ceph RBD images are sparse by design. When a volume is created, no physical storage is consumed until data is written. No configuration is required to enable thin provisioning on the Ceph backend.
+
+    ```ini title="cinder.conf — Ceph RBD backend"
+    [ceph-ssd]
+    volume_driver = cinder.volume.drivers.rbd.RBDDriver
+    volume_backend_name = ceph-ssd
+    rbd_pool = volumes
+    rbd_ceph_conf = /etc/ceph/ceph.conf
+    rbd_user = cinder
+    rbd_secret_uuid = <libvirt-secret-uuid>
+    ```
+
+    <Tip>
+      Because Ceph RBD is thin by default, the `max_over_subscription_ratio` setting in the `[DEFAULT]` section controls how aggressively the scheduler overcommits capacity. The default value is 20.0 (20x overcommit).
+    </Tip>
+  </Accordion>
+
+  <Accordion title="LVM — configure thin pools" icon="layers">
+    LVM uses thick provisioning by default. To enable thin provisioning, create a thin pool in the volume group before configuring Cinder, then set `lvm_type = thin` in the backend section.
+
+    **Step 1: Create the thin pool**
+
+    ```bash title="Create LVM thin pool"
+    pvcreate /dev/sdX
+    vgcreate cinder-volumes /dev/sdX
+    lvcreate --type thin-pool \
+      --size 500G \
+      --name thin-pool \
+      cinder-volumes
+    ```
+
+    **Step 2: Configure Cinder**
+
+    ```ini title="cinder.conf — LVM thin backend"
+    [lvm-thin]
+    volume_driver = cinder.volume.drivers.lvm.LVMVolumeDriver
+    volume_backend_name = lvm-thin
+    volume_group = cinder-volumes
+    lvm_type = thin
+    target_helper = lioadm
+    target_protocol = iscsi
+    ```
+
+    **Step 3: Apply the configuration**
+
+    ```bash title="Deploy block storage configuration"
+    xavs-ansible deploy --tags cinder
+    ```
+
+    **Step 4: Verify thin volumes are created**
+
+    ```bash title="Check LVM thin volume allocation"
+    lvs --options +lv_layout
+    ```
+
+    Volumes created from this backend will show `Twi` in the `Attr` column, confirming thin layout.
+  </Accordion>
+
+  <Accordion title="NetApp ONTAP — FlexVol thin provisioning" icon="server">
+    NetApp ONTAP supports thin provisioning through FlexVol volumes. Set `netapp_lun_space_reservation = disabled` to enable thin provisioning on the LUN.
+
+    ```ini title="cinder.conf — NetApp thin provisioning"
+    [netapp-thin]
+    volume_driver = cinder.volume.drivers.netapp.common.NetAppDriver
+    volume_backend_name = netapp-thin
+    netapp_storage_family = ontap_cluster
+    netapp_transport_type = https
+    netapp_server_hostname = 10.0.10.50
+    netapp_login = admin
+    netapp_password = <password>
+    netapp_vserver = svm0
+    netapp_storage_protocol = iscsi
+    netapp_lun_space_reservation = disabled
+    ```
+  </Accordion>
+
+  <Accordion title="Pure Storage — thin by default" icon="zap">
+    Pure Storage FlashArray volumes are thin-provisioned by default. The array reports the provisioned size to the scheduler, not physical consumption. No additional configuration is needed.
+
+    ```ini title="cinder.conf — Pure Storage thin provisioning"
+    [pure-flash]
+    volume_driver = cinder.volume.drivers.pure.PureISCSIDriver
+    volume_backend_name = pure-flash
+    san_ip = 10.0.10.60
+    pure_api_token = <api-token>
+    use_multipath_for_image_xfer = true
+    ```
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Scheduler Overcommit Configuration
+
+The Cinder scheduler uses `max_over_subscription_ratio` to determine how much capacity to advertise to tenants above physical availability. This applies to backends that report `thin_provisioning_support = True`.
+
+```ini title="cinder.conf — scheduler overcommit settings"
+[DEFAULT]
+max_over_subscription_ratio = 20.0
+reserved_percentage = 5
+```
+
+| Parameter | Description | Default |
+|-----------|-------------|---------|
+| `max_over_subscription_ratio` | Maximum ratio of provisioned capacity to physical capacity | `20.0` |
+| `reserved_percentage` | Percentage of backend capacity reserved and excluded from scheduling | `0` |
+
+<Warning>
+  Setting `max_over_subscription_ratio` too high without monitoring physical usage can result in volumes that cannot be written to once the physical backend is full. Monitor actual consumption against provisioned capacity and set alerts at 70–80% physical utilization.
+</Warning>
+
+---
+
+## Monitor Overcommit and Capacity
+
+<Tabs>
+  <Tab title="Dashboard" icon="monitor">
+    Navigate to **Storage > Storage Backends** (admin view) to view backend capacity statistics. The **Free Capacity** and **Total Capacity** columns show the physical pool state reported by each backend driver.
+
+    For provisioned-vs-physical overcommit visibility, use the XIMP monitoring dashboard to track Cinder backend pool utilization over time.
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    <CliAuth />
+
+    ```bash title="List backend capacity and provisioning"
+    openstack volume backend pool list --long
+    ```
+
+    Key columns:
+
+    | Column | Description |
+    |--------|-------------|
+    | `free_capacity_gb` | Physical free space remaining on the backend |
+    | `total_capacity_gb` | Total physical capacity of the backend pool |
+    | `provisioned_capacity_gb` | Total provisioned (allocated) capacity across all volumes |
+    | `thin_provisioning_support` | `True` if the backend supports thin provisioning |
+    | `max_over_subscription_ratio` | Configured overcommit ratio for this backend |
+
+    ```bash title="Check volume actual allocation (Ceph)"
+    rbd du volumes
+    ```
+
+    The `rbd du` command shows the difference between provisioned size and actual data written for each RBD volume, providing a direct view of thin provisioning savings.
+  </Tab>
+</Tabs>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="External Storage Integration" href="/services/storage/external-storage" color="#197560">
+    Connect to enterprise storage backends including NetApp, Pure Storage, and Dell
+  </Card>
+  <Card title="Storage Backends" href="/services/storage/storage-backends" color="#197560">
+    Configure and register backend drivers with the scheduler
+  </Card>
+  <Card title="Volume Types Admin" href="/services/storage/volume-types-admin" color="#197560">
+    Expose provisioning mode to tenants through volume type extra specs
+  </Card>
+  <Card title="Storage Tiers" href="/services/storage/storage-tiers" color="#197560">
+    Configure multi-tier storage with NVMe, SSD, and HDD backends
+  </Card>
+</CardGroup>

@@ -1,0 +1,150 @@
+---
+title: "Monitoring Clusters"
+description: "Monitor Xloud K8SaaS cluster health, resource usage, and lifecycle status across all projects — admin-level cluster observability and health auditing."
+sidebarTitle: "Monitoring"
+---
+
+## Overview
+
+Administrators monitor the health and status of all Kubernetes clusters across all projects
+from a single view. This includes tracking cluster lifecycle states, node health, control
+plane availability, and identifying clusters that require attention — stuck in a non-terminal
+state, unhealthy, or consuming unexpected resources.
+
+---
+
+## Admin Cluster Overview
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    Navigate to **Container (admin view) > Clusters** to view all clusters across all projects.
+
+    | Column | Description |
+    |--------|-------------|
+    | **Name** | Cluster identifier |
+    | **Status** | Lifecycle state: `CREATE_COMPLETE`, `UPDATE_IN_PROGRESS`, `CREATE_FAILED`, etc. |
+    | **Health Status** | Kubernetes-level health: `HEALTHY`, `UNHEALTHY`, `UNKNOWN` |
+    | **Master Count** | Number of control plane nodes |
+    | **Node Count** | Number of worker nodes |
+    | **Project** | Owning project |
+    | **Created** | Provisioning timestamp |
+
+    <Tip>
+      Filter by Status to quickly identify clusters in non-terminal states that require
+      operator attention (e.g., `CREATE_IN_PROGRESS` for more than 30 minutes).
+    </Tip>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="List all clusters across all projects"
+    openstack coe cluster list --all
+    ```
+
+    ```bash title="Filter for non-healthy clusters"
+    openstack coe cluster list --all \
+      -f json | jq '.[] | select(.health_status != "HEALTHY")'
+    ```
+
+    ```bash title="Show detailed status for a specific cluster"
+    openstack coe cluster show <cluster-name> -f json
+    ```
+
+    ```bash title="List clusters stuck in a transitional state"
+    openstack coe cluster list --all \
+      | grep -v -E "CREATE_COMPLETE|UPDATE_COMPLETE|DELETE_COMPLETE"
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Cluster Health States
+
+| Status | Meaning | Operator Action |
+|--------|---------|----------------|
+| `CREATE_COMPLETE` | Cluster deployed and healthy | None required |
+| `UPDATE_COMPLETE` | Last update succeeded | None required |
+| `CREATE_IN_PROGRESS` | Provisioning in progress | Monitor; investigate if >30 min |
+| `UPDATE_IN_PROGRESS` | Update (scale/upgrade) in progress | Monitor |
+| `CREATE_FAILED` | Provisioning failed | Investigate `status_reason`, assist user |
+| `UPDATE_FAILED` | Scale or upgrade failed | Investigate and assist user |
+| `DELETE_IN_PROGRESS` | Cluster being deleted | Monitor |
+| `DELETE_FAILED` | Deletion failed | Manual stack cleanup required |
+
+---
+
+## Check Control Plane Availability
+
+For high-availability clusters (3 master nodes), verify the control plane load balancer
+and all master nodes are healthy:
+
+```bash title="Show cluster API address"
+openstack coe cluster show <cluster-name> \
+  -f value -c api_address
+```
+
+```bash title="Test API server availability"
+curl -sk https://<api-address>:6443/healthz
+```
+
+Expected: `ok`
+
+---
+
+## Identify Unhealthy Clusters
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    Navigate to **Container (admin view) > Clusters** and sort by **Health Status**.
+    Clusters with `UNHEALTHY` or `UNKNOWN` health status should be investigated
+    and the project owner notified.
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Find unhealthy clusters"
+    openstack coe cluster list --all \
+      -f json \
+      | jq -r '.[] | select(.health_status != "HEALTHY") | [.name, .status, .health_status] | @tsv'
+    ```
+
+    For each unhealthy cluster, check the associated compute instances:
+
+    ```bash title="List instances for a cluster"
+    openstack server list \
+      --name <cluster-name> \
+      -f table -c ID -c Name -c Status
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Audit Inactive Clusters
+
+Identify clusters that may have been abandoned by project teams to reclaim compute
+resources:
+
+```bash title="List all clusters with creation date"
+openstack coe cluster list --all \
+  -f table -c name -c project_id -c created_at -c status
+```
+
+Contact the project owner for clusters that have been in `CREATE_COMPLETE` status for
+an extended period without recent activity, and confirm whether they are still needed.
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Quotas" href="/services/kubernetes/admin-guide/quotas" color="#197560">
+    Manage per-project cluster limits to prevent resource exhaustion.
+  </Card>
+  <Card title="Troubleshooting" href="/services/kubernetes/admin-guide/troubleshooting" color="#197560">
+    Diagnose failed clusters and stuck lifecycle states.
+  </Card>
+  <Card title="Security" href="/services/kubernetes/admin-guide/security" color="#197560">
+    Audit cluster security groups and RBAC configuration.
+  </Card>
+  <Card title="Certificates" href="/services/kubernetes/admin-guide/certificates" color="#197560">
+    Monitor and rotate cluster certificate authorities.
+  </Card>
+</CardGroup>

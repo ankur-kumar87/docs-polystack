@@ -1,0 +1,188 @@
+---
+title: "Agent Configuration"
+description: "Deploy XIMP monitoring agents via XDeploy or manually, configure custom scrape targets, and manage per-node agent authentication tokens."
+sidebarTitle: "Agent Configuration"
+---
+
+import AdminWarning from '/snippets/admin-warning.mdx';
+
+## Overview
+
+Monitoring agents run on every managed node and are responsible for collecting host-level
+metrics, forwarding logs, and reporting health status to the XIMP platform. Agents are
+deployed automatically when a node is registered in XDeploy, or manually for nodes
+outside XDeploy management.
+
+<AdminWarning />
+
+<Note>
+  **Prerequisites**
+  - Administrator credentials with the `admin` role
+  - Access to **XDeploy** (the **Xloud Dashboard**) for node management
+  - SSH access to target nodes for manual agent installation
+</Note>
+
+---
+
+## Deploy via XDeploy
+
+<Steps titleSize="h3">
+  <Step title="Register the node" icon="plus">
+    Navigate to **XDeploy → Infrastructure → Nodes → Add Node**. Provide the node
+    IP, hostname, and role. XDeploy installs and configures the XIMP agent as part
+    of the node onboarding process.
+  </Step>
+  <Step title="Verify agent registration" icon="circle-check">
+    Navigate to **Monitor Center > Monitoring** (Agents, admin view). The new node appears
+    with status **Active** within 2–3 minutes of registration.
+
+    ```bash title="Check agent status via CLI"
+    ximp agent list --status all
+    ```
+
+    <Check>Agent shows `ACTIVE` and last-seen timestamp is within the scrape interval.</Check>
+  </Step>
+  <Step title="Configure custom scrape targets" icon="settings">
+    If the node runs application-specific metric endpoints (e.g., a database exporter),
+    add them as additional scrape targets:
+
+    Navigate to **Monitor Center > Monitoring** (Add Scrape Target, admin view) and
+    provide the endpoint URL and scrape interval.
+
+    <Tip>
+      Metric endpoints must be accessible from the XIMP collector nodes. Ensure
+      security group rules permit inbound connections on the target port from the
+      collector IP range.
+    </Tip>
+  </Step>
+</Steps>
+
+---
+
+## Manual Agent Installation
+
+For nodes not managed by XDeploy, install and configure the agent manually.
+
+<Steps titleSize="h3">
+  <Step title="Install the agent package" icon="download">
+    ```bash title="Install XIMP agent"
+    apt install ximp-agent
+    ```
+  </Step>
+  <Step title="Retrieve an agent token" icon="key">
+    Generate an agent authentication token from the XIMP portal:
+    ```bash title="Create agent token"
+    ximp agent token create \
+      --node <HOSTNAME> \
+      --expires 365d
+    ```
+
+    Store the token securely — it cannot be retrieved after the command completes.
+  </Step>
+  <Step title="Configure the agent" icon="file-text">
+    Edit `/etc/ximp/agent.yaml`:
+
+    ```yaml title="/etc/ximp/agent.yaml"
+    server:
+      endpoint: https://ximp.xloud.internal:9090
+      auth_token: <AGENT_AUTH_TOKEN>
+
+    node:
+      hostname: compute-node-04
+      labels:
+        role: compute
+        az: zone-a
+
+    scrape_interval: 30s
+    log_paths:
+      - /var/log/syslog
+      - /var/log/nova/nova-compute.log
+    ```
+  </Step>
+  <Step title="Start and enable the agent" icon="play">
+    ```bash title="Enable and start XIMP agent"
+    systemctl enable --now ximp-agent
+    ```
+
+    ```bash title="Verify agent is running"
+    systemctl status ximp-agent
+    ```
+
+    <Check>Agent service is `active (running)` and registers with XIMP within 30 seconds.</Check>
+  </Step>
+</Steps>
+
+---
+
+## Managing Agent Tokens
+
+<Tabs>
+  <Tab title="Token Operations" icon="key">
+    ```bash title="List all agent tokens"
+    ximp agent token list
+    ```
+
+    ```bash title="Create a new token"
+    ximp agent token create --node compute-node-04 --expires 365d
+    ```
+
+    ```bash title="Revoke a token (e.g., for decommissioned nodes)"
+    ximp agent token revoke <TOKEN_ID>
+    ```
+  </Tab>
+  <Tab title="Token Rotation" icon="refresh-cw">
+    Rotate agent tokens periodically (recommended: every 365 days) or immediately
+    if a node is decommissioned or suspected compromised.
+
+    <Steps titleSize="h3">
+      <Step title="Generate a new token" icon="plus">
+        ```bash title="Create replacement token"
+        ximp agent token create --node compute-node-04 --expires 365d
+        ```
+      </Step>
+      <Step title="Update agent configuration" icon="settings">
+        Update `/etc/ximp/agent.yaml` on the node with the new token, then restart:
+        ```bash title="Restart agent with new token"
+        systemctl restart ximp-agent
+        ```
+      </Step>
+      <Step title="Revoke the old token" icon="trash">
+        ```bash title="Revoke old token"
+        ximp agent token revoke <OLD_TOKEN_ID>
+        ```
+
+        <Check>Old token is revoked and agent authenticates successfully with the new token.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+</Tabs>
+
+---
+
+## Troubleshooting Agents
+
+| Symptom | Diagnostic | Resolution |
+|---------|-----------|-----------|
+| Agent shows `offline` | `systemctl status ximp-agent` | Restart service; check token validity |
+| Agent not in list | `ximp agent list --status all` | Verify token; re-register node |
+| High scrape latency | `ximp agent stats --node <HOST>` | Reduce scrape targets; scale up node resources |
+| Authentication errors | Check `/var/log/ximp/agent.log` | Rotate token; verify endpoint URL |
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Metric Endpoints" href="/services/monitoring/admin-guide/metric-endpoints" color="#197560">
+    Add custom application scrape targets to agents
+  </Card>
+  <Card title="Log Collection" href="/services/monitoring/admin-guide/log-collection" color="#197560">
+    Configure which log files are forwarded by each agent
+  </Card>
+  <Card title="Security" href="/services/monitoring/admin-guide/security" color="#197560">
+    Agent token management and dashboard access control
+  </Card>
+  <Card title="Troubleshooting" href="/services/monitoring/admin-guide/troubleshooting" color="#197560">
+    Diagnose agent connectivity and metric collection issues
+  </Card>
+</CardGroup>

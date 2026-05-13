@@ -1,0 +1,116 @@
+---
+title: "Object Storage Quotas"
+description: "Enforce per-account and per-container storage quotas in Xloud Object Storage — set byte limits, object count limits, and monitor usage."
+sidebarTitle: "Quotas"
+---
+
+import AdminWarning from '/snippets/admin-warning.mdx';
+
+## Overview
+
+Quotas prevent individual projects from consuming excessive object storage capacity.
+Quotas are enforced at the account level (project-wide) or container level. When a
+quota is exceeded, the storage service returns `413 Request Entity Too Large`.
+
+<AdminWarning />
+
+---
+
+## Account-Level Quotas
+
+Account quotas limit the total storage consumed by a project across all containers.
+
+<Tabs>
+  <Tab title="Set account quota" icon="settings">
+    ```bash title="Set account-level quota (100 GB)"
+    openstack object store account set \
+      --property X-Account-Meta-Quota-Bytes=107374182400
+    ```
+
+    ```bash title="View current account usage vs quota"
+    openstack object store account show \
+      -c x-account-bytes-used \
+      -c x-account-meta-quota-bytes
+    ```
+  </Tab>
+  <Tab title="Remove account quota" icon="trash-2">
+    ```bash title="Remove account quota"
+    openstack object store account set \
+      --property X-Account-Meta-Quota-Bytes=
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Container-Level Quotas
+
+Container quotas limit storage within a specific container.
+
+<Tabs>
+  <Tab title="Set byte quota" icon="database">
+    ```bash title="Set container byte quota (10 GB)"
+    openstack container set \
+      --property X-Container-Meta-Quota-Bytes=10737418240 \
+      app-uploads
+    ```
+  </Tab>
+  <Tab title="Set object count quota" icon="list">
+    ```bash title="Set container object count quota"
+    openstack container set \
+      --property X-Container-Meta-Quota-Count=10000 \
+      app-uploads
+    ```
+
+    <Tip>
+      Set both byte and count quotas on shared containers — count quotas prevent
+      namespace abuse from applications that create excessive small objects.
+    </Tip>
+  </Tab>
+  <Tab title="View container quota" icon="eye">
+    ```bash title="View container quota and usage"
+    openstack container show app-uploads | grep -i "quota\|object"
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Quota Reference
+
+| Quota Type | Header | Scope | Enforcement |
+|------------|--------|-------|-------------|
+| Account byte limit | `X-Account-Meta-Quota-Bytes` | All containers in account | Returns 413 on exceed |
+| Container byte limit | `X-Container-Meta-Quota-Bytes` | Single container | Returns 413 on exceed |
+| Container object count | `X-Container-Meta-Quota-Count` | Single container | Returns 413 on exceed |
+
+---
+
+## Common Quota Sizes
+
+| Size | Bytes |
+|------|-------|
+| 10 GB | `10737418240` |
+| 50 GB | `53687091200` |
+| 100 GB | `107374182400` |
+| 500 GB | `536870912000` |
+| 1 TB | `1099511627776` |
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Security" href="/services/object-storage/security" color="#197560">
+    Apply access controls and TLS hardening alongside quotas
+  </Card>
+  <Card title="Monitoring" href="/services/object-storage/monitoring" color="#197560">
+    Track capacity usage across nodes and accounts
+  </Card>
+  <Card title="Storage Policies" href="/services/object-storage/storage-policies" color="#197560">
+    Design storage tiers to optimize cost and capacity
+  </Card>
+  <Card title="Admin Troubleshooting" href="/services/object-storage/admin-troubleshooting" color="#197560">
+    Diagnose quota enforcement and 413 errors
+  </Card>
+</CardGroup>

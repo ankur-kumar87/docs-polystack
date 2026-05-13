@@ -1,0 +1,285 @@
+---
+title: "VPN as a Service"
+description: "Create IPsec site-to-site VPN tunnels for secure inter-site connectivity between your Xloud environment and remote networks."
+sidebarTitle: "VPN (VPNaaS)"
+---
+
+## Overview
+
+VPN as a Service (VPNaaS) provides IPsec-based site-to-site tunnel connectivity, enabling secure communication between your Xloud private cloud and remote data centers, branch offices, or other cloud environments. VPNaaS is available with XPCI deployments.
+
+<Note>
+  **Prerequisites**
+  - Active project with `member` role or higher
+  - At least one router with an external gateway configured
+  - Remote site VPN endpoint details (peer IP, subnets, pre-shared key)
+  - VPNaaS enabled by your administrator (`enable_neutron_vpnaas: "yes"`)
+</Note>
+
+---
+
+## Key Concepts
+
+| Concept | Description |
+|---------|-------------|
+| **IKE Policy** | Defines the Internet Key Exchange parameters used during Phase 1 negotiation — authentication algorithm, encryption algorithm, IKE version (v1 or v2), and key lifetime |
+| **IPsec Policy** | Defines the Phase 2 parameters for the data channel — encryption algorithm, authentication algorithm, encapsulation mode (tunnel or transport), and Perfect Forward Secrecy (PFS) group |
+| **VPN Service** | Associates a VPN with a specific router and subnet in your project |
+| **Endpoint Group** | Defines the local or remote subnets that participate in the VPN tunnel |
+| **IPsec Site Connection** | Combines the IKE policy, IPsec policy, VPN service, and endpoint groups into an active tunnel to a remote peer |
+
+---
+
+## Supported Algorithms
+
+<Tabs>
+  <Tab title="IKE Policy" icon="key">
+    | Parameter | Supported Values | Default |
+    |-----------|-----------------|---------|
+    | **IKE Version** | v1, v2 | v1 |
+    | **Auth Algorithm** | sha1, sha256, sha384, sha512 | sha1 |
+    | **Encryption Algorithm** | aes-128, aes-192, aes-256, 3des | aes-128 |
+    | **Phase 1 Negotiation Mode** | main | main |
+    | **Lifetime Value** | 60 -- 86400 seconds | 3600 |
+    | **PFS** | group2, group5, group14 | group5 |
+
+    <Tip>
+      Use IKEv2 with AES-256 and SHA-256 for production deployments. IKEv1 is supported for backward compatibility with legacy equipment.
+    </Tip>
+  </Tab>
+  <Tab title="IPsec Policy" icon="shield">
+    | Parameter | Supported Values | Default |
+    |-----------|-----------------|---------|
+    | **Transform Protocol** | esp, ah, ah-esp | esp |
+    | **Auth Algorithm** | sha1, sha256, sha384, sha512 | sha1 |
+    | **Encryption Algorithm** | aes-128, aes-192, aes-256, 3des | aes-128 |
+    | **Encapsulation Mode** | tunnel, transport | tunnel |
+    | **PFS** | group2, group5, group14 | group5 |
+    | **Lifetime Value** | 60 -- 86400 seconds | 3600 |
+
+    <Tip>
+      Enable Perfect Forward Secrecy (PFS) with at least group14 (2048-bit DH) for production tunnels.
+    </Tip>
+  </Tab>
+</Tabs>
+
+---
+
+## Create a VPN Connection
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Create an IKE Policy" icon="key">
+        Navigate to **Network > VPNs** (IKE Policies tab) and click **Create**.
+
+        | Field | Value |
+        |-------|-------|
+        | **Name** | A descriptive name (e.g., `ike-aes256-sha256`) |
+        | **IKE Version** | v2 |
+        | **Encryption Algorithm** | aes-256 |
+        | **Auth Algorithm** | sha256 |
+        | **PFS** | group14 |
+        | **Lifetime Value** | 3600 |
+      </Step>
+      <Step title="Create an IPsec Policy" icon="shield">
+        Navigate to **Network > VPNs** (IPsec Policies tab) and click **Create**.
+
+        | Field | Value |
+        |-------|-------|
+        | **Name** | A descriptive name (e.g., `ipsec-aes256-sha256`) |
+        | **Transform Protocol** | esp |
+        | **Encryption Algorithm** | aes-256 |
+        | **Auth Algorithm** | sha256 |
+        | **Encapsulation Mode** | tunnel |
+        | **PFS** | group14 |
+      </Step>
+      <Step title="Create a VPN Gateway">
+        Navigate to **Network > VPNs** (VPN Gateways tab) and click **Create**.
+
+        | Field | Value |
+        |-------|-------|
+        | **Name** | A descriptive name (e.g., `vpn-to-branch-office`) |
+        | **Router** | Select the router with an external gateway |
+        | **Subnet** | Select the local subnet to expose through the tunnel |
+      </Step>
+      <Step title="Create Endpoint Groups" icon="circle-dot">
+        Navigate to **Network > VPNs** (VPN EndPoint Groups tab) and create two endpoint groups:
+
+        **Local Endpoint Group:**
+
+        | Field | Value |
+        |-------|-------|
+        | **Name** | `local-subnets` |
+        | **Type** | subnet |
+        | **Endpoints** | Select your local project subnet(s) |
+
+        **Remote Endpoint Group:**
+
+        | Field | Value |
+        |-------|-------|
+        | **Name** | `remote-subnets` |
+        | **Type** | cidr |
+        | **Endpoints** | Enter the remote subnet CIDRs (e.g., `192.168.1.0/24`) |
+      </Step>
+      <Step title="Create the IPsec Site Connection" icon="link">
+        Navigate to **Network > VPNs** (IPsec Site Connections tab) and click **Create**.
+
+        | Field | Value |
+        |-------|-------|
+        | **Name** | `connection-to-branch` |
+        | **VPN Service** | Select the VPN service created above |
+        | **IKE Policy** | Select the IKE policy created above |
+        | **IPsec Policy** | Select the IPsec policy created above |
+        | **Local Endpoint Group** | `local-subnets` |
+        | **Peer Endpoint Group** | `remote-subnets` |
+        | **Peer Gateway Public Address** | Public IP of the remote VPN device |
+        | **Peer ID** | Remote peer identifier (typically the peer gateway IP) |
+        | **Pre-Shared Key(PSK) String** | Shared secret agreed upon with the remote site |
+
+        Click **Create** to establish the tunnel.
+
+        <Check>The connection appears in the list with status **Active** once both sides negotiate successfully.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    <Steps titleSize="h3">
+      <Step title="Create an IKE Policy" icon="key">
+        ```bash title="Create IKE policy"
+        openstack vpn ike policy create ike-aes256-sha256 \
+          --ike-version v2 \
+          --auth-algorithm sha256 \
+          --encryption-algorithm aes-256 \
+          --pfs group14 \
+          --lifetime units=seconds,value=3600
+        ```
+      </Step>
+      <Step title="Create an IPsec Policy" icon="shield">
+        ```bash title="Create IPsec policy"
+        openstack vpn ipsec policy create ipsec-aes256-sha256 \
+          --transform-protocol esp \
+          --auth-algorithm sha256 \
+          --encryption-algorithm aes-256 \
+          --pfs group14 \
+          --encapsulation-mode tunnel
+        ```
+      </Step>
+      <Step title="Create a VPN Service" icon="server">
+        ```bash title="Create VPN service"
+        openstack vpn service create vpn-to-branch-office \
+          --router my-router \
+          --subnet my-local-subnet
+        ```
+      </Step>
+      <Step title="Create Endpoint Groups" icon="circle-dot">
+        ```bash title="Create local endpoint group"
+        openstack vpn endpoint group create local-subnets \
+          --type subnet \
+          --value my-local-subnet
+        ```
+
+        ```bash title="Create remote endpoint group"
+        openstack vpn endpoint group create remote-subnets \
+          --type cidr \
+          --value 192.168.1.0/24
+        ```
+      </Step>
+      <Step title="Create the IPsec Site Connection" icon="link">
+        ```bash title="Create IPsec site connection"
+        openstack vpn ipsec site connection create connection-to-branch \
+          --vpnservice vpn-to-branch-office \
+          --ikepolicy ike-aes256-sha256 \
+          --ipsecpolicy ipsec-aes256-sha256 \
+          --local-endpoint-group local-subnets \
+          --peer-endpoint-group remote-subnets \
+          --peer-address 203.0.113.50 \
+          --peer-id 203.0.113.50 \
+          --psk "your-pre-shared-key"
+        ```
+      </Step>
+    </Steps>
+  </Tab>
+</Tabs>
+
+---
+
+## Validation
+
+Confirm the VPN tunnel is established and operational:
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    Navigate to **Network > VPNs** (IPsec Site Connections tab). The connection status should display **Active**.
+
+    | Status | Meaning |
+    |--------|---------|
+    | **Active** | Tunnel is established and passing traffic |
+    | **Down** | Tunnel negotiation failed or peer is unreachable |
+    | **Pending Create** | Connection is being provisioned |
+    | **Error** | Configuration error — review IKE/IPsec parameters |
+
+    <Check>Connection status is **Active** — the tunnel is operational.</Check>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Check connection status"
+    openstack vpn ipsec site connection show connection-to-branch -c status -c id
+    ```
+
+    Expected output:
+
+    ```text title="Expected response"
+    +--------+--------------------------------------+
+    | Field  | Value                                |
+    +--------+--------------------------------------+
+    | id     | a1b2c3d4-e5f6-7890-abcd-ef1234567890 |
+    | status | ACTIVE                               |
+    +--------+--------------------------------------+
+    ```
+
+    <Check>Status shows `ACTIVE` — the VPN tunnel is operational.</Check>
+  </Tab>
+</Tabs>
+
+---
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Connection stuck in DOWN status" icon="circle-x">
+    **Cause**: The remote peer is unreachable or IKE/IPsec parameters do not match.
+
+    **Resolution**:
+    - Verify the peer gateway IP is reachable from the router's external network
+    - Confirm that IKE version, encryption, authentication, and PFS settings match on both sides
+    - Check that the pre-shared key is identical on both endpoints
+    - Verify security group rules allow UDP ports 500 and 4500 (IKE/NAT-T) and IP protocol 50 (ESP)
+  </Accordion>
+  <Accordion title="Tunnel established but no traffic flows" icon="wifi-off">
+    **Cause**: Endpoint group CIDRs do not match between the local and remote configurations.
+
+    **Resolution**:
+    - Verify the local endpoint group subnets match what the remote side expects as "remote" subnets
+    - Verify the remote endpoint group CIDRs match the actual subnets behind the remote peer
+    - Check routing tables on both sides to ensure traffic is directed through the tunnel
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Security Groups" href="/services/networking/security-groups" color="#197560">
+    Configure firewall rules to control traffic flow through the VPN tunnel
+  </Card>
+  <Card title="Routers" href="/services/networking/routers" color="#197560">
+    Manage the routers that anchor your VPN services
+  </Card>
+  <Card title="Network Topology" href="/services/networking/network-topology" color="#197560">
+    Visualize your network layout including VPN connections
+  </Card>
+  <Card title="Key Manager" href="/services/key-manager" color="#197560">
+    Store and manage VPN pre-shared keys and certificates securely
+  </Card>
+</CardGroup>

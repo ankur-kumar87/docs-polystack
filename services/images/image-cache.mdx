@@ -1,0 +1,158 @@
+---
+title: "Image Cache"
+description: "Configure the Xloud Image Service cache to reduce instance launch times by storing frequently-used images locally on compute nodes."
+sidebarTitle: "Image Cache"
+---
+
+import AdminWarning from '/snippets/admin-warning.mdx';
+
+## Overview
+
+The image cache stores a local copy of frequently-used images on each compute node,
+eliminating repeated downloads from the central image service at instance launch time.
+Enabling the cache is most impactful when the same image is used to launch many instances
+on the same compute node — typical in auto-scaling and cluster workloads.
+
+<AdminWarning />
+
+---
+
+## Cache Configuration
+
+Configure cache settings via XDeploy globals before deploying:
+
+| Setting | Default | Description |
+|---------|---------|-------------|
+| `glance_enable_image_cache` | `no` | Enable the image cache |
+| `glance_cache_max_size` | 10 GB | Maximum total size of the cache directory |
+| `glance_cache_staleness_seconds` | 86400 | How long a cached entry remains fresh (seconds) |
+| `glance_cache_prefetcher_delay` | 300 | Seconds between pre-fetch sweep runs |
+
+```yaml title="Image cache configuration in XDeploy globals"
+glance_enable_image_cache: "yes"
+glance_cache_max_size: 10737418240      # 10 GB in bytes
+glance_cache_staleness_seconds: 86400   # 24 hours
+glance_cache_prefetcher_delay: 300      # 5 minutes
+```
+
+Deploy after configuring:
+```bash title="Apply image cache configuration"
+xavs-ansible deploy --tags glance
+```
+
+---
+
+## How the Cache Works
+
+```mermaid
+sequenceDiagram
+    participant C as Compute Node
+    participant CA as Image Cache
+    participant G as Image Service
+    participant S as Storage Backend
+    C->>CA: Request image data (launch)
+    alt Cache hit
+        CA-->>C: Return cached data (fast)
+    else Cache miss
+        CA->>G: Forward request
+        G->>S: Fetch from backend
+        S-->>G: Image data
+        G-->>CA: Image data
+        CA->>CA: Store in cache directory
+        CA-->>C: Return image data
+    end
+```
+
+---
+
+## Verify Cache Status
+
+```bash title="Check cache directory on Image API node"
+docker exec glance_api ls -lh /var/lib/glance/image-cache/
+```
+
+```bash title="View cached image entries"
+docker exec glance_api glance-cache-manage list-cached
+```
+
+```bash title="View pending pre-fetch queue"
+docker exec glance_api glance-cache-manage list-queued
+```
+
+---
+
+## Manual Cache Management
+
+<Tabs>
+  <Tab title="Pre-fetch an image" icon="download">
+    Queue an image for pre-caching before its first use:
+    ```bash title="Queue image for pre-fetch"
+    docker exec glance_api glance-cache-manage queue-image <IMAGE_ID>
+    ```
+    The pre-fetcher picks it up on the next sweep interval.
+  </Tab>
+  <Tab title="Clear the cache" icon="trash">
+    Remove all cached entries to free disk space:
+    ```bash title="Clear the image cache"
+    docker exec glance_api glance-cache-manage delete-all-cached-images
+    ```
+    <Warning>
+      Clearing the cache causes the next instance launch from each image to download
+      from the storage backend. This temporarily increases launch times.
+    </Warning>
+  </Tab>
+  <Tab title="Trigger pre-fetch manually" icon="play">
+    Run the pre-fetcher outside its scheduled interval:
+    ```bash title="Trigger cache pre-fetch"
+    docker exec glance_api glance-cache-prefetcher
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## When to Use the Cache
+
+<AccordionGroup>
+  <Accordion title="Best case: Many instances from same image" icon="zap" defaultOpen>
+    The cache provides the greatest benefit when the same image is repeatedly used on
+    the same compute node — typical patterns include:
+    - Auto-scaling groups launching many identical instances
+    - Development clusters where all developers use the same base image
+    - CI/CD pipelines that launch many ephemeral test instances
+
+    After the first launch (cache miss), all subsequent launches are served from the
+    local cache — typically 10-50x faster than fetching from the storage backend.
+  </Accordion>
+  <Accordion title="Limited benefit: RBD-to-RBD cloning" icon="database">
+    When both the Image Service and Block Storage use Xloud Distributed Storage (RBD),
+    instance launches use zero-copy RBD clones. This already achieves near-instantaneous
+    boot times regardless of image size — the image cache provides minimal additional
+    benefit in this configuration.
+  </Accordion>
+</AccordionGroup>
+
+<Tip>
+  Enable the image cache on compute nodes with SSD-backed local storage. Storing the
+  cache on slow HDDs may actually increase launch latency compared to fetching from
+  a fast Ceph cluster.
+</Tip>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Storage Backends" href="/services/images/storage-backends" color="#197560">
+    Configure the primary storage backend that feeds the cache.
+  </Card>
+  <Card title="Architecture" href="/services/images/architecture" color="#197560">
+    Understand where the cache fits in the overall Image Service topology.
+  </Card>
+  <Card title="Admin Troubleshooting" href="/services/images/admin-troubleshooting" color="#197560">
+    Diagnose cache effectiveness and storage issues.
+  </Card>
+  <Card title="Quotas" href="/services/images/quotas" color="#197560">
+    Control storage consumption to ensure cache space is not exhausted.
+  </Card>
+</CardGroup>

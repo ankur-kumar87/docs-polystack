@@ -1,0 +1,319 @@
+---
+title: "API Authentication"
+description: "Authenticate with the Xloud API using password tokens, application credentials, and scoped tokens. Includes token lifecycle management and CLI examples."
+sidebarTitle: "Authentication"
+---
+
+## Overview
+
+All Xloud API requests require a valid bearer token in the `X-Auth-Token` request header. The Identity service (Keystone) issues tokens upon successful authentication. Tokens are time-limited, project-scoped, and carry the role assignments of the authenticated user.
+
+<Note>
+  **Prerequisites**
+  - An active Xloud account
+  - Project name, username, and password (or application credential ID and secret)
+  - Identity endpoint: `https://api.<your-domain>/identity/v3`
+</Note>
+
+---
+
+## Token-Based Authentication
+
+### Password Authentication
+
+Authenticate with a username and password to receive a project-scoped token:
+
+<CodeGroup>
+```bash title="cURL"
+curl -i -X POST https://api.<your-domain>/identity/v3/auth/tokens \
+  -H "Content-Type: application/json" \
+  -d '{
+    "auth": {
+      "identity": {
+        "methods": ["password"],
+        "password": {
+          "user": {
+            "name": "myuser",
+            "domain": { "name": "Default" },
+            "password": "mypassword"
+          }
+        }
+      },
+      "scope": {
+        "project": {
+          "name": "myproject",
+          "domain": { "name": "Default" }
+        }
+      }
+    }
+  }'
+```
+```python title="Python (requests)"
+import requests
+
+auth_payload = {
+    "auth": {
+        "identity": {
+            "methods": ["password"],
+            "password": {
+                "user": {
+                    "name": "myuser",
+                    "domain": {"name": "Default"},
+                    "password": "mypassword"
+                }
+            }
+        },
+        "scope": {
+            "project": {
+                "name": "myproject",
+                "domain": {"name": "Default"}
+            }
+        }
+    }
+}
+
+resp = requests.post(
+    "https://api.<your-domain>/identity/v3/auth/tokens",
+    json=auth_payload
+)
+token = resp.headers["X-Subject-Token"]
+print(f"Token: {token}")
+```
+</CodeGroup>
+
+The response contains:
+- `X-Subject-Token` header — the token string to use in subsequent calls
+- JSON body with token metadata including expiry time and service catalog
+
+```json title="Token metadata response (excerpt)"
+{
+  "token": {
+    "expires_at": "2026-03-19T10:00:00.000000Z",
+    "issued_at": "2026-03-18T10:00:00.000000Z",
+    "methods": ["password"],
+    "project": {
+      "id": "abc123",
+      "name": "myproject",
+      "domain": { "id": "default", "name": "Default" }
+    },
+    "roles": [
+      { "id": "def456", "name": "member" }
+    ],
+    "catalog": [...]
+  }
+}
+```
+
+---
+
+## Application Credentials
+
+Application credentials allow services and automation scripts to authenticate without exposing user passwords. They are scoped to a specific project and role set at creation time.
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Navigate to Application Credentials" icon="compass">
+        Log in to the **Xloud Dashboard** (`https://connect.<your-domain>`) and navigate to
+        **Project → Identity → Application Credentials**. Click **Create Application Credential**.
+      </Step>
+      <Step title="Configure the credential" icon="settings">
+        | Field | Value | Description |
+        |-------|-------|-------------|
+        | **Name** | `ci-deploy-prod` | Descriptive identifier |
+        | **Secret** | Auto-generated or custom | Store this immediately — it is shown only once |
+        | **Expiration** | Optional date | Leave blank for non-expiring credentials |
+        | **Roles** | `member` | Restrict to minimum required roles |
+        | **Unrestricted** | Disabled | Only enable if the credential must manage other credentials |
+
+        <Warning>
+          Copy the **Secret** value immediately after creation. It cannot be retrieved again. If lost, delete and recreate the credential.
+        </Warning>
+      </Step>
+      <Step title="Download the clouds.yaml" icon="download">
+        Click **Download clouds.yaml** to get a ready-to-use configuration file for the
+        Xloud CLI and Python SDK.
+
+        <Check>The `clouds.yaml` file is saved to your local machine and can be placed at `~/.config/xloud/clouds.yaml`.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Create an application credential"
+    openstack application credential create ci-deploy-prod \
+      --role member \
+      --description "CI/CD deployment credential for production project"
+    ```
+
+    Store the `secret` value from the output immediately.
+
+    ```bash title="Authenticate using an application credential"
+    curl -i -X POST https://api.<your-domain>/identity/v3/auth/tokens \
+      -H "Content-Type: application/json" \
+      -d '{
+        "auth": {
+          "identity": {
+            "methods": ["application_credential"],
+            "application_credential": {
+              "id": "<credential-id>",
+              "secret": "<credential-secret>"
+            }
+          }
+        }
+      }'
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Scoped Tokens
+
+Tokens can be scoped to different resources depending on the operation required:
+
+| Scope | Use Case | Request `scope` field |
+|-------|----------|-----------------------|
+| **Project-scoped** | Manage resources within a project | `"project": { "name": "myproject" }` |
+| **Domain-scoped** | Manage users and projects within a domain | `"domain": { "name": "Default" }` |
+| **System-scoped** | Administrative operations across all projects | `"system": { "all": true }` |
+| **Unscoped** | Discover available projects before scoping | Omit the `scope` field |
+
+### Exchange an Unscoped Token for a Project-Scoped Token
+
+```bash title="Step 1: Obtain unscoped token"
+curl -i -X POST https://api.<your-domain>/identity/v3/auth/tokens \
+  -H "Content-Type: application/json" \
+  -d '{
+    "auth": {
+      "identity": {
+        "methods": ["password"],
+        "password": {
+          "user": {
+            "name": "myuser",
+            "domain": { "name": "Default" },
+            "password": "mypassword"
+          }
+        }
+      }
+    }
+  }'
+```
+
+```bash title="Step 2: List available projects"
+curl -X GET https://api.<your-domain>/identity/v3/auth/projects \
+  -H "X-Auth-Token: $UNSCOPED_TOKEN"
+```
+
+```bash title="Step 3: Exchange for project-scoped token"
+curl -i -X POST https://api.<your-domain>/identity/v3/auth/tokens \
+  -H "Content-Type: application/json" \
+  -H "X-Auth-Token: $UNSCOPED_TOKEN" \
+  -d '{
+    "auth": {
+      "identity": {
+        "methods": ["token"],
+        "token": { "id": "'"$UNSCOPED_TOKEN"'" }
+      },
+      "scope": {
+        "project": { "id": "<project-id>" }
+      }
+    }
+  }'
+```
+
+---
+
+## Token Lifecycle
+
+| Operation | Endpoint | Method |
+|-----------|----------|--------|
+| Create token | `/identity/v3/auth/tokens` | POST |
+| Validate token | `/identity/v3/auth/tokens` | GET (with `X-Subject-Token`) |
+| Revoke token | `/identity/v3/auth/tokens` | DELETE (with `X-Subject-Token`) |
+| List tokens (admin) | `/identity/v3/OS-PKI/revoked` | GET |
+
+```bash title="Validate a token"
+curl -i -X GET https://api.<your-domain>/identity/v3/auth/tokens \
+  -H "X-Auth-Token: $OS_TOKEN" \
+  -H "X-Subject-Token: $TOKEN_TO_VALIDATE"
+```
+
+```bash title="Revoke a token"
+curl -i -X DELETE https://api.<your-domain>/identity/v3/auth/tokens \
+  -H "X-Auth-Token: $OS_TOKEN" \
+  -H "X-Subject-Token: $TOKEN_TO_REVOKE"
+```
+
+<Info>
+  Tokens expire after the configured token TTL (default: 1 hour). Long-running automation scripts should implement token refresh logic — detect `401 Unauthorized` responses and re-authenticate automatically.
+</Info>
+
+---
+
+## Using the OpenRC File
+
+For CLI and script use, source an OpenRC credentials file instead of manually passing credentials:
+
+```bash title="Source OpenRC file"
+source admin-openrc.sh
+```
+
+```bash title="Sample OpenRC file content"
+export OS_AUTH_URL=https://api.<your-domain>/identity/v3
+export OS_PROJECT_NAME=myproject
+export OS_USERNAME=myuser
+export OS_PASSWORD=mypassword
+export OS_USER_DOMAIN_NAME=Default
+export OS_PROJECT_DOMAIN_NAME=Default
+export OS_IDENTITY_API_VERSION=3
+```
+
+Download the OpenRC file from **Xloud Dashboard → Project → API Access → Download OpenStack RC File**.
+
+---
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="401 Unauthorized on every request" icon="lock">
+    **Cause**: Token is expired, invalid, or not included in the request header.
+
+    **Resolution**:
+    1. Re-authenticate to obtain a fresh token
+    2. Confirm the token is passed in `X-Auth-Token` (not `Authorization: Bearer`)
+    3. Verify the Identity endpoint URL is correct
+  </Accordion>
+  <Accordion title="403 Forbidden despite valid token" icon="shield">
+    **Cause**: The token is valid but the user's role does not permit this operation.
+
+    **Resolution**: Verify your role assignment in the project:
+    ```bash title="Check role assignments"
+    openstack role assignment list --user $OS_USERNAME --project $OS_PROJECT_NAME
+    ```
+    Contact your administrator to assign the appropriate role.
+  </Accordion>
+  <Accordion title="Token scope mismatch" icon="key">
+    **Cause**: The token is scoped to a different project than the resource being accessed.
+
+    **Resolution**: Re-authenticate with the correct project scope. Confirm the `OS_PROJECT_NAME` environment variable matches the project containing the resource.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Compute API" href="/api-reference/compute-api" color="#197560">
+    Launch and manage instances using the Compute API
+  </Card>
+  <Card title="Identity API" href="/services/identity/index" color="#197560">
+    Manage users, projects, and roles via the Identity API
+  </Card>
+  <Card title="Automation Guide" href="/integrations/index" color="#197560">
+    Scripting patterns and token refresh strategies for automation
+  </Card>
+  <Card title="Application Credentials" href="/services/identity/application-credentials" color="#197560">
+    Create and manage application credentials for non-interactive access
+  </Card>
+</CardGroup>

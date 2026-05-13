@@ -1,0 +1,134 @@
+---
+title: "Networking Service Architecture"
+description: "Understand the distributed SDN agent model powering Xloud Networking. API server, message bus, L2/L3 agents, DHCP, and metadata service components."
+sidebarTitle: "Service Architecture"
+---
+
+import AdminWarning from '/snippets/admin-warning.mdx';
+
+## Overview
+
+Xloud Networking follows a distributed agent model. A central API and database tier manages
+resource state, while per-node agents program the virtual switching fabric in real time.
+Understanding this architecture helps administrators diagnose failures, plan capacity, and
+maintain the networking plane across the cluster.
+
+<AdminWarning />
+
+---
+
+## Architecture Diagram
+
+```mermaid
+graph TD
+    U([Dashboard / CLI]) --> API[Networking API<br/>:9696]
+    API --> DB[(Database)]
+    API --> MQ[Message Bus<br/>:5672]
+    MQ --> L2A1[L2 Agent<br/>Compute Node 1]
+    MQ --> L2A2[L2 Agent<br/>Compute Node 2]
+    MQ --> L2A3[L2 Agent<br/>Compute Node N]
+    MQ --> L3A[L3 Agent<br/>Network Node]
+    MQ --> DHCP[DHCP Agent<br/>Network Node]
+    MQ --> META[Metadata Agent<br/>Network Node]
+    L3A --> GW([External Gateway<br/>Provider Network])
+    L2A1 --> VS1[Virtual Switch<br/>Host 1]
+    L2A2 --> VS2[Virtual Switch<br/>Host 2]
+    L2A3 --> VS3[Virtual Switch<br/>Host N]
+    style API fill:#197560,color:#fff
+    style L3A fill:#197560,color:#fff
+    style DHCP fill:#3F8F7E,color:#fff
+    style META fill:#3F8F7E,color:#fff
+```
+
+---
+
+## Agent Components
+
+| Agent | Default Port | Role |
+|-------|-------------|------|
+| Networking API | 9696 | RESTful endpoint for all network resource management |
+| L2 Agent | N/A (message bus) | Programs virtual switching and port bindings on each compute node |
+| L3 Agent | N/A (message bus) | Manages routers, NAT rules, and floating IP translation |
+| DHCP Agent | 67/68 (DHCP) | Provides IP address assignment for tenant subnets |
+| Metadata Agent | 80 (internal proxy) | Forwards instance metadata requests from the network namespace |
+| RPC Message Bus | 5672 (AMQP) | Carries control messages between the API server and distributed agents |
+
+---
+
+## Request Flow: Create Network and Create Instance
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant API as Networking API
+    participant DB as Database
+    participant MQ as Message Bus
+    participant L2 as L2 Agent
+    participant DHCP as DHCP Agent
+
+    User->>API: POST /v2.0/networks
+    API->>DB: Store network record
+    API-->>User: 201 Created (network-id)
+
+    User->>API: POST /v2.0/subnets
+    API->>DB: Store subnet record
+    API->>MQ: Notify DHCP agent
+    MQ->>DHCP: Configure DHCP namespace
+    API-->>User: 201 Created (subnet-id)
+
+    User->>API: POST /v2.0/ports (via Nova)
+    API->>DB: Store port record
+    API->>MQ: Bind port to host
+    MQ->>L2: Program virtual switch port
+    L2-->>MQ: Port bound
+    API-->>User: 200 OK (port active)
+```
+
+---
+
+## Data Plane: Virtual Switching
+
+Each compute node runs an L2 agent that programs the local virtual switch to enforce:
+
+- **Port bindings** — connect instance virtual NICs to the correct network segment
+- **VLAN or VXLAN segmentation** — isolate tenant traffic from other projects
+- **Security group rules** — iptables/nftables rules enforced per port
+- **Anti-spoofing** — MAC and IP address binding prevents address impersonation
+
+<Info>
+  The specific virtual switch backend (Linux bridge, Open vSwitch, or OVN) is configured
+  during cluster deployment via XDeploy. The choice of backend affects performance
+  characteristics and advanced features like DVR and hardware offload.
+</Info>
+
+---
+
+## High Availability Considerations
+
+| Component | HA Mechanism | Impact of Failure |
+|-----------|-------------|-------------------|
+| Networking API | Multiple API instances behind HAProxy | Single instance loss: no impact |
+| Database | Galera cluster (3+ nodes) | Partial loss: degraded writes |
+| Message Bus | RabbitMQ cluster (3+ nodes) | Partial loss: agent messaging delayed |
+| L2 Agent | One per compute node | Agent loss: no new port bindings on that host |
+| L3 Agent | VRRP failover (HA routers) | Active agent loss: standby takes over |
+| DHCP Agent | Multiple agents per network | Agent loss: secondary agent serves leases |
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Network Agent Management" href="/services/networking/network-agents" color="#197560">
+    Monitor agent health and manage agent lifecycle
+  </Card>
+  <Card title="Provider Networks" href="/services/networking/provider-networks" color="#197560">
+    Configure physical network mappings and segmentation types
+  </Card>
+  <Card title="L3 Router Configuration" href="/services/networking/l3-routing" color="#197560">
+    Enable HA and distributed routing for production deployments
+  </Card>
+  <Card title="DHCP Configuration" href="/services/networking/dhcp" color="#197560">
+    Manage DHCP agents and subnet assignments
+  </Card>
+</CardGroup>

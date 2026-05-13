@@ -1,0 +1,221 @@
+---
+title: "Notification Drivers"
+description: "Configure Instance HA notification drivers — Nova driver, TaskFlow driver, and custom webhook integration."
+sidebarTitle: "Notification Drivers"
+---
+
+## Overview
+
+Notification drivers are the bridge between external monitoring systems and the Instance HA
+recovery engine. They receive fault signals in various formats, translate them into
+structured Instance HA notifications, and route them to the Recovery Engine. Xloud Instance
+HA ships with the `NovaNotificationDriver` as the default. Custom drivers allow integration
+with existing monitoring infrastructure such as Prometheus Alertmanager or Nagios.
+
+---
+
+## Built-in Drivers
+
+| Driver | Source | Protocol | When to Use |
+|--------|--------|----------|-------------|
+| `NovaNotificationDriver` | Xloud Compute message bus | AMQP | Default — all standard deployments |
+| `TaskFlowDriver` | TaskFlow workflow engine | Internal RPC | Advanced workflow orchestration |
+| Custom webhook driver | Third-party tools (Prometheus, Nagios) | HTTP POST | Environments with existing monitoring infrastructure |
+
+---
+
+## NovaNotificationDriver (Default)
+
+The `NovaNotificationDriver` is enabled by default in all Xloud Instance HA deployments.
+It subscribes to the Xloud Compute AMQP message bus and listens for `compute.host.error`
+and `compute.instance.error` notification events.
+
+<AccordionGroup>
+  <Accordion title="How it works" icon="bell" defaultOpen>
+    When a compute host enters a failure state, the Compute service publishes an error
+    notification on the AMQP message bus. The `NovaNotificationDriver` receives this
+    message, extracts the affected host information, and creates an Instance HA
+    notification record to trigger the recovery workflow.
+
+    This driver requires no additional configuration beyond what is provided by the
+    standard XDeploy deployment.
+  </Accordion>
+  <Accordion title="Verify the driver is active" icon="circle-check">
+    ```bash title="Check driver configuration"
+    grep -i notification_driver \
+      /etc/xavs/instance-ha/instance-ha.conf
+    ```
+
+    Expected output:
+    ```
+    notification_drivers = nova_notification
+    ```
+
+    ```bash title="Confirm AMQP connectivity"
+    docker logs masakari_engine | grep -i "notification"
+    ```
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Webhook Notification Driver
+
+For environments that use Prometheus, Nagios, or other external monitoring tools as the
+primary fault detection system, Instance HA exposes an HTTP notification endpoint that
+accepts structured fault payloads.
+
+### Endpoint
+
+```
+POST /v1/notifications
+Authorization: Bearer <token>
+Content-Type: application/json
+```
+
+### Payload Format
+
+```json title="Host fault notification payload"
+{
+  "hostname": "compute-01.xloud.local",
+  "type": "COMPUTE_HOST",
+  "payload": {
+    "event": "STOPPED",
+    "cluster_status": "OFFLINE",
+    "host_status": "NORMAL"
+  }
+}
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `hostname` | string | The compute hostname as registered in the segment |
+| `type` | string | `COMPUTE_HOST`, `COMPUTE_INSTANCE`, or `COMPUTE_PROCESS` |
+| `payload.event` | string | `STOPPED` or `STARTED` |
+| `payload.cluster_status` | string | `ONLINE` or `OFFLINE` |
+| `payload.host_status` | string | `NORMAL` or `UNKNOWN` |
+
+### Example: Prometheus Alertmanager Webhook
+
+Configure an Alertmanager receiver that calls the Instance HA notification endpoint:
+
+```yaml title="alertmanager.yml — webhook receiver"
+receivers:
+  - name: "instance-ha-webhook"
+    webhook_configs:
+      - url: "http://<instance-ha-api>:15868/v1/notifications"
+        http_config:
+          bearer_token: "<service-token>"
+```
+
+<Warning>
+  The Instance HA API uses Xloud Identity token authentication. Generate a service
+  token for the alertmanager integration using a dedicated service account with
+  the `admin` role. Do not use personal user tokens in production.
+</Warning>
+
+---
+
+## TaskFlowDriver
+
+The TaskFlow driver enables advanced workflow orchestration for recovery actions.
+It is used internally when the default recovery workflow requires multi-step
+sequencing with retry and rollback support.
+
+This driver operates transparently alongside the `NovaNotificationDriver` and
+does not require separate configuration in standard deployments. To customize
+the TaskFlow task pipeline, implement the `BaseTask` interface and register the
+plugin in the configuration.
+
+<Tabs>
+  <Tab title="XDeploy" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Open Advanced Configuration" icon="settings">
+        In XDeploy, navigate to **Advanced Configuration**. In the **Service Tree**,
+        select **masakari**.
+      </Step>
+      <Step title="Edit workflow targets" icon="file-code">
+        Select or create `instance-ha.conf` in the Code Editor. Add the custom
+        workflow targets:
+
+        ```ini title="TaskFlow workflow in XDeploy Advanced Configuration"
+        [recovery_workflow_on_stop]
+        targets = disableComputeNodeTask, PrepareHAEnabled, EvacuateHost
+        ```
+
+        Click **Save Current File**.
+      </Step>
+      <Step title="Apply changes" icon="play">
+        Navigate to **Operations** and run a **reconfigure** action. The recovery
+        engine restarts with the updated workflow pipeline.
+
+        <Check>Engine logs confirm the custom TaskFlow targets are loaded.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    Edit the configuration file directly and restart the engine container:
+
+    ```ini title="/etc/xavs/instance-ha/instance-ha.conf"
+    [recovery_workflow_on_stop]
+    targets = disableComputeNodeTask, PrepareHAEnabled, EvacuateHost
+    ```
+
+    ```bash title="Restart recovery engine"
+    docker restart masakari_engine
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Validation
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    Navigate to **Instance-HA > Notifications (admin view)**.
+
+    Simulate a notification by creating one manually (test environments only):
+    - Click **Create Notification** (admin view)
+    - Set type to `COMPUTE_HOST`, hostname to a registered host, event to `STOPPED`
+    - Confirm the notification appears and transitions to `running`
+
+    <Check>Notification is received, logged, and triggers the recovery workflow.</Check>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Create a test notification (test environments only)"
+    openstack notification create \
+      --hostname compute-01.xloud.local \
+      --type COMPUTE_HOST \
+      --payload '{"event": "STOPPED", "cluster_status": "OFFLINE", "host_status": "NORMAL"}'
+    ```
+
+    ```bash title="Monitor notification status"
+    openstack notification list --status new
+    ```
+
+    <Warning>
+      Creating test notifications in production triggers real recovery workflows.
+      Only use this in isolated test environments.
+    </Warning>
+  </Tab>
+</Tabs>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Recovery Methods" href="/services/instance-ha/admin-guide/recovery-methods" color="#197560">
+    Configure how instances are evacuated after a notification triggers recovery.
+  </Card>
+  <Card title="Instance Monitors" href="/services/instance-ha/admin-guide/instance-monitors" color="#197560">
+    Configure guest-level monitoring independent of the notification driver.
+  </Card>
+  <Card title="Engine Configuration" href="/services/instance-ha/admin-guide/engine-config" color="#197560">
+    Tune recovery engine timing, retries, and workflow task ordering.
+  </Card>
+  <Card title="Security" href="/services/instance-ha/admin-guide/security" color="#197560">
+    Secure the notification API endpoint and service account credentials.
+  </Card>
+</CardGroup>

@@ -1,0 +1,78 @@
+---
+title: "Identity Administration"
+description: "Configure authentication backends, federation, LDAP, and access policies for Xloud Identity."
+sidebarTitle: "Admin Guide"
+mode: "wide"
+---
+
+import AdminWarning from '/snippets/admin-warning.mdx';
+
+<p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Overview</p>
+
+Xloud Identity administration covers every layer of the authentication and authorization
+stack — from the backend that validates credentials to the policies that govern what each
+role can do. Use the guides below to configure your deployment, manage domains, secure
+token issuance, and troubleshoot platform-level issues.
+
+<AdminWarning />
+
+---
+
+<CardGroup cols={4}>
+  <Card title="Architecture" icon="network" href="/services/identity/architecture" color="#197560">
+    Service topology, component roles, and data flow through the Identity stack.
+  </Card>
+  <Card title="Authentication Backends" icon="database" href="/services/identity/auth-backends" color="#197560">
+    Configure SQL, LDAP, SAML 2.0, and OpenID Connect authentication drivers.
+  </Card>
+  <Card title="Domain Management" icon="building" href="/services/identity/domain-management" color="#197560">
+    Create and manage organizational domains with independent user namespaces.
+  </Card>
+  <Card title="Token Configuration" icon="clock" href="/services/identity/token-config" color="#197560">
+    Configure Fernet key rotation, token lifetime, and expiration policies.
+  </Card>
+  <Card title="Service Catalog" icon="list" href="/services/identity/service-catalog" color="#197560">
+    Manage endpoint registration for all Xloud services across regions and interfaces.
+  </Card>
+  <Card title="Federation" icon="link" href="/services/identity/federation" color="#197560">
+    Integrate SAML 2.0 and OIDC identity providers for enterprise single sign-on.
+  </Card>
+  <Card title="Policy Management" icon="shield" href="/services/identity/policy-management" color="#197560">
+    Customize service-level policy rules to control which roles can perform each API operation.
+  </Card>
+  <Card title="Extended RBAC" icon="user-check" href="/services/identity/extended-rbac" color="#197560">
+    Fine-grained per-action privileges, custom roles, and tag-conditioned grants — beyond the built-in role set.
+  </Card>
+  <Card title="Security Hardening" icon="lock" href="/services/identity/security" color="#197560">
+    Enforce MFA, rotate Fernet keys, audit role assignments, and apply best practices.
+  </Card>
+  <Card title="Troubleshooting" icon="wrench" href="/services/identity/admin-troubleshooting" color="#197560">
+    Resolve token validation failures, LDAP issues, and service catalog misconfigurations.
+  </Card>
+</CardGroup>
+
+---
+
+<p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Quick Reference</p>
+
+| Task | Command |
+|------|---------|
+| Rotate Fernet keys | `xavs-ansible deploy --tags keystone-fernet-rotate` |
+| List all domains | `openstack domain list` |
+| List all users | `openstack user list --domain Default` |
+| List all role assignments | `openstack role assignment list --names` |
+| Show service endpoints | `openstack endpoint list` |
+| Show token expiration config | `openstack --os-cloud admin domain show Default` |
+
+---
+
+<p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Next Steps</p>
+
+<CardGroup cols={4}>
+  <Card title="Identity User Guide" icon="book-open" href="/services/identity/user-guide" color="#197560">
+    Day-to-day operations — projects, users, and application credentials.
+  </Card>
+  <Card title="Compute Admin Guide" icon="settings" href="/services/compute/admin-guide" color="#197560">
+    Configure compute hosts, flavors, quotas, and scheduler policies.
+  </Card>
+</CardGroup>

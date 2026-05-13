@@ -1,0 +1,169 @@
+---
+title: "Troubleshooting"
+description: "Diagnose XIMP administrative issues — high cardinality metric performance problems, log ingestion backlogs, missing dashboard data, and scrape target failures."
+sidebarTitle: "Troubleshooting"
+---
+
+import AdminWarning from '/snippets/admin-warning.mdx';
+
+## Overview
+
+This page covers administrator-level XIMP troubleshooting. For user-facing issues
+such as alert delivery failures and missing metrics on dashboards, see the
+[XIMP User Guide Troubleshooting](/services/monitoring/user-guide/troubleshooting) page.
+
+<AdminWarning />
+
+<Note>
+  **Prerequisites**
+  - Administrator credentials with the `admin` role
+  - Access to XIMP CLI and management interfaces
+</Note>
+
+---
+
+## Common Issues
+
+<AccordionGroup>
+  <Accordion title="High cardinality causing metric store performance issues" icon="gauge">
+    **Cause**: Metric labels with unbounded values (e.g., request IDs, user IDs, or
+    ephemeral container names) create millions of unique metric series, degrading
+    query performance and consuming excessive storage.
+
+    **Diagnosis**:
+    ```bash title="List highest-cardinality metric series"
+    ximp metric cardinality top --limit 20
+    ```
+
+    **Resolution**:
+    Drop or relabel high-cardinality labels in the scrape configuration:
+    ```yaml title="Relabel config — drop high-cardinality label"
+    relabel_configs:
+      - source_labels: [request_id]
+        action: drop
+    ```
+
+    Apply via:
+    ```bash title="Apply relabel configuration"
+    ximp target update <TARGET_ID> --relabel-file relabel.yaml
+    ```
+
+    <Warning>
+      Dropping a label is irreversible for historical data. The label will be absent
+      from future ingested metrics. Consider using `labelmap` to replace high-cardinality
+      values with aggregate labels instead of dropping them entirely.
+    </Warning>
+  </Accordion>
+
+  <Accordion title="Log ingestion backlog" icon="clock">
+    **Cause**: Log volume exceeds the collector's processing capacity, causing a write
+    backlog and delayed delivery to the search index.
+
+    **Diagnosis**:
+    ```bash title="Check ingestion queue depth"
+    ximp log ingest-status
+    ```
+
+    **Resolution**:
+    - Reduce log verbosity on high-volume services (set log level to `WARNING` instead of `DEBUG`):
+      ```bash title="Example: reduce Nova log level"
+      docker exec nova_api crudini --set /etc/nova/nova.conf DEFAULT debug false
+      ```
+    - Increase log collector worker count in the XIMP configuration:
+      Navigate to **Monitor Center > Logging** (Collector Settings, admin view)
+    - Add a second log collector node through XDeploy for horizontal scaling
+
+    <Tip>
+      A single high-verbosity service at DEBUG level can generate more log volume than
+      100 services at INFO. Identify the top log emitters:
+      `ximp log stats top-emitters --last 1h`
+    </Tip>
+  </Accordion>
+
+  <Accordion title="Scrape target in DOWN state" icon="activity">
+    **Cause**: The scrape target is unreachable — firewall blocking, service down,
+    or authentication failure.
+
+    **Diagnosis**:
+    ```bash title="Check specific target health"
+    ximp target health --target <URL> --verbose
+    ```
+
+    Common causes:
+
+    | Symptom | Cause | Resolution |
+    |---------|-------|-----------|
+    | Connection refused | Service not running on target port | Verify service is running; check port |
+    | Timeout | Firewall blocking | Add inbound rule for XIMP collector IP |
+    | 401 Unauthorized | Invalid auth credentials | Update auth config in target definition |
+    | 503 Service Unavailable | Service overloaded | Review service health; reduce scrape frequency |
+  </Accordion>
+
+  <Accordion title="XIMP metric store disk full" icon="hard-drive">
+    **Cause**: Metric volume has exceeded the allocated storage for the metric store.
+    This can occur from high cardinality, insufficient retention management, or
+    unexpected metric bursts.
+
+    **Diagnosis**:
+    ```bash title="Check metric store disk usage"
+    ximp storage status
+    ```
+
+    **Resolution** (in order of preference):
+    1. Reduce raw metric retention to free space immediately:
+       ```bash title="Reduce raw retention to 15 days (emergency)"
+       ximp retention set --type metrics-raw --duration 15d
+       ```
+    2. Identify and drop high-cardinality series (see above)
+    3. Expand storage on the metric store node through XDeploy
+    4. Add a second metric store node for horizontal capacity
+  </Accordion>
+
+  <Accordion title="Dashboard shows 'No data' for a metric" icon="gauge">
+    **Cause**: The scrape target is down, the agent is offline, or the metric name has
+    changed after a software update.
+
+    **Diagnosis**:
+    1. Check target health: `ximp target health --target <URL>`
+    2. Verify agent is active: `ximp agent list --node <HOSTNAME>`
+    3. Search for the metric by prefix to find renamed metrics:
+       ```bash title="Search metrics by prefix"
+       ximp metric search --prefix xloud_compute_cpu
+       ```
+
+    If the metric was renamed in a recent software update, update dashboard queries
+    and alert rules to use the new metric name.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Diagnostics Reference
+
+| Issue | Diagnostic Command |
+|-------|------------------|
+| Cardinality | `ximp metric cardinality top --limit 20` |
+| Log backlog | `ximp log ingest-status` |
+| Target DOWN | `ximp target health --verbose` |
+| Storage usage | `ximp storage status` |
+| Agent offline | `ximp agent list --status offline` |
+| Top log emitters | `ximp log stats top-emitters --last 1h` |
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Agent Configuration" href="/services/monitoring/admin-guide/agent-config" color="#197560">
+    Review and fix agent configuration that may be causing issues
+  </Card>
+  <Card title="Retention Policies" href="/services/monitoring/admin-guide/retention" color="#197560">
+    Adjust retention settings to address storage pressure
+  </Card>
+  <Card title="Metric Endpoints" href="/services/monitoring/admin-guide/metric-endpoints" color="#197560">
+    Review and fix scrape target configurations
+  </Card>
+  <Card title="User Guide Troubleshooting" href="/services/monitoring/user-guide/troubleshooting" color="#197560">
+    User-facing issues — alerts not firing, log delays
+  </Card>
+</CardGroup>

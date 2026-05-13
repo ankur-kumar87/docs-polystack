@@ -1,0 +1,157 @@
+---
+title: "Post-Migration Validation"
+description: "Verify a migrated workload boots, networks, stores, and behaves correctly on Xloud before retiring the source VM."
+sidebarTitle: "Post-Migration"
+---
+
+## Overview
+
+After a cold migration completes or a warm migration cuts over, you should
+validate the migrated workload end-to-end before retiring the source VM.
+Post-migration validation covers boot, network, storage, guest services, and
+application-level smoke tests. Only after these checks pass should you
+decommission the source.
+
+<Note>
+  **Prerequisites**
+  - A completed [cold migration](/services/migration/user-guide/cold-migration)
+    or [warm migration cutover](/services/migration/user-guide/cutover)
+  - Xloud Dashboard access to the target project
+  - Guest-level credentials or a console login path for the migrated instance
+</Note>
+
+---
+
+## Validation Checklist
+
+<Steps titleSize="h3">
+  <Step title="Target instance reaches active power state" icon="power">
+    In the Xloud Dashboard, open **Compute → Instances** in the target project
+    and confirm the migrated instance shows an active power state. A status
+    of `ERROR` or `BUILD` stuck for more than a few minutes indicates a
+    platform-level issue — see
+    [Troubleshooting](/services/migration/user-guide/troubleshooting).
+
+    <Check>Instance is active and the volume is attached.</Check>
+  </Step>
+  <Step title="Boot completed and console is reachable" icon="monitor">
+    Open the instance console from the Xloud Dashboard and confirm:
+
+    - The guest reached a login prompt or desktop session
+    - No unexpected disk-check prompts or recovery-mode banners
+    - Boot loader messages match the expected OS (GRUB for Linux, Windows
+      Boot Manager for Windows)
+
+    <Check>Guest reaches normal login prompt without dropping to recovery mode.</Check>
+  </Step>
+  <Step title="Network is reachable" icon="network">
+    Confirm the instance responds on its configured network:
+
+    - Instance has the expected IP addresses assigned
+    - Ping or SSH or RDP from an allowed source reaches the instance
+    - Guest-level interface count matches the source (every source NIC was mapped)
+    - DNS resolution works from inside the guest
+
+    <Check>You can reach the guest using the connection method used on the source.</Check>
+  </Step>
+  <Step title="Storage is intact" icon="hard-drive">
+    From inside the guest, verify:
+
+    - Every disk from the source is present and mounted
+    - Filesystems mount read-write as expected
+    - Disk sizes match the source
+    - No filesystem errors appear in dmesg or the Windows Event Viewer
+
+    <Check>All source disks are present, mounted, and report no filesystem errors.</Check>
+  </Step>
+  <Step title="Guest services are running" icon="play">
+    Log in to the guest and verify the services that run on the source are
+    running on the target:
+
+    - Linux: `systemctl list-units --state=running` matches the expected set
+    - Windows: Services MMC shows the expected services in Running state
+    - Application-specific daemons (databases, web servers, custom services)
+      are up and responding
+
+    <Check>Every service that runs on the source is running on the target.</Check>
+  </Step>
+  <Step title="Application-level smoke test" icon="flask-conical">
+    Run the workload's application-level health check:
+
+    - Databases: connect and run a trivial query
+    - Web apps: load the home page and a backend route
+    - Custom services: run the test suite or health endpoint
+
+    <Check>Application smoke test returns the same result on the target as on the source.</Check>
+  </Step>
+</Steps>
+
+---
+
+## Common Post-Migration Symptoms
+
+| Symptom | Likely Cause | Fix |
+|---------|--------------|-----|
+| **Guest boots to recovery mode (Linux)** | GRUB was pointing at old device names | Boot from recovery, regenerate GRUB config, update initramfs |
+| **Windows BSOD on boot (INACCESSIBLE_BOOT_DEVICE)** | VirtIO storage driver was not loaded at early boot | Attach the target volume to a rescue instance and enable the `viostor` service at boot |
+| **Network interface missing** | Guest tied the interface to a specific MAC or driver | Remove the stale interface record (for example, NetworkManager keyfile or udev persistent-net rule) and re-detect |
+| **Hostname resolves but services not reachable** | Firewall inside the guest blocks the new IP range | Update the guest firewall rules to allow the target Xloud network range |
+| **High CPU usage at idle** | Leftover source-side tools (for example, VMware Tools) running in a loop | Uninstall source-side hypervisor tools from the guest |
+| **Clock drift** | Guest time source is still pointing at source NTP | Reconfigure the guest time source for the target network |
+
+<Tip>
+  Most post-migration issues are guest-side side effects, not migration
+  failures. The migration writes the source disks faithfully — the guest just
+  needs to re-learn its new environment.
+</Tip>
+
+---
+
+## Decommissioning the Source
+
+Only after every checklist item passes and the workload owner has confirmed
+the migrated instance is authoritative should you retire the source VM.
+
+<Warning>
+  Do **not** delete the source VM immediately. Keep it powered off for a
+  rollback window (typically 7-30 days depending on your change management
+  policy) before deleting it permanently. If a post-migration issue appears
+  later, the source is still available as a reference.
+</Warning>
+
+### Recommended Decommission Sequence
+
+<Steps titleSize="h3">
+  <Step title="Confirm validation passed" icon="check-square">
+    All checklist items above are green and the workload owner has signed off.
+  </Step>
+  <Step title="Keep source powered off" icon="pause">
+    Leave the source VM in the VMware inventory, powered off. Do not delete
+    it yet.
+  </Step>
+  <Step title="Wait out the rollback window" icon="clock">
+    Wait the number of days your change management policy requires. During
+    this window the source remains available as a reference or rollback target.
+  </Step>
+  <Step title="Delete the source VM" icon="trash">
+    Once the rollback window has elapsed, delete the source VM through vSphere.
+    XMS does not delete source VMs — this is always a manual step by the source
+    environment owner.
+  </Step>
+</Steps>
+
+---
+
+## Next Steps
+
+<CardGroup cols={3}>
+  <Card title="Troubleshooting" href="/services/migration/user-guide/troubleshooting" color="#197560">
+    Diagnose boot, network, and guest-level issues after migration
+  </Card>
+  <Card title="Xloud Compute" href="/services/compute" color="#197560">
+    Manage the migrated instance lifecycle on Xloud
+  </Card>
+  <Card title="Infrastructure Monitoring" href="/services/monitoring" color="#197560">
+    Add the migrated instance to monitoring and alerting
+  </Card>
+</CardGroup>

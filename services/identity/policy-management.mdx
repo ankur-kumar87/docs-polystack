@@ -1,0 +1,329 @@
+---
+title: "Policy Management"
+description: "Customize RBAC policies to control which roles can perform each API operation across Xloud services. Create custom roles and map them to service-level."
+sidebarTitle: "Policy Management"
+---
+
+import AdminWarning from '/snippets/admin-warning.mdx';
+
+## Overview
+
+Xloud services enforce role-based access control through **policy files**. Each service has a `policy.yaml` (or `policy.json`) file that maps API operations to role requirements. The default policies follow the principle of least privilege — `admin` gets full access, `member` gets project-scoped CRUD, and `reader` gets read-only access. This guide covers viewing default policies, creating custom roles, writing per-service overrides, and applying changes safely.
+
+<AdminWarning />
+
+---
+
+## Default Policy Overview
+
+Xloud ships with three built-in roles and a set of default policies enforced across all services:
+
+| Role | Typical Policy Permissions |
+|------|---------------------------|
+| `admin` | Full access to all APIs including administrative endpoints |
+| `member` | Project-scoped create, read, update, delete operations |
+| `reader` | Project-scoped read-only access |
+
+The `admin` role implies `member`, which implies `reader` — so each role inherits the permissions of those below it.
+
+<Info>
+  Policy files use **oslo.policy** syntax. Rules can reference roles, project context, object ownership, and system scope. You only need to define overrides — unspecified rules use the service's compiled-in defaults.
+</Info>
+
+---
+
+## Policy File Locations
+
+Each Xloud service reads its policy file from inside its container. Overrides are placed in `/etc/xavs/<service>/` on the host and deployed by XDeploy:
+
+| Service | Policy Override Path | Container Path |
+|---------|---------------------|----------------|
+| **Compute** (Nova) | `/etc/xavs/nova/policy.yaml` | `/etc/nova/policy.yaml` |
+| **Block Storage** (Cinder) | `/etc/xavs/cinder/policy.yaml` | `/etc/cinder/policy.yaml` |
+| **Networking** (Neutron) | `/etc/xavs/neutron/policy.yaml` | `/etc/neutron/policy.yaml` |
+| **Image** (Glance) | `/etc/xavs/glance/policy.yaml` | `/etc/glance/policy.yaml` |
+| **Identity** (Keystone) | `/etc/xavs/keystone/policy.yaml` | `/etc/keystone/policy.yaml` |
+| **Orchestration** (Heat) | `/etc/xavs/heat/policy.yaml` | `/etc/heat/policy.yaml` |
+| **Object Storage** (Swift) | `/etc/xavs/swift/policy.yaml` | `/etc/swift/policy.yaml` |
+| **DNS** (Designate) | `/etc/xavs/designate/policy.yaml` | `/etc/designate/policy.yaml` |
+| **Key Manager** (Barbican) | `/etc/xavs/barbican/policy.yaml` | `/etc/barbican/policy.yaml` |
+| **Load Balancer** (Octavia) | `/etc/xavs/octavia/policy.yaml` | `/etc/octavia/policy.yaml` |
+
+<Tip>
+  Start with an empty override file and add only the rules you need to change. All other rules fall back to the service's built-in defaults.
+</Tip>
+
+---
+
+## Custom Roles and Per-Service Policies
+
+Custom roles are names you create in Keystone. They have **no permissions by default** — you must explicitly grant them permissions in each service's policy file.
+
+### Workflow
+
+<Steps titleSize="h3">
+  <Step title="Create the custom role in Keystone" icon="plus">
+    ```bash title="Create a custom role"
+    openstack role create network-operator
+    ```
+
+    ```bash title="Verify"
+    openstack role show network-operator
+    ```
+  </Step>
+  <Step title="Find the policy rule names for the operations you want to allow" icon="search">
+    View the current built-in policy rules for the target service:
+
+    ```bash title="Show Nova's current effective policies"
+    docker exec nova_api oslopolicy-policy-generator \
+      --namespace nova \
+      --output-file /tmp/nova-effective-policy.yaml
+    docker exec nova_api cat /tmp/nova-effective-policy.yaml | grep "flavor"
+    ```
+
+    ```bash title="Show Neutron's current effective policies"
+    docker exec neutron_server oslopolicy-policy-generator \
+      --namespace neutron \
+      --output-file /tmp/neutron-policy.yaml
+    ```
+  </Step>
+  <Step title="Write the policy override file" icon="file-code">
+    Create `/etc/xavs/<service>/policy.yaml` with only the rules you want to change:
+
+    ```yaml title="/etc/xavs/nova/policy.yaml — allow network-operator to list servers"
+    "os_compute_api:servers:index": "role:network-operator or role:member"
+    "os_compute_api:servers:detail": "role:network-operator or role:member"
+    ```
+
+    ```yaml title="/etc/xavs/neutron/policy.yaml — allow network-operator to manage ports"
+    "create_port": "role:network-operator or role:admin"
+    "update_port": "role:network-operator or role:admin"
+    "delete_port": "role:network-operator or role:admin"
+    "get_port": "role:network-operator or role:member"
+    ```
+  </Step>
+  <Step title="Apply the policy changes via XDeploy" icon="upload">
+    ```bash title="Redeploy the affected service"
+    xavs-ansible deploy --tags nova
+    xavs-ansible deploy --tags neutron
+    ```
+
+    <Check>The new policy is active. Test with a user holding the custom role to verify enforcement.</Check>
+  </Step>
+  <Step title="Assign the custom role to users" icon="user-plus">
+    ```bash title="Assign the custom role to a user on a project"
+    openstack role add \
+      --user alice \
+      --project ops-project \
+      network-operator
+    ```
+  </Step>
+</Steps>
+
+---
+
+## Policy Syntax Reference
+
+<AccordionGroup>
+  <Accordion title="Role-based rules" icon="shield" defaultOpen>
+    ```yaml title="Common policy rule patterns"
+    # Allow only admin role
+    "rule_name": "role:admin"
+
+    # Allow a custom role or admin
+    "rule_name": "role:network-operator or role:admin"
+
+    # Allow member and admin roles
+    "rule_name": "role:member or role:admin"
+
+    # Allow any authenticated user
+    "rule_name": "@"
+
+    # Deny everyone (disable an operation)
+    "rule_name": "!"
+    ```
+  </Accordion>
+  <Accordion title="Project-scoped rules" icon="folder">
+    ```yaml title="Project ownership rules"
+    # Allow only the resource owner or admin
+    "rule_name": "project_id:%(project_id)s or role:admin"
+
+    # Allow only within the same project
+    "rule_name": "project_id:%(target.project.id)s"
+    ```
+  </Accordion>
+  <Accordion title="System-scope rules" icon="globe">
+    ```yaml title="System admin rules"
+    # Require system-scope admin (cross-project operations)
+    "rule_name": "role:admin and system_scope:all"
+    ```
+  </Accordion>
+  <Accordion title="Combining rules with aliases" icon="code">
+    Define reusable aliases at the top of the policy file to avoid repetition:
+
+    ```yaml title="Policy with reusable aliases"
+    # Define aliases
+    "is_admin": "role:admin"
+    "is_operator": "role:network-operator or role:admin"
+    "is_member": "role:member or role:admin"
+
+    # Use aliases in rules
+    "get_network": "rule:is_member"
+    "create_network": "rule:is_operator"
+    "delete_network": "rule:is_admin"
+    ```
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Per-Service Policy Examples
+
+<Tabs>
+  <Tab title="Compute (Nova)" icon="server">
+    ```yaml title="/etc/xavs/nova/policy.yaml"
+    # Restrict flavor creation and deletion to admins only
+    "os_compute_api:os-flavor-manage:create": "role:admin"
+    "os_compute_api:os-flavor-manage:delete": "role:admin"
+
+    # Allow a custom 'compute-operator' role to resize instances
+    "os_compute_api:servers:resize": "role:compute-operator or role:admin"
+
+    # Restrict live migration to admins
+    "os_compute_api:os-migrate-server:migrate_live": "role:admin"
+
+    # Allow readers to list hypervisors (normally admin-only)
+    "os_compute_api:os-hypervisors:list": "role:reader or role:admin"
+    ```
+  </Tab>
+  <Tab title="Networking (Neutron)" icon="network">
+    ```yaml title="/etc/xavs/neutron/policy.yaml"
+    # Allow a 'network-operator' role to manage routers
+    "create_router": "role:network-operator or role:admin"
+    "update_router": "role:network-operator or role:admin"
+    "delete_router": "role:network-operator or role:admin"
+
+    # Allow QoS policy creation for network admins
+    "create_policy": "role:network-operator or role:admin"
+    "update_policy": "role:network-operator or role:admin"
+
+    # Restrict floating IP allocation to members and above
+    "create_floatingip": "role:member or role:admin"
+    ```
+  </Tab>
+  <Tab title="Block Storage (Cinder)" icon="hard-drive">
+    ```yaml title="/etc/xavs/cinder/policy.yaml"
+    # Restrict volume type creation to admins
+    "volume_extension:types_manage": "role:admin"
+
+    # Allow a 'storage-operator' to manage volume backups
+    "backup:create": "role:storage-operator or role:member"
+    "backup:delete": "role:storage-operator or role:admin"
+
+    # Allow members to set volume metadata
+    "volume:update_volume_metadata": "role:member or role:admin"
+    ```
+  </Tab>
+  <Tab title="Image (Glance)" icon="image">
+    ```yaml title="/etc/xavs/glance/policy.yaml"
+    # Restrict image deletion to image owner or admin
+    "delete_image": "rule:image_owner or role:admin"
+
+    # Allow a custom 'image-publisher' role to publicize images
+    "publicize_image": "role:image-publisher or role:admin"
+
+    # Restrict community image creation to members+
+    "communitize_image": "role:member or role:admin"
+    ```
+  </Tab>
+  <Tab title="Identity (Keystone)" icon="fingerprint">
+    ```yaml title="/etc/xavs/keystone/policy.yaml"
+    # Allow a 'domain-admin' role to manage users within a domain
+    "identity:list_users": "rule:cloud_admin or rule:domain_admin"
+    "identity:create_user": "rule:cloud_admin or rule:domain_admin"
+    "identity:update_user": "rule:cloud_admin or rule:domain_admin"
+
+    # Restrict role assignment to cloud admins only
+    "identity:create_grant": "role:admin and system_scope:all"
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Discover Policy Rule Names
+
+Before writing an override, find the exact rule name used by the service:
+
+<CodeGroup>
+```bash title="List Nova policy rules (from inside container)"
+docker exec nova_api oslopolicy-list-redundant --namespace nova
+```
+
+```bash title="Generate full effective policy (Nova)"
+docker exec nova_api oslopolicy-policy-generator \
+  --namespace nova 2>/dev/null | grep -A1 "flavor"
+```
+
+```bash title="Show Neutron policy rules"
+docker exec neutron_server \
+  cat /etc/neutron/policy.yaml 2>/dev/null || \
+  docker exec neutron_server \
+  oslopolicy-policy-generator --namespace neutron 2>/dev/null | head -100
+```
+
+```bash title="Check current policy file for a service"
+cat /etc/xavs/nova/policy.yaml 2>/dev/null || echo "No override — using defaults"
+```
+</CodeGroup>
+
+---
+
+## Audit Policy Enforcement
+
+Regularly review and verify policy configurations across all services:
+
+<CodeGroup>
+```bash title="List all policy overrides for a service"
+cat /etc/xavs/nova/policy.yaml
+cat /etc/xavs/neutron/policy.yaml
+```
+
+```bash title="Test policy as a non-admin user"
+# Source a non-admin openrc, then:
+openstack server list
+openstack image list
+openstack network list
+```
+
+```bash title="List all role assignments (full audit)"
+openstack role assignment list --names
+```
+</CodeGroup>
+
+<Warning>
+  Overly permissive policies are a leading cause of privilege escalation incidents. Test policy changes in a staging environment before applying to production. Always restrict — never relax — default policies without documented justification.
+</Warning>
+
+<Tip>
+  Maintain a change log for all policy modifications. Document the business justification, date of change, and approver for each policy override. This record is essential for compliance audits.
+</Tip>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Roles & Role Assignments" href="/services/identity/roles" color="#197560">
+    Create custom roles and assign them to users on projects and domains
+  </Card>
+  <Card title="Security Hardening" href="/services/identity/security" color="#197560">
+    Apply the full security hardening checklist including policy auditing best practices
+  </Card>
+  <Card title="Domain Management" href="/services/identity/domain-management" color="#197560">
+    Manage the domain and project hierarchy that policies operate within
+  </Card>
+  <Card title="Admin Troubleshooting" href="/services/identity/admin-troubleshooting" color="#197560">
+    Resolve 403 Forbidden errors caused by policy misconfigurations
+  </Card>
+</CardGroup>

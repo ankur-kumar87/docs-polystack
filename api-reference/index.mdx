@@ -1,0 +1,130 @@
+---
+title: "API Reference"
+description: "REST API documentation for the Xloud Cloud Platform. Programmatically control compute, storage, networking, and identity services."
+icon: "code"
+sidebarTitle: "API Reference"
+mode: "wide"
+---
+
+## Overview
+
+The Xloud Cloud Platform exposes a comprehensive set of RESTful APIs. These APIs give you programmatic control over every infrastructure resource — compute instances, block storage volumes, networks, identity tokens, and more. All APIs use token-based authentication and return JSON-formatted responses.
+
+<Note>
+  **Prerequisites**
+  - An active Xloud account with project membership
+  - API access enabled (contact your administrator if not available)
+  - API base URL: `https://api.<your-domain>` or the internal endpoint provided during deployment
+</Note>
+
+---
+
+## API Services
+
+<CardGroup cols={4}>
+  <Card title="Authentication" icon="key" href="/api-reference/authentication" color="#197560">
+    Token-based auth, application credentials, and scoped tokens
+  </Card>
+  <Card title="Compute API" icon="server" href="/api-reference/compute-api" color="#197560">
+    Instances, flavors, keypairs, and console access
+  </Card>
+  <Card title="Storage API" icon="hard-drive" href="/api-reference/storage-api" color="#197560">
+    Volumes, snapshots, backups, and volume types
+  </Card>
+  <Card title="Networking API" icon="network" href="/api-reference/networking-api" color="#197560">
+    Networks, subnets, routers, security groups, and floating IPs
+  </Card>
+  <Card title="Identity API" icon="fingerprint" href="/services/identity/index" color="#197560">
+    Projects, users, roles, domains, and service catalog
+  </Card>
+  <Card title="Automation" icon="workflow" href="/integrations/index" color="#197560">
+    Scripting patterns, SDK usage, and webhook integration
+  </Card>
+</CardGroup>
+
+---
+
+## Quick Reference
+
+| Service | Base Path | Current Version |
+|---------|-----------|----------------|
+| Identity (Keystone) | `/identity/v3` | v3 |
+| Compute (Nova) | `/compute/v2.1` | v2.1 |
+| Block Storage (Cinder) | `/volume/v3` | v3 |
+| Networking (Neutron) | `/networking/v2.0` | v2.0 |
+| Image Service (Glance) | `/image/v2` | v2 |
+| Object Storage (Swift) | `/object-store/v1` | v1 |
+| Object Storage (S3) | `/s3` | S3 v4 |
+
+---
+
+## Authentication Overview
+
+All API calls require a valid token in the `X-Auth-Token` header. Obtain a token by authenticating against the Identity service:
+
+```bash title="Obtain authentication token"
+curl -i -X POST https://api.<your-domain>/identity/v3/auth/tokens \
+  -H "Content-Type: application/json" \
+  -d '{
+    "auth": {
+      "identity": {
+        "methods": ["password"],
+        "password": {
+          "user": {
+            "name": "admin",
+            "domain": { "name": "Default" },
+            "password": "your_password"
+          }
+        }
+      },
+      "scope": {
+        "project": {
+          "name": "admin",
+          "domain": { "name": "Default" }
+        }
+      }
+    }
+  }'
+```
+
+The `X-Subject-Token` response header contains the token value. Use it in all subsequent API calls:
+
+```bash title="Use token in API calls"
+export OS_TOKEN="<X-Subject-Token value>"
+curl -X GET https://api.<your-domain>/compute/v2.1/servers \
+  -H "X-Auth-Token: $OS_TOKEN"
+```
+
+See the [Authentication reference](/api-reference/authentication) for application credentials, token scoping, and token renewal.
+
+---
+
+## Response Format
+
+All API responses use JSON. Standard HTTP status codes indicate success or failure:
+
+| Status | Meaning |
+|--------|---------|
+| `200 OK` | Request succeeded. Response body contains the resource. |
+| `201 Created` | Resource created. Response body contains the new resource. |
+| `202 Accepted` | Asynchronous operation started. Poll the resource for status. |
+| `204 No Content` | Request succeeded. No response body (common for DELETE). |
+| `400 Bad Request` | Invalid request body or parameters. Check the error message. |
+| `401 Unauthorized` | Invalid or expired token. Re-authenticate. |
+| `403 Forbidden` | Valid token, but insufficient permissions for this operation. |
+| `404 Not Found` | Resource does not exist or is not visible to your project. |
+| `409 Conflict` | Operation conflicts with current resource state. |
+| `429 Too Many Requests` | Rate limit exceeded. Back off and retry. |
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Authentication Guide" href="/api-reference/authentication" color="#197560">
+    Start here — learn how to obtain tokens and use application credentials
+  </Card>
+  <Card title="Automation Patterns" href="/integrations/index" color="#197560">
+    Scripting, SDK usage, and CI/CD pipeline integration examples
+  </Card>
+</CardGroup>

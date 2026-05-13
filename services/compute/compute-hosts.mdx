@@ -1,0 +1,127 @@
+---
+title: "Compute Hosts"
+description: "List, inspect, enable, and disable hypervisor hosts in Xloud Compute. Monitor real-time vCPU, memory, and instance utilization across the cluster."
+sidebarTitle: "Compute Hosts"
+---
+
+import AdminWarning from '/snippets/admin-warning.mdx';
+
+## Overview
+
+The Compute Hosts page provides a real-time view of all hypervisor nodes in the cluster.
+Administrators use it to monitor resource utilization, identify overcommitted hosts, plan
+capacity, and manage host availability for maintenance operations.
+
+<AdminWarning />
+
+<Note>
+  **Prerequisites**
+  - Administrator access to the Xloud Dashboard (admin view)
+</Note>
+
+---
+
+## View Hypervisors
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    Navigate to **Compute > Hypervisors** in the admin sidebar. The page has two tabs:
+
+    **Hypervisor tab** — lists all compute nodes:
+
+    | Column | Description |
+    |--------|-------------|
+    | **Hostname** | Hypervisor hostname (clickable to view details) |
+    | **Type** | Hypervisor type (e.g., QEMU, Ironic) |
+    | **VCPU (Core)** | Used/Total vCPUs with progress bar (shows `-` for bare metal) |
+    | **Configured Memory (GiB)** | Used/Total memory with progress bar (shows `-` for bare metal) |
+    | **Instances** | Number of running instances on this host |
+
+    Filter by **Hostname** or **Type**.
+
+    **Compute Host tab** — lists compute services:
+
+    | Column | Description |
+    |--------|-------------|
+    | **Host** | Service hostname |
+    | **Availability Zone** | Zone assignment |
+    | **Service Status** | Enabled or Disabled (with disabled reason tooltip) |
+    | **Service State** | Up or Down |
+    | **Last Updated** | Last heartbeat timestamp |
+
+    Filter by **Host**, **Service Status**, or **Service State**.
+
+    **Compute Host actions**:
+
+    | Action | Description |
+    |--------|-------------|
+    | **Disable** | Disable the compute service (prevents new instance scheduling) |
+    | **Enable** | Re-enable a disabled compute service |
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Source credentials"
+    source openrc.sh
+    ```
+
+    <CodeGroup>
+    ```bash title="List all hypervisors"
+    openstack hypervisor list
+    ```
+    ```bash title="Show hypervisor details"
+    openstack hypervisor show <HOSTNAME>
+    ```
+    ```bash title="List compute services"
+    openstack compute service list
+    ```
+    ```bash title="Disable a compute host"
+    openstack compute service set --disable --disable-reason "Maintenance" <HOST> nova-compute
+    ```
+    ```bash title="Enable a compute host"
+    openstack compute service set --enable <HOST> nova-compute
+    ```
+    </CodeGroup>
+  </Tab>
+</Tabs>
+
+---
+
+## Hypervisor Detail
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    Click a hypervisor hostname in the list to open the detail page.
+
+    The header shows: **Hostname**, **Type**, **VCPU** (used/total), **Memory**
+    (used/total), and **VGPU** (used/total, if GPU resources exist).
+
+    The **Members** tab shows all instances running on this hypervisor.
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Show hypervisor stats"
+    openstack hypervisor show <HOSTNAME>
+    ```
+
+    ```bash title="List instances on a hypervisor"
+    openstack server list --all-projects --host <HOSTNAME>
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Live Migration" href="/services/compute/live-migration" color="#197560">
+    Move instances off a host before maintenance
+  </Card>
+  <Card title="Scheduling" href="/services/compute/scheduling" color="#197560">
+    Configure host aggregates and scheduling policies
+  </Card>
+  <Card title="Availability Zones" href="/services/compute/availability-zones" color="#197560">
+    Organize hosts into fault domains
+  </Card>
+  <Card title="Quotas" href="/services/compute/quotas" color="#197560">
+    Set per-project resource limits
+  </Card>
+</CardGroup>

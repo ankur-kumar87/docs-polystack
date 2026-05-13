@@ -1,0 +1,184 @@
+---
+title: "Node Groups"
+description: "Create and manage Xloud K8SaaS node groups — add heterogeneous worker pools to a cluster, configure autoscaling, and scale individual groups independently."
+sidebarTitle: "Node Groups"
+---
+
+## Overview
+
+Node groups are named pools of worker nodes within a single Kubernetes cluster. Each
+group can have a different instance flavor, enabling heterogeneous clusters — e.g.,
+a GPU node pool for machine learning workloads alongside a general-purpose pool for web
+services. Node groups are scaled independently, giving fine-grained control over capacity
+without affecting other workloads on the cluster.
+
+<Note>
+  **Prerequisites**
+  - A cluster in `CREATE_COMPLETE` status
+  - Sufficient compute quota for the new node group
+</Note>
+
+---
+
+## Default Node Group
+
+Every cluster has a default node group created at provisioning time. Its flavor and node
+count are set by the cluster template and the initial node count parameter. The default
+node group is named `default-worker`.
+
+```bash title="List node groups for a cluster"
+openstack coe nodegroup list prod-cluster-01
+```
+
+---
+
+## Create a Node Group
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Navigate to the cluster" icon="compass">
+        Navigate to
+        **Container > Clusters**. Click your cluster name.
+      </Step>
+      <Step title="Open Node Groups" icon="layers">
+        Click the **Node Groups** tab on the cluster detail page.
+      </Step>
+      <Step title="Create node group" icon="plus">
+        Click **Create Node Group** and fill in the fields:
+
+        | Field | Description | Example |
+        |-------|-------------|---------|
+        | **Name** | Unique name within the cluster | `gpu-workers` |
+        | **Node Count** | Initial number of nodes in the group | `2` |
+        | **Flavor** | Instance size for this group | `g1.xlarge` |
+        | **Min Nodes** | Minimum nodes for autoscaling | `1` |
+        | **Max Nodes** | Maximum nodes for autoscaling | `5` |
+        | **Role** | `worker` or `infra` | `worker` |
+      </Step>
+      <Step title="Create" icon="circle-check">
+        Click **Create Node Group**. Nodes are provisioned and join the cluster.
+
+        <Check>Node group appears in the list and nodes show `STATUS: Ready` in kubectl.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Create a GPU node group"
+    openstack coe nodegroup create prod-cluster-01 \
+      --name gpu-workers \
+      --node-count 2 \
+      --flavor g1.xlarge \
+      --min-nodes 1 \
+      --max-nodes 5 \
+      --role worker
+    ```
+
+    ```bash title="List all node groups"
+    openstack coe nodegroup list prod-cluster-01
+    ```
+
+    ```bash title="Show node group details"
+    openstack coe nodegroup show prod-cluster-01 gpu-workers
+    ```
+
+    ```bash title="Verify nodes are Ready in kubectl"
+    kubectl get nodes -l ng=gpu-workers
+    ```
+
+    <Check>New nodes appear in kubectl with `STATUS: Ready`.</Check>
+  </Tab>
+</Tabs>
+
+---
+
+## Scale a Node Group
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    On the cluster detail page, click the **Node Groups** tab. Find the node group
+    and click **Actions → Resize**. Enter the new node count and confirm.
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Scale a node group"
+    openstack coe nodegroup update prod-cluster-01 gpu-workers \
+      replace node_count=4
+    ```
+
+    ```bash title="Monitor scaling progress"
+    openstack coe nodegroup show prod-cluster-01 gpu-workers \
+      -f value -c status -c node_count
+    ```
+
+    Wait for `status` to return to `UPDATE_COMPLETE`.
+
+    <Tip>
+      Use node groups for fine-grained scaling: scale GPU nodes up for batch jobs
+      and back down when idle, without touching the general-purpose worker pool.
+    </Tip>
+  </Tab>
+</Tabs>
+
+---
+
+## Schedule Workloads to a Specific Node Group
+
+Use Kubernetes node selectors or taints and tolerations to target workloads to a
+specific node group.
+
+<CodeGroup>
+```yaml title="Node selector in Pod spec"
+spec:
+  nodeSelector:
+    node.kubernetes.io/instance-type: g1.xlarge
+```
+
+```yaml title="Toleration for a tainted node group"
+spec:
+  tolerations:
+    - key: "node-type"
+      operator: "Equal"
+      value: "gpu"
+      effect: "NoSchedule"
+```
+</CodeGroup>
+
+Apply a taint to all nodes in a node group to ensure only workloads with the matching
+toleration are scheduled there:
+
+```bash title="Taint all GPU nodes"
+kubectl taint nodes -l ng=gpu-workers \
+  node-type=gpu:NoSchedule
+```
+
+---
+
+## Delete a Node Group
+
+<Danger>
+  Deleting a node group removes all nodes in the group and evicts all pods running on
+  them. Ensure workloads have been migrated to other node groups before deletion.
+</Danger>
+
+```bash title="Delete a node group"
+openstack coe nodegroup delete prod-cluster-01 gpu-workers
+```
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Scale Cluster" href="/services/kubernetes/user-guide/scale-cluster" color="#197560">
+    Resize the default node group for overall cluster capacity changes.
+  </Card>
+  <Card title="Cluster Upgrades" href="/services/kubernetes/user-guide/cluster-upgrades" color="#197560">
+    Upgrade Kubernetes version across all node groups.
+  </Card>
+  <Card title="Access Cluster" href="/services/kubernetes/user-guide/access-cluster" color="#197560">
+    Configure kubectl to connect to your cluster and verify node readiness.
+  </Card>
+  <Card title="Troubleshooting" href="/services/kubernetes/user-guide/troubleshooting" color="#197560">
+    Resolve node group creation and scaling failures.
+  </Card>
+</CardGroup>

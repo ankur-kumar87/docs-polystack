@@ -1,0 +1,456 @@
+---
+title: "Cloud-init and Provisioning Scripts"
+description: "Bootstrap virtual machines with Bash, PowerShell, cloud-config, or any cloud-init compatible script at first boot, and re-run scripts on running and discovered instances as part of an operational workflow."
+sidebarTitle: "Cloud-init"
+---
+
+## Overview
+
+Xloud Compute supports automatic execution of customer-supplied scripts
+at virtual machine launch time and at any later point during the
+machine's lifecycle. The mechanism is the industry-standard **cloud-init**
+agent on Linux guests and **Cloudbase-Init** on Windows guests — both
+consume the same Xloud metadata service so the same launch flow works
+for every supported OS.
+
+<Info>
+  **Two capabilities, one mechanism**
+
+  1. **At provisioning** — the hypervisor executes Bash or PowerShell
+  scripts during virtual machine creation to automate system
+  bootstrapping operations (installing packages, configuring services,
+  joining clusters, registering with monitoring, etc).
+
+  2. **On provisioned and discovered instances** — the same scripting
+  mechanism can be invoked on already-running and previously-imported
+  virtual machines as part of an operational workflow (re-bootstrap,
+  re-key, rotate credentials, patch in place, run a one-off task).
+</Info>
+
+<Note>
+  **Prerequisites**
+  - A guest image with `cloud-init` (Linux) or `Cloudbase-Init` (Windows)
+    pre-installed. The Xloud public image catalog ships with both.
+  - A network or metadata route from the instance to the Xloud metadata
+    service (link-local `169.254.169.254` over the management network is
+    enabled by default).
+  - For post-provisioning execution: SSH (Linux) or WinRM (Windows)
+    reachability from the orchestration host, or an attached qemu-guest-
+    agent channel.
+</Note>
+
+---
+
+## Supported Script Formats
+
+The user-data payload is read once by the agent on first boot. The
+**first line** of the payload tells the agent how to interpret the rest.
+
+| Header line | Treated as | Runs on |
+|-------------|------------|---------|
+| `#!/bin/bash` (or `#!/bin/sh`, `#!/usr/bin/env python3`, etc.) | A shebang script | Linux (cloud-init) |
+| `#cloud-config` | Declarative YAML — packages, users, files, run commands | Linux (cloud-init) |
+| `#include` | Fetches a script from a URL | Linux (cloud-init) |
+| `Content-Type: multipart/mixed` (MIME) | Multiple payloads in one upload | Linux (cloud-init) |
+| `#ps1` or `#ps1_sysnative` | PowerShell script | Windows (Cloudbase-Init) |
+| `#cmd` | Classic Windows command prompt batch | Windows (Cloudbase-Init) |
+| `#cloud-config` | Declarative YAML (subset supported) | Windows (Cloudbase-Init) |
+
+<Tip>
+  When you need to run more than one script type at first boot — for
+  example a `#cloud-config` to install packages **plus** a Bash script
+  to run after — wrap them in a MIME multipart payload. The Dashboard
+  accepts the full multipart blob in the User Data box.
+</Tip>
+
+---
+
+## Provisioning a VM with a Script
+
+The user-data input lives in the **System Config** step of the launch
+wizard, under **Advanced Options → User Data**, and is mirrored by the
+`--user-data` flag on the CLI.
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Open the launch wizard">
+        Navigate to **Compute → Instances** and click
+        **Create Instance**. Complete the **Base Config** and
+        **Network Config** steps as normal.
+      </Step>
+      <Step title="Expand Advanced Options">
+        On the **System Config** step, scroll to the **Advanced Options**
+        toggle and turn it on. The **User Data** textarea becomes
+        visible.
+      </Step>
+      <Step title="Paste or upload the script">
+        Paste the script directly into the textarea, or click the upload
+        icon and choose a local `.sh`, `.yaml`, `.ps1`, or `.cmd` file.
+
+        | Limit | Value |
+        |-------|-------|
+        | Maximum payload size | 16 KB (before base64 encoding) |
+        | Encoding | UTF-8, ASCII safe |
+        | Forbidden characters | None — full Unicode allowed inside the script body |
+
+        The Dashboard rejects payloads above the limit before submit.
+      </Step>
+      <Step title="Confirm and launch">
+        Continue to **Confirm Config**, review, and click **Confirm**.
+        The script begins executing inside the guest as soon as
+        cloud-init or Cloudbase-Init reaches its `final` stage —
+        typically within 30–90 seconds of the VM going `Active`.
+
+        <Check>Cloud-init logs at `/var/log/cloud-init.log` (Linux) or `C:\Program Files\Cloudbase Solutions\Cloudbase-Init\log\cloudbase-init.log` (Windows) confirm successful execution.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Source credentials"
+    source openrc.sh
+    ```
+
+    ```bash title="Launch with a Bash bootstrap script"
+    openstack server create \
+      --image <IMAGE_ID> \
+      --flavor <FLAVOR_NAME> \
+      --network <NETWORK_ID> \
+      --key-name <KEYPAIR_NAME> \
+      --user-data /path/to/bootstrap.sh \
+      my-linux-vm
+    ```
+
+    ```bash title="Launch with a cloud-config YAML"
+    openstack server create \
+      --image <IMAGE_ID> \
+      --flavor <FLAVOR_NAME> \
+      --network <NETWORK_ID> \
+      --user-data /path/to/cloud-init.yaml \
+      my-linux-vm
+    ```
+
+    ```bash title="Launch a Windows VM with a PowerShell bootstrap"
+    openstack server create \
+      --image <WINDOWS_IMAGE_ID> \
+      --flavor <FLAVOR_NAME> \
+      --network <NETWORK_ID> \
+      --user-data /path/to/bootstrap.ps1 \
+      my-windows-vm
+    ```
+
+    The CLI auto-detects the format from the file's first line and
+    base64-encodes the payload before submission, so you do not need to
+    encode it yourself.
+  </Tab>
+</Tabs>
+
+---
+
+## Linux Bootstrap Examples (Bash and cloud-config)
+
+### Bash script — install and start nginx
+
+```bash title="bootstrap.sh"
+#!/bin/bash
+set -euxo pipefail
+
+# Wait for the package manager lock to clear
+while pgrep -a apt > /dev/null; do sleep 2; done
+
+apt-get update
+apt-get install -y nginx
+
+systemctl enable --now nginx
+
+# Drop a marker file so monitoring can confirm bootstrap completed
+echo "$(date -u +%FT%TZ) cloud-init bootstrap complete" > /var/log/xloud-bootstrap.done
+```
+
+### cloud-config YAML — declarative bootstrap
+
+```yaml title="cloud-init.yaml"
+#cloud-config
+package_update: true
+package_upgrade: true
+
+packages:
+  - nginx
+  - curl
+  - git
+
+users:
+  - name: ops
+    groups: sudo
+    sudo: "ALL=(ALL) NOPASSWD:ALL"
+    shell: /bin/bash
+    ssh_authorized_keys:
+      - ssh-ed25519 AAAA... ops@xloud
+
+write_files:
+  - path: /etc/xloud/site.conf
+    permissions: "0644"
+    content: |
+      backend = production
+      region  = ap-south-1
+
+runcmd:
+  - systemctl enable --now nginx
+  - curl -fsSL https://repo.xloud.tech/setup.sh | bash
+  - echo "bootstrap-done" > /var/log/xloud-bootstrap.done
+
+final_message: "Xloud bootstrap finished after $UPTIME seconds"
+```
+
+<Tip>
+  cloud-config is preferred over raw Bash for routine bootstrapping —
+  it is declarative, idempotent, and the `packages:` and `runcmd:` keys
+  read straightforwardly in change reviews. Use Bash only when you need
+  imperative control flow (loops, retries, conditional logic).
+</Tip>
+
+---
+
+## Windows Bootstrap Examples (PowerShell and cmd)
+
+### PowerShell script — install IIS and write a marker
+
+```powershell title="bootstrap.ps1"
+#ps1_sysnative
+$ErrorActionPreference = "Stop"
+
+# Install the Web Server role with management tools
+Install-WindowsFeature -Name Web-Server -IncludeManagementTools
+
+# Replace the default page so health checks see the right banner
+Set-Content -Path C:\inetpub\wwwroot\index.html `
+  -Value "<h1>Xloud-managed IIS host</h1>" -Encoding UTF8
+
+# Disk-level marker the monitoring agent picks up
+$now = Get-Date -Format "yyyy-MM-ddTHH:mm:ssZ"
+"$now Xloud bootstrap complete" | Out-File C:\xloud-bootstrap.done -Encoding UTF8
+```
+
+<Note>
+  `#ps1_sysnative` runs the script through the native 64-bit PowerShell
+  on 64-bit Windows guests, avoiding the 32-bit WoW64 redirector. Use
+  `#ps1` if you specifically need the 32-bit engine.
+</Note>
+
+### Classic command prompt — register the VM with internal DNS
+
+```bat title="bootstrap.cmd"
+#cmd
+@echo off
+nslookup %COMPUTERNAME%.corp.local
+nltest /dsregdns
+echo Xloud bootstrap complete > C:\xloud-bootstrap.done
+```
+
+### cloud-config on Windows — restricted subset
+
+```yaml title="cloud-init.yaml"
+#cloud-config
+users:
+  - name: admin
+    passwd: ChangeMeAtFirstLogin!
+    groups: Administrators
+
+set_hostname: web-01.corp.local
+
+runcmd:
+  - powershell -Command "Install-WindowsFeature Web-Server"
+```
+
+<Warning>
+  Not all `cloud-config` keys are honored by Cloudbase-Init. `users`,
+  `set_hostname`, `runcmd`, and `write_files` are well supported.
+  `apt`-specific keys, systemd unit management, and Linux-only modules
+  are ignored. Test your YAML on a throwaway VM before rolling it out
+  to a production fleet.
+</Warning>
+
+---
+
+## Running Scripts on Provisioned or Discovered Instances
+
+For operational workflows that fire **after** a VM has been provisioned
+— or on instances that were imported into Xloud through migration or
+discovery — the same scripting mechanism is available. Choose the path
+that fits your security and connectivity model.
+
+<AccordionGroup>
+  <Accordion title="Rebuild with new user-data (Bash or PowerShell)">
+    The Compute API's **rebuild** action re-applies a fresh user-data
+    payload on the next boot of an existing instance. The instance
+    keeps its UUID, IP, security groups, and metadata; only the disk
+    image and user-data are re-applied.
+
+    ```bash title="Re-run bootstrap on an existing instance"
+    openstack server rebuild <INSTANCE_ID> \
+      --image <SAME_IMAGE_ID> \
+      --user-data /path/to/new-bootstrap.sh
+    ```
+
+    Works for both Linux and Windows guests. The user-data format is
+    the same as at first launch — Bash, cloud-config, PowerShell, or
+    cmd, identified by the first line of the payload.
+  </Accordion>
+  <Accordion title="Ansible against the instance IP">
+    The recommended path for ongoing operational workflows. The
+    instance's floating IP (or fixed IP if the orchestrator runs inside
+    the cloud) is the target. Ansible's `shell` module handles Bash
+    payloads on Linux, and `win_shell` / `win_command` handle Bash-via-
+    WSL or PowerShell on Windows.
+
+    ```yaml title="ops-playbook.yaml"
+    - hosts: web-tier
+      tasks:
+        - name: Rotate the deploy key
+          ansible.builtin.shell: |
+            sudo /opt/xloud/rotate-key.sh
+          when: ansible_os_family != "Windows"
+
+        - name: Rotate the deploy key on Windows hosts
+          ansible.windows.win_powershell:
+            script: C:\Program Files\Xloud\rotate-key.ps1
+          when: ansible_os_family == "Windows"
+    ```
+
+    XAVS Deployment Automation already includes the inventory plugin
+    that pulls instance lists straight from Xloud, so a fresh
+    `ansible-playbook` run picks up newly-launched VMs without manual
+    inventory editing.
+  </Accordion>
+  <Accordion title="qemu-guest-agent (hypervisor-side execution)">
+    When an instance has the **qemu-guest-agent** package installed and
+    the `hw_qemu_guest_agent=yes` property set on its source image, the
+    administrator can send commands directly through the virtio-serial
+    channel — no SSH or WinRM is required. This is the path that
+    satisfies "execute scripts on a discovered VM" when the VM has no
+    public network reachability.
+
+    ```bash title="Execute a one-shot command via the guest agent"
+    virsh qemu-agent-command instance-00000abc \
+      '{"execute":"guest-exec","arguments":{
+         "path":"/bin/sh",
+         "arg":["-c","systemctl restart nginx"],
+         "capture-output":true}}'
+    ```
+
+    The same channel supports `guest-exec` on Windows guests for
+    PowerShell payloads.
+  </Accordion>
+  <Accordion title="Re-run cloud-init on the next boot">
+    For situations where the VM already has cloud-init installed and
+    you just want it to re-process its user-data (for example, after
+    editing the metadata via API), connect to the guest and clear the
+    state:
+
+    ```bash title="Linux (cloud-init)"
+    sudo cloud-init clean --logs
+    sudo reboot
+    ```
+
+    On the next boot the agent re-fetches user-data from the metadata
+    service and re-runs the bootstrap. Cloudbase-Init exposes a similar
+    `cloudbase-init --reset-service-password` style flow.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Verification
+
+| Layer | How to check | Expected |
+|-------|--------------|----------|
+| **Cloud-init invoked** | `sudo cloud-init status --long` (Linux) | `status: done` |
+| **Cloudbase-Init invoked** | Inspect `cloudbase-init.log` | Final line reads `Plugins execution done` |
+| **User-data was visible to the guest** | `curl http://169.254.169.254/openstack/latest/user_data` from inside the VM | Returns the exact payload you submitted |
+| **Script ran** | Check the marker file written by your script | File exists and is recent |
+| **Errors during run** | `sudo cloud-init analyze show` (Linux) or `cloudbase-init.log` (Windows) | No `ERROR` lines |
+
+---
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="The script never ran">
+    The guest image probably has cloud-init or Cloudbase-Init disabled
+    or uninstalled. Boot a fresh VM from the same image, run
+    `which cloud-init` (Linux) or check for the **Cloudbase-Init**
+    service in `services.msc` (Windows). If absent, rebuild the image
+    or pick one from the Xloud public catalog.
+  </Accordion>
+  <Accordion title="The script ran but failed silently">
+    Cloud-init swallows non-zero exit codes from the user script by
+    default. Set `set -euxo pipefail` at the top of a Bash payload and
+    `$ErrorActionPreference = "Stop"` at the top of a PowerShell payload
+    to force errors to surface. Then re-run with the rebuild action
+    above and check the log files listed in **Verification**.
+  </Accordion>
+  <Accordion title="Payload too large — 16 KB limit">
+    The metadata service caps user-data at 16 KB raw (before base64).
+    For larger payloads, host the script on an internal URL and use
+    `#include https://repo.internal/bootstrap.sh` as the user-data; the
+    agent fetches and executes it inline.
+  </Accordion>
+  <Accordion title="PowerShell complains about execution policy">
+    Cloudbase-Init bypasses execution policy when running scripts it
+    fetches from the metadata service, so this is rare. If you see
+    `cannot be loaded because running scripts is disabled`, the script
+    is being launched by something *other* than Cloudbase-Init — check
+    Scheduled Tasks or third-party agents that may have been baked into
+    the image.
+  </Accordion>
+  <Accordion title="The user-data ran once but I want it to run on every boot">
+    Cloud-init runs `runcmd` and shell scripts once per **instance ID**.
+    For per-boot execution use `bootcmd:` in `#cloud-config`, or
+    schedule a systemd unit that fires on boot. On Windows, set the
+    Cloudbase-Init plugin policy to `BootStatusPolicy = AlwaysRun` in
+    `cloudbase-init.conf`.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Security Considerations
+
+- **Treat user-data as code, not config.** It runs as root on Linux and
+  as Administrator on Windows. Anyone with `compute:create_server`
+  permission can submit it.
+- **Do not embed secrets in user-data.** The metadata service is reachable
+  by every process inside the guest. Use Xloud Key Management for
+  secrets and fetch them at runtime over an authenticated channel.
+- **Network reachability of the metadata service.** Restrict the
+  metadata route in tenant security groups when an instance is moved
+  to a hardened production segment — cloud-init will not need it
+  after first boot.
+- **Audit script content.** XAVS Deployment Automation's `--check`
+  mode renders the playbook diff before execution. Use it for any
+  multi-host operational workflow.
+
+---
+
+## Next Steps
+
+<CardGroup cols={3}>
+  <Card title="Launch an Instance" icon="server" href="/services/compute/launch-instance">
+    Full launch-wizard reference including every System Config field.
+  </Card>
+  <Card title="Linux VM Guide" icon="terminal" href="/services/compute/linux-vm-guide">
+    Boot, login, and lifecycle for Linux guests.
+  </Card>
+  <Card title="Windows VM Guide" icon="monitor" href="/services/compute/windows-vm-guide">
+    Cloudbase-Init, RDP setup, and Windows-specific notes.
+  </Card>
+  <Card title="Instance Snapshots" icon="camera" href="/services/compute/snapshots">
+    Capture a known-good state after bootstrap finishes.
+  </Card>
+  <Card title="Instance Rollback" icon="rotate-ccw" href="/services/compute/instance-rollback">
+    Revert a bad bootstrap to a clean snapshot.
+  </Card>
+  <Card title="Instance Tagging" icon="tag" href="/services/compute/instance-tagging">
+    Tag VMs so operational scripts can target them by group.
+  </Card>
+</CardGroup>

@@ -1,0 +1,189 @@
+---
+title: "Instance HA Troubleshooting — User Guide"
+description: "Resolve Instance HA issues — stuck notifications, failed recoveries, and manual evacuation procedures."
+sidebarTitle: "Troubleshooting"
+---
+
+## Overview
+
+This page covers common Instance HA issues encountered by project users — instances that
+did not recover, notifications stuck in error or running states, and protection settings
+that are not visible in the Dashboard. For platform-level issues such as monitor failures
+or engine misconfiguration, refer to the
+[Instance HA Admin Troubleshooting](/services/instance-ha/admin-guide/troubleshooting) guide.
+
+<Note>
+  **Prerequisites**
+  - Project access to the Xloud Dashboard or CLI
+  - Knowledge of the affected instance IDs and the compute host involved
+</Note>
+
+---
+
+## Common Issues
+
+<AccordionGroup>
+  <Accordion title="Instance did not recover after host failure" icon="circle-alert">
+    **Cause**: Instance HA protection may not be enabled for the instance, the compute
+    host may not be registered in any segment, or the segment may be disabled.
+
+    **Resolution**:
+
+    Confirm the segment is enabled and the host is registered:
+    ```bash title="Check segment status"
+    openstack segment list
+    ```
+
+    ```bash title="List hosts in segment"
+    openstack segment host list <segment-uuid>
+    ```
+
+    If the failed host is missing from the segment, contact your administrator to
+    register it. Your administrator can configure this through [XDeploy](/deployment). If the segment is disabled (`enabled: False`), your administrator
+    must re-enable it.
+
+    <Tip>
+      After the root cause is resolved, manually evacuate the instance to restore service:
+      ```bash title="Manual evacuation"
+      openstack server evacuate <instance-id> --host <healthy-host>
+      ```
+    </Tip>
+  </Accordion>
+
+  <Accordion title="Notification status is error" icon="circle-x">
+    **Cause**: Automatic recovery failed. Common causes: insufficient capacity on remaining
+    hosts, an instance stuck in `ERROR` state that the engine cannot recover, or a network
+    issue during evacuation.
+
+    **Resolution**:
+
+    ```bash title="Show notification detail"
+    openstack notification show <notification-uuid>
+    ```
+
+    Review the payload for specific failure information. Then check instance state:
+
+    ```bash title="Show instance status"
+    openstack server show <instance-id> -f value -c status
+    ```
+
+    If the instance is in `ERROR` state, attempt a manual reset and evacuation:
+
+    ```bash title="Reset instance state"
+    openstack server set --state active <instance-id>
+    ```
+
+    ```bash title="Manually evacuate"
+    openstack server evacuate <instance-id> --host <healthy-host>
+    ```
+
+    Contact your administrator if the instance cannot be recovered through the above steps. Your administrator can configure this through [XDeploy](/deployment).
+  </Accordion>
+
+  <Accordion title="Notification stuck in running state" icon="clock">
+    **Cause**: The recovery engine is waiting for the target host to accept the instance,
+    a workflow step has timed out, or the target host is under load.
+
+    **Resolution**:
+
+    Check how long the notification has been in `running` state:
+
+    ```bash title="Show notification timestamps"
+    openstack notification show <notification-uuid> \
+      -f value -c generated_time -c status
+    ```
+
+    If the notification has been `running` for more than 10 minutes, contact your
+    administrator. They can inspect the Instance HA engine logs and reset the workflow
+    if it has genuinely stalled. Your administrator can configure this through [XDeploy](/deployment).
+  </Accordion>
+
+  <Accordion title="Protection segment not visible in Dashboard" icon="eye-off">
+    **Cause**: No failover segment has been created for your environment, or the segments
+    that exist have not been made accessible to your project.
+
+    **Resolution**: Contact your Xloud administrator and request that a failover segment
+    be created and that the compute hosts used by your project be registered. Your administrator can configure this through [XDeploy](/deployment). See the
+    [Instance HA Admin Guide — Failover Segments](/services/instance-ha/admin-guide/failover-segments)
+    for the configuration steps.
+  </Accordion>
+
+  <Accordion title="Instance shows UNKNOWN status after host failure" icon="circle-help">
+    **Cause**: The compute service cannot confirm the instance state because the host
+    is unreachable. This is expected immediately after a host fault is detected.
+
+    **Resolution**: Wait for the recovery workflow to complete. The instance transitions
+    from `UNKNOWN` → `MIGRATING` → `BUILD` → `ACTIVE` as recovery proceeds.
+
+    If the instance remains `UNKNOWN` for more than 5 minutes without a recovery
+    notification being created, verify that the failed host is registered in an enabled
+    segment and that the host monitor can reach the Instance HA notification endpoint.
+  </Accordion>
+
+  <Accordion title="Instance restarted on wrong host" icon="server">
+    **Cause**: The `auto` recovery method placed the instance on any available host
+    rather than a specific preferred host. This is expected behaviour for the `auto` method.
+
+    **Resolution**: If your workloads require guaranteed placement on specific hosts, ask
+    your administrator to configure a segment with `reserved_host` or `rh_priority`
+    recovery method and designate the preferred host as a reserved standby.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Manual Recovery Procedure
+
+If automatic recovery fails, use the following procedure to restore service manually.
+
+<Steps titleSize="h3">
+  <Step title="Identify the affected instances" icon="search">
+    ```bash title="Find instances on the failed host"
+    openstack server list \
+      --host <failed-hostname> \
+      -f table -c ID -c Name -c Status
+    ```
+  </Step>
+  <Step title="Reset instance state if stuck in ERROR" icon="rotate">
+    ```bash title="Reset instance state"
+    openstack server set --state active <instance-id>
+    ```
+  </Step>
+  <Step title="Evacuate to a healthy host" icon="arrow-right">
+    ```bash title="Evacuate to a specific host"
+    openstack server evacuate <instance-id> --host <healthy-host>
+    ```
+
+    Omit `--host` to let the scheduler choose any available host in the segment:
+    ```bash title="Evacuate to any available host"
+    openstack server evacuate <instance-id>
+    ```
+  </Step>
+  <Step title="Verify recovery" icon="circle-check">
+    ```bash title="Confirm instance is ACTIVE"
+    openstack server show <instance-id> \
+      -f value -c status -c "OS-EXT-SRV-ATTR:host"
+    ```
+
+    <Check>Instance shows `ACTIVE` and the host field reflects the new compute node.</Check>
+  </Step>
+</Steps>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Monitoring Status" href="/services/instance-ha/user-guide/monitoring-status" color="#197560">
+    Track live and historical recovery notifications.
+  </Card>
+  <Card title="Recovery Workflows" href="/services/instance-ha/user-guide/recovery-workflows" color="#197560">
+    Understand recovery methods and workflow stages.
+  </Card>
+  <Card title="Instance HA Admin Troubleshooting" href="/services/instance-ha/admin-guide/troubleshooting" color="#197560">
+    Administrator-level troubleshooting for monitors, engine failures, and capacity issues.
+  </Card>
+  <Card title="Compute User Guide" href="/services/compute/user-guide" color="#197560">
+    Manage and recover instances manually using core compute operations.
+  </Card>
+</CardGroup>

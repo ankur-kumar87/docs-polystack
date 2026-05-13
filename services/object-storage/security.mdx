@@ -1,0 +1,113 @@
+---
+title: "Object Storage Security"
+description: "Harden Xloud Object Storage — enforce TLS on proxy nodes, rotate temp URL keys, configure audit logging, and govern cross-project container access."
+sidebarTitle: "Security"
+---
+
+import AdminWarning from '/snippets/admin-warning.mdx';
+
+## Overview
+
+Object Storage security covers the proxy-layer communication security, temporary URL
+key management, audit logging, and governance of cross-project container sharing.
+This guide covers the key hardening areas for platform administrators.
+
+<AdminWarning />
+
+---
+
+## Hardening Guidelines
+
+<AccordionGroup>
+  <Accordion title="TLS enforcement on proxy nodes" icon="lock" defaultOpen>
+    All proxy-server endpoints must use TLS:
+
+    - Configure the proxy-server with SSL certificates issued through Xloud Key Manager
+    - Disable plain HTTP access at the load balancer frontend — redirect all port 80
+      traffic to 443
+    - Set HSTS headers in the proxy pipeline:
+      ```
+      strict-transport-security: max-age=31536000
+      ```
+    - Rotate TLS certificates 30 days before expiration using an automated renewal workflow
+    - Verify TLS configuration after every certificate rotation:
+      ```bash title="Verify TLS certificate on proxy endpoint"
+      openssl s_client -connect <proxy-ip>:443 -servername <proxy-hostname> < /dev/null
+      ```
+  </Accordion>
+
+  <Accordion title="Temp URL key management" icon="link">
+    Temporary URLs are signed with an account-level key. Compromise of this key allows
+    generation of arbitrary temporary URLs for all objects in the account:
+
+    - Use randomly generated keys of at least 32 bytes
+    - Rotate the `Temp-URL-Key` quarterly:
+      ```bash title="Rotate temp URL signing key"
+      openstack object store account set \
+        --property Temp-URL-Key=$(openssl rand -hex 32)
+      ```
+    - Set `Temp-URL-Key-2` as a secondary key during rotation to avoid invalidating
+      existing in-flight URLs immediately:
+      ```bash title="Set secondary temp URL key for rotation overlap"
+      openstack object store account set \
+        --property Temp-URL-Key-2=$(openssl rand -hex 32)
+      ```
+  </Accordion>
+
+  <Accordion title="Object access audit logging" icon="file-text">
+    The proxy-server logs every API request including the authenticated user, container,
+    object path, HTTP method, and response code. Configure log forwarding with:
+
+    - 90-day minimum retention for compliance frameworks
+    - Alerting on unusual patterns:
+      - Mass object deletions
+      - Access from unexpected source IPs
+      - Spike in 4xx errors indicating credential scanning
+    - Storage of logs in a separate protected container — restrict write access to the
+      proxy log-shipping service account only
+  </Accordion>
+
+  <Accordion title="Cross-project container ACL governance" icon="users">
+    Cross-project container sharing via ACLs requires careful governance:
+
+    - Audit all containers with non-empty read or write ACLs quarterly:
+      ```bash title="Find containers with ACLs (admin)"
+      openstack container list --all-projects --long
+      ```
+    - Require documented business justification for any cross-project ACL
+    - Immediately revoke ACLs for decommissioned projects
+    - Never grant write ACLs to external user IDs — use dedicated service accounts
+      traceable to a specific application
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Security Checklist
+
+| Control | Frequency | Command |
+|---------|-----------|---------|
+| TLS certificate valid | Ongoing | `openssl s_client -connect <proxy>:443` |
+| TLS certificate rotation | 30 days before expiry | Key Manager renewal workflow |
+| Temp URL key rotation | Quarterly | `account set --property Temp-URL-Key=...` |
+| Cross-project ACL audit | Quarterly | `container list --all-projects --long` |
+| Audit log retention review | Annually | Verify 90-day minimum |
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Quotas" href="/services/object-storage/quotas" color="#197560">
+    Enforce per-account and per-container storage limits
+  </Card>
+  <Card title="Monitoring" href="/services/object-storage/monitoring" color="#197560">
+    Set up cluster health and access pattern monitoring
+  </Card>
+  <Card title="Key Manager Admin Guide" href="/services/key-manager/admin-guide" color="#197560">
+    Manage TLS certificates used by proxy nodes
+  </Card>
+  <Card title="Admin Troubleshooting" href="/services/object-storage/admin-troubleshooting" color="#197560">
+    Diagnose security-related access errors
+  </Card>
+</CardGroup>

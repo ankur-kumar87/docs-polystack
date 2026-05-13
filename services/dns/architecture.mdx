@@ -1,0 +1,126 @@
+---
+title: "DNS Service Architecture"
+description: "Understand the Xloud DNS service topology — API layer, central processing service, DNS worker, and backend nameserver pools with data plane separation."
+sidebarTitle: "Architecture"
+---
+
+## Overview
+
+The Xloud DNS service uses a multi-tier architecture separating the API layer, the
+central processing service, and the backend DNS server pools. This separation allows the
+management plane to scale independently from the data plane that serves resolver queries.
+
+---
+
+## Service Topology
+
+```mermaid
+graph TD
+    User["User / API Client"] --> API["DNS API\n:9001"]
+    API --> Central["DNS Central Service\n(zone management)"]
+    Central --> DB[("Service Database\n(zones, records)")]
+    Central --> MQ["Message Queue"]
+    MQ --> Worker["DNS Worker\n(pool manager)"]
+    Worker --> Pool1["Pool: Default\nBIND9 / PowerDNS"]
+    Worker --> Pool2["Pool: External\n(zone transfers)"]
+    Pool1 --> NS1["Nameserver 1"]
+    Pool1 --> NS2["Nameserver 2"]
+    Pool2 --> Secondary["Secondary DNS\n(AXFR consumer)"]
+
+    subgraph "Management Plane"
+        API
+        Central
+        DB
+        MQ
+        Worker
+    end
+
+    subgraph "Data Plane"
+        Pool1
+        Pool2
+        NS1
+        NS2
+    end
+```
+
+<Info>
+  The DNS API and central service operate in the management plane. Nameservers in
+  pools operate as data-plane components — they respond to resolver queries directly
+  without routing through the API layer.
+</Info>
+
+---
+
+## Component Descriptions
+
+| Component | Role | Port |
+|-----------|------|------|
+| **DNS API** | REST API for zone and record management | 9001 |
+| **DNS Central** | Orchestrates zone lifecycle, writes to the database | Internal |
+| **DNS Worker** | Pushes zone data to backend nameserver pools | Internal |
+| **Message Queue** | Decouples Central from Workers for async processing | Internal |
+| **Service Database** | Stores zone metadata, record sets, and pool configuration | Internal |
+| **Nameserver Pool** | Backend DNS servers that answer resolver queries | 53 (UDP/TCP) |
+
+---
+
+## Request Flow
+
+### Zone Creation
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant API as DNS API
+    participant Central as DNS Central
+    participant DB as Database
+    participant Queue as Message Queue
+    participant Worker as DNS Worker
+    participant NS as Nameserver Pool
+
+    User->>API: POST /v2/zones {name: "example.com."}
+    API->>Central: Create zone request
+    Central->>DB: Write zone record (status: PENDING)
+    Central->>Queue: Publish zone_create event
+    API-->>User: 202 Accepted (zone in PENDING)
+    Queue->>Worker: Deliver zone_create event
+    Worker->>NS: Push zone to backend
+    NS-->>Worker: Acknowledgment
+    Worker->>DB: Update status to ACTIVE
+```
+
+---
+
+## High Availability
+
+The DNS management plane components (API, Central, Worker) are deployed as containerized
+services managed by XDeploy. For production deployments:
+
+- Deploy at least two API containers behind a load balancer
+- Run two Worker instances for redundancy — only one processes each event (queue-based)
+- Database and message queue are shared, managed services
+
+<Note>
+  The data plane (nameservers) operates independently of the management plane. Resolver
+  queries continue to be served even if the DNS API or central service is temporarily
+  unavailable. Only zone updates and record changes require the management plane.
+</Note>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Backend Configuration" href="/services/dns/backend-config" color="#197560">
+    Configure backend DNS drivers and pool targets
+  </Card>
+  <Card title="Pool Management" href="/services/dns/pool-management" color="#197560">
+    Manage nameserver pools and geographic distribution
+  </Card>
+  <Card title="Security" href="/services/dns/security" color="#197560">
+    Harden the DNS service and protect zone data
+  </Card>
+  <Card title="Troubleshooting" href="/services/dns/admin-troubleshooting" color="#197560">
+    Diagnose and resolve platform-level DNS issues
+  </Card>
+</CardGroup>

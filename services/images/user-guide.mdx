@@ -1,0 +1,91 @@
+---
+title: "Image Service User Guide"
+description: "Upload, discover, and manage virtual machine images and snapshots in Xloud Cloud Platform."
+sidebarTitle: "User Guide"
+mode: "wide"
+---
+
+<p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Overview</p>
+
+The Xloud Image Service stores and delivers virtual machine images to the compute service
+at instance launch time. Use the guides below to upload images, capture snapshots, share
+images with other projects, set metadata properties, and troubleshoot common issues.
+
+<CardGroup cols={4}>
+  <Card title="Upload an Image" icon="upload" href="/services/images/upload-image" color="#197560">
+    Upload OS images and VM disk files from your workstation or via URL import.
+  </Card>
+  <Card title="Create a Snapshot" icon="camera" href="/services/images/create-snapshot" color="#197560">
+    Capture a running or stopped instance as a reusable image snapshot.
+  </Card>
+  <Card title="Share Images" icon="share-2" href="/services/images/share-images" color="#197560">
+    Share private images with specific projects without making them globally public.
+  </Card>
+  <Card title="Image Properties" icon="tag" href="/services/images/image-properties" color="#197560">
+    Set hardware requirements, OS metadata, and scheduler hints on images.
+  </Card>
+  <Card title="Image Formats" icon="file-code" href="/services/images/image-formats" color="#197560">
+    Compare QCOW2, RAW, VHD, and VMDK formats and choose the right one for your workload.
+  </Card>
+  <Card title="Troubleshooting" icon="wrench" href="/services/images/troubleshooting" color="#197560">
+    Resolve upload failures, stuck images, and launch errors caused by image issues.
+  </Card>
+  <Card title="Get Images" icon="download" href="/services/images/get-images" color="#197560">
+    Download pre-built cloud images for Ubuntu, AlmaLinux, Rocky Linux, and more.
+  </Card>
+  <Card title="Image Requirements" icon="circle-check" href="/services/images/image-requirements" color="#197560">
+    Understand cloud-init, SSH, and disk requirements for Xloud-compatible images.
+  </Card>
+  <Card title="Modify Images" icon="edit" href="/services/images/modify-images" color="#197560">
+    Customize images offline using virt-customize, guestfish, and guestmount.
+  </Card>
+  <Card title="Convert Formats" icon="repeat" href="/services/images/convert-formats" color="#197560">
+    Convert VMDK, VHD, or RAW images to QCOW2 using qemu-img.
+  </Card>
+</CardGroup>
+
+---
+
+<p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Key Concepts</p>
+
+| Concept | Description |
+|---------|-------------|
+| **Image** | A file containing a virtual disk with a pre-installed operating system or application. Used as the boot source for new instances. |
+| **Snapshot** | An image captured from a running or stopped instance. Preserves the instance disk state at the moment of capture. |
+| **Metadata / Properties** | Key-value pairs attached to an image. Describe OS type, version, minimum hardware requirements, and custom attributes. |
+| **Visibility** | Access scope for the image. Options: `public` (all projects), `private` (owner only), `shared` (specific projects), `community` (discoverable but not pushed). |
+| **Disk Format** | The storage format of the image file (QCOW2, RAW, VHD, VMDK). |
+| **Min Disk / Min RAM** | Minimum flavor requirements enforced at instance launch. |
+
+---
+
+<p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Image Lifecycle</p>
+
+```mermaid
+graph LR
+    A([Upload / Create]) --> B[queued]
+    B --> C[saving]
+    C --> D[active]
+    D --> E([Create Instance])
+    D --> F([Create Snapshot])
+    F --> D
+    D --> G[deactivated]
+    G --> D
+    D --> H([Delete])
+    style D fill:#197560,color:#fff
+    style A fill:#3F8F7E,color:#fff
+    style E fill:#3F8F7E,color:#fff
+```
+
+---
+
+<p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Next Steps</p>
+
+<CardGroup cols={4}>
+  <Card title="Image Admin Guide" icon="settings" href="/services/images/admin-guide" color="#197560">
+    Configure storage backends, metadata schemas, image caching, and access policies.
+  </Card>
+  <Card title="Compute User Guide" icon="server" href="/services/compute/user-guide" color="#197560">
+    Launch instances from the images you upload and manage.
+  </Card>
+</CardGroup>

@@ -1,0 +1,173 @@
+---
+title: "Bootstrap"
+description: "Server readiness validation and dependency installation for cloud deployment"
+icon: "check"
+sidebarTitle: "Bootstrap"
+---
+
+Bootstrap is the preflight checklist for your server. Before deploying cloud services, every target server must meet hardware requirements and have all software dependencies installed. Bootstrap automates detection, validation, and installation — ensuring a clean foundation for deployment.
+
+<Note>
+  **Prerequisites**
+  - Physical or virtual server with root or sudo access
+  - Internet connection (required for package installation)
+  - Ubuntu 24.04 LTS (XOS) recommended as the base operating system
+</Note>
+
+---
+
+## Bootstrap Tabs
+
+The Bootstrap module is organized into four tabs. Navigate between tabs to inspect specific subsystems or install dependencies.
+
+<Tabs>
+  <Tab title="Overview" icon="monitor">
+    Quick snapshot of server health without modifying anything. Four information cards are displayed:
+
+    <CardGroup cols={2}>
+      <Card title="Operating System" icon="monitor" color="#197560">
+        Linux distribution, kernel version, package manager, and XDeploy mode (AIO or Multi-Node)
+      </Card>
+      <Card title="System Status" icon="activity" color="#197560">
+        Uptime, CPU load average and usage percentage, memory used vs total
+      </Card>
+      <Card title="Storage Overview" icon="hard-drive" color="#197560">
+        Root filesystem type and free space, total disk count, storage type (SSD/HDD)
+      </Card>
+      <Card title="Network Overview" icon="globe" color="#197560">
+        Interface count, internet connectivity, primary IP address, DNS resolution status
+      </Card>
+    </CardGroup>
+
+    Quick Actions at the bottom: **Run Hardware Checks** and **Install All Information**.
+  </Tab>
+
+  <Tab title="Hardware" icon="cpu">
+    Runs automated hardware requirement checks and shows detailed specifications. Each check shows a green checkmark (pass) or red indicator (fail).
+
+    **5 Requirement Checks:**
+
+    | Check | Minimum | Why |
+    |-------|---------|-----|
+    | Root Filesystem | 100 GB | Services, Docker images, and logs |
+    | Network Interfaces | 2 | Management NIC + provider/external NIC |
+    | Additional Disk or Volume Group | Optional | Required for persistent block storage volumes |
+    | CPU Cores | 4 (16+ production) | Control plane needs ~2 cores, compute needs the rest |
+    | RAM | 8 GB (32-64 GB production) | Each service container uses 200-500 MB |
+
+    <Info>
+      Servers below minimums are flagged but not blocked — you can proceed for development and testing.
+    </Info>
+
+    **Hardware Details** (expandable sections):
+
+    <AccordionGroup>
+      <Accordion title="CPU Information" icon="cpu">
+        Model name, physical cores, logical threads, architecture (x86_64/ARM), and hardware virtualization support (VT-x/AMD-V). Virtualization is required for running VMs.
+      </Accordion>
+      <Accordion title="Memory Information" icon="bar-chart">
+        Total installed, currently available, in use, and swap size.
+      </Accordion>
+      <Accordion title="Storage Information" icon="hard-drive">
+        Root filesystem type (ext4, xfs), all block devices (sda, nvme0n1, etc.), LVM volume groups, and mount points. Identifies disks available for block storage.
+      </Accordion>
+      <Accordion title="Network Information" icon="globe">
+        Active interfaces, link types (ethernet, bond, bridge), all IP addresses, and default gateway.
+      </Accordion>
+    </AccordionGroup>
+  </Tab>
+
+  <Tab title="Dependencies" icon="package">
+    The Dependencies tab validates and installs 7 software groups required for deployment. Each group addresses a specific layer of the deployment stack.
+
+    <Warning>
+      ALL 7 dependency groups must pass before proceeding to the next stage. If even one group fails, deployment will break — sometimes 45 minutes in, when a missing library causes a playbook task to fail.
+    </Warning>
+
+    | Group | What It Installs | Why |
+    |-------|-----------------|-----|
+    | **Python Dependencies** | git, python3-dev, libffi-dev, gcc, libssl-dev, python3-venv | Ansible modules and Python libraries require compilation of C extensions |
+    | **System Tools** | Monitoring, networking, storage, and virtualization CLI utilities | Ansible playbooks detect interfaces, disks, and containers using these tools |
+    | **Python Environment** | Isolated Python virtual environment | Prevents version conflicts between system Python packages and deployment tooling |
+    | **XDeploy Dependencies** | Ansible + XAVS Deployment Automation | Core deployment engine and service playbooks that provision every cloud component |
+    | **CLI Clients** | nova, neutron, cinder, keystone, swift, octavia, magnum, barbican | Command-line tools for post-deployment management and troubleshooting |
+    | **Configuration Setup** | `/etc/xavs` directory with correct ownership and permissions | Scaffolds the configuration directory structure: globals, inventory, and password files |
+    | **Password Generation** | Auto-generated secure random passwords | Produces 50+ internal passwords for databases, service accounts, and message queue authentication |
+
+    <Tip>
+      Use **Install All** to install every dependency group in sequence with a single action. Once a group passes validation, its individual Install button is disabled to prevent accidental re-installation.
+    </Tip>
+  </Tab>
+
+  <Tab title="Logs" icon="terminal">
+    Every Bootstrap action is recorded in a live scrolling terminal log with timestamps. Use this log to diagnose failures — it captures the full output of every package installation, validation check, and error message. The log persists across page refreshes, so you can return to it at any time during the session.
+  </Tab>
+</Tabs>
+
+---
+
+## Validation
+
+After all dependency groups are installed, verify readiness:
+
+<Steps titleSize="h3">
+  <Step title="Check All Groups Pass" icon="circle-check">
+    Every dependency group in the Bootstrap interface displays a green status indicator. No group should show a warning or error state.
+  </Step>
+  <Step title="Review the Overview Tab" icon="eye">
+    Return to the Overview tab and confirm that hardware values (CPU, RAM, disk, network interfaces) meet or exceed the minimums listed above.
+  </Step>
+  <Step title="Verify Internet Connectivity" icon="globe">
+    The Network tab must show successful internet connectivity and DNS resolution. Offline deployments require pre-staged package archives.
+  </Step>
+</Steps>
+
+<Check>
+  All 7 dependency groups installed and passing — the server is ready for the next stage.
+</Check>
+
+---
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Python Dependencies group fails with compilation errors" icon="alert-triangle">
+    **Cause**: Missing build tools or development headers on the base operating system.
+
+    **Resolution**: Verify that `build-essential`, `python3-dev`, and `libffi-dev` are available in the system package repository. On XOS, these packages are pre-installed. On other Ubuntu 24.04 installations, run:
+
+    ```bash title="Install build prerequisites"
+    sudo apt update && sudo apt install -y build-essential python3-dev libffi-dev libssl-dev
+    ```
+
+    Retry the Python Dependencies installation after installing the missing packages.
+  </Accordion>
+  <Accordion title="Network Overview shows no internet connectivity" icon="alert-triangle">
+    **Cause**: DNS resolution failure or firewall blocking outbound connections.
+
+    **Resolution**: Verify that `/etc/resolv.conf` contains valid nameservers and that outbound HTTPS (port 443) is not blocked by a firewall or proxy. Bootstrap requires internet access to download packages from Ubuntu and Python package repositories.
+
+    ```bash title="Test DNS and connectivity"
+    nslookup archive.ubuntu.com
+    curl -s https://pypi.org/simple/ | head -1
+    ```
+  </Accordion>
+  <Accordion title="Dependency installation hangs or times out" icon="clock">
+    **Cause**: Slow or unreliable network connection to package repositories.
+
+    **Resolution**: Check network throughput between the server and the internet. If using a corporate proxy, ensure the proxy is configured in the system environment variables (`http_proxy`, `https_proxy`). Consider using a local package mirror for air-gapped or bandwidth-constrained environments.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Hosts" icon="server" href="/deployment/hosts" color="#197560">
+    Define your cluster inventory and establish SSH connectivity to all nodes
+  </Card>
+  <Card title="Configuration" icon="settings" href="/deployment/configuration" color="#197560">
+    Set up networking, storage backends, and enable optional cloud services
+  </Card>
+</CardGroup>

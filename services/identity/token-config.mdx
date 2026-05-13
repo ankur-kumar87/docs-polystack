@@ -1,0 +1,137 @@
+---
+title: "Token Configuration"
+description: "Configure Fernet key rotation, token lifetime, and expiration policies for Xloud Identity."
+sidebarTitle: "Token Config"
+---
+
+import AdminWarning from '/snippets/admin-warning.mdx';
+
+## Overview
+
+Xloud Identity uses Fernet tokens by default — stateless, symmetric-key-encrypted tokens
+that do not require a database lookup on every validation request. This guide covers
+token format selection, Fernet key rotation procedures, and lifetime configuration.
+Proper token configuration balances security (short lifetimes) with operational convenience
+(longer windows for automation pipelines).
+
+<AdminWarning />
+
+---
+
+## Token Format Reference
+
+| Token Type | Storage | Validation | Use Case |
+|-----------|---------|------------|---------|
+| **Fernet** | None (stateless) | Decrypted locally using key repository | Default. Recommended for all deployments. |
+| **JWT** | None (stateless) | Verified locally via public key | Alternative to Fernet with standard JWT tooling. |
+
+<Tip>
+  Fernet is the recommended format for all deployments. JWT tokens are useful when
+  you need to validate tokens outside of Xloud (e.g., in a sidecar proxy or API gateway).
+</Tip>
+
+---
+
+## Fernet Key Rotation
+
+Fernet uses a key repository with three key roles:
+
+| Key Role | Position | Description |
+|----------|----------|-------------|
+| **Primary** | `1` | Used to sign all new tokens |
+| **Secondary** | `2+` | Used to validate tokens signed by previous primary keys |
+| **Staged** | `0` | Pre-positioned key that will become the next primary on rotation |
+
+<Steps titleSize="h3">
+  <Step title="Configure rotation schedule" icon="clock">
+    XDeploy manages Fernet key rotation automatically via a scheduled cron job.
+    Configure the rotation interval in your deployment globals:
+
+    ```yaml title="Fernet key rotation schedule"
+    keystone_fernet_key_rotation: "0 */24 * * *"  # Every 24 hours
+    keystone_fernet_max_active_keys: 3             # Primary + 1 secondary + staged
+    ```
+  </Step>
+  <Step title="Rotate keys manually" icon="rotate-cw">
+    To trigger an immediate rotation outside the scheduled window:
+
+    ```bash title="Rotate Fernet keys"
+    keystone-manage fernet_rotate \
+      --keystone-user keystone \
+      --keystone-group keystone
+    ```
+
+    After rotation, XDeploy synchronizes the new key set to all Identity API nodes.
+  </Step>
+  <Step title="Verify key synchronization" icon="circle-check">
+    All nodes must have identical key files:
+
+    ```bash title="Check key file timestamps on all nodes"
+    ls -la /var/lib/kolla/config_files/fernet-keys/
+    ```
+    <Check>All nodes report the same key files with matching timestamps.</Check>
+  </Step>
+</Steps>
+
+<Warning>
+  Rotate keys on all Identity API nodes simultaneously. Keys not in sync across
+  nodes cause token validation failures. XDeploy's rotation playbook handles
+  synchronization automatically.
+</Warning>
+
+---
+
+## Token Lifetime Configuration
+
+Token lifetime is configured in XDeploy globals. Shorter lifetimes improve security
+but increase re-authentication overhead for users and automation pipelines.
+
+```yaml title="Token lifetime settings"
+keystone_token_expiration: 3600        # Default token lifetime in seconds (1 hour)
+keystone_allow_expired_window: 172800  # Allow expired tokens for re-issue (48 hours)
+```
+
+| Parameter | Default | Recommended | Notes |
+|-----------|---------|-------------|-------|
+| `keystone_token_expiration` | 3600 | 3600 (1 hour) | Reduce for high-security environments |
+| `keystone_allow_expired_window` | 172800 | 172800 (48 hours) | Allows token re-issuance without password re-entry |
+
+<Note>
+  For long-running automation jobs, use [application credentials](/services/identity/application-credentials)
+  rather than increasing token lifetime. Application credentials can be scoped, restricted,
+  and rotated independently of user accounts.
+</Note>
+
+---
+
+## Verify Token Configuration
+
+```bash title="Issue a token and inspect its expiry"
+openstack token issue -f json | python3 -c "
+import json, sys, datetime
+t = json.load(sys.stdin)
+expires = datetime.datetime.fromisoformat(t['expires'].replace('Z', '+00:00'))
+now = datetime.datetime.now(datetime.timezone.utc)
+print(f'Expires: {t[\"expires\"]}')
+print(f'Valid for: {(expires - now).seconds // 60} minutes')
+"
+```
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Security Hardening" href="/services/identity/security" color="#197560">
+    Enforce MFA requirements and audit token usage patterns.
+  </Card>
+  <Card title="Architecture" href="/services/identity/architecture" color="#197560">
+    Understand how Fernet keys flow through the distributed Identity service.
+  </Card>
+  <Card title="Admin Troubleshooting" href="/services/identity/admin-troubleshooting" color="#197560">
+    Diagnose token validation failures caused by key synchronization issues.
+  </Card>
+  <Card title="Application Credentials" href="/services/identity/application-credentials" color="#197560">
+    Create long-lived automation credentials as an alternative to extended token lifetimes.
+  </Card>
+</CardGroup>

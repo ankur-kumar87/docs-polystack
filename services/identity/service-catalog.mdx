@@ -1,0 +1,150 @@
+---
+title: "Service Catalog"
+description: "Manage endpoint registration for all Xloud services across regions and interface types in Xloud Identity."
+sidebarTitle: "Service Catalog"
+---
+
+import AdminWarning from '/snippets/admin-warning.mdx';
+
+## Overview
+
+The service catalog registers every Xloud service endpoint so clients can discover the
+correct API URL for each service and region. It is included in every authentication token
+response, enabling the `openstack` CLI and Dashboard to route requests correctly without
+hard-coded URLs. Each catalog entry includes the service type, endpoint interface
+(public, internal, admin), region, and URL.
+
+<AdminWarning />
+
+---
+
+## Catalog Structure
+
+| Concept | Description |
+|---------|-------------|
+| **Service** | A registered Xloud service (compute, image, block-storage, network, etc.) |
+| **Endpoint** | A URL for a specific service, interface type, and region combination |
+| **Interface** | `public` (external clients), `internal` (service-to-service), or `admin` (administrative operations) |
+| **Region** | Logical grouping for geographically or administratively separate deployments |
+
+---
+
+## View the Service Catalog
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    Navigate to **Global Setting > System Info** to view all registered services, and
+    **Global Setting > System Info** to view and manage endpoint URLs for each service.
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="List all registered services"
+    openstack service list
+    ```
+
+    ```bash title="List all endpoints"
+    openstack endpoint list
+    ```
+
+    ```bash title="List endpoints for a specific service"
+    openstack endpoint list --service compute
+    ```
+
+    ```bash title="Show the current token's service catalog"
+    openstack catalog list
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Manage Endpoints
+
+<Tabs>
+  <Tab title="Create endpoint" icon="plus">
+    ```bash title="Create a public endpoint for Compute"
+    openstack endpoint create \
+      --region RegionOne \
+      compute public https://api.<your-domain>:8774/v2.1
+    ```
+
+    ```bash title="Create an internal endpoint"
+    openstack endpoint create \
+      --region RegionOne \
+      compute internal http://10.0.1.71:8774/v2.1
+    ```
+  </Tab>
+  <Tab title="Update endpoint" icon="pencil">
+    ```bash title="Update an existing endpoint URL"
+    openstack endpoint set \
+      --url https://api.<your-domain>:8774/v2.1 \
+      <ENDPOINT_ID>
+    ```
+
+    ```bash title="Disable an endpoint"
+    openstack endpoint set --disable <ENDPOINT_ID>
+    ```
+  </Tab>
+  <Tab title="Delete endpoint" icon="trash">
+    ```bash title="Delete an endpoint"
+    openstack endpoint delete <ENDPOINT_ID>
+    ```
+
+    <Warning>
+      Deleting an endpoint makes the associated service undiscoverable via the catalog.
+      Clients that rely on catalog discovery will fail to resolve the service URL.
+      Always ensure a replacement endpoint is registered before removing an existing one.
+    </Warning>
+  </Tab>
+</Tabs>
+
+---
+
+## Standard Service Registrations
+
+The following services are registered during XDeploy deployment. Verify they are present
+after a fresh deployment or endpoint migration:
+
+| Service Type | Public Port | Description |
+|-------------|-------------|-------------|
+| `identity` | 5000 | Authentication and authorization |
+| `compute` | 8774 | Virtual machine management |
+| `image` | 9292 | Image and snapshot management |
+| `block-storage` | 8776 | Persistent block volumes |
+| `network` | 9696 | Virtual networking |
+| `object-store` | 8080 | Object storage (if enabled) |
+| `load-balancer` | 9876 | Load balancing (if enabled) |
+| `dns` | 9001 | DNS as a Service (if enabled) |
+| `key-manager` | 9311 | Secrets and key management (if enabled) |
+
+---
+
+## Verify Catalog After Endpoint Changes
+
+After modifying endpoints, verify that clients can resolve the updated URLs:
+
+```bash title="Test catalog resolution"
+openstack --os-cloud admin catalog show compute
+```
+
+```bash title="Verify CLI uses the correct endpoint"
+openstack server list -v 2>&1 | grep "GET http"
+```
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Domain Management" href="/services/identity/domain-management" color="#197560">
+    Manage the domains that own the users and projects accessing these services.
+  </Card>
+  <Card title="Admin Troubleshooting" href="/services/identity/admin-troubleshooting" color="#197560">
+    Resolve service catalog misconfigurations and endpoint routing errors.
+  </Card>
+  <Card title="Authentication Backends" href="/services/identity/auth-backends" color="#197560">
+    Configure the authentication drivers that issue tokens containing the service catalog.
+  </Card>
+  <Card title="Architecture" href="/services/identity/architecture" color="#197560">
+    Understand how the service catalog fits into the authentication flow.
+  </Card>
+</CardGroup>

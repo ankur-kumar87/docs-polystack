@@ -1,0 +1,132 @@
+---
+title: "DNS Pool Management"
+description: "Manage Xloud DNS nameserver pools — configure pool attributes for zone scheduling, monitor nameserver health, and add or remove nameservers from pools."
+sidebarTitle: "Pool Management"
+---
+
+import AdminWarning from '/snippets/admin-warning.mdx';
+
+## Overview
+
+DNS pools group nameserver backends that process zone data. Multiple pools support
+geographic distribution or tiered service levels. Pool attributes control automatic
+zone scheduling — when a zone is created, the DNS service selects a pool based on
+attribute matching policies.
+
+<AdminWarning />
+
+---
+
+## Pool Attributes and Zone Scheduling
+
+Pools use key-value attributes to match zones during scheduling. When a zone is created
+without an explicit pool assignment, the DNS service selects a pool based on these
+attributes.
+
+| Attribute | Example Values | Purpose |
+|-----------|----------------|---------|
+| `service_tier` | `standard`, `premium` | Route zones to capacity-appropriate pools |
+| `region` | `east`, `west` | Assign zones to geographically local pools |
+| `tenant_type` | `internal`, `external` | Separate internal and external zones |
+
+Configure pool attributes through XDeploy service configuration files.
+
+---
+
+## View Pool Information
+
+<CodeGroup>
+```bash title="List all pools"
+openstack zone pool list
+```
+```bash title="Show pool detail with nameservers and targets"
+openstack zone pool show <pool-id>
+```
+```bash title="Check zone's pool assignment"
+openstack zone show <zone-name> -c attributes
+```
+</CodeGroup>
+
+---
+
+## Nameserver Health Monitoring
+
+<Tabs>
+  <Tab title="Verify authoritative responses" icon="heart-pulse">
+    Monitor the health of pool nameservers by verifying they are authoritatively
+    answering queries for managed zones:
+
+    ```bash title="Verify nameserver is authoritative"
+    dig @<nameserver-ip> example.com. SOA +norecurse
+    ```
+
+    A healthy nameserver returns the SOA record with `AUTHORITY: 1`. If the nameserver
+    returns `SERVFAIL` or does not respond, check the DNS service worker logs for
+    synchronization errors.
+  </Tab>
+  <Tab title="Check SOA serial consistency" icon="refresh-cw">
+    All nameservers in a pool should have the same SOA serial number for a given zone:
+
+    ```bash title="Check SOA serial on each nameserver"
+    dig @<ns1-ip> example.com. SOA +short
+    dig @<ns2-ip> example.com. SOA +short
+    ```
+
+    Mismatched serials indicate a synchronization lag. Check DNS worker logs for push
+    errors to the affected nameserver's target configuration.
+  </Tab>
+</Tabs>
+
+---
+
+## Adding Nameservers to a Pool
+
+Adding nameservers requires updating the pool configuration through XDeploy. After
+adding a nameserver:
+
+<Steps titleSize="h3">
+  <Step title="Update pool configuration in XDeploy">
+    Add the new nameserver to the pool's `nameservers` and `targets` lists in the
+    XDeploy DNS service configuration.
+  </Step>
+  <Step title="Deploy the configuration">
+    Apply the updated configuration:
+    ```bash title="Deploy DNS service configuration"
+    xavs-ansible deploy -t dns
+    ```
+  </Step>
+  <Step title="Verify the new nameserver receives zone data">
+    ```bash title="Verify zone synchronization on new nameserver"
+    dig @<new-ns-ip> example.com. SOA +norecurse
+    ```
+    Wait for the zone data to synchronize before proceeding.
+  </Step>
+  <Step title="Update external NS delegation records">
+    Update the NS delegation records at the domain registrar to include the new
+    nameserver. Allow 48 hours for resolver caches to propagate the new NS records globally.
+  </Step>
+</Steps>
+
+<Warning>
+  Do not remove an existing nameserver from a pool until the new nameserver is fully
+  synchronized and the old NS records have expired from resolver caches (typically 48 hours).
+</Warning>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Backend Configuration" href="/services/dns/backend-config" color="#197560">
+    Configure backend driver targets for each pool
+  </Card>
+  <Card title="Zone Transfers" href="/services/dns/zone-transfers" color="#197560">
+    Manage zone transfer requests to secondary nameservers
+  </Card>
+  <Card title="Quotas" href="/services/dns/quotas" color="#197560">
+    Set per-project DNS resource limits
+  </Card>
+  <Card title="Admin Troubleshooting" href="/services/dns/admin-troubleshooting" color="#197560">
+    Diagnose nameserver synchronization failures
+  </Card>
+</CardGroup>

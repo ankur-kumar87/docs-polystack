@@ -1,0 +1,185 @@
+---
+title: "Server Groups"
+description: "Control instance placement across physical hosts using affinity and anti-affinity policies. Create and manage server groups in the Xloud Dashboard or CLI."
+sidebarTitle: "Server Groups"
+---
+
+## Overview
+
+Server groups enforce placement policies that determine how a set of instances is
+distributed across physical compute hosts. Use server groups to guarantee high availability
+through host separation, improve performance through co-location, or meet compliance
+requirements for workload isolation.
+
+<Note>
+  **Prerequisites**
+  - An active Xloud project
+  - At least two compute hosts available (required for `anti-affinity` enforcement)
+  - Sufficient server group quota
+</Note>
+
+---
+
+## Placement Policies
+
+| Policy | Behavior | Failure Mode |
+|--------|----------|--------------|
+| **affinity** | All instances placed on the **same** physical host | Launch fails if the target host cannot accommodate the instance |
+| **anti-affinity** | Each instance placed on a **different** physical host | Launch fails if insufficient distinct hosts are available |
+| **soft-affinity** | Prefer the same host; allow different hosts if required | Launch succeeds even when co-location is not possible |
+| **soft-anti-affinity** | Prefer different hosts; allow same host if no alternative exists | Launch succeeds even when distinct hosts are unavailable |
+
+<Tip>
+  Use `anti-affinity` for production replicated services (web tiers, application clusters,
+  database replicas) where a single host failure must not take down all instances simultaneously.
+  Use `soft-anti-affinity` when you want best-effort separation without hard placement failures.
+</Tip>
+
+---
+
+## Create a Server Group
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Navigate to Server Groups">
+        Navigate to **Compute > Server Groups** in the sidebar.
+        Click **Create Server Group**.
+      </Step>
+      <Step title="Configure the server group">
+        | Field | Type | Required | Description |
+        |-------|------|----------|-------------|
+        | **Name** | Text input | Yes | Human-readable name for the group |
+        | **Policy** | Dropdown | Yes | Placement policy — see the table above |
+
+        The dropdown options are:
+        - `affinity` — instances on same physical machine (mandatory)
+        - `anti-affinity` — instances on different machines (mandatory)
+        - `soft-affinity` — same machine preferred (best effort)
+        - `soft-anti-affinity` — different machines preferred (best effort)
+
+        The dialog also displays your current **Server Groups** quota usage
+        (used / limit). If your quota is exhausted, the submit button is disabled.
+      </Step>
+      <Step title="Create the group">
+        Click **Confirm**. The server group appears in the list.
+
+        <Check>Server group appears in the list with the selected policy.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Source credentials"
+    source openrc.sh
+    ```
+
+    <CodeGroup>
+    ```bash title="Create anti-affinity group"
+    openstack server group create \
+      --policy anti-affinity \
+      ha-web-tier
+    ```
+    ```bash title="Create soft-affinity group"
+    openstack server group create \
+      --policy soft-affinity \
+      collocated-cache
+    ```
+    </CodeGroup>
+  </Tab>
+</Tabs>
+
+---
+
+## View Server Groups
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    Navigate to **Compute > Server Groups**. The list shows:
+
+    | Column | Description |
+    |--------|-------------|
+    | **ID/Name** | Group identifier (clickable to view details) |
+    | **Member Count** | Number of instances in the group |
+    | **Policy** | Placement policy |
+
+    Filter by **Name** or **Policy** using the search/filter bar.
+
+    Click a group name to view the detail page, which shows the **Members** tab
+    listing all instances assigned to this server group.
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    <CodeGroup>
+    ```bash title="List server groups"
+    openstack server group list
+    ```
+    ```bash title="Show server group details"
+    openstack server group show <GROUP_ID>
+    ```
+    </CodeGroup>
+  </Tab>
+</Tabs>
+
+---
+
+## Launch Instances in a Server Group
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    When creating an instance, expand the **Advanced Options** section in **Step 3
+    (System Config)** of the wizard. Select your server group from the **Server Group**
+    table.
+
+    Alternatively, from the server group detail page, click the **Create Instance**
+    action in the **More** dropdown. The server group is pre-selected in the wizard.
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Launch instance in a server group"
+    openstack server create \
+      --image <IMAGE_ID> \
+      --flavor <FLAVOR> \
+      --network <NETWORK> \
+      --hint group=<SERVER_GROUP_ID> \
+      my-instance
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Delete a Server Group
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    Navigate to **Compute > Server Groups**. Click the **Delete** action (the first
+    row action) on the group row. Confirm the deletion in the dialog.
+
+    <Danger>
+      Deleting a server group removes the placement constraint. Existing instances
+      are not affected, but new launches will no longer enforce the policy.
+    </Danger>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Delete a server group"
+    openstack server group delete <GROUP_ID>
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Launch an Instance" href="/services/compute/launch-instance" color="#197560">
+    Create instances with server group placement in the 4-step wizard
+  </Card>
+  <Card title="Availability Zones" href="/services/compute/availability-zones" color="#197560">
+    Understand fault domains and zone-level placement
+  </Card>
+  <Card title="Live Migration" href="/services/compute/live-migration" color="#197560">
+    Move instances between hosts while respecting group policies
+  </Card>
+  <Card title="Troubleshooting" href="/services/compute/troubleshooting" color="#197560">
+    Resolve placement failures and group member limit issues
+  </Card>
+</CardGroup>

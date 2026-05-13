@@ -1,0 +1,271 @@
+---
+title: "Failover Segments"
+description: "Create and manage Xloud Instance HA failover segments — configure recovery methods, register compute hosts, and designate reserved standby nodes."
+sidebarTitle: "Failover Segments"
+---
+
+## Overview
+
+Failover segments group compute hosts into logical fault domains. Each segment has its
+own recovery method — determining how instances are relocated when a host fails. Creating
+well-designed segments is the most important administrative task for Instance HA. Incorrect
+segment design (too few hosts, wrong recovery method) is the primary cause of failed
+automatic recovery.
+
+<Warning>
+  Segment configuration changes take effect immediately and affect all active recovery
+  workflows. Plan segment structure carefully before production deployment.
+</Warning>
+
+<Note>
+  **Prerequisites**
+  - Administrator role in Xloud Identity
+  - Compute hosts registered and reachable
+  - Instance HA service deployed via XDeploy
+</Note>
+
+---
+
+## Segment Design Principles
+
+<CardGroup cols={2}>
+  <Card title="Match Physical Topology" icon="network" color="#197560">
+    Group hosts that share a failure domain — the same power circuit, network switch,
+    or rack. Hosts in the same fault domain should not be in the same segment.
+  </Card>
+  <Card title="Reserve Enough Headroom" icon="gauge" color="#197560">
+    For `auto` recovery, maintain 20–30% unused capacity across all hosts in the segment.
+    For `reserved_host`, the reserved node must absorb all instances from the largest host.
+  </Card>
+  <Card title="Separate Critical Workloads" icon="shield-check" color="#197560">
+    Place SLA-critical instances in segments with `reserved_host` recovery. Use `auto`
+    segments for standard workloads where recovery capacity is shared.
+  </Card>
+  <Card title="Single-Segment Host Membership" icon="server" color="#197560">
+    A compute host can belong to only one segment. Plan segment boundaries before
+    registering hosts to avoid re-registration overhead.
+  </Card>
+</CardGroup>
+
+---
+
+## Create a Failover Segment
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Navigate to Instance HA administration" icon="compass">
+        Navigate to
+        **Instance-HA > Segments (admin view)**.
+      </Step>
+      <Step title="Create the segment" icon="plus">
+        Click **Create Segment** and complete the form:
+
+        | Field | Description | Example |
+        |-------|-------------|---------|
+        | **Name** | Unique identifier | `prod-zone-a` |
+        | **Recovery Method** | Evacuation algorithm | `auto` |
+        | **Enabled** | Activate immediately | Checked |
+        | **Description** | Optional documentation note | `Production AZ-A hosts` |
+      </Step>
+      <Step title="Save" icon="circle-check">
+        Click **Create Segment**. The segment appears in the list with status `ENABLED`.
+
+        <Check>Segment created and ready for host registration.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    <Steps titleSize="h3">
+      <Step title="Authenticate as admin" icon="key">
+        ```bash title="Load admin credentials"
+        source openrc.sh
+        ```
+      </Step>
+      <Step title="Create the segment" icon="plus">
+        ```bash title="Create failover segment"
+        openstack segment create \
+          --recovery_method auto \
+          --enabled True \
+          --description "Production Zone A" \
+          prod-zone-a
+        ```
+
+        Recovery method options:
+
+        | Method | Behaviour |
+        |--------|-----------|
+        | `auto` | Evacuate to any healthy host in the segment |
+        | `reserved_host` | Evacuate only to pre-designated reserved hosts |
+        | `rh_priority` | Prefer reserved; fall back to `auto` |
+      </Step>
+      <Step title="Verify" icon="circle-check">
+        ```bash title="Show segment"
+        openstack segment show prod-zone-a
+        ```
+
+        <Check>Segment shows `enabled: True` and the correct `recovery_method`.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+</Tabs>
+
+---
+
+## Register Hosts in a Segment
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Open the segment" icon="eye">
+        Navigate to **Instance-HA > Segments (admin view)** and click the segment name.
+      </Step>
+      <Step title="Add host" icon="plus">
+        Click **Add Host** and fill in:
+
+        | Field | Description |
+        |-------|-------------|
+        | **Name** | Compute hostname — must match the hostname registered in the Compute service |
+        | **Type** | `COMPUTE` for compute nodes |
+        | **Control Attributes** | JSON object with IPMI or SSH connection parameters |
+        | **On Maintenance** | Temporarily exclude host from recovery targets |
+        | **Reserved** | Designate as a standby node for `reserved_host` / `rh_priority` methods |
+      </Step>
+      <Step title="Confirm registration" icon="circle-check">
+        The host appears in the segment host list with `ON_MAINTENANCE: False`.
+
+        <Check>Host registered and available as a recovery target.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Register a compute host"
+    openstack segment host create \
+      --type COMPUTE \
+      --control_attributes '{"host": "compute-01.xloud.local"}' \
+      --on_maintenance False \
+      --reserved False \
+      <segment-uuid>
+    ```
+
+    ```bash title="Designate a reserved standby host"
+    openstack segment host update \
+      --reserved True \
+      <segment-uuid> <host-uuid>
+    ```
+
+    ```bash title="List hosts in segment"
+    openstack segment host list <segment-uuid>
+    ```
+
+    <Tip>
+      Reserved hosts must be in the same segment as the instances they recover.
+      A host cannot belong to more than one segment.
+    </Tip>
+  </Tab>
+</Tabs>
+
+---
+
+## Manage Segment Lifecycle
+
+<Tabs>
+  <Tab title="Disable a Segment" icon="pause-circle">
+    Temporarily disable a segment to suppress recovery during maintenance windows.
+
+    ```bash title="Disable segment"
+    openstack segment update --enabled False <segment-uuid>
+    ```
+
+    Re-enable after maintenance is complete:
+    ```bash title="Re-enable segment"
+    openstack segment update --enabled True <segment-uuid>
+    ```
+
+    <Warning>
+      Disabling a segment suppresses all automatic recovery for hosts in that segment.
+      Any host failure during the window requires manual evacuation.
+    </Warning>
+  </Tab>
+  <Tab title="Place Host on Maintenance" icon="wrench">
+    Flag a specific host as on maintenance to exclude it from recovery targets without
+    affecting the rest of the segment.
+
+    ```bash title="Set host maintenance flag"
+    openstack segment host update \
+      --on_maintenance True \
+      <segment-uuid> <host-uuid>
+    ```
+
+    Clear the flag when maintenance is complete:
+    ```bash title="Clear maintenance flag"
+    openstack segment host update \
+      --on_maintenance False \
+      <segment-uuid> <host-uuid>
+    ```
+  </Tab>
+  <Tab title="Delete a Segment" icon="trash">
+    <Danger>
+      Deleting a segment removes all host registrations and historical notification
+      data associated with it. Instances on registered hosts will no longer be
+      automatically recovered.
+    </Danger>
+
+    ```bash title="Delete segment"
+    openstack segment delete <segment-uuid>
+    ```
+
+    Deregister all hosts from the segment before deletion:
+    ```bash title="Delete a host from segment"
+    openstack segment host delete <segment-uuid> <host-uuid>
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Validation
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    Navigate to **Instance-HA > Segments (admin view)**. Verify:
+    - All production segments have `Status: ENABLED`
+    - Each segment lists the expected compute hosts
+    - Reserved hosts are correctly flagged for `reserved_host` segments
+
+    <Check>Segments are enabled and all compute hosts are registered.</Check>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="List all segments"
+    openstack segment list
+    ```
+
+    ```bash title="Verify host registration for each segment"
+    for seg in $(openstack segment list -f value -c uuid); do
+      echo "=== Segment: $seg ==="
+      openstack segment host list $seg
+    done
+    ```
+
+    <Check>All segments show `enabled: True` and expected hosts are listed.</Check>
+  </Tab>
+</Tabs>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Host Monitors" href="/services/instance-ha/admin-guide/host-monitors" color="#197560">
+    Configure IPMI and SSH monitors for hosts registered in your segments.
+  </Card>
+  <Card title="Recovery Methods" href="/services/instance-ha/admin-guide/recovery-methods" color="#197560">
+    Deep-dive into recovery method selection and reserved host configuration.
+  </Card>
+  <Card title="Engine Configuration" href="/services/instance-ha/admin-guide/engine-config" color="#197560">
+    Tune detection timeouts, retry intervals, and engine behaviour.
+  </Card>
+  <Card title="Architecture" href="/services/instance-ha/admin-guide/architecture" color="#197560">
+    Review the full Instance HA component architecture and deployment topology.
+  </Card>
+</CardGroup>

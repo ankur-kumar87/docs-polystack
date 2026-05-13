@@ -1,0 +1,190 @@
+---
+title: "Orchestration CLI Reference"
+description: "Complete openstack stack CLI commands for managing Xloud Orchestration — create, update, delete, and inspect stacks, resources, events, and outputs."
+sidebarTitle: "CLI Reference"
+---
+
+## Overview
+
+The `openstack stack` command group manages infrastructure stacks defined by orchestration templates — create, update, suspend, resume, and delete stacks, inspect resources and events, and retrieve stack outputs.
+
+<Note>
+  **Prerequisites**
+  - CLI installed and authenticated — see [CLI Setup](/cli-setup)
+  - Python heatclient installed: `pip install python-heatclient`
+</Note>
+
+---
+
+## Stacks
+
+### Create and Update
+
+<CodeGroup>
+```bash title="Create stack from template"
+openstack stack create \
+  --template stack.yaml \
+  my-stack
+```
+
+```bash title="Create with parameters"
+openstack stack create \
+  --template stack.yaml \
+  --parameter image=Ubuntu-22.04 \
+  --parameter flavor=m1.small \
+  --parameter network=private \
+  --wait \
+  my-stack
+```
+
+```bash title="Create from environment file"
+openstack stack create \
+  --template stack.yaml \
+  --environment env.yaml \
+  --wait \
+  my-stack
+```
+
+```bash title="Update stack"
+openstack stack update \
+  --template stack.yaml \
+  --parameter flavor=m1.medium \
+  --wait \
+  my-stack
+```
+
+```bash title="Preview stack changes (dry run)"
+openstack stack update \
+  --template stack.yaml \
+  --dry-run \
+  my-stack
+```
+</CodeGroup>
+
+### List and Inspect
+
+<CodeGroup>
+```bash title="List stacks"
+openstack stack list
+openstack stack list --nested
+```
+
+```bash title="Show stack details"
+openstack stack show my-stack
+```
+
+```bash title="Show stack in JSON"
+openstack stack show my-stack --format json
+```
+</CodeGroup>
+
+### Lifecycle
+
+<CodeGroup>
+```bash title="Suspend stack"
+openstack stack suspend my-stack
+```
+
+```bash title="Resume stack"
+openstack stack resume my-stack
+```
+
+```bash title="Abandon stack (keep resources)"
+openstack stack abandon my-stack
+```
+
+```bash title="Delete stack"
+openstack stack delete my-stack
+openstack stack delete --wait my-stack
+```
+</CodeGroup>
+
+---
+
+## Resources
+
+<CodeGroup>
+```bash title="List resources in a stack"
+openstack stack resource list my-stack
+openstack stack resource list --nested-depth 3 my-stack
+```
+
+```bash title="Show resource details"
+openstack stack resource show my-stack <resource-name>
+```
+
+```bash title="List resource types"
+openstack orchestration resource type list
+```
+
+```bash title="Show resource type schema"
+openstack orchestration resource type show OS::Nova::Server
+```
+</CodeGroup>
+
+---
+
+## Events
+
+<CodeGroup>
+```bash title="List stack events"
+openstack stack event list my-stack
+```
+
+```bash title="List with nested resources"
+openstack stack event list --nested-depth 5 my-stack
+```
+
+```bash title="Show event details"
+openstack stack event show my-stack <resource-name> <event-id>
+```
+</CodeGroup>
+
+---
+
+## Outputs
+
+<CodeGroup>
+```bash title="List stack outputs"
+openstack stack output list my-stack
+```
+
+```bash title="Show a specific output"
+openstack stack output show my-stack <output-key>
+```
+
+```bash title="Extract output value"
+openstack stack output show my-stack scale_out_url \
+  -c output_value -f value
+```
+</CodeGroup>
+
+---
+
+## Template Validation
+
+<CodeGroup>
+```bash title="Validate template"
+openstack orchestration template validate \
+  --template stack.yaml
+```
+
+```bash title="Validate with parameters"
+openstack orchestration template validate \
+  --template stack.yaml \
+  --parameter flavor=m1.small
+```
+</CodeGroup>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Template Guide" href="/services/orchestration/template-guide" color="#197560">
+    Write and validate orchestration templates
+  </Card>
+  <Card title="Auto-Scaling" href="/services/orchestration/autoscaling" color="#197560">
+    Configure auto-scaling groups and alarm triggers
+  </Card>
+</CardGroup>

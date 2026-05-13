@@ -1,0 +1,185 @@
+---
+title: "File-Level Restore"
+description: "Recover individual files from a volume or instance snapshot without restoring the whole volume — download the files you need directly."
+sidebarTitle: "File-Level Restore"
+---
+
+## Overview
+
+File-Level Restore lets you reach into an existing snapshot and pull out a single file, a
+handful of files, or a folder — without restoring the entire volume first. Pick a
+snapshot, open its filesystem in the Dashboard, navigate the directory tree, and download
+the files you need as individual files or a single ZIP archive.
+
+This is the fastest way to recover from accidental deletions, configuration mistakes, or
+corruption of a specific file, without spinning up a new volume or attaching a recovery
+VM.
+
+<Note>
+  **Prerequisites**
+  - An existing volume snapshot or instance snapshot
+  - The snapshot must be in a usable state — **Available** for a volume snapshot,
+    **Active** for an instance snapshot
+</Note>
+
+---
+
+## Video Walkthrough
+
+<iframe
+  className="w-full aspect-video rounded-xl"
+  src="https://www.youtube.com/embed/oU3IunS26Q8"
+  title="How to Recover Files from a Snapshot on Xloud"
+  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+  allowFullScreen
+></iframe>
+
+---
+
+## When to Use File-Level Restore
+
+| Scenario | Full Restore | File-Level Restore |
+|----------|:------------:|:------------------:|
+| Recover a single deleted config file | Overkill | Best fit |
+| Recover a folder of documents | Overkill | Best fit |
+| Recover from ransomware that encrypted a whole disk | Best fit | — |
+| Roll back after a failed OS upgrade | Best fit | — |
+| Pull a log file from last week's snapshot for auditing | Overkill | Best fit |
+| Compare old vs current configuration | Overkill | Best fit |
+
+<Tip>
+  File-Level Restore is non-destructive — it opens the snapshot read-only. You cannot
+  accidentally modify the snapshot's contents while browsing it.
+</Tip>
+
+---
+
+## Where to Find It
+
+The **Browse Files** action appears on the row actions of every eligible snapshot:
+
+| Dashboard location | Source | Eligible when |
+|--------------------|--------|---------------|
+| **Storage → Volume Snapshots** → row → **Browse Files** | A volume snapshot | Snapshot status is **Available** |
+| **Compute → Instance Snapshots** → row → **Browse Files** | An instance snapshot | Snapshot status is **Active** |
+
+<Info>
+  If you do not see **Browse Files**, either the snapshot is in a non-ready state, or the
+  File-Level Restore feature is not enabled on your cluster. Ask your administrator.
+</Info>
+
+---
+
+## Recover Files from a Snapshot
+
+<Steps titleSize="h3">
+  <Step title="Find your snapshot" icon="search">
+    Open the appropriate page — **Storage → Volume Snapshots** or
+    **Compute → Instance Snapshots** — and locate the snapshot you want to recover
+    from.
+  </Step>
+  <Step title="Click Browse Files" icon="folder-open">
+    In the row actions, click **Browse Files**. The Dashboard opens a full-page file
+    browser tagged with the snapshot type and ID.
+
+    <Info>
+      The first open of a snapshot can take **20-30 seconds** as the Dashboard opens the
+      snapshot's filesystem. Subsequent opens of the same snapshot are much faster.
+    </Info>
+  </Step>
+  <Step title="Pick the right partition" icon="hard-drive">
+    At the top of the page, a **partition dropdown** lists every partition on the
+    snapshot with its size and detected OS or filesystem label. The Dashboard picks the
+    most likely default — usually the OS partition. Change it if your target files live
+    on a different partition.
+  </Step>
+  <Step title="Navigate the filesystem" icon="folder-tree">
+    Use the file table to browse:
+
+    - Click a **folder** row to enter it
+    - Click a breadcrumb segment at the top to jump back to a parent folder
+    - Click the **Up** button to move one folder up
+    - Click **Reload** to refresh the current folder
+
+    Each row shows the name, type (file or directory), size, and last-modified time.
+  </Step>
+  <Step title="Download what you need" icon="download">
+    Two ways to download:
+
+    | Method | Use for |
+    |--------|---------|
+    | **Per-row Download icon** | A single file — downloads directly to your browser |
+    | **Download Selected as ZIP** | Multiple files at once — tick the checkboxes, then click the primary button to get a single ZIP archive |
+
+    <Check>Files arrive in your browser's default download folder.</Check>
+  </Step>
+  <Step title="Close or continue browsing" icon="arrow-left">
+    Click the **Back** button in the top-left when you are done, or continue browsing to
+    recover additional files from the same snapshot.
+  </Step>
+</Steps>
+
+---
+
+## Common Tasks
+
+<AccordionGroup>
+  <Accordion title="Recover a single deleted file" icon="file">
+    1. Go to the snapshot that was taken before the file was deleted
+    2. Click **Browse Files**
+    3. Navigate to the folder the file was in (e.g. `/etc`, `/home/you/Documents`)
+    4. Click the per-row **Download** icon
+
+    The file is restored to your laptop — copy it back into the running VM to finish the
+    recovery.
+  </Accordion>
+  <Accordion title="Recover a folder of files" icon="folder">
+    1. **Browse Files** into the snapshot
+    2. Navigate to the folder
+    3. Tick the checkboxes for the files you want
+    4. Click **Download Selected as ZIP**
+
+    Extract the ZIP on your workstation and copy the files back where they belong.
+  </Accordion>
+  <Accordion title="Compare an old config against the current one" icon="clipboard">
+    1. **Browse Files** into an older snapshot
+    2. Download the config file (for example `/etc/nginx/nginx.conf`)
+    3. Download the current version from the running VM
+    4. Run your favorite diff tool on the two files
+
+    No downtime, no extra volume provisioning.
+  </Accordion>
+  <Accordion title="Find a file when you do not know the partition" icon="search">
+    Many VMs have multiple partitions (EFI, system, data). If the OS partition is picked
+    by default and your file is not there, open the **partition dropdown** and try the
+    next partition — typically the largest one or the one labeled **data**.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Good to Know
+
+- **Read-only by design** — browsing a snapshot never modifies its contents.
+- **Project-scoped** — you can only browse snapshots in projects you have access to.
+- **First open is the slowest** — opening a snapshot takes 20-30 seconds the first time.
+  Subsequent navigation inside the same snapshot is near-instant.
+- **Best for recovery, not discovery** — File-Level Restore shines when you know roughly
+  which snapshot and folder to look in. For wide searches, consider restoring the whole
+  volume to a rescue VM.
+
+---
+
+## Related Topics
+
+<CardGroup cols={3}>
+  <Card title="Volume Snapshots" href="/services/storage/snapshots" color="#197560">
+    Create snapshots you can later browse for file-level recovery
+  </Card>
+  <Card title="Volume Backups" href="/services/storage/backups" color="#197560">
+    Full volume protection with off-site retention for disaster recovery
+  </Card>
+  <Card title="Storage Troubleshooting" href="/services/storage/troubleshooting" color="#197560">
+    Diagnose snapshot and volume issues
+  </Card>
+</CardGroup>

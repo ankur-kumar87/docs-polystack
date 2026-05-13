@@ -1,0 +1,173 @@
+---
+title: "Create Instance Snapshots"
+description: "Capture running or stopped instances as reusable image snapshots for backup, cloning, and golden image workflows."
+sidebarTitle: "Create Snapshot"
+---
+
+import PrerequisitesAuth from '/snippets/prerequisites-auth.mdx';
+import CliAuth from '/snippets/cli-auth.mdx';
+
+## Overview
+
+Instance snapshots capture the entire disk state of a running or stopped instance as a new
+image registered in the Xloud Image Service. Snapshots are used for backups, creating
+golden images for new instance launches, and cloning instances across projects. The
+snapshot is stored in the same format as the original boot image and can be launched
+on any compute host.
+
+<PrerequisitesAuth />
+
+<Warning>
+  Snapshotting a running instance captures disk state while the instance is live. For
+  application consistency, quiesce the guest OS (flush writes, stop services, or pause the
+  database) before initiating the snapshot to avoid capturing a partially-written state.
+</Warning>
+
+---
+
+## Create a Snapshot
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Locate the instance" icon="monitor">
+        Navigate to **Compute > Instances**. Find the instance you want to snapshot.
+      </Step>
+      <Step title="Initiate the snapshot" icon="camera">
+        In the instance row, open the **Actions** dropdown and select **Create Snapshot**.
+      </Step>
+      <Step title="Name the snapshot" icon="tag">
+        Enter a descriptive snapshot name using a consistent convention, e.g.:
+        `<instance-name>-<date>` (e.g., `web-server-2026-03-18`)
+
+        Click **Create Snapshot**. The instance continues running during snapshot creation.
+      </Step>
+      <Step title="Monitor completion" icon="activity">
+        Navigate to **Compute > Images** to see the snapshot in progress.
+        <Check>
+          The snapshot appears with status **Active** when complete. It is immediately
+          available for launching new instances.
+        </Check>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    <Steps titleSize="h3">
+      <Step title="Authenticate" icon="key">
+        <CliAuth />
+      </Step>
+      <Step title="Create the snapshot" icon="camera">
+        ```bash title="Create instance snapshot"
+        openstack server image create \
+          --name web-server-2026-03-18 \
+          my-instance
+        ```
+        The command returns the new image ID. The snapshot is created asynchronously.
+      </Step>
+      <Step title="Wait for completion" icon="clock">
+        ```bash title="Poll snapshot status"
+        openstack image show web-server-2026-03-18 -c status
+        ```
+        <Check>`status` shows `active` — the snapshot is ready to launch new instances.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+</Tabs>
+
+---
+
+## Snapshot for Consistency
+
+For production workloads, follow this pre-snapshot checklist to ensure data consistency:
+
+<Steps titleSize="h3">
+  <Step title="Prepare the guest OS" icon="settings">
+    SSH into the instance and run:
+    ```bash title="Flush filesystem buffers (Linux)"
+    sync
+    ```
+    For database servers, flush and lock tables before snapshotting:
+    ```bash title="MySQL/MariaDB: flush and lock"
+    mysql -u root -e "FLUSH TABLES WITH READ LOCK;"
+    ```
+  </Step>
+  <Step title="Create the snapshot" icon="camera">
+    ```bash title="Create snapshot immediately after flush"
+    openstack server image create \
+      --name db-primary-2026-03-18 \
+      db-primary
+    ```
+  </Step>
+  <Step title="Release locks after snapshot initiates" icon="unlock">
+    Once the snapshot command returns (the snapshot is queued in the backend), release any locks:
+    ```bash title="MySQL/MariaDB: release lock"
+    mysql -u root -e "UNLOCK TABLES;"
+    ```
+    <Tip>
+      The snapshot operation itself is fast (metadata only at initiation). The actual data
+      copy happens in the background — you can release locks as soon as the CLI command returns.
+    </Tip>
+  </Step>
+</Steps>
+
+---
+
+## Manage Snapshots
+
+Snapshots are regular images stored in the Image Service. Manage them using the same
+image commands:
+
+<CodeGroup>
+```bash title="List snapshots"
+openstack image list \
+  --property image_type=snapshot
+```
+```bash title="Delete a snapshot"
+openstack image delete web-server-2026-03-18
+```
+```bash title="Set snapshot visibility to shared"
+openstack image set --shared web-server-2026-03-18
+```
+</CodeGroup>
+
+---
+
+## Launch from Snapshot
+
+After a snapshot is active, launch new instances directly from it:
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    When creating a new instance, in **Step 1 (Base Config)**, select **Instance Snapshot**
+    as the Start Source. The snapshot appears in the selection table.
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Launch instance from snapshot"
+    openstack server create \
+      --image web-server-2026-03-18 \
+      --flavor m1.medium \
+      --network private \
+      --key-name my-keypair \
+      restored-web-server
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Image Properties" href="/services/images/image-properties" color="#197560">
+    Add metadata and hardware requirements to your snapshots.
+  </Card>
+  <Card title="Share Images" href="/services/images/share-images" color="#197560">
+    Share snapshots with other projects in your organization.
+  </Card>
+  <Card title="Upload an Image" href="/services/images/upload-image" color="#197560">
+    Upload external OS images alongside your captured snapshots.
+  </Card>
+  <Card title="Troubleshooting" href="/services/images/troubleshooting" color="#197560">
+    Resolve snapshot creation failures and status issues.
+  </Card>
+</CardGroup>

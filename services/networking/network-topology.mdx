@@ -1,0 +1,172 @@
+---
+title: "Network Topologies"
+description: "Design and visualize multi-tier network topologies in Xloud Cloud Platform. Reference architectures for web, app, and database tier isolation with SDN."
+sidebarTitle: "Network Topologies"
+---
+
+## Overview
+
+Xloud Networking's SDN fabric supports a wide range of topology patterns — from a single
+flat network for development environments to fully isolated multi-tier architectures for
+production workloads. This page describes common reference topologies, their component
+requirements, and how security groups enforce trust boundaries between tiers.
+
+<Note>
+  **Prerequisites**
+  - Familiarity with [networks](/services/networking/create-network), [subnets](/services/networking/subnets), [routers](/services/networking/routers), and [security groups](/services/networking/security-groups)
+  - At least one external or provider network available in your cluster
+</Note>
+
+---
+
+## Standard Three-Tier Topology
+
+The recommended topology for most production applications. Each application tier is
+isolated on its own subnet, all tiers route through a shared router, and only the
+web tier exposes floating IPs to the internet.
+
+```mermaid
+graph TD
+    EXT([External Network<br/>203.0.113.0/24]) --> R[Router<br/>main-router]
+    R --> WEB[Web Subnet<br/>192.168.10.0/24]
+    R --> APP[App Subnet<br/>192.168.20.0/24]
+    R --> DB[DB Subnet<br/>192.168.30.0/24]
+    WEB --> W1[Web Instance 1]
+    WEB --> W2[Web Instance 2]
+    APP --> A1[App Instance 1]
+    APP --> A2[App Instance 2]
+    DB --> D1[DB Instance 1]
+    DB --> D2[DB Instance 2]
+    W1 -.->|Floating IP| EXT
+    W2 -.->|Floating IP| EXT
+    style R fill:#197560,color:#fff
+    style EXT fill:#3F8F7E,color:#fff
+```
+
+### Component Checklist
+
+| Resource | Purpose |
+|----------|---------|
+| `web-network` / `web-subnet` (192.168.10.0/24) | Hosts web-tier instances with floating IPs |
+| `app-network` / `app-subnet` (192.168.20.0/24) | Internal app tier — no floating IPs |
+| `db-network` / `db-subnet` (192.168.30.0/24) | Database tier — no floating IPs, restricted access |
+| `main-router` | Routes all subnets, external gateway for NAT |
+| `web-sg` | Allows TCP 80, 443 from internet; TCP 22 from management CIDR |
+| `app-sg` | Allows traffic from `web-sg` only |
+| `db-sg` | Allows database port from `app-sg` only |
+
+<Info>
+  Security groups enforce the trust boundary between tiers. Apply a strict group to
+  the DB subnet that only allows connections from the App subnet's security group —
+  not from `0.0.0.0/0`.
+</Info>
+
+---
+
+## Isolated Development Topology
+
+A minimal topology for development and testing environments. All instances share a single
+network and subnet. One floating IP provides external access for the developer.
+
+```mermaid
+graph LR
+    EXT([External Network]) --> R[Router]
+    R --> DEV[Dev Network<br/>10.0.1.0/24]
+    DEV --> I1[Instance 1]
+    DEV --> I2[Instance 2]
+    DEV --> I3[Instance 3]
+    I1 -.->|Floating IP| EXT
+    style R fill:#197560,color:#fff
+    style EXT fill:#3F8F7E,color:#fff
+```
+
+This topology is appropriate for individual developer sandboxes, CI/CD test environments,
+and proof-of-concept workloads. It minimizes resource consumption while providing full
+internet egress via NAT.
+
+---
+
+## Shared Services Topology
+
+A multi-project topology where shared infrastructure services (monitoring, logging, secrets)
+run on a dedicated network accessible to all application projects via router peering.
+
+```mermaid
+graph TD
+    EXT([External Network]) --> CORE_R[Core Router]
+    CORE_R --> SHARED[Shared Services Subnet<br/>172.16.0.0/24]
+    CORE_R --> APP1[Project A Subnet<br/>192.168.1.0/24]
+    CORE_R --> APP2[Project B Subnet<br/>192.168.2.0/24]
+    SHARED --> MON[Monitoring]
+    SHARED --> LOG[Logging]
+    SHARED --> VAULT[Key Management]
+    APP1 --> A1[App A Instances]
+    APP2 --> A2[App B Instances]
+    style CORE_R fill:#197560,color:#fff
+    style EXT fill:#3F8F7E,color:#fff
+```
+
+---
+
+## High Availability Topology
+
+A topology designed for production availability requirements. Redundant instances in each
+tier are distributed across the router's subnet interfaces, with HA floating IPs that can
+be reassigned during failover events.
+
+```mermaid
+graph TD
+    EXT([External Network]) --> HA_R[HA Router<br/>VRRP Active/Standby]
+    HA_R --> WEB_SUBNET[Web Subnet<br/>192.168.10.0/24]
+    WEB_SUBNET --> LB[Load Balancer VIP]
+    LB --> W1[Web Instance AZ-1]
+    LB --> W2[Web Instance AZ-2]
+    W1 --> APP_SUBNET[App Subnet<br/>192.168.20.0/24]
+    W2 --> APP_SUBNET
+    APP_SUBNET --> A1[App Instance AZ-1]
+    APP_SUBNET --> A2[App Instance AZ-2]
+    style HA_R fill:#197560,color:#fff
+    style EXT fill:#3F8F7E,color:#fff
+    style LB fill:#3F8F7E,color:#fff
+```
+
+<Tip>
+  Enable HA routers (`--ha` flag) for production deployments to protect against L3 agent
+  failures. See the [L3 Router Configuration](/services/networking/l3-routing) guide for
+  HA and DVR setup.
+</Tip>
+
+---
+
+## MTU Considerations
+
+Different network types require different MTU settings to avoid packet fragmentation.
+
+| Network Type | Recommended MTU | Reason |
+|-------------|----------------|--------|
+| VXLAN tenant networks | 1450 | 50-byte VXLAN encapsulation overhead |
+| VLAN provider networks | 1500 | No encapsulation overhead |
+| Jumbo-frame VLAN | Up to 9000 | Requires switch support end-to-end |
+
+```bash title="Set network MTU for VXLAN"
+openstack network set app-network --mtu 1450
+```
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Create a Network" href="/services/networking/create-network" color="#197560">
+    Provision the networks required for your chosen topology
+  </Card>
+  <Card title="Routers and Gateways" href="/services/networking/routers" color="#197560">
+    Connect your subnets and configure the external gateway
+  </Card>
+  <Card title="Network Security Groups" href="/services/networking/security-groups" color="#197560">
+    Define trust boundaries between tiers with stateful firewall rules
+  </Card>
+  <Card title="L3 Router Configuration" href="/services/networking/l3-routing" color="#197560">
+    Enable HA routers and distributed virtual routing for production deployments
+  </Card>
+</CardGroup>

@@ -1,0 +1,211 @@
+---
+title: "Kubernetes Security"
+description: "Secure Xloud K8SaaS deployments — TLS configuration, Kubernetes RBAC enforcement, node security groups, and hardened node image practices."
+sidebarTitle: "Security"
+---
+
+## Overview
+
+K8SaaS security encompasses multiple layers: TLS encryption for all cluster API
+communication, Kubernetes RBAC within clusters, network-level restrictions via security
+groups, and hardened node images. This page covers the key security controls and how to
+verify they are correctly applied across your K8SaaS deployment.
+
+<Warning>
+  Security misconfigurations in K8SaaS can expose Kubernetes API servers to unauthorized
+  access or allow cross-tenant privilege escalation. Review each control before deploying
+  production clusters.
+</Warning>
+
+---
+
+## TLS Configuration
+
+All K8SaaS cluster API communication is TLS-encrypted. Each cluster has a dedicated
+CA generated at provisioning time.
+
+<AccordionGroup>
+  <Accordion title="Verify TLS on the API server" icon="lock" defaultOpen>
+    ```bash title="Check API server TLS certificate"
+    openssl s_client -connect <api-address>:6443 \
+      -showcerts 2>/dev/null \
+      | openssl x509 -noout -issuer -subject -dates
+    ```
+
+    Verify the certificate is issued by the cluster's CA (not a self-signed root)
+    and has not expired.
+  </Accordion>
+  <Accordion title="Key Management integration" icon="key">
+    Enable Xloud Key Management to store CA private keys outside the K8SaaS database.
+    This prevents CA private keys from being accessible to anyone with database
+    read access.
+
+    <Tabs>
+      <Tab title="XDeploy" icon="server">
+        <Steps titleSize="h3">
+          <Step title="Enable KMS" icon="toggle-left">
+            Navigate to **XDeploy → Configuration → Advance Features** and set
+            **Enable KMS** to **Yes**.
+          </Step>
+          <Step title="Configure certificate manager" icon="key">
+            Navigate to **XDeploy → Advanced Configuration**, select **magnum** in the
+            Service Tree, then open or create `kubernetes.conf`. Add the following:
+
+            ```ini title="kubernetes.conf"
+            [certificate]
+            cert_manager_type = barbican
+            ```
+
+            Click **Save Current File**.
+          </Step>
+          <Step title="Deploy" icon="rocket">
+            Run **XDeploy → Operations → Reconfigure** for both the Key Management
+            and Kubernetes services.
+          </Step>
+        </Steps>
+      </Tab>
+      <Tab title="CLI" icon="terminal">
+        ```ini title="/etc/xavs/kubernetes/kubernetes.conf"
+        [certificate]
+        cert_manager_type = barbican
+        ```
+
+        ```bash title="Restart services"
+        docker restart magnum_api magnum_conductor
+        ```
+      </Tab>
+    </Tabs>
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Kubernetes RBAC
+
+Kubernetes RBAC is enabled by default on all K8SaaS clusters. The `--authorization-mode`
+flag is set to `Node,RBAC` in the Kubernetes API server configuration.
+
+<AccordionGroup>
+  <Accordion title="Enforce least-privilege service accounts" icon="shield-check" defaultOpen>
+    Do not grant the `cluster-admin` role to application service accounts. Use
+    namespace-scoped roles and bindings:
+
+    ```yaml title="Namespace-scoped role example"
+    apiVersion: rbac.authorization.k8s.io/v1
+    kind: Role
+    metadata:
+      namespace: production
+      name: app-reader
+    rules:
+    - apiGroups: [""]
+      resources: ["pods", "services"]
+      verbs: ["get", "list", "watch"]
+    ```
+
+    ```bash title="Check for overly broad cluster-admin bindings"
+    kubectl get clusterrolebindings \
+      -o json | jq -r '.items[] | select(.roleRef.name == "cluster-admin") | .metadata.name'
+    ```
+  </Accordion>
+  <Accordion title="Audit RBAC bindings" icon="clipboard-list">
+    Periodically audit cluster role bindings to identify unauthorized privilege escalation:
+
+    ```bash title="List all cluster-level role bindings"
+    kubectl get clusterrolebindings -o wide
+    ```
+
+    ```bash title="Find service accounts with admin privileges"
+    kubectl get clusterrolebindings \
+      -o json | jq -r '.items[] | select(.roleRef.name | startswith("cluster-admin")) | "\(.metadata.name): \(.subjects[].name)"'
+    ```
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Node Security Groups
+
+Each K8SaaS cluster creates dedicated security groups for master and worker nodes.
+Review and restrict these groups to permit only required traffic.
+
+```bash title="List cluster security groups"
+openstack security group list \
+  | grep <cluster-name>
+```
+
+### Required Ports
+
+| Port | Protocol | Direction | Purpose |
+|------|----------|-----------|---------|
+| 6443 | TCP | Inbound to masters | Kubernetes API server (kubectl, kubelets) |
+| 2379-2380 | TCP | Master to master | etcd peer and client communication |
+| 10250 | TCP | Master to workers | kubelet API |
+| 10255 | TCP | Any (optional) | kubelet read-only API (disable if not needed) |
+| VXLAN / BGP | UDP/TCP | Node to node | CNI overlay (Flannel) or BGP peering (Calico) |
+
+```bash title="Restrict master API port to management CIDR only"
+openstack security group rule create \
+  --protocol tcp \
+  --dst-port 6443 \
+  --remote-ip <management-cidr> \
+  <master-security-group-id>
+```
+
+```bash title="Remove any overly permissive rule"
+openstack security group rule delete <rule-id>
+```
+
+---
+
+## Node Image Hardening
+
+Use CIS-benchmarked or hardened node images for production cluster templates.
+
+<CardGroup cols={2}>
+  <Card title="Use Hardened Images" icon="shield-check" color="#197560">
+    Use images with CIS Level 1 benchmark applied. Fedora CoreOS provides a minimal,
+    immutable OS — a good baseline for Kubernetes node hardening.
+  </Card>
+  <Card title="Rotate Images on Security Updates" icon="rotate" color="#197560">
+    When node OS security updates are released, create a new cluster template with
+    the updated image and upgrade existing clusters to replace all nodes.
+  </Card>
+</CardGroup>
+
+---
+
+## Validation Checklist
+
+<Steps titleSize="h3">
+  <Step title="TLS verified" icon="lock">
+    API server TLS certificate is valid, issued by the cluster CA, and not expired.
+  </Step>
+  <Step title="RBAC audited" icon="shield-check">
+    No unnecessary `cluster-admin` bindings exist for application service accounts.
+  </Step>
+  <Step title="Security groups restricted" icon="network">
+    Master API port 6443 is restricted to management CIDR only.
+  </Step>
+  <Step title="Key Management configured" icon="key">
+    CA private keys stored in Xloud Key Management, not the K8SaaS database.
+  </Step>
+</Steps>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Certificates" href="/services/kubernetes/admin-guide/certificates" color="#197560">
+    Manage and rotate cluster CA certificates.
+  </Card>
+  <Card title="Monitoring" href="/services/kubernetes/admin-guide/monitoring" color="#197560">
+    Monitor cluster health and audit security events.
+  </Card>
+  <Card title="Network Drivers" href="/services/kubernetes/admin-guide/network-drivers" color="#197560">
+    Configure Calico for NetworkPolicy enforcement in production clusters.
+  </Card>
+  <Card title="Key Manager" href="/services/key-manager" color="#197560">
+    Configure Xloud Key Management for cluster CA storage.
+  </Card>
+</CardGroup>

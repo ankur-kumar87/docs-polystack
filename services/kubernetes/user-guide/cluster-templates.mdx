@@ -1,0 +1,185 @@
+---
+title: "Cluster Templates"
+description: "Create and manage Xloud K8SaaS cluster templates — define Kubernetes version, node flavor, network driver, and container runtime for reusable cluster."
+sidebarTitle: "Cluster Templates"
+---
+
+## Overview
+
+Cluster templates are reusable blueprints that define the configuration for Kubernetes
+clusters. A template captures the Kubernetes version, node image, instance flavor, network
+driver, and storage backend. Once created, a template can be used to deploy multiple
+clusters with consistent configurations. Your administrator can publish public templates shared
+across all projects; you can also create private templates for your own use.
+
+<Note>
+  **Prerequisites**
+  - An active Xloud account with project access
+  - A keypair created in your project for node SSH access
+  - Compute quota sufficient for cluster nodes
+  - A project network with external access
+</Note>
+
+---
+
+## Template Fields Reference
+
+| Field | Required | Description | Recommended Value |
+|-------|----------|-------------|------------------|
+| **Name** | Yes | Unique template identifier | `k8s-1.29-prod` |
+| **Container Infra Driver** | Yes | Cluster provisioning engine | `kubernetes` |
+| **Image** | Yes | Boot image for cluster nodes | `fedora-coreos-39` |
+| **Keypair** | Yes | SSH key for node access | Your project keypair |
+| **Flavor** | Yes | Instance size for worker nodes | `m1.large` (4 vCPU / 8 GB) |
+| **Master Flavor** | Yes | Instance size for master nodes | `m1.xlarge` (8 vCPU / 16 GB) |
+| **Network Driver** | Yes | Container network interface | `calico` (production) |
+| **Volume Driver** | Yes | Persistent volume backend | `cinder` |
+| **External Network** | Yes | Floating IP source | `public` |
+| **DNS Nameserver** | Yes | Resolver for cluster nodes | `8.8.8.8` |
+| **Master LB Enabled** | No | Load balance master nodes | `True` (HA) |
+| **Docker Volume Size** | No | Container storage per node (GB) | `50` |
+| **Floating IP Enabled** | No | Assign floating IPs to nodes | `True` |
+
+---
+
+## Create a Cluster Template
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Navigate to Cluster Templates" icon="compass">
+        Navigate to
+        **Container > Cluster Templates**.
+      </Step>
+      <Step title="Create the template" icon="plus">
+        Click **Create Cluster Template** and fill in the required fields using the
+        reference table above.
+
+        <Tip>
+          For production clusters, enable **Master LB** to place a load balancer in front
+          of master nodes and set **Master Count** to 3 when deploying the cluster.
+        </Tip>
+      </Step>
+      <Step title="Configure advanced options" icon="settings">
+        Expand **Advanced** to set optional parameters:
+
+        - **Insecure Registry**: Internal container registry URL (if used)
+        - **Fixed Network / Subnet**: Pin cluster nodes to a specific project network
+        - **Labels**: Key-value labels for platform-specific options (e.g., `auto_healing_enabled=true`)
+      </Step>
+      <Step title="Save the template" icon="circle-check">
+        Click **Create Cluster Template**. The template appears in the list with status `ACTIVE`.
+
+        <Check>Template created with status `ACTIVE` and visible in the template list.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    <Steps titleSize="h3">
+      <Step title="Authenticate" icon="key">
+        ```bash title="Load credentials"
+        source openrc.sh
+        ```
+      </Step>
+      <Step title="Create the template" icon="plus">
+        ```bash title="Create cluster template"
+        openstack coe cluster template create k8s-1.29-prod \
+          --coe kubernetes \
+          --image fedora-coreos-39 \
+          --keypair my-keypair \
+          --flavor m1.large \
+          --master-flavor m1.xlarge \
+          --network-driver calico \
+          --volume-driver cinder \
+          --external-network public \
+          --dns-nameserver 8.8.8.8 \
+          --docker-volume-size 50 \
+          --master-lb-enabled \
+          --labels auto_healing_enabled=true
+        ```
+      </Step>
+      <Step title="Verify the template" icon="circle-check">
+        ```bash title="List templates"
+        openstack coe cluster template list
+        ```
+
+        ```bash title="Show template details"
+        openstack coe cluster template show k8s-1.29-prod
+        ```
+
+        <Check>Template shows `coe_version` populated and no error messages.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+</Tabs>
+
+---
+
+## Network Driver Comparison
+
+The network driver (CNI plugin) is configured at template creation and cannot be changed
+after cluster deployment.
+
+| Driver | Network Policy | Performance | Recommended For |
+|--------|---------------|-------------|-----------------|
+| `calico` | Full NetworkPolicy enforcement | Moderate | Production workloads requiring pod isolation |
+| `flannel` | None | Higher (simpler overlay) | Development and test clusters |
+
+<Tip>
+  Use `calico` for all production templates. Flannel is appropriate only for isolated
+  test environments where Kubernetes NetworkPolicy is not required.
+</Tip>
+
+---
+
+## Manage Existing Templates
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    Navigate to **Container > Cluster Templates**. From this view you can:
+    - Click a template name to view its full configuration
+    - Click **Actions → Delete** to remove unused templates (templates in use by clusters cannot be deleted)
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="List all templates"
+    openstack coe cluster template list
+    ```
+
+    ```bash title="Show a template"
+    openstack coe cluster template show <template-name>
+    ```
+
+    ```bash title="Update a template field"
+    openstack coe cluster template update <template-name> \
+      replace dns_nameserver=1.1.1.1
+    ```
+
+    ```bash title="Delete a template"
+    openstack coe cluster template delete <template-name>
+    ```
+
+    <Warning>
+      Templates referenced by active clusters cannot be deleted. Delete all clusters
+      using the template before removing it.
+    </Warning>
+  </Tab>
+</Tabs>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Deploy a Cluster" href="/services/kubernetes/user-guide/deploy-cluster" color="#197560">
+    Provision a Kubernetes cluster from your template in minutes.
+  </Card>
+  <Card title="Node Groups" href="/services/kubernetes/user-guide/node-groups" color="#197560">
+    Add specialized node pools with different flavors to your cluster.
+  </Card>
+  <Card title="Access Cluster" href="/services/kubernetes/user-guide/access-cluster" color="#197560">
+    Download kubeconfig and connect kubectl to your cluster.
+  </Card>
+  <Card title="Kubernetes Admin Guide" href="/services/kubernetes/admin-guide" color="#197560">
+    Administrator reference for managing public templates and quotas.
+  </Card>
+</CardGroup>

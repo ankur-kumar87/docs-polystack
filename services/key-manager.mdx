@@ -1,0 +1,108 @@
+---
+title: "Key Manager"
+description: "Securely store and manage secrets, certificates, and encryption keys in your Xloud private cloud with Xloud Key Manager — enterprise key management as a."
+icon: "lock"
+sidebarTitle: "Key Manager"
+mode: "wide"
+---
+
+Centralized, secure secret and certificate management for your entire Xloud cloud infrastructure.
+
+<Card title="Xloud Key Manager — Enterprise KMS" icon="lock" href="https://xloud.tech/xavs" color="#197560" horizontal>
+  Product details and datasheet on xloud.tech
+</Card>
+
+---
+
+<p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Xloud Key Manager</p>
+
+<CardGroup cols={2}>
+  <Card title="User Guide" icon="book-open" href="/services/key-manager/user-guide" color="#197560">
+    Store secrets and credentials, manage certificate containers, issue certificate orders, and configure access control lists for your Xloud Key Manager resources.
+  </Card>
+  <Card title="Admin Guide" icon="shield-check" href="/services/key-manager/admin-guide" color="#197560">
+    Configure secret store backends, manage transport keys, enforce quotas, and apply security hardening policies for the Key Manager service.
+  </Card>
+  <Card title="CLI Reference" icon="terminal" href="/services/key-manager/cli-reference" color="#197560">
+    `openstack secret` commands for managing secrets, containers, orders, and ACLs from the command line.
+  </Card>
+  <Card title="TLS Integration" icon="shield" color="#197560">
+    Store TLS certificates in Key Manager and reference them directly from Load Balancer HTTPS listeners for centralized certificate lifecycle management.
+  </Card>
+</CardGroup>
+
+---
+
+<p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Key Features</p>
+
+<CardGroup cols={2}>
+  <Card title="Secret Storage" icon="vault" href="/services/key-manager/store-secrets" color="#197560">
+    Securely store passwords, API keys, encryption keys, and arbitrary binary secrets. All secrets are encrypted at rest using the configured backend store.
+  </Card>
+  <Card title="Certificate Management" icon="certificate" href="/services/key-manager/certificates" color="#197560">
+    Store and manage TLS/SSL certificates with their associated private keys and certificate chains. Reference directly from Load Balancer and other services.
+  </Card>
+  <Card title="Access Control Lists" icon="list-checks" href="/services/key-manager/acl" color="#197560">
+    Fine-grained ACLs control which users and projects can read or manage each secret. Delegate access without exposing credentials.
+  </Card>
+  <Card title="Certificate Orders" icon="clipboard-list" href="/services/key-manager/certificates" color="#197560">
+    Automate certificate issuance through configured Certificate Authority plugins. Track order status and retrieve issued certificates programmatically.
+  </Card>
+  <Card title="Transport Key Encryption" icon="key" href="/services/key-manager/transport-keys" color="#197560">
+    Client-side secret encryption using transport keys prevents secrets from ever appearing in plaintext on the network — even during upload.
+  </Card>
+  <Card title="Multi-Backend Support" icon="database" href="/services/key-manager/backend-config" color="#197560">
+    Plug in industry-standard backends including local encryption, hardware security modules (HSMs), and KMIP-compliant key management appliances.
+  </Card>
+</CardGroup>
+
+---
+
+<p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Key Manager Components</p>
+
+| Component | Description |
+|-----------|-------------|
+| Secret | An encrypted payload — passwords, API keys, certificates, private keys, or arbitrary binary data |
+| Container | A named grouping of related secrets (e.g., a certificate + private key + CA chain) |
+| Order | An asynchronous request to generate or issue a key or certificate via a CA plugin |
+| Transport Key | An asymmetric key pair used to encrypt secrets client-side before transmission |
+| ACL | Access Control List defining per-user and per-project read/write permissions on a secret |
+| Secret Store | The backend encryption provider (simple crypto, PKCS#11 HSM, KMIP) |
+
+---
+
+<p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Related Services</p>
+
+<CardGroup cols={3}>
+  <Card title="Xloud Load Balancer" icon="combine" href="/services/load-balancer" color="#197560">
+    Reference TLS certificate containers in HTTPS listener configuration
+  </Card>
+  <Card title="Xloud Compute" icon="server" href="/services/compute" color="#197560">
+    Encrypt instance storage volumes with keys managed in Key Manager
+  </Card>
+  <Card title="Xloud DNS" icon="globe" href="/services/dns" color="#197560">
+    Store DNSSEC signing keys as secrets for automated zone signing
+  </Card>
+  <Card title="Xloud Object Storage" icon="box" href="/services/object-storage" color="#197560">
+    Server-side encryption of object containers with customer-managed keys
+  </Card>
+  <Card title="Xloud Identity" icon="fingerprint" href="/cli-setup" color="#197560">
+    RBAC policies and trust delegation for Key Manager resource access
+  </Card>
+  <Card title="Xloud Block Storage" icon="hard-drive" href="/services/compute" color="#197560">
+    Volume encryption using keys managed and rotated through Key Manager
+  </Card>
+</CardGroup>
+
+---
+
+<p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Getting Started</p>
+
+<CardGroup cols={2}>
+  <Card title="Authentication" icon="key" href="/cli-setup" color="#197560">
+    Configure Dashboard access and CLI credentials before working with Key Manager
+  </Card>
+  <Card title="User Guide" icon="book-open" href="/services/key-manager/user-guide" color="#197560">
+    Step-by-step instructions for storing your first secret
+  </Card>
+</CardGroup>

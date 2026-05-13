@@ -1,0 +1,156 @@
+---
+title: "DNS CLI Reference"
+description: "Complete openstack zone and recordset CLI commands for managing Xloud DNS — zones, records, PTR records, and zone transfers."
+sidebarTitle: "CLI Reference"
+---
+
+## Overview
+
+The `openstack zone` and `openstack recordset` command groups manage authoritative DNS zones and all record types.
+
+<Note>
+  **Prerequisites**
+  - CLI installed and authenticated — see [CLI Setup](/cli-setup)
+  - Python designateclient installed: `pip install python-designateclient`
+</Note>
+
+---
+
+## Zones
+
+<CodeGroup>
+```bash title="List zones"
+openstack zone list
+```
+
+```bash title="Create primary zone"
+openstack zone create \
+  --email admin@example.com \
+  --ttl 3600 \
+  example.com.
+```
+
+```bash title="Create secondary zone"
+openstack zone create \
+  --type SECONDARY \
+  --masters 192.0.2.1 \
+  example.com.
+```
+
+```bash title="Show zone"
+openstack zone show example.com.
+```
+
+```bash title="Delete zone"
+openstack zone delete example.com.
+```
+</CodeGroup>
+
+---
+
+## Record Sets
+
+<CodeGroup>
+```bash title="List record sets in zone"
+openstack recordset list example.com.
+```
+
+```bash title="Create A record"
+openstack recordset create \
+  --type A \
+  --record 203.0.113.10 \
+  example.com. web
+```
+
+```bash title="Create AAAA record"
+openstack recordset create \
+  --type AAAA \
+  --record "2001:db8::1" \
+  example.com. web
+```
+
+```bash title="Create CNAME record"
+openstack recordset create \
+  --type CNAME \
+  --record web.example.com. \
+  example.com. www
+```
+
+```bash title="Create MX record"
+openstack recordset create \
+  --type MX \
+  --record "10 mail.example.com." \
+  example.com. @
+```
+
+```bash title="Create TXT record"
+openstack recordset create \
+  --type TXT \
+  --record '"v=spf1 include:_spf.example.com ~all"' \
+  example.com. @
+```
+
+```bash title="Show record set"
+openstack recordset show example.com. web
+```
+
+```bash title="Delete record set"
+openstack recordset delete example.com. web
+```
+</CodeGroup>
+
+---
+
+## PTR Records (Reverse DNS)
+
+<CodeGroup>
+```bash title="Set PTR record for floating IP"
+openstack ptr record set \
+  --description "Web server" \
+  --ttl 300 \
+  RegionOne:$(openstack floating ip show <fip> -c id -f value) \
+  web.example.com.
+```
+
+```bash title="List PTR records"
+openstack ptr record list
+```
+
+```bash title="Delete PTR record"
+openstack ptr record delete \
+  RegionOne:<floating-ip-id>
+```
+</CodeGroup>
+
+---
+
+## Zone Transfers
+
+<CodeGroup>
+```bash title="Create zone transfer request"
+openstack zone transfer request create example.com.
+```
+
+```bash title="Accept zone transfer"
+openstack zone transfer accept request \
+  --transfer-id <transfer-id> \
+  --key <transfer-key>
+```
+
+```bash title="List transfer requests"
+openstack zone transfer request list
+```
+</CodeGroup>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Create Zone Guide" href="/services/dns/create-zone" color="#197560">
+    Step-by-step guide to creating DNS zones and records
+  </Card>
+  <Card title="Reverse DNS Guide" href="/services/dns/reverse-dns" color="#197560">
+    Configure PTR records for floating IPs
+  </Card>
+</CardGroup>

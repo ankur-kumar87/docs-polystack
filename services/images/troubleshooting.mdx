@@ -1,0 +1,175 @@
+---
+title: "Image Service Troubleshooting"
+description: "Diagnose and resolve image upload failures, stuck images, shared image visibility issues, and launch errors in Xloud Image Service."
+sidebarTitle: "Troubleshooting"
+---
+
+## Overview
+
+This guide covers the most common issues encountered when working with Xloud Image Service
+— including upload failures, stuck images, launch errors caused by image properties, and
+shared image visibility problems.
+
+<Note>
+  For platform-level issues such as storage backend connectivity or Image API container
+  failures, refer to the [Image Admin Guide — Troubleshooting](/services/images/admin-troubleshooting).
+</Note>
+
+---
+
+## Upload Issues
+
+<AccordionGroup>
+  <Accordion title="Image stuck in 'saving' status" icon="clock" defaultOpen>
+    **Cause**: The upload stalled due to a client-side network interruption or the
+    image service ran out of available storage.
+
+    **Diagnose**: Check the image status:
+    ```bash title="Check image status"
+    openstack image show <IMAGE_ID> -c status -c size
+    ```
+
+    **Resolution**: Delete the stuck image record and re-upload:
+    ```bash title="Delete the stuck image"
+    openstack image delete <IMAGE_ID>
+    ```
+    Then re-upload with the `--progress` flag to monitor the transfer:
+    ```bash title="Re-upload with progress indicator"
+    openstack image create \
+      --disk-format qcow2 \
+      --container-format bare \
+      --file image.qcow2 \
+      --progress \
+      my-image
+    ```
+  </Accordion>
+
+  <Accordion title="Upload fails with 413 Request Entity Too Large" icon="upload">
+    **Cause**: HAProxy or the load balancer is enforcing an upload size limit smaller
+    than the image file.
+
+    **Resolution**: Contact your platform administrator to increase the upload limit.
+    This is a platform-level configuration change. See the
+    [Image Admin Guide — Troubleshooting](/services/images/admin-troubleshooting) for
+    administrator instructions.
+  </Accordion>
+
+  <Accordion title="Upload fails midway through a large file" icon="wifi-off">
+    **Cause**: Network interruption during a large file upload. Standard HTTP PUT has
+    no resumption capability.
+
+    **Resolution**: Use the chunked import API for images larger than 5 GB:
+    ```bash title="Create image record"
+    openstack image create \
+      --disk-format qcow2 \
+      --container-format bare \
+      --import-method web-download \
+      large-image
+    ```
+    Then import from a URL hosted on a stable server — the Image Service fetches the
+    file server-side and handles resumption internally.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Launch Failures
+
+<AccordionGroup>
+  <Accordion title="Launch fails: minimum disk requirement not met" icon="hard-drive">
+    **Cause**: The selected flavor's root disk is smaller than the image's `min_disk`
+    property.
+
+    **Diagnose**: Check the image's minimum disk setting:
+    ```bash title="Show image min_disk"
+    openstack image show <IMAGE_ID> -c min_disk
+    ```
+
+    **Resolution**: Either select a flavor with a larger root disk, or reduce `min_disk`
+    if it was set too conservatively:
+    ```bash title="Update min_disk property"
+    openstack image set --min-disk 20 my-image
+    ```
+  </Accordion>
+
+  <Accordion title="Instance fails to boot — OS not found" icon="monitor">
+    **Cause**: Incorrect `hw_disk_bus` or `hw_firmware_type` property. A UEFI image
+    launched with BIOS firmware (or vice versa) will fail to boot.
+
+    **Diagnose**: Verify properties match the image's actual configuration:
+    ```bash title="Show image hardware properties"
+    openstack image show <IMAGE_ID> -c properties
+    ```
+
+    **Resolution**: Correct the firmware and machine type properties:
+    ```bash title="Correct UEFI image properties"
+    openstack image set \
+      --property hw_firmware_type=uefi \
+      --property hw_machine_type=q35 \
+      <IMAGE_ID>
+    ```
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Sharing Issues
+
+<AccordionGroup>
+  <Accordion title="Shared image not visible in target project" icon="eye-off">
+    **Cause**: The target project has not accepted the image share.
+
+    **Diagnose**: Check the membership status:
+    ```bash title="List image members and their status"
+    openstack image member list <IMAGE_ID>
+    ```
+
+    If status shows `pending`, the target project must accept:
+    ```bash title="Accept the share (run as target project)"
+    openstack image set --accept <IMAGE_ID>
+    ```
+    <Check>Image is now visible in the target project's image catalog.</Check>
+  </Accordion>
+
+  <Accordion title="Cannot share an image — permission denied" icon="lock">
+    **Cause**: Only the image owner can modify its members. If the image is `public`,
+    membership cannot be modified (it is already visible to all).
+
+    **Diagnose**: Verify you are authenticated as the image owner's project:
+    ```bash title="Check image ownership"
+    openstack image show <IMAGE_ID> -c owner
+    ```
+    The `owner` must match your current project ID (`openstack token issue -c project_id`).
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Image Status Reference
+
+| Status | Meaning | Action |
+|--------|---------|--------|
+| `queued` | Record created, upload not started | Upload data or delete and retry |
+| `saving` | Upload in progress | Wait, or delete if stalled |
+| `active` | Ready for use | No action needed |
+| `deactivated` | Disabled by admin | Contact platform administrator |
+| `killed` | Upload failed with an error | Delete and re-upload |
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Upload an Image" href="/services/images/upload-image" color="#197560">
+    Re-upload after resolving the issue using best practices.
+  </Card>
+  <Card title="Image Properties" href="/services/images/image-properties" color="#197560">
+    Correct hardware properties to resolve launch failures.
+  </Card>
+  <Card title="Share Images" href="/services/images/share-images" color="#197560">
+    Review the correct sharing workflow to resolve visibility issues.
+  </Card>
+  <Card title="Image Admin Troubleshooting" href="/services/images/admin-troubleshooting" color="#197560">
+    Platform-level diagnostics for Image API and storage backend issues.
+  </Card>
+</CardGroup>

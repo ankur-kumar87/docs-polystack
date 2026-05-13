@@ -1,0 +1,145 @@
+---
+title: "Discover Workloads"
+description: "Inventory virtual machines, disks, networks, and guest metadata from a registered VMware source so they can be selected for migration."
+sidebarTitle: "Discover Workloads"
+---
+
+## Overview
+
+Discovery walks the inventory of a registered VMware environment and records
+every candidate virtual machine along with its disks, network adapters, and
+guest metadata. Discovery is safe to re-run at any time — it is read-only
+against the source and does not alter the running VMs.
+
+<Note>
+  **Prerequisites**
+  - A [registered VMware environment](/services/migration/user-guide/register-source)
+    with status `Connected`
+  - The vSphere account used for registration must have read access to the
+    VMs, hosts, and datastores you plan to discover
+</Note>
+
+---
+
+## Run Discovery
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Open the Discover tab" icon="search">
+        Navigate to **Migration → Discover** and select the VMware environment
+        from the source dropdown.
+      </Step>
+      <Step title="Choose a scope" icon="filter">
+        Optionally narrow discovery by datacenter, cluster, or folder. Leaving
+        the scope empty inventories every reachable VM in the environment.
+      </Step>
+      <Step title="Start the scan" icon="play">
+        Click **Discover**. XMS opens a vSphere API session, walks the
+        inventory through a container view, and normalizes each VM into a
+        platform-neutral record.
+
+        Progress is shown live — hosts walked, VMs counted, and the currently
+        inspected object.
+      </Step>
+      <Step title="Review the inventory" icon="list">
+        When the scan completes, the inventory table lists every discovered VM
+        with its key attributes. Templates are excluded by default.
+
+        <Check>Inventory shows the expected VM count and each row has a valid OS, disk, and NIC summary.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash
+    # Kick off a discovery scan
+    xms discovery start --source prod-vcenter
+
+    # Optional — restrict to a single datacenter
+    xms discovery start --source prod-vcenter --datacenter DC-East
+
+    # Stream progress until the scan completes
+    xms discovery status --source prod-vcenter --follow
+
+    # List the discovered workloads
+    xms discovery list --source prod-vcenter
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## What XMS Discovers
+
+For every VM, XMS records the following attributes and makes them available
+throughout the Migration panel:
+
+| Category | Attributes |
+|----------|------------|
+| **Identity** | Name, instance UUID, managed object reference, power state |
+| **Compute** | vCPU count, memory, hardware version, firmware (BIOS or UEFI), Secure Boot |
+| **Guest** | Reported OS family, guest hostname and IP addresses (when guest tools are installed), tools status |
+| **Disks** | Count, size, controller type, thin or thick provisioning, datastore path |
+| **Networks** | Adapter count, MAC addresses, port group names, adapter type |
+| **Protection** | Changed Block Tracking state, snapshot count, template flag |
+
+<Tip>
+  Guest hostname and IP addresses come from VMware Tools. If tools are not
+  installed on a source VM, the discovery record still contains all hypervisor
+  attributes — it has no guest-level fields. This is not a migration
+  blocker.
+</Tip>
+
+---
+
+## Inventory Columns
+
+The **Discover** inventory table exposes the most important fields for
+triage and selection:
+
+| Column | Meaning |
+|--------|---------|
+| **Name** | VM display name |
+| **Power State** | `poweredOn`, `poweredOff`, or `suspended` |
+| **Guest OS** | OS family reported by guest tools or guest ID |
+| **Firmware** | `bios` or `efi` |
+| **vCPU / Memory** | Current resource allocation |
+| **Disks** | Total count and aggregate size |
+| **CBT** | Whether Changed Block Tracking is already enabled |
+| **Last Discovered** | Timestamp of the most recent scan |
+
+Use the column filters to narrow the list — for example, show only powered-off
+Windows VMs under 100 GB for an initial cold-migration wave.
+
+---
+
+## Re-running Discovery
+
+Discovery is idempotent. Re-running it refreshes the inventory cache and
+reflects any changes made in the source:
+
+- VMs added, deleted, renamed, or moved between clusters
+- Disk layouts changed on the source side
+- Power-state transitions since the last scan
+
+<Warning>
+  Re-running discovery does not affect in-progress migration jobs. Warm
+  migrations keep their original baseline — they do not pick up new disks
+  that appear after the job started. Add new disks by submitting a new job.
+</Warning>
+
+---
+
+## Next Steps
+
+<CardGroup cols={3}>
+  <Card title="Preflight Assessment" href="/services/migration/user-guide/preflight" color="#197560">
+    Score each workload for compatibility before migrating
+  </Card>
+  <Card title="Cold Migration" href="/services/migration/user-guide/cold-migration" color="#197560">
+    Migrate powered-off VMs in a single pass
+  </Card>
+  <Card title="Warm Migration" href="/services/migration/user-guide/warm-migration" color="#197560">
+    Migrate running VMs with incremental sync
+  </Card>
+</CardGroup>

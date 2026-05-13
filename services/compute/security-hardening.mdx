@@ -1,0 +1,199 @@
+---
+title: "Compute Security Hardening"
+description: "Harden the Xloud Compute control plane with metadata protection, live migration TLS, and API rate limiting."
+sidebarTitle: "Security"
+---
+
+import AdminWarning from '/snippets/admin-warning.mdx';
+
+## Overview
+
+The Xloud Compute control plane manages hypervisor hosts, instance lifecycle, and
+metadata delivery. Securing it against unauthorized access, network eavesdropping, and
+API abuse is critical in any production deployment. This guide covers the three primary
+hardening areas: metadata service protection, live migration TLS, and API rate limiting.
+
+<AdminWarning />
+
+<Danger>
+  The following hardening measures must be applied to all production deployments.
+  Failure to secure the compute control plane exposes hypervisor hosts, instance
+  metadata, and inter-node communication to unauthorized access and data interception.
+</Danger>
+
+<Note>
+  **Prerequisites**
+  - Administrator credentials sourced (`source openrc.sh`)
+  - XDeploy access for host-level configuration changes
+  - TLS certificates issued by the cluster CA (required for live migration TLS)
+</Note>
+
+---
+
+## Metadata Service Protection
+
+The instance metadata service (`169.254.169.254`) is accessible from every running
+instance by default. It delivers user data, SSH public keys, and cloud-init configuration.
+Unrestricted access to this endpoint is a common attack vector in multi-tenant environments.
+
+<AccordionGroup>
+  <Accordion title="Restrict metadata access via security groups" icon="shield">
+    Apply security group rules to limit which instances can reach the metadata endpoint.
+    In environments where instances do not require cloud-init or credential injection at
+    boot, block metadata access entirely.
+
+    ```bash title="Verify instance metadata service status"
+    openstack compute service list
+    ```
+
+    Configure metadata access restrictions through XDeploy under **Compute → Advanced
+    Settings → Metadata Security**.
+  </Accordion>
+
+  <Accordion title="Enable metadata service authentication" icon="key">
+    Metadata service authentication requires instances to present a signed token when
+    requesting user data and credentials. This prevents unauthorized metadata reads from
+    compromised instances or SSRF attacks.
+
+    Enable authenticated metadata through XDeploy under **Compute → Advanced Settings →
+    Metadata Security → Require Authentication**.
+
+    <Warning>
+      Enabling metadata authentication requires cloud-init 20.3 or later in the guest OS.
+      Instances running older cloud-init versions will fail to retrieve their cloud
+      configuration at boot. Verify guest OS compatibility before enabling this setting
+      in production.
+    </Warning>
+  </Accordion>
+
+  <Accordion title="Apply API rate limiting on the metadata endpoint" icon="gauge">
+    Configure rate limits on the metadata endpoint to prevent abuse:
+
+    - Maximum 60 requests per minute per instance
+    - Temporary block after 3 consecutive rate limit violations within 5 minutes
+
+    Configure endpoint rate limits through XDeploy under **Compute → Security →
+    Metadata Rate Limiting**.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Live Migration TLS
+
+By default, live migration transfers instance memory and disk data over the management
+network without encryption. Enable TLS for live migration to protect in-flight instance
+data from network interception.
+
+<AccordionGroup>
+  <Accordion title="Enable live migration TLS" icon="lock">
+    Live migration TLS encrypts the migration data channel between source and destination
+    hypervisor nodes using mutual TLS authentication.
+
+    ```bash title="Verify current live migration configuration"
+    openstack compute service list --long
+    ```
+
+    Enable TLS through XDeploy under **Compute → Security → Live Migration TLS**.
+    This requires all compute nodes to have valid TLS certificates issued by the cluster CA.
+
+    <Warning>
+      Enabling live migration TLS requires restarting the Compute Agent on all hypervisor
+      nodes. Schedule this change during a maintenance window. Instances remain running
+      during the agent restart, but live migrations cannot be initiated until all nodes
+      complete the restart.
+    </Warning>
+  </Accordion>
+
+  <Accordion title="Verify TLS is active after enabling" icon="circle-check">
+    After enabling live migration TLS and restarting all compute agents, verify the
+    configuration is active:
+
+    ```bash title="Check compute agent configuration on a host"
+    openstack hypervisor show <hostname>
+    ```
+
+    Initiate a test live migration between two hosts and verify in the migration log
+    that the connection uses TLS. Inspect the migration network traffic to confirm
+    data is encrypted.
+
+    <Check>
+      A successful live migration after enabling TLS confirms the configuration is
+      working. Any migration failure at this stage typically indicates a certificate
+      validation error — verify certificate validity and CA trust chain on all nodes.
+    </Check>
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## API Rate Limiting
+
+The Compute API does not enforce rate limits by default. Without rate limiting, malicious
+actors or misconfigured automation can issue thousands of API requests per second,
+degrading control plane performance and enabling denial-of-service conditions.
+
+<AccordionGroup>
+  <Accordion title="Configure rate limits" icon="gauge">
+    Xloud recommends the following rate limits for production deployments:
+
+    | Operation Type | Recommended Limit | Scope |
+    |---------------|------------------|-------|
+    | Write operations (POST/PUT/DELETE) | 100 per minute | Per user |
+    | Read operations (GET) | 1,000 per minute | Per user |
+    | Admin operations | 500 per minute | Per admin user |
+
+    Apply these limits at the load balancer layer or via the Compute API service
+    configuration through XDeploy under **Compute → Security → API Rate Limiting**.
+  </Accordion>
+
+  <Accordion title="Enable automatic temporary bans" icon="ban">
+    Configure automatic temporary bans for clients that repeatedly exceed rate limits:
+
+    - Clients exceeding the rate limit threshold 3 times within 5 minutes receive a
+      temporary 15-minute block
+    - All blocked requests return `HTTP 429 Too Many Requests`
+    - Block events are logged for security audit review
+
+    Enable automatic bans through XDeploy under **Compute → Security → API Rate
+    Limiting → Automatic Blocking**.
+
+    <Tip>
+      Review API access logs regularly for patterns that indicate credential stuffing,
+      automated instance enumeration, or quota exhaustion attacks. Set up an alert
+      in Xloud Monitoring (XIMP) for sustained `429` error rates above 1% of total
+      API traffic.
+    </Tip>
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Security Checklist
+
+Review these items on every production deployment.
+
+| Control | Configured Via | Priority |
+|---------|---------------|---------|
+| Metadata service authentication enabled | XDeploy → Compute → Metadata Security | High |
+| Metadata endpoint rate limiting applied | XDeploy → Compute → Metadata Rate Limiting | High |
+| Live migration TLS enabled | XDeploy → Compute → Security → Live Migration TLS | High |
+| API rate limiting configured | XDeploy → Compute → Security → API Rate Limiting | Medium |
+| Console proxy ports firewalled to admin CIDRs | Firewall / security group rules | Medium |
+| Admin API endpoints restricted to management network | Load balancer / HAProxy ACL | High |
+
+---
+
+## Next Steps
+
+<CardGroup cols={3}>
+  <Card title="Live Migration" href="/services/compute/live-migration" color="#197560">
+    Configure and test live migration after enabling TLS on the migration channel.
+  </Card>
+  <Card title="Advanced Features" href="/services/compute/advanced-features" color="#197560">
+    Enable vTPM and UEFI Secure Boot for instance-level hardware security.
+  </Card>
+  <Card title="Admin Guide" href="/services/compute/admin-guide" color="#197560">
+    Return to the Compute Administration Guide index.
+  </Card>
+</CardGroup>

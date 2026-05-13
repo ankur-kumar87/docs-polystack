@@ -1,0 +1,204 @@
+---
+title: "Extend a Volume"
+description: "Increase the capacity of an Xloud Block Storage volume online or offline. Covers resizing the block device and expanding the filesystem after extension."
+sidebarTitle: "Extend a Volume"
+---
+
+import CliAuth from '/snippets/cli-auth.mdx';
+
+## Overview
+
+Volume extension increases the allocated capacity of an existing block storage volume. The operation grows the underlying block device — the filesystem inside the instance must then be resized separately to use the additional space. Xloud Block Storage supports online extension for volumes that are attached to running instances, depending on the volume type and backend configuration.
+
+<Note>
+  **Prerequisites**
+  - The target volume must exist and have status **Available** (offline) or **In-use** (online)
+  - The new size must be larger than the current size — volumes cannot be shrunk
+  - For online extension, the instance must be running and the guest OS must support online resize
+</Note>
+
+---
+
+## Online vs Offline Extension
+
+| Mode | Volume Status | Instance Required | Filesystem Resize | Downtime |
+|------|--------------|-------------------|-------------------|---------|
+| **Online** | In-use (attached) | Running | Live, no reboot needed | None |
+| **Offline** | Available (detached) | Not required | After re-attach | Brief detach window |
+
+<Note>
+  Online extension is supported for most Linux filesystems (ext4, XFS) on volumes backed
+  by distributed storage. The block device grows automatically — the filesystem does not
+  resize automatically and must be expanded inside the instance after the volume is extended.
+</Note>
+
+---
+
+## Extend a Volume
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Locate the volume" icon="compass">
+        Navigate to
+        **Storage > Volumes**.
+      </Step>
+      <Step title="Extend the volume" icon="expand">
+        Click the **More** dropdown and select **Capacity & Type > Extend Volume** on the target volume. Enter the new total size
+        in GiB — the value must be larger than the current size.
+
+        Click **Confirm**.
+
+        <Warning>
+          Volume size can only be **increased**, never decreased. Verify the new size
+          before confirming — the operation cannot be reversed.
+        </Warning>
+      </Step>
+      <Step title="Verify the new size" icon="circle-check">
+        The volume list refreshes. Confirm the **Size** column reflects the new capacity.
+
+        <Check>Volume extended — new size visible in the Volumes list.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    <Steps titleSize="h3">
+      <Step title="Authenticate" icon="key">
+        <CliAuth />
+      </Step>
+      <Step title="Check current size" icon="search">
+        ```bash title="Show current volume size"
+        openstack volume show <volume-name-or-id> -c size -c status
+        ```
+      </Step>
+      <Step title="Extend the volume" icon="expand">
+        ```bash title="Extend volume to new size"
+        openstack volume set --size 200 <volume-name-or-id>
+        ```
+
+        Replace `200` with the new total size in GiB.
+      </Step>
+      <Step title="Verify the new size" icon="circle-check">
+        ```bash title="Confirm new size"
+        openstack volume show <volume-name-or-id> -c size -c status
+        ```
+
+        <Check>Size field reflects the new capacity. Status remains `in-use` or `available`.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+</Tabs>
+
+---
+
+## Resize the Filesystem
+
+After extending the block device, resize the filesystem inside the instance to use the
+additional capacity. The correct command depends on the filesystem type.
+
+<Tabs>
+  <Tab title="ext4" icon="hard-drive">
+    ext4 filesystems can be resized online while mounted:
+
+    ```bash title="Resize ext4 filesystem (online)"
+    sudo resize2fs /dev/vdb
+    ```
+
+    ```bash title="Verify new capacity"
+    df -h /mnt/data
+    ```
+
+    <Check>Filesystem expanded to the full volume size with no downtime.</Check>
+  </Tab>
+  <Tab title="XFS" icon="hard-drive">
+    XFS filesystems must be resized while mounted. The filesystem must be actively
+    mounted at the target path:
+
+    ```bash title="Resize XFS filesystem (online)"
+    sudo xfs_growfs /mnt/data
+    ```
+
+    ```bash title="Verify new capacity"
+    df -h /mnt/data
+    ```
+
+    <Check>XFS filesystem grown to the new volume size.</Check>
+  </Tab>
+  <Tab title="LVM (logical volume)" icon="layers">
+    If the volume contains an LVM physical volume, resize the PV and LV separately:
+
+    ```bash title="Resize physical volume"
+    sudo pvresize /dev/vdb
+    ```
+
+    ```bash title="Extend logical volume to 100% of available space"
+    sudo lvextend -l +100%FREE /dev/mapper/vg0-lv0
+    ```
+
+    ```bash title="Resize the filesystem on the logical volume"
+    sudo resize2fs /dev/mapper/vg0-lv0
+    ```
+
+    <Check>LVM logical volume and filesystem resized to the new capacity.</Check>
+  </Tab>
+</Tabs>
+
+---
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Extension fails with 'Invalid volume: Volume status must be available or in-use'" icon="triangle-alert">
+    **Cause**: The volume is in an intermediate state (`creating`, `deleting`, `error`,
+    or `migrating`) that does not permit size changes.
+
+    **Resolution**:
+    ```bash title="Check volume status"
+    openstack volume show <volume-id> -c status
+    ```
+
+    Wait for the operation to complete or contact your administrator if the volume is
+    stuck in an error state.
+  </Accordion>
+
+  <Accordion title="Filesystem does not show new capacity after extension" icon="hard-drive">
+    **Cause**: The block device was extended but the filesystem was not resized.
+
+    **Resolution**: Run the appropriate filesystem resize command (`resize2fs` for ext4,
+    `xfs_growfs` for XFS) as described in the **Resize the Filesystem** section above.
+    Verify with `df -h` that the new capacity is visible.
+  </Accordion>
+
+  <Accordion title="resize2fs reports 'No space left on device'" icon="circle-x">
+    **Cause**: The filesystem resize is being attempted on a device that has not yet
+    been extended at the block level, or the extension has not propagated to the guest.
+
+    **Resolution**:
+    ```bash title="Check block device size inside instance"
+    sudo blockdev --getsize64 /dev/vdb
+    ```
+
+    Compare the reported bytes against the expected new size. If the block device still
+    shows the old size, wait a few seconds and retry — the backend may still be
+    completing the resize operation.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Volume Snapshots" href="/services/storage/snapshots" color="#197560">
+    Create a snapshot before extending to preserve a recovery point
+  </Card>
+  <Card title="Attach / Detach" href="/services/storage/attach-volume" color="#197560">
+    Connect volumes to compute instances and prepare filesystems
+  </Card>
+  <Card title="Volume Backups" href="/services/storage/backups" color="#197560">
+    Back up volume data to a separate target for long-term retention
+  </Card>
+  <Card title="Create a Volume" href="/services/storage/create-volume" color="#197560">
+    Provision a new volume with the correct initial capacity and storage tier
+  </Card>
+</CardGroup>

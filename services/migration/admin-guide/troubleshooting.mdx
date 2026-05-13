@@ -1,0 +1,171 @@
+---
+title: "Operator Troubleshooting"
+description: "Operator-side diagnostics for XMS — platform health, worker availability, and service-level recovery."
+sidebarTitle: "Troubleshooting"
+---
+
+## Overview
+
+This page covers the operator-facing failure modes — the ones you investigate
+when multiple users report broken migrations or the Migration panel itself
+is unresponsive. For end-user workflow failures (single-job symptoms), see
+the [User Troubleshooting](/services/migration/user-guide/troubleshooting)
+page instead.
+
+---
+
+## Quick Health Check
+
+Work through these checks in order when an operator incident is reported:
+
+<Steps titleSize="h3">
+  <Step title="Platform identity" icon="key">
+    Confirm the Xloud Identity service is reachable and responding to token
+    validation. XMS cannot accept any API call if identity is down.
+  </Step>
+  <Step title="Platform block storage and compute" icon="database">
+    Confirm block storage and compute are healthy in the platform health
+    dashboard. A migration cannot complete without both.
+  </Step>
+  <Step title="XMS API responsiveness" icon="activity">
+    Call the XMS API from an operator workstation or CLI. A non-responding
+    API is the single most visible symptom and usually points at control
+    plane or upstream identity issues.
+  </Step>
+  <Step title="Worker availability" icon="server">
+    Check the XMS control plane for worker availability. If zero workers are
+    available, new jobs queue indefinitely.
+  </Step>
+  <Step title="Source reachability from XMS" icon="network">
+    Confirm the XMS deployment can still reach every registered source
+    endpoint. A network path change on the operator side is a common cause
+    of widespread job failures.
+  </Step>
+</Steps>
+
+---
+
+## Common Operator Incidents
+
+<AccordionGroup>
+  <Accordion title="All new jobs are stuck in Queued" icon="clock">
+    **Symptom**: Users submit migrations and they never leave **Queued**.
+
+    **Cause**: No workers are available, either because workers are down or
+    because an existing set of jobs is holding every worker slot.
+
+    **Fix**:
+    - Confirm worker health — are any workers in a failed state?
+    - Check in-flight job count. If the job count equals the worker count,
+      this is expected — jobs are waiting their turn
+    - If workers are down, restart the worker pool and monitor the
+      orchestrator
+  </Accordion>
+  <Accordion title="All sources show Disconnected" icon="plug">
+    **Symptom**: Every registered source reports **Disconnected** in the
+    Dashboard at the same time.
+
+    **Cause**: A network change on the XMS side broke the outbound path to
+    all sources, or the platform's outbound DNS stopped resolving.
+
+    **Fix**:
+    - Confirm DNS resolution from XMS for the source hostnames
+    - Confirm outbound TCP/443 reachability from XMS to the source endpoints
+    - Check for any new egress policy on the operator-managed firewall
+  </Accordion>
+  <Accordion title="Jobs fail in Write Volume phase" icon="database">
+    **Symptom**: Multiple jobs fail during the write volume phase even
+    though block storage is reported healthy.
+
+    **Cause**: Block storage API is responsive but the target back-end is
+    running out of capacity, or a specific volume type has hit its quota.
+
+    **Fix**:
+    - Review block storage capacity and volume type quota in the platform
+      health dashboard
+    - Confirm the target project has volume footprint headroom
+    - Rebalance the campaign to a different volume type while capacity is
+      provisioned
+  </Accordion>
+  <Accordion title="Migration panel is slow or times out" icon="gauge">
+    **Symptom**: Dashboard users report the Migration panel is slow to load
+    or returns a timeout.
+
+    **Cause**: The XMS control plane is under load, the job state store is
+    slow, or the upstream identity service is slow to validate tokens.
+
+    **Fix**:
+    - Measure API latency from the operator side
+    - Check the job state store health
+    - Check identity service latency — a slow identity service impacts
+      every Xloud UI, not just XMS
+  </Accordion>
+  <Accordion title="Sources refresh slowly or partially" icon="search">
+    **Symptom**: Discovery runs take significantly longer than previous
+    runs, or return partial results.
+
+    **Cause**: The source environment is under load, or CBT state on the
+    source is being rebuilt after a host or datastore change.
+
+    **Fix**:
+    - Coordinate with the source environment owner — they may be doing
+      maintenance
+    - Re-run discovery during a lower-load window on the source side
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Operator Diagnostics to Collect
+
+When escalating an incident to Xloud support, collect:
+
+- Platform health dashboard screenshot at the time of the incident
+- XMS worker availability snapshot
+- A representative failed job ID and its full event stream
+- Source environment type, version, and the specific endpoint affected
+- Any platform-side changes in the window before the incident started
+- Audit log entries for source and job operations in the incident window
+
+Attach all of the above to the incident ticket before escalating.
+
+---
+
+## Recovery Operations
+
+### Cancel a Stuck Job
+
+Jobs that are stuck in a phase can be cancelled from the Dashboard or CLI.
+Cancellation stops the phase cleanly, releases any disk transport session
+and worker slot, and marks the job as **Cancelled**. Source and target
+state are left unchanged — the user can re-submit or clean up manually.
+
+### Retry After a Transient Failure
+
+Failed jobs are not automatically retried. If a job failed due to a
+transient cause (network blip, momentary source unavailability), the user
+can re-submit it from the Dashboard. For warm migrations that failed after
+the full sync completed, re-submission restarts from scratch — coordinate
+with the user on whether a cold fallback is faster.
+
+### Scale Worker Pool
+
+If worker availability is the bottleneck, the operator can scale the XMS
+worker pool. The exact steps depend on your deployment — typically it is a
+configuration change followed by a controlled restart of the control plane.
+
+---
+
+## Next Steps
+
+<CardGroup cols={3}>
+  <Card title="User Troubleshooting" href="/services/migration/user-guide/troubleshooting" color="#197560">
+    Single-job failure modes and fixes
+  </Card>
+  <Card title="Capacity Planning" href="/services/migration/admin-guide/capacity-planning" color="#197560">
+    Size XMS to avoid capacity-driven incidents
+  </Card>
+  <Card title="Architecture" href="/services/migration/admin-guide/architecture" color="#197560">
+    Component map and workload data flow
+  </Card>
+</CardGroup>

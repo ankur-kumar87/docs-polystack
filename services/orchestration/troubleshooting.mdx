@@ -1,0 +1,212 @@
+---
+title: "Orchestration Troubleshooting"
+description: "Resolve common orchestration issues — stuck stacks, template errors, and resource creation failures."
+sidebarTitle: "Troubleshooting"
+---
+
+## Overview
+
+Most Orchestration issues fall into one of five categories: stack creation failures,
+stacks stuck in progress, template validation errors, resource dependency failures, and
+nested stack propagation issues. Use the event log as the primary diagnostic tool —
+it records each resource transition with timestamps and error messages.
+
+<Tip>
+  Always check the stack event log first: `openstack stack event list <stack-name> --nested-depth 5`
+  provides a chronological view of every resource action across all nested stacks.
+</Tip>
+
+---
+
+## Troubleshooting Reference
+
+<AccordionGroup>
+  <Accordion title="Stack stuck in CREATE_FAILED" icon="circle-x">
+    **Symptoms**: Stack creation stops and the status shows `CREATE_FAILED`. One or more
+    resources show `CREATE_FAILED` in the resource list.
+
+    **Diagnosis**:
+    ```bash title="List stack events"
+    openstack stack event list my-stack --nested-depth 5
+    ```
+
+    ```bash title="Show the specific failed resource"
+    openstack stack resource show my-stack my_instance
+    ```
+
+    **Common causes and resolutions**:
+
+    | Cause | Resolution |
+    |-------|-----------|
+    | Invalid image name or ID | Verify the image exists: `openstack image list --status active` |
+    | Flavor not found | Verify the flavor: `openstack flavor list` |
+    | Network not found | Verify the network: `openstack network list` |
+    | Quota exceeded | Check quota: `openstack quota show` |
+    | Security group rule conflict | Review security group rules for duplicates or conflicting CIDR ranges |
+    | No hosts available in availability zone | Check host capacity with your administrator |
+    | Key pair not found | Verify: `openstack keypair list` |
+
+    **Recovery**:
+    After fixing the root cause, re-deploy the stack. `CREATE_FAILED` stacks can be
+    deleted and recreated, but cannot be resumed:
+
+    ```bash title="Delete failed stack and redeploy"
+    openstack stack delete --yes my-stack
+    openstack stack create --template template.yaml --wait my-stack
+    ```
+  </Accordion>
+
+  <Accordion title="Stack stuck in CREATE_IN_PROGRESS or UPDATE_IN_PROGRESS" icon="clock">
+    **Symptoms**: The stack status has not changed from `IN_PROGRESS` for an extended
+    period (beyond the expected resource creation time).
+
+    **Diagnosis**:
+    ```bash title="Check current resource states"
+    openstack stack resource list my-stack
+    ```
+
+    ```bash title="Stream live events"
+    openstack stack event list my-stack --follow
+    ```
+
+    **Common causes and resolutions**:
+
+    | Cause | Resolution |
+    |-------|-----------|
+    | `WaitCondition` waiting for a signal that never arrives | Check the instance console log: `openstack console log show <instance-id>`. Verify the signal URL in user_data is correct. |
+    | Instance in BUILD state for too long | Check compute host capacity and scheduler logs via XDeploy |
+    | Dependency cycle between resources | Review `depends_on` declarations and `get_resource` references for circular chains |
+    | External API timeout | The Orchestration engine retries — wait for the configured timeout before intervening |
+
+    **Force-abort a stuck stack** (admin only):
+
+    ```bash title="Abandon a stuck stack"
+    openstack stack abandon my-stack
+    ```
+
+    <Warning>
+      `stack abandon` releases the stack from Orchestration management but does NOT
+      delete the underlying resources. You must clean up instances, volumes, and
+      networks manually.
+    </Warning>
+  </Accordion>
+
+  <Accordion title="Template validation errors" icon="file-x">
+    **Symptoms**: `openstack orchestration template validate` returns errors, or the
+    Dashboard rejects the template at upload time.
+
+    **Diagnosis**:
+    ```bash title="Validate template"
+    openstack orchestration template validate -t my-template.yaml
+    ```
+
+    **Common error messages and resolutions**:
+
+    | Error Message | Resolution |
+    |---------------|-----------|
+    | `Unknown type: Xloud::Compute::Serverr` | Check for typos in resource type names — type names are case-sensitive |
+    | `Property X is not supported` | Check the property name against the resource type documentation |
+    | `Parameter X not found` | A `get_param` references a parameter that is not defined in the `parameters` section |
+    | `Circular dependency detected` | A `depends_on` or `get_resource` chain creates a cycle — draw the dependency graph to identify the loop |
+    | `Invalid YAML` | Use a YAML linter (e.g., `yamllint`) to find indentation or syntax errors |
+
+    <Tip>
+      Use two-space indentation consistently throughout your templates. Tabs are not
+      valid in YAML and will cause parse failures.
+    </Tip>
+  </Accordion>
+
+  <Accordion title="Resource dependency failures" icon="link-slash">
+    **Symptoms**: A resource fails because a resource it depends on was not yet created,
+    or an attribute reference returns an empty value.
+
+    **Diagnosis**:
+    ```bash title="Show resource detail and status"
+    openstack stack resource show my-stack resource_name
+    ```
+
+    ```bash title="List resource events"
+    openstack stack resource event list my-stack resource_name
+    ```
+
+    **Common causes and resolutions**:
+
+    | Cause | Resolution |
+    |-------|-----------|
+    | `get_attr` used on a resource still in `CREATE_IN_PROGRESS` | Add an explicit `depends_on` to ensure the source resource is complete before the dependent resource starts |
+    | `get_attr` attribute path is incorrect | Check the resource type's attribute documentation for the correct path |
+    | Resource deleted out-of-band (manually) | The stack's view of the resource is stale — run `openstack stack update --existing` to reconcile |
+    | Volume attachment fails because instance is still building | Add `depends_on: [my_instance]` to the `VolumeAttachment` resource |
+  </Accordion>
+
+  <Accordion title="Nested stack errors" icon="layers">
+    **Symptoms**: A parent stack fails or stalls because a child (nested) stack
+    encounters an error.
+
+    **Diagnosis**:
+    ```bash title="List events across all nested stacks"
+    openstack stack event list my-parent-stack --nested-depth 5
+    ```
+
+    ```bash title="List nested stacks"
+    openstack stack resource list my-parent-stack
+    # Find the Xloud::Orchestration::Stack resource, then:
+    openstack stack show <child-stack-id>
+    ```
+
+    **Common causes and resolutions**:
+
+    | Cause | Resolution |
+    |-------|-----------|
+    | Child template file not accessible | Ensure `get_file:` paths are relative to the parent template directory, or use `template_url` with an accessible URL |
+    | Parameter mismatch between parent and child | Verify that all parameters passed to the child template via `parameters:` match the parameter names defined in the child |
+    | Child stack output referenced before creation completes | Add `depends_on` to resources that consume child stack outputs |
+    | `get_attr` on nested stack refers to undefined output | Verify the output name exists in the child template's `outputs` section |
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Diagnostic Command Reference
+
+```bash title="Key troubleshooting commands"
+# List all stacks with status
+openstack stack list
+
+# Show stack detail and status reason
+openstack stack show my-stack
+
+# List resources with status
+openstack stack resource list my-stack
+
+# Show a specific resource
+openstack stack resource show my-stack resource_name
+
+# Stream events in real time
+openstack stack event list my-stack --follow
+
+# Events across all nested stacks
+openstack stack event list my-stack --nested-depth 5
+
+# Validate a template before deploying
+openstack orchestration template validate -t my-template.yaml
+```
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Getting Started" href="/services/orchestration/getting-started" color="#197560">
+    Review stack creation fundamentals and template structure
+  </Card>
+  <Card title="Template Guide" href="/services/orchestration/template-guide" color="#197560">
+    Correct template syntax, parameter types, and intrinsic functions
+  </Card>
+  <Card title="Admin Troubleshooting" href="/services/orchestration/admin-troubleshooting" color="#197560">
+    Engine-level diagnostics and service configuration issues
+  </Card>
+  <Card title="Resource Types" href="/services/orchestration/resources" color="#197560">
+    Verify correct resource type names and property definitions
+  </Card>
+</CardGroup>

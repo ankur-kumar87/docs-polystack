@@ -1,0 +1,228 @@
+---
+title: "Images"
+description: "Manage Docker container images and local registry for cloud service deployment"
+icon: "package"
+sidebarTitle: "Images"
+---
+
+Every cloud service in your Xloud environment runs inside a Docker container. Before deployment, container images must be available on every target server. The Images tool helps you pull, extract, store, and distribute container images. This is a critical step for both online and air-gapped (offline) deployments.
+
+<Note>
+  **Prerequisites**
+  - [Bootstrap](/deployment/bootstrap) completed with all dependency groups passing
+  - Docker installed and running on all target nodes
+  - Network connectivity to the internet (online mode) or a `.tar.gz` image archive file (offline mode)
+</Note>
+
+---
+
+## Overview Tab
+
+The Overview tab provides a real-time status dashboard for Docker and the local registry without modifying anything on the system.
+
+<CardGroup cols={3}>
+  <Card title="Docker Engine" icon="box" color="#197560">
+    Running status, installed Docker version, and total number of locally cached images on the current server.
+  </Card>
+  <Card title="Local Registry" icon="database" color="#197560">
+    Registry container (`docker-registry:4000`) operational status and total stored image count. The registry serves images to all cluster nodes over the internal network.
+  </Card>
+  <Card title="Registry Controls" icon="settings" color="#197560">
+    Action buttons to Deploy, Start, and Stop the local registry container. Deploy creates the container for the first time; Start and Stop manage its lifecycle afterward.
+  </Card>
+</CardGroup>
+
+<Info>
+  The local registry runs as a Docker container listening on port 4000. It is accessible to all cluster nodes at `docker-registry:4000` — no TLS required for internal communication.
+</Info>
+
+---
+
+## Getting Images
+
+Container images can be loaded from two sources depending on your network environment. After loading images into Docker, push them to the local registry so all cluster nodes can access them.
+
+<Tabs>
+  <Tab title="Extract / Pull" icon="download">
+    Use this tab to load container images from offline archives or pull them from an online registry. The tab provides two sub-tabs: **Extract** for offline deployments and **Pull** for online deployments.
+
+    ---
+
+    ### Extract (Offline)
+
+    Use Extract when your servers have no internet access or when deploying in air-gapped environments. Images can be loaded from two sources:
+
+    <Tabs>
+      <Tab title="USB Device" icon="plug">
+        Load images directly from a USB storage device connected to the deployment server. This is the primary method for air-gapped data centers where images are delivered on physical media.
+
+        <Steps titleSize="h3">
+          <Step title="Connect USB Storage" icon="plug">
+            Connect the USB storage device containing the image archive to the deployment server. The tool automatically detects connected USB storage devices and displays them in the **USB Storage Detection** section.
+          </Step>
+          <Step title="Select Archive" icon="folder">
+            Browse the detected USB device and select the `.tar.gz` image archive file. The tool displays the archive filename and size for confirmation.
+          </Step>
+          <Step title="Copy to Server" icon="download">
+            Set the **Destination** path (default: `/var/lib/xavs/images`) and click **Copy to Server** to transfer the archive from the USB device to local server storage. This ensures extraction runs from local disk for maximum performance.
+
+            <Info>Copying from USB to local storage first avoids slow extraction speeds caused by USB transfer rates. The default destination has sufficient space for full release archives.</Info>
+          </Step>
+          <Step title="Extract and Load Images" icon="play">
+            After the copy completes, click **Extract & Load Images** to decompress the archive and load all container images into the local Docker daemon.
+          </Step>
+        </Steps>
+      </Tab>
+      <Tab title="Server Storage" icon="hard-drive">
+        Load images from an archive file already present on the server's local storage. Use this when the archive was transferred via SCP, SFTP, or other file transfer methods.
+
+        <Steps titleSize="h3">
+          <Step title="Browse for Archive" icon="folder">
+            Browse the server filesystem and select the `.tar.gz` image archive file. The tool validates the archive format before proceeding.
+          </Step>
+          <Step title="Extract Images" icon="play">
+            Click **Extract** to load all images from the archive into the local Docker daemon. This process reads each image layer from the archive and registers it with Docker.
+
+            <Info>Extraction duration depends on archive size and disk speed. A full release archive typically takes 5-15 minutes to extract.</Info>
+          </Step>
+        </Steps>
+      </Tab>
+    </Tabs>
+
+    After extraction completes from either source, click **Push to Local Registry** to distribute all loaded images to `docker-registry:4000`. This makes images available to every node in the cluster.
+
+    ---
+
+    ### Pull (Online)
+
+    Use Pull when the deployment node has internet access and can reach the Xloud cloud registry.
+
+    <Steps titleSize="h3">
+      <Step title="Verify Connectivity" icon="globe">
+        Confirm that the deployment node can reach the Xloud container registry over HTTPS. The tool tests connectivity automatically and displays the result.
+      </Step>
+      <Step title="Pull Images" icon="download">
+        Click **Pull** to download all required container images from the configured image catalog. Each image is downloaded with its full layer chain and stored in the local Docker daemon.
+      </Step>
+      <Step title="Push to Local Registry" icon="upload">
+        After pulling completes, push all images to the local registry so cluster nodes pull from the internal network instead of the internet during deployment.
+      </Step>
+    </Steps>
+  </Tab>
+</Tabs>
+
+<Tip>
+  A local registry makes image pulls instant and deterministic across the cluster. Without it, multiple nodes pulling simultaneously from the internet is slow and unreliable — especially during initial deployment when 50+ images are needed.
+</Tip>
+
+---
+
+## Registry Management
+
+The local Docker registry is the central image distribution point for your cluster. All nodes pull container images from this registry during deployment and scaling operations.
+
+<AccordionGroup>
+  <Accordion title="Deploy the Registry" icon="plus">
+    Creates and starts the `docker-registry` container for the first time. The registry listens on port 4000 and stores images in a persistent Docker volume.
+  </Accordion>
+  <Accordion title="Start / Stop / Restart" icon="power">
+    Lifecycle controls for the registry container. Stop halts the registry; Start resumes it. Stored images persist across restarts in the backing volume.
+  </Accordion>
+  <Accordion title="Browse Catalog" icon="list">
+    Displays the complete catalog of images stored in the registry, including all available tags per image. Use this view to verify that all required service images are present before running deployment.
+  </Accordion>
+  <Accordion title="Monitor Storage" icon="hard-drive">
+    Shows disk space consumed by the registry volume. Large environments with multiple image versions can consume significant storage — monitor usage and clean up unused tags periodically.
+  </Accordion>
+  <Accordion title="Delete Unused Images" icon="trash">
+    Removes old or unused image tags from the registry to reclaim disk space. Exercise caution — deleting an image that a running container depends on prevents that container from restarting.
+  </Accordion>
+</AccordionGroup>
+
+<Warning>
+  The local registry serves images to your entire cluster. If it goes down, new containers cannot start during maintenance, scaling operations, or node recovery. Keep the registry running at all times in production.
+</Warning>
+
+---
+
+## Docker Configuration
+
+The Images tool provides an editor for `/etc/docker/daemon.json` — the Docker daemon configuration file. Changes here affect how Docker pulls, stores, and logs container images.
+
+| Setting | Purpose | Default |
+|---------|---------|---------|
+| **Insecure Registries** | Allow Docker to pull from `docker-registry:4000` over HTTP (non-TLS) | `docker-registry:4000` |
+| **Registry Mirrors** | Configure Docker Hub mirror URLs for faster or cached pulls | None |
+| **Storage Driver** | Set the filesystem driver for image layer storage | `overlay2` |
+| **Logging Configuration** | Configure container log rotation to prevent disk exhaustion | JSON file with rotation |
+
+<Tip>
+  The most common deployment issue is Docker refusing to pull from the local registry because `docker-registry:4000` is not listed as an insecure registry. Verify this setting on every node before running deployment.
+</Tip>
+
+<Warning>
+  Changes to the Docker daemon configuration require a Docker service restart to take effect. Restarting Docker stops all running containers briefly — schedule configuration changes during maintenance windows on production clusters.
+</Warning>
+
+---
+
+## Validation
+
+After loading images and configuring the registry, verify readiness before proceeding to deployment.
+
+<Steps titleSize="h3">
+  <Step title="Verify Registry Status" icon="circle-check">
+    The Overview tab shows the local registry with a green running status. Confirm the stored image count matches the expected number for your release version.
+  </Step>
+  <Step title="Confirm Image Availability" icon="eye">
+    Browse the registry catalog and verify that all core service images are present — including compute, networking, identity, storage, and dashboard images.
+  </Step>
+  <Step title="Test Pull from Another Node" icon="server">
+    From a compute or storage node, verify that Docker can pull an image from the local registry:
+
+    ```bash title="Test registry pull from a cluster node"
+    docker pull docker-registry:4000/xloud/nova-compute:2025.1
+    ```
+
+    A successful pull confirms that the registry is accessible from across the cluster.
+  </Step>
+</Steps>
+
+<Check>
+  Registry running, all images loaded, and cross-node pulls verified — images are ready for deployment.
+</Check>
+
+---
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Docker refuses to pull from the local registry" icon="alert-triangle">
+    **Cause**: The local registry is not listed as an insecure registry in the Docker daemon configuration.
+
+    **Resolution**: Open the Docker Configuration section in the Images tool and add `docker-registry:4000` to the insecure registries list. Restart the Docker daemon after saving the change. Repeat on every node in the cluster.
+  </Accordion>
+  <Accordion title="Archive extraction fails with checksum errors" icon="alert-triangle">
+    **Cause**: The `.tar.gz` archive was corrupted during transfer.
+
+    **Resolution**: Re-download or re-transfer the archive file and verify its integrity using the checksum provided with the release. Retry extraction after replacing the corrupted file.
+  </Accordion>
+  <Accordion title="Registry container fails to start" icon="alert-triangle">
+    **Cause**: Port 4000 is already in use by another process, or the Docker volume is corrupted.
+
+    **Resolution**: Check for port conflicts with `ss -tlnp | grep 4000`. If no conflicts exist, remove and redeploy the registry container to recreate the volume from scratch.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Operations" icon="play" href="/deployment/operations" color="#197560">
+    Deploy cloud services across the cluster using the loaded container images
+  </Card>
+  <Card title="Configuration" icon="settings" href="/deployment/configuration" color="#197560">
+    Review and adjust cloud service configuration before deployment
+  </Card>
+</CardGroup>

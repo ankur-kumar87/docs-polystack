@@ -1,0 +1,186 @@
+---
+title: "Share Images"
+description: "Share private images with specific projects in Xloud without making them globally public."
+sidebarTitle: "Share Images"
+---
+
+import PrerequisitesAuth from '/snippets/prerequisites-auth.mdx';
+import CliAuth from '/snippets/cli-auth.mdx';
+
+## Overview
+
+Private images can be shared with specific projects without making them globally public.
+This enables controlled cross-team image distribution — a platform team can maintain
+golden images and share them selectively with application teams. The target project must
+accept the share before the image becomes visible in their catalog.
+
+<PrerequisitesAuth />
+
+---
+
+## Image Visibility Options
+
+| Visibility | Who Can See | Who Can Set | Use Case |
+|-----------|------------|-------------|----------|
+| `private` | Owning project only | Image owner | Default. Development and test images. |
+| `shared` | Owning project + accepted members | Image owner | Controlled cross-team sharing. |
+| `community` | All projects (discoverable) | Image owner | Broadly useful images without admin approval. |
+| `public` | All projects (visible by default) | Admin only | Platform-wide OS images maintained by the platform team. |
+
+---
+
+## Share an Image
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Set image visibility to Shared">
+        The image must have **Shared** visibility before it can be shared with
+        other projects. If the image is currently Private:
+
+        - **During creation**: Select **Shared** in the Visibility radio and choose
+          the target projects from the project table
+        - **After creation** (admin only): Click **Edit** on the image row and check
+          **Public**, or use the CLI to set visibility to `shared`
+      </Step>
+      <Step title="Manage Access (admin only)">
+        In the admin view, navigate to **Compute > Images** (admin view). Click
+        the **More** dropdown on the image row and select **Manage Access**.
+
+        <Note>
+          The **Manage Access** action only appears when the image has **Shared**
+          visibility. It is available to administrators only.
+        </Note>
+
+        The dialog shows:
+
+        | Field | Type | Description |
+        |-------|------|-------------|
+        | **Name** | Read-only | The image being shared |
+        | **Project** | Multi-select table | Select projects to grant access |
+
+        Select one or more projects and click **Confirm**.
+      </Step>
+      <Step title="Verify in target project">
+        Users in the target project can see the shared image under the
+        **Shared Images** tab in **Compute > Images**.
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    <Steps titleSize="h3">
+      <Step title="Authenticate" icon="key">
+        <CliAuth />
+      </Step>
+      <Step title="Change visibility to shared" icon="share-2">
+        ```bash title="Set image visibility to shared"
+        openstack image set --shared ubuntu-24.04-lts
+        ```
+      </Step>
+      <Step title="Add the target project as a member" icon="user-plus">
+        ```bash title="Share image with target project"
+        openstack image add project ubuntu-24.04-lts <TARGET_PROJECT_ID>
+        ```
+      </Step>
+      <Step title="Verify member was added" icon="search">
+        ```bash title="List current image members"
+        openstack image member list ubuntu-24.04-lts
+        ```
+        The target project appears with status `pending`.
+      </Step>
+    </Steps>
+  </Tab>
+</Tabs>
+
+---
+
+## Accept a Shared Image (Target Project)
+
+The target project administrator must accept the share before the image is usable.
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    Log in as a user in the target project. Navigate to **Compute > Images**.
+    Find the shared image in the **Shared Images** tab. Shared images appear
+    automatically — no explicit accept action is needed in the Dashboard.
+
+    <Note>
+      To explicitly accept a shared image via CLI, run:
+      `openstack image set --accept <image-id>`
+    </Note>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    Source credentials for the target project, then accept the share:
+
+    ```bash title="Accept shared image (run as target project)"
+    export OS_PROJECT_NAME=<target-project>
+    source openrc.sh
+
+    openstack image set --accept <IMAGE_ID>
+    ```
+
+    Verify the image is now accessible:
+    ```bash title="Confirm image is visible"
+    openstack image show <IMAGE_ID> -c visibility -c status
+    ```
+    <Check>Image visibility shows `shared` and status shows `active` — it is ready to use.</Check>
+  </Tab>
+</Tabs>
+
+---
+
+## Reject or Remove a Share
+
+<Tabs>
+  <Tab title="Remove a member (image owner)" icon="gauge">
+    ```bash title="Remove project from image members"
+    openstack image remove project ubuntu-24.04-lts <TARGET_PROJECT_ID>
+    ```
+    The image immediately disappears from the target project's catalog.
+  </Tab>
+  <Tab title="Reject share (target project)" icon="terminal">
+    ```bash title="Reject a pending share (target project)"
+    openstack image set --reject <IMAGE_ID>
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Community Images
+
+Community images are discoverable by all projects without explicit sharing, but are not
+pushed into every project's default catalog. You must search for them explicitly.
+
+```bash title="Set image visibility to community"
+openstack image set --community my-app-image
+```
+
+```bash title="List community images"
+openstack image list --community
+```
+
+<Note>
+  Community images are visible to all authenticated users but do not appear in the
+  default image list unless searched. They are useful for widely-useful base images
+  that any team can discover and use without platform team intervention.
+</Note>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Image Properties" href="/services/images/image-properties" color="#197560">
+    Add metadata to shared images to communicate hardware requirements and OS details.
+  </Card>
+  <Card title="Upload an Image" href="/services/images/upload-image" color="#197560">
+    Upload new images to share with your organization.
+  </Card>
+  <Card title="Image Admin Guide — Quotas" href="/services/images/quotas" color="#197560">
+    Configure per-project image count and storage quotas.
+  </Card>
+  <Card title="Troubleshooting" href="/services/images/troubleshooting" color="#197560">
+    Resolve shared image visibility and acceptance issues.
+  </Card>
+</CardGroup>

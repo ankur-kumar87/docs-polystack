@@ -1,0 +1,178 @@
+---
+title: "Get Cloud Images"
+description: "Download pre-built cloud images for popular Linux distributions and Windows Server for use with Xloud Compute."
+sidebarTitle: "Get Images"
+---
+
+import PrerequisitesAuth from '/snippets/prerequisites-auth.mdx';
+import CliAuth from '/snippets/cli-auth.mdx';
+
+## Overview
+
+Pre-built cloud images are official distribution releases packaged for virtual machine
+deployment. Each image includes cloud-init for first-boot customization, SSH server
+access, and storage drivers optimized for virtual environments. Use these images as the
+starting point for new instances rather than installing an operating system from scratch.
+
+<PrerequisitesAuth />
+
+<Tip>
+  Start with CirrOS for initial environment testing. It is a minimal test image that
+  launches in seconds and consumes almost no resources.
+</Tip>
+
+---
+
+## Available Images
+
+<Note>
+  All images listed below require [cloud-init](https://cloud-init.io) to function
+  correctly in Xloud. Images without cloud-init will not receive SSH keys, hostname
+  assignments, or network configuration on launch.
+</Note>
+
+| Distribution | Download URL | Format | Default User |
+|---|---|---|---|
+| **Ubuntu 24.04 LTS** | [cloud-images.ubuntu.com](https://cloud-images.ubuntu.com/noble/current/noble-server-cloudimg-amd64.img) | QCOW2 | `ubuntu` |
+| **Ubuntu 22.04 LTS** | [cloud-images.ubuntu.com](https://cloud-images.ubuntu.com/jammy/current/jammy-server-cloudimg-amd64.img) | QCOW2 | `ubuntu` |
+| **CentOS Stream 9** | [cloud.centos.org](https://cloud.centos.org/centos/9-stream/x86_64/images/) | QCOW2 | `cloud-user` |
+| **AlmaLinux 9** | [repo.almalinux.org](https://repo.almalinux.org/almalinux/9/cloud/x86_64/images/) | QCOW2 | `almalinux` |
+| **Rocky Linux 9** | [dl.rockylinux.org](https://dl.rockylinux.org/pub/rocky/9/images/x86_64/) | QCOW2 | `rocky` |
+| **Debian 12** | [cloud.debian.org](https://cloud.debian.org/images/cloud/bookworm/latest/) | QCOW2 | `debian` |
+| **Fedora 41** | [fedoraproject.org](https://fedoraproject.org/cloud/download) | QCOW2 | `fedora` |
+| **CirrOS 0.6.2** | [download.cirros-cloud.net](https://download.cirros-cloud.net/0.6.2/cirros-0.6.2-x86_64-disk.img) | QCOW2 | `cirros` / pass: `gocubsgo` |
+| **Windows Server 2022** | [microsoft.com/evalcenter](https://www.microsoft.com/en-us/evalcenter/evaluate-windows-server-2022) | VHD | `Administrator` |
+
+<Warning>
+  Windows Server evaluation images expire after 180 days. For production use, supply a
+  licensed Windows image prepared with Cloudbase-Init installed.
+</Warning>
+
+---
+
+## Download and Upload an Image
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Navigate to Images" icon="disc">
+        Navigate to
+        **Compute > Images**. Click **Create Image**.
+      </Step>
+      <Step title="Configure the image record">
+        | Field | Recommended Value |
+        |-------|------------------|
+        | **Name** | `ubuntu-24.04-lts` |
+        | **Upload Type** | **File URL** (for web download) or **Upload File** (for local upload) |
+        | **File URL** | Paste the download URL from the table above |
+        | **Disk Format** | `QCOW2` |
+        | **OS** | Select the matching distribution (e.g., Ubuntu) |
+        | **OS Version** | `24.04` |
+        | **OS Admin** | `root` (Linux) or `Administrator` (Windows) |
+        | **Min System Disk (GiB)** | `10` for most Linux images; `40` for Windows |
+        | **Min Memory (GiB)** | `1` for Linux; `2` for Windows |
+
+        See [Upload an Image](/services/images/upload-image) for the complete field reference.
+      </Step>
+      <Step title="Create the image">
+        Click **Confirm**. The image enters `Saving` status while the file is
+        fetched and stored. Large images may take several minutes.
+
+        <Check>
+          The status transitions to **Active** when storage is complete. The image
+          is available immediately for launching instances.
+        </Check>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    <Steps titleSize="h3">
+      <Step title="Authenticate" icon="key">
+        <CliAuth />
+      </Step>
+      <Step title="Download the image locally" icon="download">
+        ```bash title="Download Ubuntu 24.04 LTS cloud image"
+        curl -L -o ubuntu-24.04-lts.img \
+          https://cloud-images.ubuntu.com/noble/current/noble-server-cloudimg-amd64.img
+        ```
+        Verify the download completed and matches the published checksum:
+        ```bash title="Verify checksum (SHA256)"
+        sha256sum ubuntu-24.04-lts.img
+        ```
+      </Step>
+      <Step title="Upload to the image service" icon="upload">
+        ```bash title="Upload image with metadata"
+        openstack image create \
+          --disk-format qcow2 \
+          --container-format bare \
+          --file ubuntu-24.04-lts.img \
+          --min-disk 10 \
+          --min-ram 512 \
+          --property os_type=linux \
+          --property os_distro=ubuntu \
+          --property os_version=24.04 \
+          ubuntu-24.04-lts
+        ```
+        Note the image `id` from the output for verification.
+      </Step>
+      <Step title="Verify the image is active" icon="circle-check">
+        ```bash title="Check image status"
+        openstack image show ubuntu-24.04-lts -c status -c size -c disk_format
+        ```
+        <Check>`status` shows `active` — the image is ready for use with instances.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+</Tabs>
+
+---
+
+## Validation
+
+Confirm the uploaded image is registered and ready before launching instances.
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    Navigate to **Compute > Images**. Locate the image by name and verify:
+    - **Status**: Active (green indicator)
+    - **Format**: Matches the selected disk format
+    - **Size**: Matches the expected download size
+
+    <Check>Image shows **Active** status and is selectable when launching a new instance.</Check>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="List images and filter by name"
+    openstack image list --name ubuntu-24.04-lts -c Name -c Status -c "Disk Format"
+    ```
+
+    Expected output:
+    ```text title="Expected output"
+    +------------------+--------+-------------+
+    | Name             | Status | Disk Format |
+    +------------------+--------+-------------+
+    | ubuntu-24.04-lts | active | qcow2       |
+    +------------------+--------+-------------+
+    ```
+
+    <Check>Status `active` confirms the image is stored and ready for compute use.</Check>
+  </Tab>
+</Tabs>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Image Requirements" href="/services/images/image-requirements" color="#197560">
+    Understand what makes an image compatible with Xloud Compute.
+  </Card>
+  <Card title="Upload an Image" href="/services/images/upload-image" color="#197560">
+    Upload images from local files or import via web URL.
+  </Card>
+  <Card title="Convert Formats" href="/services/images/convert-formats" color="#197560">
+    Convert VMDK, VHD, or RAW images to QCOW2 before uploading.
+  </Card>
+  <Card title="Image Properties" href="/services/images/image-properties" color="#197560">
+    Set OS metadata, hardware requirements, and scheduler hints.
+  </Card>
+</CardGroup>

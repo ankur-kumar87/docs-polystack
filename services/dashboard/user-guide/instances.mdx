@@ -1,0 +1,236 @@
+---
+title: "Manage Instances"
+description: "Launch, monitor, scale, snapshot, and control compute instances through the Xloud Dashboard. Covers every action exposed on the Instances page."
+sidebarTitle: "Instances"
+---
+
+## Overview
+
+Navigate to **Compute → Instances** in the sidebar to manage compute instances.
+
+---
+
+## Launch an Instance
+
+Click **Create Instance** to open the 4-step wizard.
+
+| Step | Name | What you configure |
+|------|------|--------------------|
+| 1 | **Base Config** | Availability Zone, Flavor (with architecture and category filters), Start Source (Image / Snapshot / Bootable Volume), Boot From Volume, System Disk, Data Disks, CD-ROM |
+| 2 | **Network Config** | Networks, Virtual LAN (subnet / IP), Ports, Security Groups |
+| 3 | **System Config** | Name, Login Type (Keypair / Password), Advanced Options (Physical Node, Server Group, User Data, Virtual TPM, Secure Boot) |
+| 4 | **Confirm Config** | Review every setting, instance count, real-time quota display |
+
+<Note>
+  For the complete field-by-field reference, see
+  [Launch an Instance](/services/compute/launch-instance).
+</Note>
+
+---
+
+## Instance Actions — Every Option Explained
+
+The Instances list exposes one **direct row action** (Console), a **More** dropdown
+with five action submenus, and a **batch-action toolbar** at the top of the table
+that operates on multi-selected rows.
+
+### Direct row action
+
+| Action | What it does |
+|--------|--------------|
+| **Console** | Opens an interactive browser console (VNC for graphical guests, serial for headless) in a new tab |
+
+### More → Instance Status
+
+Power and lifecycle actions. Each is a separately gated permission.
+
+| Action | What it does |
+|--------|--------------|
+| **Start** | Boots a stopped instance |
+| **Stop** | Powers off the instance gracefully (ACPI shutdown) |
+| **Reboot** | Hard reboot — issues a reset to the running guest |
+| **Soft Reboot** | Graceful reboot — asks the guest OS to shut down and start again |
+| **Pause** | Suspends instance execution in CPU only — RAM stays in place; faster to resume than Suspend |
+| **Unpause** | Resumes a paused instance |
+| **Suspend** | Saves the instance state to disk and frees its host RAM — slower to resume but releases hypervisor memory |
+| **Resume** | Resumes a suspended instance from its saved state |
+| **Shelve** | Stops the instance and offloads its image so the hypervisor can reclaim the slot — survives even if the original host is removed |
+| **Unshelve** | Restores a shelved instance, scheduling it onto an available host |
+| **Lock** | Prevents accidental destructive actions on this instance — required to be unlocked before delete or other state changes |
+| **Unlock** | Removes the lock |
+
+### More → Related Resources
+
+Attach or detach things to a running instance.
+
+| Action | What it does |
+|--------|--------------|
+| **Attach Interface** | Adds a network interface (port) to the instance — pick an existing port or auto-create from a network |
+| **Detach Interface** | Removes a network interface |
+| **Attach Volume** | Attaches an existing block storage volume — choose the volume and the device name |
+| **Detach Volume** | Detaches a volume from the instance (volume must be detachable; some boot volumes are not) |
+| **Associate Floating IP** | Binds a public floating IP to the instance's port |
+| **Disassociate Floating IP** | Releases the public floating IP from the port |
+| **Manage Security Group** | Add or remove security groups on the instance's ports — controls inbound and outbound traffic rules |
+
+### More → Backups and Snapshots
+
+| Action | What it does |
+|--------|--------------|
+| **Create Snapshot** | Captures the current disk state of the instance as a new image — useful as a checkpoint before an upgrade or as a base for cloning |
+
+### More → Clone and Template
+
+| Action | What it does |
+|--------|--------------|
+| **Clone** | Creates a new instance from a copy of this instance's disks — copies system and data volumes, preserves the network configuration choice in a single step |
+| **Convert to Template** | Captures the running instance's disk and metadata into a reusable VM Template that other users can deploy as a starting point |
+
+### More → Configuration Update
+
+| Action | What it does |
+|--------|--------------|
+| **Resize** | Change the instance's flavor (vCPU / RAM / disk shape). The instance is stopped, migrated to a host with capacity, and restarted on the new flavor |
+| **Confirm Resize or Migrate** | Confirms a successful resize or migration — frees the original allocation. Required step before further actions |
+| **Revert Resize or Migrate** | Aborts a resize or migration — rolls back to the original flavor and host |
+| **Adjust Resources** | Live-resize — changes vCPU and RAM (and adds or removes virtual devices) **without rebooting**. See [Live Resize](/services/compute/live-resize) |
+| **Change Password** | Resets the guest OS root or administrator password. The guest must have the password reset agent (cloud-init or QEMU guest agent) installed |
+| **Rebuild Instance** | Reinstalls the instance from a different image while keeping its IPs, ports, attached volumes, and metadata. Use to refresh a guest OS without losing network identity |
+
+### Other row actions (ungrouped)
+
+| Action | What it does |
+|--------|--------------|
+| **Edit Instance** | Edit the instance name and description |
+| **Modify Instance Tags** | Add or remove tags on the instance — used by automation, billing, and scheduling. Up to 50 tags per instance |
+| **Delete** | Soft-delete the instance — the row remains in **Recycle Bin** for the configured retention window before being purged |
+
+### Batch actions (multi-select toolbar)
+
+Select multiple rows with the checkboxes at the left of the table; the batch
+toolbar appears above the table.
+
+| Action | What it does |
+|--------|--------------|
+| **Start** | Bulk start every selected instance |
+| **Stop** | Bulk graceful stop |
+| **Reboot** | Bulk hard reboot |
+| **Soft Reboot** | Bulk graceful reboot |
+| **Delete** | Bulk soft-delete |
+
+### Admin-view extras
+
+When viewing instances through the admin view (visible to users with the
+`admin` role), additional actions appear:
+
+| Action | What it does |
+|--------|--------------|
+| **Migrate** | Cold migrate — stops the instance, moves it to a different compute host, restarts |
+| **Live Migrate** | Move a running instance to another compute host with no perceptible downtime |
+| **Bulk Live Migrate** | Live-migrate multiple selected instances in sequence — useful when evacuating a host for maintenance |
+
+---
+
+## Auto-Discovery of Instances Launched Outside the Dashboard
+
+The Xloud Platform's compute layer keeps a single source of truth for every
+running virtual machine. Whether an instance was launched through the Xloud
+Dashboard, through XCONNECT, or through any external client (`openstack server
+create`, Terraform, Ansible, Heat stack, custom script using the SDK), the
+instance appears in **Compute → Instances** automatically.
+
+| Where the VM came from | Visible in Compute → Instances? |
+|------------------------|:--------------------------------:|
+| Xloud Dashboard — Create Instance wizard | Yes |
+| XCONNECT | Yes |
+| `openstack server create` from the CLI | Yes |
+| Terraform `openstack_compute_instance_v2` | Yes |
+| Ansible `os_server` module | Yes |
+| Heat orchestration template | Yes |
+| Custom SDK script (Python / Go / JavaScript) | Yes |
+
+**How it works** — every compute host added to the cluster through XDEPLOY runs
+the Xloud compute agent, which reports every VM running on the hypervisor back
+to the platform's central state. The Dashboard reads from that central state, so
+it always reflects what is actually running on the cluster — there is no
+separate "import" or "register VM" step needed for instances launched outside
+the Dashboard.
+
+**Two prerequisites** for auto-discovery:
+
+<Steps titleSize="h3">
+  <Step title="The compute host is added to the cluster" icon="server">
+    The hypervisor running the VM must have been added to the cluster through
+    **XDEPLOY → Hosts**. Hosts not registered with the cluster cannot report
+    their VMs, and any VMs running on them remain invisible until the host is
+    added.
+  </Step>
+  <Step title="Project visibility applies" icon="users">
+    The signed-in user must have access to the project that owns the instance.
+    Cross-project visibility requires the admin view, which exposes every
+    instance on the cluster.
+  </Step>
+</Steps>
+
+<Tip>
+  This behavior is independent of how the instance was provisioned, what
+  toolchain manages it, or which user created it. Even an instance booted from
+  a Heat stack months ago by a teammate who has since left appears in
+  **Compute → Instances** as long as the host is in the cluster and you have
+  project access.
+</Tip>
+
+---
+
+## Instance Detail Page
+
+Click any instance name in the list to open the detail page. The detail page
+exposes eight tabs:
+
+| Tab | What it shows |
+|-----|---------------|
+| **Detail** | Identity, project, image, flavor, host, AZ, IPs, security groups, tags, timestamps |
+| **Volumes** | Attached volumes with size, type, device name, and detach action |
+| **Snapshots** | Instance snapshots created from this VM |
+| **Interfaces** | Network ports, MAC addresses, fixed IPs, security groups |
+| **Floating IPs** | Public IPs bound to the instance's ports |
+| **Security Groups** | Effective security group rules applied to the instance |
+| **Action Logs** | Audit trail of every action performed on the instance with actor and timestamp |
+| **Logs** | Console boot log captured by the hypervisor |
+
+Detail-page row actions are the same set as the list row actions — Console as the
+direct action, plus the More menu with all submenus described above.
+
+---
+
+## Detailed Guides
+
+<CardGroup cols={3}>
+  <Card title="Launch an Instance" href="/services/compute/launch-instance" color="#197560">
+    Complete 4-step wizard reference
+  </Card>
+  <Card title="Resize" href="/services/compute/resize-instance" color="#197560">
+    Change flavor with confirm and revert
+  </Card>
+  <Card title="Live Resize" href="/services/compute/live-resize" color="#197560">
+    Adjust vCPU and RAM without reboot
+  </Card>
+  <Card title="Console Access" href="/services/compute/console-access" color="#197560">
+    Browser-based VNC console
+  </Card>
+  <Card title="Snapshots" href="/services/compute/snapshots" color="#197560">
+    Capture and manage instance snapshots
+  </Card>
+  <Card title="Clone and Template" href="/services/compute/clone-instance" color="#197560">
+    Duplicate an instance or save it as a reusable template
+  </Card>
+  <Card title="Live Migration" href="/services/compute/live-migration" color="#197560">
+    Move a running instance to another host with zero downtime
+  </Card>
+  <Card title="Server Groups" href="/services/compute/server-groups" color="#197560">
+    Affinity and anti-affinity placement policies
+  </Card>
+  <Card title="Instance Tagging" href="/services/compute/instance-tagging" color="#197560">
+    Tag instances for organization, billing, and automation
+  </Card>
+</CardGroup>

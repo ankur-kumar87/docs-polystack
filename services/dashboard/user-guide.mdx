@@ -1,0 +1,129 @@
+---
+title: "Dashboard User Guide"
+description: "Navigate the Xloud Dashboard to manage instances, volumes, networks, images, and security. Covers the Dashboard layout and key workflows."
+sidebarTitle: "User Guide"
+mode: "wide"
+---
+
+## Overview
+
+The Xloud Dashboard provides a browser-based interface for managing all cloud resources
+in your project. This guide covers the Dashboard layout, navigation, and links to
+detailed workflows for each service.
+
+<Note>
+  **Prerequisites**
+  - Active account in an Xloud project with `member` role or higher
+  - Access to the Dashboard at `https://connect.<your-domain>`
+  - Supported browser: Chrome 88+, Firefox 90+, Edge 88+, Safari 14+
+</Note>
+
+---
+
+## Dashboard Layout
+
+The Dashboard has three main areas:
+
+| Area | Description |
+|------|-------------|
+| **Header** | Project selector, Console/Admin view toggle, user menu, notification bell |
+| **Sidebar** | Navigation menu organized by service (Compute, Storage, Network, etc.) |
+| **Content Area** | Resource lists, detail pages, create forms, and wizards |
+
+<Tip>
+  Switch between the **Console** view (project-scoped operations) and **Admin** view
+  (platform-wide administration) using the toggle in the header. The Admin view is
+  only visible to users with the `admin` role.
+</Tip>
+
+---
+
+## Resource Management
+
+Each service section in the sidebar provides list pages, create forms, and detail views.
+The detailed workflows for each service are documented in their respective guides:
+
+<CardGroup cols={2}>
+  <Card title="Instances" icon="server" href="/services/compute/launch-instance" color="#197560">
+    Launch, resize, reboot, snapshot, and manage compute instances via the 4-step wizard
+  </Card>
+  <Card title="Volumes" icon="hard-drive" href="/services/storage/create-volume" color="#197560">
+    Create, attach, extend, snapshot, and back up block storage volumes
+  </Card>
+  <Card title="Networks" icon="network" href="/services/networking/create-network" color="#197560">
+    Create networks, subnets, routers, and configure floating IPs
+  </Card>
+  <Card title="Images" icon="disc" href="/services/images/upload-image" color="#197560">
+    Upload OS images, manage snapshots, and share images across projects
+  </Card>
+  <Card title="Security Groups" icon="shield" href="/services/networking/security-groups" color="#197560">
+    Create and manage firewall rules controlling instance traffic
+  </Card>
+  <Card title="Key Pairs" icon="key" href="/services/compute/launch-instance" color="#197560">
+    Manage SSH key pairs for instance authentication
+  </Card>
+  <Card title="Object Storage" icon="box" href="/services/object-storage/user-guide" color="#197560">
+    Browse and manage object storage containers and files
+  </Card>
+  <Card title="Key Manager" icon="lock" href="/services/key-manager/user-guide" color="#197560">
+    Store and manage secrets, certificates, and encryption keys
+  </Card>
+  <Card title="User Center" icon="circle-user" href="/services/dashboard/user-guide/user-center" color="#197560">
+    Manage your profile, change your password, and enable two-factor authentication
+  </Card>
+  <Card title="Global Search" icon="search" href="/services/dashboard/user-guide/global-search" color="#197560">
+    Find any instance, volume, network, image, or other resource from a single search bar — keyboard-driven with Ctrl+K
+  </Card>
+</CardGroup>
+
+---
+
+## Common Dashboard Patterns
+
+All resource pages in the Dashboard follow consistent interaction patterns:
+
+<AccordionGroup>
+  <Accordion title="List pages" defaultOpen>
+    Every resource type has a list page showing all items in your project. Common features:
+
+    - **Search/filter bar** — narrow results by name, status, or type
+    - **Tabs** — switch between views (e.g., Current Project / Public / Shared for images)
+    - **Row actions** — the first action is directly visible as a button; additional actions are under the **More** dropdown
+    - **Batch actions** — select multiple items with checkboxes, then apply bulk operations
+    - **Primary action** — the top-right button (e.g., "Create Instance", "Create Volume")
+  </Accordion>
+  <Accordion title="Create forms">
+    Resources are created via modal dialogs or multi-step wizards:
+
+    - **Modals** — single-page forms for simple resources (networks, security groups, key pairs)
+    - **Step wizards** — multi-page forms for complex resources (instances: 4 steps, flavors: 2 steps, bare metal: 3 steps)
+    - **Confirm button** — all create forms use "Confirm" as the submit button
+    - **Quota display** — real-time quota usage shown in the footer (instances, CPU, memory, volumes)
+  </Accordion>
+  <Accordion title="Detail pages">
+    Click any resource name to open its detail page:
+
+    - **Header** — key resource info (name, status, project, timestamps)
+    - **Tabs** — organized sections (Detail, Members, Interfaces, Events, etc.)
+    - **Actions** — same row actions available from the list page
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="CLI Setup" icon="terminal" href="/cli-setup" color="#197560">
+    Configure the CLI for operations that complement the Dashboard
+  </Card>
+  <Card title="Dashboard Admin Guide" icon="shield" href="/services/dashboard/admin-guide" color="#197560">
+    Platform administration and configuration
+  </Card>
+  <Card title="Compute User Guide" icon="server" href="/services/compute/user-guide" color="#197560">
+    Full compute instance management reference
+  </Card>
+  <Card title="Networking User Guide" icon="network" href="/services/networking/user-guide" color="#197560">
+    Full networking configuration reference
+  </Card>
+</CardGroup>

@@ -1,0 +1,122 @@
+---
+title: "Load Balancer Quotas"
+description: "Configure per-project resource limits for Xloud Load Balancer instances, listeners, pools, and members."
+sidebarTitle: "Quotas"
+---
+
+import AdminWarning from '/snippets/admin-warning.mdx';
+
+## Overview
+
+Quotas prevent individual projects from consuming excessive load balancing resources.
+Default quota values are set platform-wide; administrators override them per project.
+Load balancer quotas cover the full resource hierarchy — from the top-level load balancer
+down to individual L7 rules.
+
+<AdminWarning />
+
+---
+
+## Default Quota Reference
+
+| Resource | Default Limit | Description |
+|----------|--------------|-------------|
+| `loadbalancer` | 10 | Load balancer instances per project |
+| `listener` | 50 | Listeners across all load balancers in a project |
+| `pool` | 50 | Pools across all load balancers in a project |
+| `member` | 50 | Pool members per project |
+| `healthmonitor` | 50 | Health monitors per project |
+| `l7policy` | 50 | L7 routing policies per project |
+| `l7rule` | 50 | L7 rules per project |
+
+---
+
+## View Quotas
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    Navigate to the admin quota settings and scroll to the **Load Balancer** section
+    to view platform-wide default quotas. Per-project overrides are visible in
+    **Identity > Projects** (admin view) > Modify Quotas.
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Show platform-wide default quotas"
+    openstack loadbalancer quota defaults show
+    ```
+
+    ```bash title="Show quotas for a specific project"
+    openstack loadbalancer quota show <project-id>
+    ```
+
+    ```bash title="List quotas for all projects"
+    openstack loadbalancer quota list --all-projects
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Set Project Quotas
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    Navigate to **Identity > Projects** (admin view). Select the project and click
+    **Modify Quotas**. Scroll to the **Load Balancer** section and update the limits.
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Set project-specific quotas"
+    openstack loadbalancer quota set \
+      --loadbalancer 20 \
+      --listener 100 \
+      --pool 100 \
+      --member 200 \
+      --healthmonitor 50 \
+      <project-id>
+    ```
+
+    ```bash title="Reset project to platform defaults"
+    openstack loadbalancer quota delete <project-id>
+    ```
+  </Tab>
+</Tabs>
+
+<Tip>
+  Increase quotas for production projects that run multiple microservices behind
+  separate load balancers. Keep development and test project quotas at defaults
+  to control infrastructure costs.
+</Tip>
+
+---
+
+## Monitor Quota Consumption
+
+Regularly review quota consumption to identify projects approaching limits:
+
+```bash title="List all project quotas sorted by load balancer count"
+openstack loadbalancer quota list --all-projects \
+  -f json | python3 -c "
+import json, sys
+quotas = json.load(sys.stdin)
+for q in sorted(quotas, key=lambda x: x.get('loadbalancer', 0), reverse=True)[:10]:
+    print(f'{q.get(\"loadbalancer\",0):4d} LBs  {q[\"project_id\"]}')
+"
+```
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Flavor Profiles" href="/services/load-balancer/flavor-profiles" color="#197560">
+    Create capacity tiers that users can select within their quota limits.
+  </Card>
+  <Card title="Monitoring" href="/services/load-balancer/lb-monitoring" color="#197560">
+    Monitor actual resource consumption alongside quota limits.
+  </Card>
+  <Card title="Security" href="/services/load-balancer/lb-security" color="#197560">
+    Audit quota usage as part of security and compliance reviews.
+  </Card>
+  <Card title="Admin Troubleshooting" href="/services/load-balancer/lb-troubleshooting" color="#197560">
+    Resolve quota exceeded errors reported by users.
+  </Card>
+</CardGroup>

@@ -1,0 +1,142 @@
+---
+title: "Object Storage Access Control"
+description: "Configure read and write ACLs on Xloud Object Storage containers to control cross-project access and enable public or restricted sharing."
+sidebarTitle: "Access Control"
+---
+
+import PrerequisitesAuth from '/snippets/prerequisites-auth.mdx';
+
+## Overview
+
+Container ACLs control which users and projects can read from or write to a container.
+By default, containers are private — only the owning project has access. ACLs are set
+as container metadata headers and can grant access to specific users, entire projects,
+or the public.
+
+<PrerequisitesAuth />
+
+---
+
+## ACL Format Reference
+
+| Value | Meaning |
+|-------|---------|
+| `<project-id>:<user-id>` | Specific user in a specific project |
+| `<project-id>:*` | All users in a specific project |
+| `.r:*` | Public anonymous read access |
+| `.r:*,.rlistings` | Public read AND directory listing |
+
+---
+
+## Configure ACLs
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    Navigate to the container and click the **Edit** icon. In the **Access Control**
+    section:
+
+    - **Read ACL**: Comma-separated list of `<project-id>:<user-id>` pairs, or `.r:*` for
+      public read access
+    - **Write ACL**: Comma-separated list of `<project-id>:<user-id>` pairs controlling
+      write access
+
+    <Warning>
+      ACL values of `.r:*` or `.r:*,.rlistings` grant public anonymous read access.
+      Verify this is intentional before saving — objects in publicly accessible containers
+      are reachable by anyone with the URL.
+    </Warning>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    <CodeGroup>
+    ```bash title="Grant read access to a specific user"
+    openstack container set \
+      --property "X-Container-Read=<project-id>:<user-id>" \
+      app-backups
+    ```
+    ```bash title="Grant read access to all users in a project"
+    openstack container set \
+      --property "X-Container-Read=<project-id>:*" \
+      shared-data
+    ```
+    ```bash title="Grant public read access"
+    openstack container set \
+      --property "X-Container-Read=.r:*,.rlistings" \
+      public-assets
+    ```
+    ```bash title="Grant write access to another project"
+    openstack container set \
+      --property "X-Container-Write=<other-project-id>:*" \
+      shared-uploads
+    ```
+    ```bash title="Remove all ACLs (make private)"
+    openstack container set \
+      --property "X-Container-Read=" \
+      --property "X-Container-Write=" \
+      app-backups
+    ```
+    </CodeGroup>
+  </Tab>
+</Tabs>
+
+---
+
+## View Current ACLs
+
+```bash title="Show container ACLs"
+openstack container show app-backups | grep -i "read\|write"
+```
+
+---
+
+## Account-Level Access Control
+
+The object store account (project) supports an additional read ACL at the account level:
+
+```bash title="Show account metadata including ACLs"
+openstack object store account show
+```
+
+```bash title="Set account-level read ACL"
+openstack object store account set \
+  --property X-Account-Meta-Access-Control-Allow-Origin="https://app.example.com"
+```
+
+---
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Principle of least privilege" icon="shield" defaultOpen>
+    - Grant the minimum required access — prefer `<project-id>:<user-id>` over `<project-id>:*`
+    - Only use `.r:*` for containers explicitly intended for public access
+    - Use `.rlistings` only when directory browsing is intentionally public
+  </Accordion>
+  <Accordion title="Regular ACL audit" icon="file-text">
+    Review containers with non-empty read or write ACLs quarterly. Revoke access for
+    decommissioned projects and users immediately:
+    ```bash title="Check all container ACLs in your project"
+    for c in $(openstack container list -f value -c Name); do
+      echo "=== $c ==="; openstack container show "$c" | grep -i "read\|write"
+    done
+    ```
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Upload Objects" href="/services/object-storage/upload-objects" color="#197560">
+    Upload objects to your access-controlled container
+  </Card>
+  <Card title="Versioning" href="/services/object-storage/versioning" color="#197560">
+    Enable version retention for objects in the container
+  </Card>
+  <Card title="Troubleshooting" href="/services/object-storage/troubleshooting" color="#197560">
+    Resolve 403 access errors on containers
+  </Card>
+  <Card title="Object Storage Admin Guide" href="/services/object-storage/admin-guide" color="#197560">
+    Platform-wide security and ACL governance
+  </Card>
+</CardGroup>

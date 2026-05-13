@@ -1,0 +1,95 @@
+---
+title: "Xloud Compute"
+description: "Xloud Compute provides resizable virtual machine instances running on bare-metal hypervisors in your private cloud infrastructure."
+icon: "server"
+sidebarTitle: "Compute"
+mode: "wide"
+---
+
+Resizable virtual machine instances running on bare-metal hypervisors in your private cloud.
+
+<Note>
+  Compute is included in [XAVS](/products/xavs), [XPCI](/products/xpci), and [XHCI](/products/xhci). See product pages on [xloud.tech](https://xloud.tech/xavs) for specifications and datasheets.
+</Note>
+
+---
+
+<p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Guides & References</p>
+
+<CardGroup cols={2}>
+  <Card title="User Guide" icon="book-open" href="/services/compute/user-guide" color="#197560">
+    Instances, flavors, images, key pairs, security groups — launch, manage, and scale VMs.
+  </Card>
+  <Card title="Admin Guide" icon="shield" href="/services/compute/admin-guide" color="#197560">
+    Compute hosts, hypervisors, quotas, scheduling, and cluster maintenance.
+  </Card>
+  <Card title="CLI Reference" icon="terminal" href="/services/compute/cli-reference" color="#197560">
+    `openstack server` commands for instance management from the command line.
+  </Card>
+  <Card title="Hypervisor (KVM)" icon="cpu" href="/services/compute/hypervisor" color="#197560">
+    KVM configuration, CPU modes, backing storage, nested virtualization.
+  </Card>
+</CardGroup>
+
+---
+
+<p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Key Features</p>
+
+<CardGroup cols={3}>
+  <Card title="Bare-Metal Hypervisor" icon="cpu" href="/services/compute/hypervisor" color="#197560">
+    Runs directly on physical hardware — maximum performance for enterprise workloads.
+  </Card>
+  <Card title="Live Migration" icon="arrow-right-left" href="/services/compute/live-migration" color="#197560">
+    Move running workloads between hosts with zero downtime.
+  </Card>
+  <Card title="Live vCPU/RAM Scaling" icon="move-vertical" href="/services/compute/live-resize" color="#197560">
+    Add or reduce vCPU and RAM on a running instance — no reboot, no downtime.
+  </Card>
+  <Card title="Snapshots & Backup" icon="copy" href="/services/compute/snapshots" color="#197560">
+    Automated snapshots and restore points with minimal overhead.
+  </Card>
+  <Card title="Security" icon="shield" href="/services/compute/security-hardening" color="#197560">
+    VM encryption, distributed firewalls, TPM 2.0 support.
+  </Card>
+  <Card title="Disaster Recovery" icon="rotate-ccw" href="/services/disaster-recovery/index" color="#197560">
+    One-click failover/failback with application-aware recovery.
+  </Card>
+</CardGroup>
+
+---
+
+<p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Compute Components</p>
+
+| Component | Description |
+|-----------|-------------|
+| **Hypervisor** | Bare-metal virtualization layer on physical hardware |
+| **Scheduler** | Places instances on optimal hosts based on resources, affinity, and availability zones |
+| **Conductor** | Mediates database interactions and long-running operations |
+| **API** | RESTful endpoint for instance lifecycle, flavors, key pairs, server groups |
+| **Metadata Service** | Provides instance config (hostname, SSH keys, user data) at boot |
+| **Console (VNC)** | Browser-based console access to running instances |
+
+---
+
+<p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Related Services</p>
+
+<CardGroup cols={3}>
+  <Card title="Block Storage" icon="hard-drive" href="/services/storage/index" color="#197560">
+    Persistent volumes for compute instances
+  </Card>
+  <Card title="Networking" icon="network" href="/services/networking/index" color="#197560">
+    Virtual networks, floating IPs, security groups
+  </Card>
+  <Card title="Image Service" icon="disc" href="/services/images/index" color="#197560">
+    OS images and snapshots for launching instances
+  </Card>
+  <Card title="Identity & Access" icon="fingerprint" href="/services/identity/index" color="#197560">
+    Authentication and RBAC for compute operations
+  </Card>
+  <Card title="Load Balancer" icon="combine" href="/services/load-balancer" color="#197560">
+    Distribute traffic across instances
+  </Card>
+  <Card title="Instance HA" icon="heart-pulse" href="/services/instance-ha/index" color="#197560">
+    Automatic failover on host failure
+  </Card>
+</CardGroup>

@@ -1,0 +1,151 @@
+---
+title: "Xloud"
+sidebarTitle: "Overview"
+description: "User guides, admin references, CLI documentation, and resources for the Xloud Cloud Platform."
+icon: "book-open"
+mode: "wide"
+---
+
+<div style={{ display: 'flex', alignItems: 'center', gap: '2rem', marginBottom: '1rem' }}>
+  <div style={{ flex: 1 }}>
+    <p style={{ fontSize: '1.15rem', lineHeight: '1.7' }}>
+      Compute &nbsp;·&nbsp; Storage &nbsp;·&nbsp; Networking &nbsp;·&nbsp; HCI &nbsp;·&nbsp; Monitoring &nbsp;·&nbsp; Disaster Recovery
+    </p>
+  </div>
+  <div style={{ flex: 1, display: 'flex', justifyContent: 'flex-end' }}>
+    <img src="/images/xloud-services.svg" alt="Xloud Cloud Platform Services" noZoom style={{ maxWidth: '90%' }} />
+  </div>
+</div>
+
+---
+
+## Featured Services
+
+<CardGroup cols={3}>
+  <Card title="Compute" icon="cpu" href="/services/compute" color="#197560">
+    Virtual machines on bare-metal hypervisors
+  </Card>
+  <Card title="Networking" icon="network" href="/services/networking/index" color="#197560">
+    SDN, floating IPs, security groups
+  </Card>
+  <Card title="Block Storage" icon="hard-drive" href="/services/storage/index" color="#197560">
+    Persistent volumes, snapshots, and backups
+  </Card>
+</CardGroup>
+
+---
+
+## Xloud Products
+
+<Tabs>
+  <Tab title="Infrastructure" icon="boxes">
+    <CardGroup cols={3}>
+      <Card title="XAVS — Advanced Virtualization Suite" icon="server" href="/products/xavs" color="#197560">
+        Manage VMs and containers on a single optimized platform.
+      </Card>
+      <Card title="XPCI — Private Cloud Infrastructure" icon="cloud" href="/products/xpci" color="#197560">
+        Full-featured private cloud with all enterprise services.
+      </Card>
+      <Card title="XHCI — Hyperconverged Infrastructure" icon="boxes" href="/products/xhci" color="#197560">
+        Compute, storage, and networking in one system.
+      </Card>
+    </CardGroup>
+  </Tab>
+  <Tab title="Virtualization" icon="server">
+    <CardGroup cols={2}>
+      <Card title="Hypervisor" icon="cpu" href="/services/compute/hypervisor" color="#197560">
+        Hardware-assisted virtualization with near-bare-metal performance
+      </Card>
+      <Card title="XOS — Operating System" icon="terminal" href="/products/xos" color="#197560">
+        Purpose-built Linux distribution for Xloud private cloud deployments
+      </Card>
+    </CardGroup>
+  </Tab>
+  <Tab title="Storage" icon="database">
+    <CardGroup cols={3}>
+      <Card title="XSDS — Software-Defined Storage" icon="database" href="/products/xsds" color="#197560">
+        Fault-tolerant distributed storage. Unified block, object, and file with self-healing.
+      </Card>
+      <Card title="XNAS — NAS Storage" icon="hard-drive" href="/products/xnas" color="#197560">
+        SMB, NFS, AFP, FTP with snapshots, HA, thin provisioning, deduplication
+      </Card>
+      <Card title="XNexus — Unified Storage" icon="layers" href="/products/xnexus" color="#197560">
+        Unified storage platform — coming soon
+      </Card>
+    </CardGroup>
+  </Tab>
+  <Tab title="Operations" icon="activity">
+    <CardGroup cols={2}>
+      <Card title="XIMP — Infrastructure Monitoring" icon="activity" href="/products/ximp" color="#197560">
+        End-to-end monitoring, APM, log management, and security
+      </Card>
+      <Card title="XDR — Disaster Recovery" icon="rotate-ccw" href="/products/xdr" color="#197560">
+        Failover automation, replication, RPO/RTO management
+      </Card>
+    </CardGroup>
+  </Tab>
+</Tabs>
+
+---
+
+## Services
+
+**Compute & Orchestration**
+
+| Service | Description | Docs |
+|---------|-------------|------|
+| **Compute** | Virtual machines, live migration, hypervisor management | [User Guide](/services/compute/user-guide) · [Admin Guide](/services/compute/admin-guide) |
+| **Kubernetes** | Managed Kubernetes clusters | [User Guide](/services/kubernetes/user-guide) · [Admin Guide](/services/kubernetes/admin-guide) |
+| **Instance HA** | Automated instance recovery on host failure | [User Guide](/services/instance-ha/user-guide) · [Admin Guide](/services/instance-ha/admin-guide) |
+| **Resource Optimizer** | Workload placement and consolidation | [User Guide](/services/optimization/user-guide) · [Admin Guide](/services/optimization/admin-guide) |
+
+**Storage**
+
+| Service | Description | Docs |
+|---------|-------------|------|
+| **Block Storage** | Persistent volumes, snapshots, backups, storage tiers | [User Guide](/services/storage/user-guide) · [Admin Guide](/services/storage/admin-guide) |
+| **Object Storage** | S3-compatible distributed object store | [User Guide](/services/object-storage/user-guide) · [Admin Guide](/services/object-storage/admin-guide) |
+| **Software-Defined Storage** | Unified block, object, and file storage | [User Guide](/services/sds/user-guide) · [Admin Guide](/services/sds/admin-guide) |
+| **Image Service** | OS images, snapshots, and image sharing | [User Guide](/services/images/user-guide) · [Admin Guide](/services/images/admin-guide) |
+
+**Networking & Security**
+
+| Service | Description | Docs |
+|---------|-------------|------|
+| **Networking** | SDN, tenant networks, security groups, floating IPs | [User Guide](/services/networking/user-guide) · [Admin Guide](/services/networking/admin-guide) |
+| **Load Balancer** | L4/L7 load balancing with health checks and TLS | [User Guide](/services/load-balancer/user-guide) · [Admin Guide](/services/load-balancer/admin-guide) |
+| **DNS** | Managed DNS zones and record management | [User Guide](/services/dns/user-guide) · [Admin Guide](/services/dns/admin-guide) |
+| **Identity & Access** | Authentication, RBAC, projects, multi-tenancy | [User Guide](/services/identity/user-guide) · [Admin Guide](/services/identity/admin-guide) |
+| **Key Manager** | Secrets, certificates, encryption key management | [User Guide](/services/key-manager/user-guide) · [Admin Guide](/services/key-manager/admin-guide) |
+
+---
+
+## Release Notes
+
+<Update label="March 2026" description="Latest Releases" tags={["Current"]}>
+  | Product | Version | Status |
+  |---------|---------|--------|
+  | **XAVS** | 2025.1 LTS | Stable — Long-term support |
+  | **XPCI** | 2025.1 | Stable — Full private cloud platform |
+  | **XDeploy** | 2025.1-beta | Beta — Deployment & lifecycle management |
+  | **XOS** | 3.1 | Stable — Base OS with security hardening |
+
+  [View full changelog and version history →](/changelog)
+</Update>
+
+---
+
+## Resources
+
+<CardGroup cols={3}>
+  <Card title="Blogs" icon="file-text" href="https://blog.xloud.tech/" color="#197560">
+    Articles, best practices, platform updates
+  </Card>
+  <Card title="Contact Support" icon="headphones" href="mailto:support@xloud.tech" color="#197560">
+    24/7/365 multilingual support
+  </Card>
+  <Card title="About Xloud" icon="building-2" href="https://xloud.tech/about" color="#197560">
+    Xloud Technologies — Made in India
+  </Card>
+</CardGroup>
+

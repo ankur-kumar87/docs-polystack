@@ -1,0 +1,160 @@
+---
+title: "Run an Optimization Audit"
+description: "Create and execute Optimization audits in Xloud — select a goal, configure scope, submit the audit, and monitor progress to action plan generation."
+sidebarTitle: "Run an Audit"
+---
+
+## Overview
+
+An audit is a point-in-time analysis of the cluster. When you create an audit, the
+Optimization collects current cluster metrics, applies the selected strategy
+algorithm, and generates a prioritized action plan. Audits are fast — typically 30
+seconds to 2 minutes depending on cluster size and data source responsiveness.
+
+<Note>
+  **Prerequisites**
+  - Optimization enabled on your platform
+  - At least 1 hour of metric data collected (for telemetry-backed strategies)
+  - Project access with the `member` role or above
+</Note>
+
+---
+
+## Create and Run an Audit
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Navigate to Audits" icon="compass">
+        Navigate to
+        **Optimization → Audits**.
+      </Step>
+      <Step title="Create a new audit" icon="plus">
+        Click **Create Audit** and fill in the parameters:
+
+        | Field | Description | Example |
+        |-------|-------------|---------|
+        | **Name** | Display name for the audit | `daily-consolidation-2026-03` |
+        | **Goal** | Optimization objective | `server_consolidation` |
+        | **Scope** | Target scope | `CLUSTER` |
+        | **Strategy** | Optional override | Leave blank for default |
+        | **Auto Trigger** | Run on a schedule | Optional |
+
+        <Tip>
+          Leave **Strategy** blank to use the default strategy for the selected goal.
+          Override only if your administrator has configured custom strategies.
+        </Tip>
+      </Step>
+      <Step title="Confirm the audit" icon="play">
+        Click **Create**. The audit status progresses:
+
+        `PENDING` → `ONGOING` → `SUCCEEDED`
+
+        <Check>Audit reaches `SUCCEEDED` status and an action plan is generated.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    <Steps titleSize="h3">
+      <Step title="Authenticate" icon="key">
+        ```bash title="Load credentials"
+        source openrc.sh
+        ```
+      </Step>
+      <Step title="List available goals" icon="list">
+        ```bash title="List optimization goals"
+        watcher goal list
+        ```
+      </Step>
+      <Step title="Create and run the audit" icon="play">
+        ```bash title="Create audit"
+        watcher audit create \
+          --goal server_consolidation \
+          --name daily-consolidation-2026-03
+        ```
+      </Step>
+      <Step title="Monitor status" icon="clock">
+        ```bash title="Check audit status"
+        watcher audit show daily-consolidation-2026-03 \
+          -f value -c state
+        ```
+
+        Poll until state is `SUCCEEDED`.
+      </Step>
+      <Step title="Verify completion" icon="circle-check">
+        ```bash title="Confirm audit succeeded"
+        watcher audit show daily-consolidation-2026-03
+        ```
+
+        <Check>State is `SUCCEEDED` and an action plan UUID is listed.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+</Tabs>
+
+---
+
+## Audit States
+
+| State | Meaning |
+|-------|---------|
+| `PENDING` | Audit queued, waiting for Decision Engine capacity |
+| `ONGOING` | Decision Engine is collecting metrics and computing recommendations |
+| `SUCCEEDED` | Audit complete — action plan generated |
+| `FAILED` | Audit could not complete — check error detail |
+| `CANCELLED` | Manually cancelled before completion |
+
+---
+
+## Audit Scope Options
+
+| Scope | Description | When to Use |
+|-------|-------------|-------------|
+| `CLUSTER` | Analyze all hosts and instances in the cluster | Full cluster rebalancing |
+| `ZONE` | Analyze only instances in a specific availability zone | Zone-specific consolidation |
+
+```bash title="Run zone-scoped audit"
+watcher audit create \
+  --goal zone_migration \
+  --scope ZONE \
+  --name zone-a-rebalance
+```
+
+---
+
+## Strategy Parameters
+
+Override default strategy thresholds when creating an audit:
+
+```bash title="Audit with custom consolidation threshold"
+watcher audit create \
+  --goal server_consolidation \
+  --parameter threshold=0.15 \
+  --parameter period=7200 \
+  --name low-threshold-consolidation
+```
+
+| Parameter | Strategy | Default | Description |
+|-----------|----------|---------|-------------|
+| `threshold` | `server_consolidation` | `0.2` | Utilization ratio below which a host is underutilized |
+| `period` | All | `3600` | Look-back window in seconds |
+| `granularity` | Telemetry-backed | `300` | Metric sample granularity in seconds |
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Action Plans" href="/services/optimization/user-guide/action-plans" color="#197560">
+    Review and approve the migration plan generated by your audit.
+  </Card>
+  <Card title="Execute Actions" href="/services/optimization/user-guide/execute-actions" color="#197560">
+    Start a recommended action plan to rebalance workloads.
+  </Card>
+  <Card title="Optimization Goals" href="/services/optimization/user-guide/optimization-goals" color="#197560">
+    Understand which goal to select for different operational scenarios.
+  </Card>
+  <Card title="Troubleshooting" href="/services/optimization/user-guide/troubleshooting" color="#197560">
+    Resolve audit failures and empty action plan scenarios.
+  </Card>
+</CardGroup>

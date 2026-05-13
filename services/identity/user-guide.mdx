@@ -1,0 +1,75 @@
+---
+title: "Identity User Guide"
+description: "Manage projects, users, roles, and authentication credentials in Xloud Cloud Platform."
+sidebarTitle: "User Guide"
+mode: "wide"
+---
+
+<p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Overview</p>
+
+Xloud Identity lets you control who can access your cloud environment and what they are permitted
+to do. Use the guides below to manage projects, users, application credentials, and
+multi-factor authentication from the Dashboard or CLI.
+
+<CardGroup cols={4}>
+  <Card title="Projects" icon="folder" href="/services/identity/projects" color="#197560">
+    Create and manage resource namespaces, add team members, and assign roles within each project.
+  </Card>
+  <Card title="Users" icon="user" href="/services/identity/users" color="#197560">
+    Create user accounts, set passwords, assign roles, and manage user lifecycle operations.
+  </Card>
+  <Card title="Application Credentials" icon="terminal" href="/services/identity/application-credentials" color="#197560">
+    Generate scoped credentials for CI/CD pipelines, automation, and service accounts without embedding passwords.
+  </Card>
+  <Card title="Multi-Factor Authentication" icon="shield" href="/services/identity/multi-factor-auth" color="#197560">
+    Enable TOTP-based two-factor authentication for enhanced account security.
+  </Card>
+  <Card title="Troubleshooting" icon="wrench" href="/services/identity/troubleshooting" color="#197560">
+    Resolve authentication failures, permission errors, and token scope issues.
+  </Card>
+</CardGroup>
+
+---
+
+<p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Key Concepts</p>
+
+<AccordionGroup>
+  <Accordion title="Domains, Projects, and Users" icon="building" defaultOpen>
+    | Concept | Scope | Description |
+    |---------|-------|-------------|
+    | **Domain** | Top-level | Administrative boundary. Separates organizations, business units, or customers. |
+    | **Project** | Within a domain | Resource namespace for quotas, billing, and access control. All instances, volumes, and networks belong to a project. |
+    | **User** | Within a domain | An identity (human or service) that authenticates and receives tokens scoped to a project. |
+    | **Group** | Within a domain | A collection of users. Role assignments on a group apply to all members. |
+    | **Role** | Assignment | Named permission set. Common roles: `admin`, `member`, `reader`. |
+    | **Token** | Session | A scoped, time-limited bearer credential issued after successful authentication. |
+    | **Service Catalog** | Token payload | Lists every Xloud service endpoint available to the authenticated user in the current scope. |
+  </Accordion>
+  <Accordion title="Role Hierarchy" icon="shield">
+    Xloud Identity ships with three built-in roles:
+
+    | Role | Capability |
+    |------|-----------|
+    | `admin` | Full management rights within the assigned scope (project or domain). Can create, modify, and delete all resources. |
+    | `member` | Standard user. Can create and manage resources within the project. Cannot manage users or quotas. |
+    | `reader` | Read-only access. Cannot create or modify any resource. Suitable for monitoring and audit use cases. |
+
+    <Tip>
+      Assign the least-privileged role that satisfies the user's requirement. Use `reader`
+      for dashboards, `member` for developers, and `admin` only for project administrators.
+    </Tip>
+  </Accordion>
+</AccordionGroup>
+
+---
+
+<p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Next Steps</p>
+
+<CardGroup cols={4}>
+  <Card title="Identity Admin Guide" icon="settings" href="/services/identity/admin-guide" color="#197560">
+    Configure LDAP, federation, token policies, and security hardening for your Xloud Identity deployment.
+  </Card>
+  <Card title="Authentication & CLI" icon="terminal" href="/cli-setup" color="#197560">
+    Source credentials and configure the `openstack` CLI for your environment.
+  </Card>
+</CardGroup>

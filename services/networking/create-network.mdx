@@ -1,0 +1,202 @@
+---
+title: "Create a Network"
+description: "Provision an isolated tenant network and subnet in Xloud. Configure IP space, DHCP, DNS, and port security using the Dashboard or CLI."
+sidebarTitle: "Create a Network"
+---
+
+import PrerequisitesAuth from '/snippets/prerequisites-auth.mdx';
+
+## Overview
+
+Every project in Xloud Networking starts with a network — an isolated Layer 2 broadcast
+domain that instances attach to via virtual ports. Paired with a subnet, it defines the
+IP address space, DHCP assignment, and routing gateway for your workload tier.
+
+<PrerequisitesAuth />
+
+---
+
+## Create a Network and Subnet
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Navigate to Networks">
+        Navigate to **Network > Networks** in the sidebar. Click **Create Network**.
+      </Step>
+      <Step title="Configure the network">
+        The create dialog shows the following fields:
+
+        | Field | Type | Required | Description |
+        |-------|------|----------|-------------|
+        | **Network Name** | Text | Yes | Network display name |
+        | **Description** | Text area | No | Optional notes |
+        | **Available Zone** | Dropdown | No | Pin to a specific zone |
+        | **MTU** | Number | No | Maximum transmission unit (68-9000, default: 1500) |
+        | **Create Subnet** | Checkbox | No | Toggle to create a subnet with the network |
+        | **Port Security Enabled** | Switch | No | Enable/disable port security (default: enabled) |
+
+        <Note>
+          Administrators see additional fields: **Shared** (make visible to all projects),
+          **External Network** (mark as router external gateway), **Project** selector,
+          and **Provider Network Type** (vxlan, flat, vlan, gre) with segmentation ID.
+        </Note>
+      </Step>
+      <Step title="Configure the subnet (if enabled)">
+        When **Create Subnet** is checked, additional fields appear:
+
+        | Field | Type | Required | Description |
+        |-------|------|----------|-------------|
+        | **Subnet Name** | Text | Yes | Subnet display name |
+        | **IP Version** | Dropdown | Yes | IPv4 or IPv6 |
+        | **CIDR** | Text | Yes | Network address block (e.g., `192.168.10.0/24`) |
+
+        For IPv6, additional fields appear: **RA Mode** and **Address Mode** with options
+        `dhcpv6-stateful`, `dhcpv6-stateless`, `slaac`.
+
+        **Advanced options** (click to expand):
+
+        | Field | Type | Description |
+        |-------|------|-------------|
+        | **Disable Gateway** | Checkbox | Remove the default gateway from the subnet |
+        | **Gateway IP** | IP input | Custom gateway address (auto-assigned if blank) |
+        | **Enable DHCP** | Radio | Enable or disable DHCP for this subnet |
+        | **Allocation Pools** | Text area | IP range pairs (e.g., `192.168.10.2,192.168.10.200`) |
+        | **DNS** | Text area | One DNS server per line |
+        | **Host Routes** | Text area | Static routes (e.g., `192.168.200.0/24,10.56.1.254`) |
+
+        <Warning>
+          Choose a CIDR that does not overlap with existing subnets in your project.
+          Overlapping subnets cause routing failures that are difficult to diagnose.
+        </Warning>
+      </Step>
+      <Step title="Create the network">
+        Click **Confirm**. The network appears in the list with status **Active**.
+
+        <Check>Network shows status **Active** with the configured subnet.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Source credentials"
+    source openrc.sh
+    ```
+
+    <Steps titleSize="h3">
+      <Step title="Create the network">
+        ```bash title="Create network"
+        openstack network create app-network
+        ```
+      </Step>
+      <Step title="Create a subnet">
+        ```bash title="Create subnet with DHCP and DNS"
+        openstack subnet create app-subnet \
+          --network app-network \
+          --subnet-range 192.168.10.0/24 \
+          --gateway 192.168.10.1 \
+          --dns-nameserver 8.8.8.8 \
+          --dns-nameserver 8.8.4.4
+        ```
+      </Step>
+      <Step title="Verify">
+        <CodeGroup>
+        ```bash title="List networks"
+        openstack network list
+        ```
+        ```bash title="Show subnet details"
+        openstack subnet show app-subnet
+        ```
+        </CodeGroup>
+
+        <Check>Network shows status `ACTIVE` and the subnet lists the correct CIDR.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+</Tabs>
+
+---
+
+## View Networks
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    Navigate to **Network > Networks**. The list shows networks in tabs:
+
+    | Tab | Shows |
+    |-----|-------|
+    | **Current Project Networks** | Networks owned by your current project |
+    | **Shared Networks** | Networks shared across projects |
+    | **External Networks** | Networks with external gateway capability |
+    | **All Networks** | All visible networks (admin role required) |
+
+    List columns:
+
+    | Column | Description |
+    |--------|-------------|
+    | **ID/Name** | Network identifier (clickable to view details) |
+    | **Is Current Project** | Whether the network belongs to your project |
+    | **External** | Whether this is an external gateway network (Yes/No) |
+    | **Shared** | Whether the network is shared across projects (Yes/No) |
+    | **Status** | Active, Build, Down, or Error |
+    | **Subnet Count** | Number of subnets (with popover showing details) |
+    | **Created At** | Creation timestamp |
+
+    Filter by **Name**, **Shared**, **External**, or **Project Range**.
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    <CodeGroup>
+    ```bash title="List all networks"
+    openstack network list
+    ```
+    ```bash title="List external networks"
+    openstack network list --external
+    ```
+    ```bash title="Show network details"
+    openstack network show app-network
+    ```
+    </CodeGroup>
+  </Tab>
+</Tabs>
+
+---
+
+## Network Detail
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    Click a network name to open the detail page. Three tabs are available:
+
+    - **Detail** — Network configuration summary
+    - **Subnets** — All subnets in this network with CIDR, DHCP status, gateway
+    - **Ports** — All ports attached to this network (instances, routers, DHCP)
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    <CodeGroup>
+    ```bash title="List subnets in a network"
+    openstack subnet list --network app-network
+    ```
+    ```bash title="List ports in a network"
+    openstack port list --network app-network
+    ```
+    </CodeGroup>
+  </Tab>
+</Tabs>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Subnets" href="/services/networking/subnets" color="#197560">
+    Add additional subnets to your network for multi-tier isolation
+  </Card>
+  <Card title="Routers" href="/services/networking/routers" color="#197560">
+    Connect your network to the external internet with an L3 router
+  </Card>
+  <Card title="Security Groups" href="/services/networking/security-groups" color="#197560">
+    Define firewall rules to control traffic to your instances
+  </Card>
+  <Card title="Floating IPs" href="/services/networking/floating-ips" color="#197560">
+    Allocate public IPs and associate them with your instances
+  </Card>
+</CardGroup>

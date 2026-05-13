@@ -1,0 +1,127 @@
+---
+title: "Dashboard Admin Guide"
+description: "Administer the Xloud Dashboard — manage projects, users, flavors, quotas, and platform resources through the Skyline admin view."
+sidebarTitle: "Admin Guide"
+mode: "wide"
+---
+
+## Overview
+
+The Xloud Dashboard admin view provides platform-wide management capabilities.
+Administrators can manage projects and users, configure flavors and quotas, monitor
+infrastructure health, and administer all cloud services from a single interface.
+
+<Note>
+  **Prerequisites**
+  - `admin` role in the target domain or globally
+  - Access to the Dashboard at `https://connect.<your-domain>`
+  - Switch to the **Admin** view using the toggle in the Dashboard header
+</Note>
+
+---
+
+## Admin-Only Sections
+
+The following sections are visible only in the Admin view:
+
+<CardGroup cols={2}>
+  <Card title="Projects & Users" icon="users" href="/services/identity/user-guide" color="#197560">
+    Create projects, manage users, assign roles, and configure domain settings
+  </Card>
+  <Card title="Flavors" icon="cpu" href="/services/compute/flavors" color="#197560">
+    Create and manage instance flavors with architecture, GPU, NUMA, and hot-add settings
+  </Card>
+  <Card title="Quotas" icon="chart-pie" href="/services/compute/quotas" color="#197560">
+    Set per-project resource limits for instances, vCPUs, RAM, and volumes
+  </Card>
+  <Card title="Volume Types" icon="hard-drive" href="/services/storage/volume-types-admin" color="#197560">
+    Configure storage tiers, QoS specs, and encryption types
+  </Card>
+  <Card title="Hypervisors" icon="server" href="/services/compute/compute-hosts" color="#197560">
+    Monitor compute host resources and manage service availability
+  </Card>
+  <Card title="Host Aggregates" icon="layers" href="/services/compute/scheduling" color="#197560">
+    Organize hosts into groups for scheduling and availability zones
+  </Card>
+  <Card title="Monitor Center" icon="activity" href="/services/monitoring/user-guide" color="#197560">
+    Platform health, service status, logging, and monitoring dashboards
+  </Card>
+  <Card title="Resource Optimizer" icon="chart-bar" href="/services/optimization/user-guide" color="#197560">
+    Automated workload placement with goals, strategies, and action plans
+  </Card>
+</CardGroup>
+
+---
+
+## Dashboard Configuration
+
+Dashboard configuration is managed through XDeploy, not through the Dashboard
+interface itself.
+
+<Tabs>
+  <Tab title="XDeploy" icon="settings">
+    <Steps titleSize="h3">
+      <Step title="Configure Dashboard settings">
+        Open **XDeploy > Configuration > Advance Features**. The Skyline Dashboard
+        can be enabled with:
+
+        - **Enable Skyline Dashboard** toggle
+        - **Enable RBAC Management** toggle (when Skyline is enabled)
+
+        Click **Save Configuration**.
+      </Step>
+      <Step title="Deploy the configuration">
+        Navigate to **XDeploy > Operations** and run **Reconfigure** to apply
+        Dashboard configuration changes across all nodes.
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    Dashboard configuration files are located at `/etc/xavs/config/skyline/`.
+    The Skyline API server configuration includes:
+
+    - `skyline.yaml` — API server settings, database, secret key
+    - `gunicorn.py` — WSGI server configuration
+    - `nginx.conf` — Reverse proxy and static file serving
+
+    After editing configuration files, run `xavs-ansible reconfigure -t skyline`
+    to apply changes.
+  </Tab>
+</Tabs>
+
+---
+
+## Session and Authentication
+
+The Skyline Dashboard uses JWT-based session cookies for authentication:
+
+| Setting | Description |
+|---------|-------------|
+| **Session Duration** | Configurable JWT expiration (default: 1 hour) |
+| **Session Cookie** | `session` cookie containing the JWT with Keystone token |
+| **Authentication** | Username + password against Keystone Identity service |
+| **RBAC** | Per-endpoint role-based access control with 30-second cache |
+
+<Note>
+  Unlike traditional session stores (Memcached, Redis), the Skyline Dashboard uses
+  stateless JWT tokens. No server-side session storage is required.
+</Note>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Dashboard User Guide" icon="book-open" href="/services/dashboard/user-guide" color="#197560">
+    End-user workflows for the Console view
+  </Card>
+  <Card title="Identity Admin Guide" icon="fingerprint" href="/services/identity/admin-guide" color="#197560">
+    Configure authentication backends, federation, and policies
+  </Card>
+  <Card title="Deployment" icon="play" href="/deployment/index" color="#197560">
+    Deploy and manage the Dashboard through XDeploy
+  </Card>
+  <Card title="CLI Setup" icon="terminal" href="/cli-setup" color="#197560">
+    Configure CLI access for administrative operations
+  </Card>
+</CardGroup>

@@ -1,0 +1,213 @@
+---
+title: "Instance HA Admin Troubleshooting"
+description: "Diagnose Instance HA platform issues — engine failures, monitor connectivity, and notification delivery problems."
+sidebarTitle: "Troubleshooting"
+---
+
+## Overview
+
+This guide covers administrator-level troubleshooting for Xloud Instance HA — from
+service startup failures to notification processing issues and capacity-related recovery
+failures. For user-facing issues such as individual instance recovery failures, see the
+[Instance HA User Troubleshooting](/services/instance-ha/user-guide/troubleshooting) guide.
+
+<Warning>
+  Several diagnostic commands in this guide inspect live recovery state. Run them on
+  the controller node and avoid interfering with in-progress recovery workflows.
+</Warning>
+
+---
+
+## Common Issues
+
+<AccordionGroup>
+  <Accordion title="Notification received but no recovery triggered" icon="bell-off">
+    **Cause**: The segment may be disabled, or the failed host is not registered in
+    any segment. Also occurs if the engine is not running.
+
+    **Resolution**:
+
+    ```bash title="Check engine status"
+    docker ps --filter name=masakari_engine
+    docker logs masakari_engine | tail -30
+    ```
+
+    ```bash title="Check segment and host registration"
+    openstack segment list
+    openstack segment host list <segment-uuid>
+    ```
+
+    If the segment is disabled, re-enable it:
+    ```bash title="Re-enable segment"
+    openstack segment update --enabled True <segment-uuid>
+    ```
+
+    If the host is missing from the segment, register it:
+    ```bash title="Register host"
+    openstack segment host create \
+      --type COMPUTE \
+      --control_attributes '{"host": "compute-01"}' \
+      <segment-uuid>
+    ```
+  </Accordion>
+
+  <Accordion title="Recovery fails with capacity error" icon="server">
+    **Cause**: No healthy host in the segment has sufficient vCPU or memory to
+    accept the evacuated instances.
+
+    **Resolution**:
+
+    ```bash title="Check host capacity"
+    openstack host list --service compute
+    openstack host show <hostname>
+    ```
+
+    ```bash title="Check per-host utilization"
+    openstack hypervisor list --long
+    ```
+
+    Add compute capacity or add additional hosts to the segment. For `reserved_host`
+    segments, verify the reserved host has sufficient headroom:
+
+    ```bash title="Check reserved host utilization"
+    openstack host show <reserved-hostname>
+    ```
+  </Accordion>
+
+  <Accordion title="Instances stuck in UNKNOWN state after evacuation" icon="circle-help">
+    **Cause**: The compute database still associates the instance with the failed host.
+    The evacuation may have been partially completed.
+
+    **Resolution**:
+
+    ```bash title="Force instance state to active"
+    openstack server set --state active <instance-uuid>
+    ```
+
+    If the instance remains stuck after state reset, manually evacuate:
+    ```bash title="Manual evacuation"
+    openstack server evacuate <instance-uuid> --host <healthy-host>
+    ```
+  </Accordion>
+
+  <Accordion title="Host monitor not detecting failures" icon="radar">
+    **Cause**: IPMI or SSH credentials are incorrect, the monitor cannot reach the
+    management network, or a firewall is blocking the monitoring port.
+
+    **Resolution**:
+
+    ```bash title="Check host monitor logs"
+    docker logs -f masakari_hostmonitor
+    ```
+
+    Test IPMI connectivity manually:
+    ```bash title="Test IPMI connection"
+    ipmitool -I lanplus \
+      -H <ipmi-ip> \
+      -U <username> \
+      -P <password> \
+      chassis status
+    ```
+
+    Test SSH connectivity:
+    ```bash title="Test SSH connection"
+    ssh -i /etc/xavs/instance-ha/id_rsa root@<compute-host> hostname
+    ```
+
+    Confirm firewall rules permit UDP 623 (IPMI) and TCP 22 (SSH) from the
+    Instance HA controller to all monitored hosts.
+  </Accordion>
+
+  <Accordion title="Engine fails to start" icon="circle-alert">
+    **Cause**: Database connectivity failure, Identity authentication error, or a
+    configuration file syntax error.
+
+    **Resolution**:
+
+    ```bash title="Check engine startup logs"
+    docker logs masakari_engine | grep -E "ERROR|CRITICAL"
+    ```
+
+    Common log patterns and their resolution:
+
+    | Log Message | Cause | Fix |
+    |-------------|-------|-----|
+    | `OperationalError: (pymysql)` | Database unreachable | Check DB connection string and service status |
+    | `Unauthorized: The request you have made requires authentication` | Invalid Identity credentials | Rotate service account password |
+    | `ConfigFileNotFound` | Missing config file | Verify `/etc/xavs/instance-ha/instance-ha.conf` exists |
+    | `ImportError: No module named` | Missing Python dependency | Reinstall the Instance HA container image |
+  </Accordion>
+
+  <Accordion title="Notifications permanently stuck in running state" icon="clock">
+    **Cause**: The recovery workflow has stalled — the engine is waiting for a Compute
+    RPC call that never completes, or the Taskflow state machine is stuck.
+
+    **Resolution**:
+
+    ```bash title="Check engine logs for stalled workflows"
+    docker logs masakari_engine | grep -E "stuck|timeout|waiting"
+    ```
+
+    If a notification has been `running` for more than 15 minutes, manually reset it:
+
+    ```bash title="Reset stalled notification"
+    openstack notification update \
+      --status error \
+      <notification-uuid>
+    ```
+
+    Then run a manual evacuation for any instances that were not recovered:
+
+    ```bash title="Manual evacuation"
+    openstack server evacuate <instance-uuid>
+    ```
+
+    Restart the engine after resolving the root cause:
+    ```bash title="Restart engine"
+    docker restart masakari_engine
+    ```
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Diagnostic Commands Reference
+
+```bash title="Check all Instance HA service container statuses"
+docker ps --filter name=masakari
+```
+
+```bash title="View engine logs (last 100 lines)"
+docker logs --tail 100 masakari_engine
+```
+
+```bash title="List all notifications with status"
+openstack notification list -f table -c uuid -c hostname -c type -c status
+```
+
+```bash title="Show full notification payload"
+openstack notification show <notification-uuid> -f json
+```
+
+```bash title="Check Compute service status for all hosts"
+openstack compute service list --service nova-compute
+```
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Engine Configuration" href="/services/instance-ha/admin-guide/engine-config" color="#197560">
+    Tune engine timing parameters to reduce false positives and improve recovery speed.
+  </Card>
+  <Card title="Host Monitors" href="/services/instance-ha/admin-guide/host-monitors" color="#197560">
+    Validate and reconfigure IPMI and SSH monitor connectivity.
+  </Card>
+  <Card title="Failover Segments" href="/services/instance-ha/admin-guide/failover-segments" color="#197560">
+    Review segment configuration and host registration.
+  </Card>
+  <Card title="User Troubleshooting" href="/services/instance-ha/user-guide/troubleshooting" color="#197560">
+    Guide for project users experiencing individual instance recovery failures.
+  </Card>
+</CardGroup>

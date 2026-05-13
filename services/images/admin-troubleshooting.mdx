@@ -1,0 +1,168 @@
+---
+title: "Image Service Admin Troubleshooting"
+description: "Diagnose and resolve Image Service API failures, storage backend connectivity issues, and cache performance problems."
+sidebarTitle: "Troubleshooting"
+---
+
+import AdminWarning from '/snippets/admin-warning.mdx';
+
+## Overview
+
+This guide covers platform-level Image Service issues that require administrator access —
+storage backend connectivity, API container failures, cache performance, and upload
+size limit issues.
+
+<AdminWarning />
+
+<Note>
+  For user-facing issues such as upload progress, shared image visibility, or launch
+  failures, see the [Image User Troubleshooting](/services/images/troubleshooting) guide.
+</Note>
+
+---
+
+## API Failures
+
+<AccordionGroup>
+  <Accordion title="Image API not responding" icon="server" defaultOpen>
+    **Cause**: The Image API container is stopped or the service has crashed.
+
+    **Diagnose**:
+    ```bash title="Check Image API container status"
+    docker ps --filter name=glance
+    ```
+
+    If the container is not running:
+    ```bash title="View container exit logs"
+    docker logs glance_api --tail 50
+    ```
+
+    **Resolution**: Restart via XDeploy:
+    ```bash title="Restart Image API"
+    xavs-ansible deploy --tags glance
+    ```
+  </Accordion>
+
+  <Accordion title="Upload fails with 413 Request Entity Too Large" icon="upload">
+    **Cause**: HAProxy is enforcing an upload size limit smaller than the image file.
+
+    **Resolution**: Adjust the timeout and body size settings in XDeploy globals:
+    ```yaml title="Increase HAProxy upload limits"
+    haproxy_client_body_timeout: 300s
+    haproxy_http_request_timeout: 600s
+    ```
+    Apply:
+    ```bash title="Apply HAProxy configuration"
+    xavs-ansible deploy --tags haproxy
+    ```
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Storage Backend Issues
+
+<AccordionGroup>
+  <Accordion title="Image status remains 'queued' after upload" icon="clock">
+    **Cause**: The Image API cannot reach the storage backend — RBD cluster unreachable,
+    wrong keyring, or Swift authentication failed.
+
+    **Diagnose**:
+    ```bash title="Check Image API logs for storage errors"
+    docker logs glance_api --tail 100 | grep -i "error\|exception\|ceph\|rbd"
+    ```
+
+    For RBD backend:
+    ```bash title="Verify RBD pool exists"
+    ceph osd pool ls | grep images
+    ```
+
+    ```bash title="Test glance keyring access"
+    rbd --keyring /etc/ceph/ceph.client.glance.keyring \
+      --id glance ls images
+    ```
+  </Accordion>
+
+  <Accordion title="Compute cannot download image during instance launch" icon="server">
+    **Cause**: The compute node cannot reach the Image API, or the image data is corrupt.
+
+    **Diagnose**: Test connectivity from the compute node:
+    ```bash title="Test image API reachability from compute node"
+    curl -H "X-Auth-Token: $OS_AUTH_TOKEN" \
+      https://api.<your-domain>:9292/v2/images/<IMAGE_ID>
+    ```
+
+    For corrupt images, verify the checksum:
+    ```bash title="Verify image checksum"
+    openstack image show <IMAGE_ID> -c checksum
+    md5sum /path/to/original-image.qcow2
+    ```
+
+    If checksums differ, re-upload the image.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Cache Issues
+
+<AccordionGroup>
+  <Accordion title="Image cache not reducing launch times" icon="zap">
+    **Cause**: Cache is not enabled, the compute node has insufficient local disk, or
+    the pre-fetcher has not yet run.
+
+    **Diagnose**: Verify cache is enabled and check the cache directory:
+    ```bash title="Check cache directory on Image API node"
+    docker exec glance_api ls -lh /var/lib/glance/image-cache/
+    ```
+
+    Images appear in the cache directory after the first instance launch from each image.
+    Trigger the pre-fetcher manually:
+    ```bash title="Trigger cache pre-fetch"
+    docker exec glance_api glance-cache-prefetcher
+    ```
+  </Accordion>
+
+  <Accordion title="Cache directory full — disk pressure" icon="hard-drive">
+    **Cause**: The cache has grown beyond the configured `glance_cache_max_size`.
+
+    **Resolution**: Clear old cached entries:
+    ```bash title="Clear stale cache entries"
+    docker exec glance_api glance-cache-manage delete-all-cached-images
+    ```
+
+    Then increase the cache size limit in XDeploy globals and redeploy:
+    ```yaml title="Increase cache size limit"
+    glance_cache_max_size: 21474836480  # 20 GB
+    ```
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Service Log Reference
+
+| Component | Log command |
+|-----------|------------|
+| Image API | `docker logs glance_api --tail 100` |
+| HAProxy | `docker logs haproxy --tail 100 \| grep 9292` |
+| Image API config | `docker exec glance_api cat /etc/glance/glance-api.conf` |
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Storage Backends" href="/services/images/storage-backends" color="#197560">
+    Review backend configuration to prevent connectivity failures.
+  </Card>
+  <Card title="Image Cache" href="/services/images/image-cache" color="#197560">
+    Tune cache size and pre-fetch settings for optimal performance.
+  </Card>
+  <Card title="Security" href="/services/images/image-security" color="#197560">
+    Review security configuration after resolving access-related issues.
+  </Card>
+  <Card title="Architecture" href="/services/images/architecture" color="#197560">
+    Understand component relationships to identify the source of failures.
+  </Card>
+</CardGroup>

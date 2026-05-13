@@ -1,0 +1,491 @@
+---
+title: "Extended RBAC"
+description: "Fine-grained role-based access control for Xloud Platform — privileges, custom roles, tag conditions, and per-action enforcement on every Dashboard action."
+sidebarTitle: "Extended RBAC"
+---
+
+## Overview
+
+**Xloud Extended RBAC** is the per-action access control layer of the Xloud Platform.
+It builds on the platform's existing identity and policy stack (Xloud Identity tokens,
+project scoping, service-level role policy) and adds a **privilege catalog** so cloud
+operators can construct custom roles that grant or deny **specific Dashboard actions**.
+Each grant can optionally be scoped to a tag condition — for example, *"this role can
+act on instances tagged `env=staging` only"*.
+
+<Info>
+  **Xloud-Developed** — Extended RBAC is developed by Xloud and ships as part of the
+  Xloud Platform identity layer. It is an addition to (not a replacement for) the
+  standard role and policy stack.
+</Info>
+
+<Note>
+  **Prerequisites**
+  - An administrator account on the Xloud Dashboard with the `rbac_admin` privilege
+    (or the built-in `admin` role)
+  - The Xloud Platform identity layer enabled (default on every cluster)
+  - The RBAC gateway enabled in **XDEPLOY → Configuration** for cluster-wide
+    enforcement on every direct platform service API call
+</Note>
+
+---
+
+## Video Walkthrough
+
+<iframe
+  className="w-full aspect-video rounded-xl"
+  src="https://www.youtube.com/embed/1usSEDeZDWw"
+  title="How to Edit Permissions on a Custom Role with Extended RBAC on Xloud"
+  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+  allowFullScreen
+></iframe>
+
+---
+
+## What Fine-Grained RBAC Lets You Express
+
+Extended RBAC was designed to express the access patterns customers expect from
+mature private cloud platforms. Concrete examples:
+
+| Statement | Expressible |
+|-----------|:-----------:|
+| Role *VM Power User* can power on / off VMs but cannot resize CPU or RAM | Yes |
+| Role *DBA* can act on VMs in project `prod` but only with tag `team=db` | Yes |
+| User Alice has role *Network Admin* on projects `prod` and `stage` but not `sandbox` | Yes (via Identity assignment) |
+| Role *Storage Operator* can attach volumes but not create or delete them | Yes |
+| Read-only auditor sees read-only data even when calling aggregator endpoints | Yes |
+| Every change to a permission is auditable with who / when / old / new | Yes |
+| Revoking a role takes effect within 5 seconds across every node | Yes |
+| The `admin` role has zero privileges on project X if explicitly denied | No — admin remains a deliberate platform bypass in v1 |
+
+---
+
+## Levels of Access Control
+
+Extended RBAC is one layer in a five-layer access stack:
+
+| Level | What it controls | Configuration surface |
+|-------|-----------------|----------------------|
+| **1. Authentication** | Who can sign in (password, TOTP MFA, federation) | Xloud Identity, [User Center](/services/dashboard/user-guide/user-center) |
+| **2. Project membership and roles** | Project membership and Identity-side roles | [Identity → Roles](/services/identity/roles), [Identity → Users](/services/identity/users) |
+| **3. Service-level policy** | Per-service `policy.yaml` rules | [Policy Management](/services/identity/policy-management) |
+| **4. Extended RBAC privileges** | Per-Dashboard-action allow / deny rules with optional tag scoping | This page |
+| **5. Audit + invalidation** | Role and grant changes recorded; cross-node cache stays coherent | RBAC audit log + invalidation poller |
+
+A typical production setup uses all five.
+
+---
+
+## Enabling the RBAC Gateway
+
+Extended RBAC's management surface is always active — privileges, custom roles, tag
+conditions, and the audit log are available from the Dashboard out of the box. The
+**RBAC gateway** is the additional switch that decides whether Extended RBAC
+enforces every direct platform service API call cluster-wide, or only the calls
+that go through the Xloud Dashboard's extension APIs.
+
+The gateway is enabled through **XDEPLOY** — there is no other supported
+configuration path.
+
+<Steps titleSize="h3">
+  <Step title="Open XDEPLOY → Configuration" icon="settings">
+    From XDEPLOY, navigate to **Configuration**.
+  </Step>
+  <Step title="Enable the RBAC gateway" icon="toggle-right">
+    Locate the **Enable RBAC Authorization Gateway** toggle and switch it on. Save
+    the configuration.
+  </Step>
+  <Step title="Run reconfigure" icon="play">
+    From XDEPLOY → Operations, run a **reconfigure** for the Dashboard service.
+    The reverse proxy is regenerated with the gateway active and reloaded
+    without downtime.
+  </Step>
+  <Step title="Verify" icon="check">
+    Open the Dashboard. From this point forward, every direct platform service API
+    call passes through Extended RBAC's enforce layer before reaching the
+    backend service.
+
+    <Check>The cluster now enforces Extended RBAC on every direct API call.</Check>
+  </Step>
+</Steps>
+
+<Tip>
+  Rolling back is symmetrical — flip the toggle off and reconfigure. No database
+  changes are needed; privilege grants and audit history persist regardless of
+  whether the gateway is on.
+</Tip>
+
+---
+
+## What You Can Control Per Service
+
+Extended RBAC privileges map one-to-one to the **action menus the Dashboard
+exposes**. The lists below are the actual GUI actions available per service —
+every entry is independently grantable to a custom role, and most can be
+tag-conditioned.
+
+<AccordionGroup>
+  <Accordion title="Compute — Instances" icon="server">
+    **Primary action**: Create Instance.
+
+    **Row actions** (organized into submenus in the More dropdown):
+
+    - **Instance Status**: Start, Stop, Lock, Unlock, Reboot, Soft Reboot, Suspend,
+      Resume, Pause, Unpause, Shelve, Unshelve
+    - **Related Resources**: Attach Interface, Detach Interface, Attach Volume,
+      Detach Volume, Associate Floating IP, Disassociate Floating IP, Manage
+      Security Group
+    - **Backups and Snapshots**: Create Snapshot
+    - **Clone and Template**: Clone, Convert to Template
+    - **Configuration Update**: Resize, Confirm Resize or Migrate, Revert Resize or
+      Migrate, Adjust Resources (live resize — vCPU / RAM / device hot-add), Change
+      Password, Rebuild Instance
+    - **Other row actions**: Console, Edit Instance, Modify Instance Tags, Delete
+    - **Batch actions**: Start, Stop, Reboot, Soft Reboot, Delete
+    - **Admin-view extras**: Migrate, Live Migrate, Bulk Live Migrate
+
+    Each item is independently grantable. Console, Create Instance, and Delete are
+    three separate privileges — they are not bundled.
+
+    **Script execution endpoints** — Xloud has no general "exec arbitrary command
+    on a running VM" endpoint. Script execution flows through two distinct Compute
+    API endpoints, each gated by its own privilege:
+
+    | Endpoint | What it does | Compute privilege |
+    |----------|--------------|-------------------|
+    | `POST /v2.1/servers` (with `user_data`) | Inject cloud-init / Bash / PowerShell at first boot | `os_compute_api:servers:create` plus a separate User Data attachment privilege when fine-grained gating is enabled |
+    | `POST /v2.1/servers/{id}/action` (with `changePassword`) | Reset the guest OS root or administrator password on a running instance | `os_compute_api:os-admin-password` |
+
+    Implications: a role can be granted Create Instance while User Data attachment
+    is independently allowed or denied; a role with Start / Stop / Reboot / Resize
+    does not automatically get `changePassword`. Both privileges can be
+    tag-conditioned (for example, *allow `changePassword` on `env=staging`
+    instances only*).
+  </Accordion>
+  <Accordion title="Compute — Snapshots, Images, Flavors, Keypairs, Server Groups, Templates" icon="layers">
+    - **Instance Snapshots**: Edit, Browse Files (file-level recovery), Rollback,
+      Create Instance, Create Volume, Delete
+    - **Images**: Create, Edit, Browse Files, Create Instance, Create Volume, Delete;
+      admin extras — Manage Access, Manage Metadata
+    - **Flavors**: Create, Manage Access, Delete (read-only catalog access is itself
+      a separate privilege)
+    - **Keypairs**: Create, Delete
+    - **Server Groups**: Create, Delete, Create Instance into the group
+    - **VM Templates**: Create Template, Edit, Deploy, Delete; admin — Manage Access
+    - **Hypervisors** (admin): Host Management
+    - **Bare Metal Nodes** (admin): Create, Manage State, Edit, Power On, Power Off,
+      Inspect, Set Maintenance, Clear Maintenance, Set Boot Device, Create Port,
+      Create Port Group, Delete
+  </Accordion>
+  <Accordion title="Storage — Volumes, Snapshots, Backups, Volume Types" icon="hard-drive">
+    **Volumes**:
+    - Primary actions: Create, Accept Volume Transfer
+    - Row first action: Edit
+    - Submenu **Data Protection**: Create Snapshot, Create Backup, Create Image,
+      Clone Volume, Restore
+    - Submenu **Instance Related**: Bootable, Create Instance, Attach, Detach
+    - Submenu **Capacity and Type**: Extend Volume, Change Type
+    - Other row actions: Create Transfer, Cancel Transfer, Delete
+    - Admin extras: Update Status, Migrate, Live Retype
+
+    **Snapshots**: Create, Edit, Restore, Create Volume, Delete
+
+    **Backups**: Create, Edit, Browse Files (file-level recovery), Create Volume,
+    Delete
+
+    **Volume Types** (admin): Create, Manage QoS, Set Provisioning, Manage Access,
+    Create Encryption, Delete Encryption, Edit, Delete
+  </Accordion>
+  <Accordion title="Network — Networks, Routers, Floating IPs, Security Groups, Ports, Load Balancers, DNS" icon="network">
+    - **Networks**: Create Network, Edit, Create Subnet, Delete
+    - **Routers**: Create, Edit, Connect Subnet, Disconnect Subnet, Set Gateway,
+      Close Gateway, Enable SNAT, Disable SNAT, Delete
+    - **Floating IPs**: Allocate, Edit, Associate, Disassociate, Create Port
+      Forwarding, Release
+    - **Security Groups**: Create, Edit, Create Rule, Delete
+    - **Ports**: Create, Edit, Attach Instance, Associate FIP, Disassociate FIP,
+      Detach, Modify QoS, Manage Security Group, Delete
+    - **Load Balancers**: Create, Edit, Associate FIP, Disassociate FIP, Delete
+    - **DNS Zones**: Create, Update, Create Records, Delete
+  </Accordion>
+  <Accordion title="Identity — Projects, Users, Roles, Domains, User Groups" icon="users">
+    - **Projects**: Create, Edit, Delete, Manage Quota, Manage User, Manage User
+      Group, Enable, Forbidden, Modify Tags
+    - **Users**: Create, Edit, System Role, Set Default Project, Password, Reset MFA
+      (admin escape hatch), Enable, Forbidden, Delete
+    - **Roles**: Create, Edit, Delete
+    - **Domains**: Create, Edit, Enable, Forbidden, Delete
+    - **User Groups**: Create, Edit, Manage User, Delete
+  </Accordion>
+  <Accordion title="Key Manager — Secrets, Containers, Certificates" icon="lock">
+    - **Secrets**: Create, Delete
+    - **Containers**: Create, Delete
+    - **Certificates** (under Network → Certificate): Create, Delete
+  </Accordion>
+  <Accordion title="Orchestration — Stacks" icon="code">
+    - **Stacks**: Create, Edit, Abandon, Delete
+  </Accordion>
+  <Accordion title="Optimization (Resource Optimizer)" icon="rotate-cw">
+    - **Audits**: Create, Delete
+    - **Audit Templates**: Create, Delete
+    - **Action Plans**: Start (execute the plan), Delete
+
+    Goals and Strategies are read-only catalogues with no actions to gate.
+  </Accordion>
+  <Accordion title="Instance HA — Segments, Hosts, Notifications" icon="shield">
+    - **Segments**: Create, Update, Add Host, Delete
+    - **Hosts**: Update, Delete
+    - **Notifications**: Create, Delete
+  </Accordion>
+  <Accordion title="Container Infrastructure — Clusters, Cluster Templates" icon="cpu">
+    - **Clusters**: Create, Delete, Get Cluster Config, Show Certificate, Sign
+      Certificate, Resize, Upgrade, Launch Dashboard
+    - **Cluster Templates**: Create, Edit, Create Cluster, Delete
+  </Accordion>
+</AccordionGroup>
+
+<Info>
+  Some Xloud-developed actions (Clone, Convert to Template, Adjust Resources, Browse
+  Files, Rollback, Reset MFA, Sign Certificate, Bulk Live Migrate) are gated **only**
+  by Extended RBAC. For these actions Extended RBAC is the sole enforcement layer,
+  even when the cluster gateway is off.
+</Info>
+
+---
+
+## Manage RBAC from the Dashboard
+
+Extended RBAC is managed from three pages under **Identity** in the admin view of
+the Dashboard. The pages have separate responsibilities — managing roles is
+intentionally distinct from editing what a role can do, and from reviewing what
+changed.
+
+### Roles — `Identity → Roles`
+
+The existing Roles list is enhanced with Extended RBAC awareness. It remains the
+single place where roles are created, deleted, and assigned to users.
+
+| Column / action | What it does |
+|-----------------|--------------|
+| **Type** column | Tags each role as **Custom** (blue) or **System** (grey). Custom roles are editable on the RBAC Permissions page; System roles are read-only |
+| **Create Role** (primary) | Opens the create-role wizard. The role is created in Xloud Identity AND a matching Custom-role record is created in Extended RBAC — there is no separate step |
+| **Edit** (row) | Edit name and description |
+| **Delete** (row) | Removes the role from both Xloud Identity and Extended RBAC in one transaction. Disabled for System roles |
+| **Edit Permissions** (row) | Jumps to the RBAC Permissions page pre-filled for that role. Disabled for System roles with a tooltip *"System roles cannot be edited"* |
+| **Manage Users** | Existing flow — assign or remove the role on a per-user basis |
+
+### RBAC Permissions — `Identity → RBAC Permissions`
+
+The dedicated permissions editor — its single responsibility is *"given a custom
+role, edit what privileges it has."* No role create / delete / assignment lives
+here.
+
+<Steps titleSize="h3">
+  <Step title="Pick a Custom role" icon="user-check">
+    The role selector at the top of the page lists every Custom role. System roles
+    do not appear because they cannot be edited.
+  </Step>
+  <Step title="Toggle privileges in the matrix" icon="grid">
+    Privileges are grouped by service (Compute, Storage, Network, Identity, Key
+    Manager, Orchestration, Optimization, Instance HA, Container Infrastructure)
+    and by category within each service (for example, **Instance Lifecycle**,
+    **Instance Actions**, **Backups and Snapshots**). Each row has:
+    - A checkbox to grant or revoke the privilege
+    - A hover tooltip showing the privilege description, prerequisite chain, and
+      any associated service-level policy rule
+    - A condition chip if a tag condition is attached to this grant
+  </Step>
+  <Step title="Add a tag condition" icon="tag">
+    Click **+ Add Tag Condition** on any granted privilege to scope it. The tag
+    condition modal lets you pick a tag key, an operator
+    (`equals`, `not_equals`, `contains`, `starts_with`, `any_of`), and a value.
+    Conditions are reusable — one *"env=prod"* condition can be referenced by many
+    grants.
+  </Step>
+  <Step title="Preview Effective Rules" icon="flask-conical">
+    Before saving, click **Preview Effective Rules** to simulate what a real user
+    holding this role would be allowed to do against representative resources. The
+    simulator runs the same enforcement engine the live request path uses.
+  </Step>
+  <Step title="Save" icon="check">
+    On Save, the backend validates that prerequisite chains are intact. If a
+    privilege you toggled requires a prerequisite that is not yet granted, a
+    **Missing Prerequisites** modal lists them and offers to enable them
+    automatically. The grant batch is written atomically with an audit log entry
+    and a cross-node invalidation event — every Dashboard and apiserver node sees
+    the change within 5 seconds.
+
+    <Check>Your changes are live within 5 seconds across the entire cluster.</Check>
+  </Step>
+</Steps>
+
+### RBAC Audit Log — `Identity → RBAC Audit Log`
+
+Every change made through Extended RBAC is recorded in an append-only log,
+queryable from the Audit Log page.
+
+| Filter | Purpose |
+|--------|---------|
+| **Actor** | Who made the change (user dropdown) |
+| **Target Role** | Which role was modified |
+| **Action Type** | `role.create`, `role.delete`, `role.grant`, `role.revoke`, `priv.add`, `priv.remove`, `condition.set`, `bypass` |
+| **Time Range** | Scope to a window |
+
+Each row shows actor, action, target, source IP, request ID, and an old → new diff.
+Expand a row to see the full JSON diff.
+
+<Tip>
+  The Audit Log page is also reachable as **View History** from any Custom row on
+  the Roles page and as **Audit Log** from the header of the RBAC Permissions page.
+</Tip>
+
+---
+
+## Examples — Common Role Designs
+
+These are example role designs you can build using the privilege matrix and tag
+conditions described above.
+
+<AccordionGroup>
+  <Accordion title="VM Power User — power on / off but cannot resize or edit" icon="power">
+    Grant `instance.start`, `instance.stop`, `instance.reboot`, `instance.suspend`,
+    `instance.resume`, `instance.pause`, and `instance.unpause`. Withhold
+    `instance.resize`, `instance.adjust_resources` (live resize), and
+    `instance.edit`. Operators keep workloads alive without changing their shape.
+  </Accordion>
+  <Accordion title="Project DBA — act only on tagged database VMs" icon="database">
+    A role scoped to project `prod` that grants instance management privileges only
+    when the target VM carries the tag `team=db`. The user holds zero privileges on
+    instances tagged `team=web` or `team=api`.
+  </Accordion>
+  <Accordion title="Storage Operator — attach but not create or delete" icon="hard-drive">
+    Grant `volume.attach`, `volume.detach`, `volume.read`. Withhold
+    `volume.create` and `volume.delete`. The operator wires existing storage but
+    cannot add or remove volumes.
+  </Accordion>
+  <Accordion title="Read-only auditor — list and view across services" icon="eye">
+    Grant only `*.list` and `*.read` privileges. Even when the user calls
+    aggregator endpoints, Extended RBAC filters the response rows so the auditor
+    sees only resources their tag conditions permit.
+  </Accordion>
+  <Accordion title="Decommission role — delete only" icon="trash">
+    Grant `instance.delete` and `volume.delete`, nothing else. Useful for
+    end-of-life automation.
+  </Accordion>
+</AccordionGroup>
+
+<Note>
+  The `admin` role remains a deliberate platform bypass. Patterns of the form
+  *"admin has zero privileges on project X if denied"* are not expressible — the
+  only ways to constrain admin are `disable_admin_bypass` (cluster-wide) or
+  `require_system_scope_for_admin` (force system-scope tokens for admin actions).
+</Note>
+
+---
+
+## Tag Conditions
+
+Tag conditions let one privilege grant target only resources matching a tag —
+without creating multiple roles. They are evaluated against the resource being
+acted on (instance tags, volume metadata, network tags, etc.).
+
+| Operator | Example | Matches |
+|----------|---------|---------|
+| `equals` | `env=prod` | tag exactly equals `prod` |
+| `not_equals` | `env=prod` | tag is anything other than `prod` |
+| `contains` | `prod` | tag contains the substring `prod` |
+| `starts_with` | `web-` | tag starts with `web-` |
+| `any_of` | `[web, api]` | tag matches any value in the list |
+
+Build conditions in the **+ Add Tag Condition** modal on the RBAC Permissions
+page. Conditions are reusable across roles — one *"env=prod"* condition can be
+referenced by many grants.
+
+---
+
+## Enforcement Model
+
+When Extended RBAC evaluates whether a request is allowed:
+
+<Steps titleSize="h3">
+  <Step title="Anonymous check" icon="user-x">
+    Requests with no user context are denied.
+  </Step>
+  <Step title="Admin bypass" icon="key">
+    The built-in `admin` role passes through unless `disable_admin_bypass` is set.
+    An emergency override is available for incident response.
+  </Step>
+  <Step title="Privilege lookup" icon="search">
+    Resolve the request to a privilege code. Unknown URLs fall through to allow
+    (compatibility mode) by default; switch to fail-closed in strict deployments.
+  </Step>
+  <Step title="Prerequisite walk" icon="link">
+    Walk the prerequisite chain (max depth 8). A grant with a tag condition does
+    not satisfy an unconditional prerequisite — this prevents bypass.
+  </Step>
+  <Step title="Rule resolution" icon="scale">
+    Collect every grant the caller's roles produce, sort by priority descending,
+    and return the first rule whose tag condition matches the target.
+  </Step>
+  <Step title="Audit" icon="clipboard-list">
+    Role and grant changes are recorded unconditionally. Allow / deny decisions
+    are recorded when audit-deny logging is enabled.
+  </Step>
+</Steps>
+
+---
+
+## Cross-Node Invalidation
+
+Multi-node deployments stay coherent through a transactional invalidation log.
+Every role mutation, privilege grant, or condition change is appended to the log
+in the same database transaction as the underlying change. Other nodes poll the
+log every couple of seconds and refresh their local caches when they see a new
+event — privilege changes propagate to every node within ~5 seconds without
+restarting any service.
+
+---
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Start with built-in roles, add Custom roles only for exceptions" icon="layers">
+    The built-in roles cover most cases. Reach for a Custom role when you have a
+    specific exception — *"this team needs to resize but not delete"* — rather than
+    rebuilding from scratch.
+  </Accordion>
+  <Accordion title="Use tag conditions for environment isolation" icon="tag">
+    Tag every resource with `env=prod`, `env=staging`, or `env=dev`, and create
+    one Custom role per privilege scope, scoped to the relevant tag. Avoids
+    combinatorial role explosion.
+  </Accordion>
+  <Accordion title="Preview effective rules before you save" icon="flask-conical">
+    Use **Preview Effective Rules** on the RBAC Permissions page to simulate a
+    role change against representative users and resources before applying it.
+  </Accordion>
+  <Accordion title="Keep admin bypass on for break-glass" icon="alert-triangle">
+    Disabling admin bypass globally is rarely worth the operational risk. Audit
+    the bypass log and tighten via `require_system_scope_for_admin` if your
+    compliance framework requires project-scoped admin separation.
+  </Accordion>
+  <Accordion title="Forward audit log to long-term storage" icon="archive">
+    The audit log retention defaults to one year. Forward to your SIEM or
+    long-term object storage for longer compliance windows.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Related Topics
+
+<CardGroup cols={3}>
+  <Card title="Roles" href="/services/identity/roles" color="#197560">
+    Manage Xloud Identity roles — create, assign, implied-roles
+  </Card>
+  <Card title="Policy Management" href="/services/identity/policy-management" color="#197560">
+    Service-level policy YAML hardening
+  </Card>
+  <Card title="Multi-Factor Auth" href="/services/identity/multi-factor-auth" color="#197560">
+    Strengthen sign-in with TOTP MFA
+  </Card>
+</CardGroup>

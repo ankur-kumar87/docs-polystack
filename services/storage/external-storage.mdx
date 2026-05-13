@@ -1,0 +1,340 @@
+---
+title: "External Storage Integration"
+description: "Connect Xloud Block Storage to enterprise storage backends including NetApp, Pure Storage, Dell, HPE, Hitachi, IBM, and Ceph RBD."
+sidebarTitle: "External Storage"
+---
+
+import AdminWarning from '/snippets/admin-warning.mdx';
+import CliAuth from '/snippets/cli-auth.mdx';
+
+## Overview
+
+Xloud Block Storage connects to a broad range of enterprise storage platforms through a pluggable driver architecture. Each backend is configured as a named section in `cinder.conf`, registered with the scheduler, and exposed to tenants as one or more volume types. Multiple backends can run simultaneously, enabling tiered storage, vendor-specific pools, and failover configurations within a single environment.
+
+<AdminWarning />
+
+<Note>
+  **Prerequisites**
+  - Administrator credentials with the `admin` role
+  - The storage array must be network-accessible from all volume service nodes
+  - Vendor-specific driver packages installed on the volume service nodes
+  - Authentication credentials (username, password, API endpoint) for each backend
+</Note>
+
+---
+
+## Supported Backends
+
+| Backend | Protocol | Use Case | HA |
+|---------|----------|----------|----|
+| **Ceph RBD** | RBD | Production — native to XAVS, zero-copy clones | Yes |
+| **NetApp ONTAP** | iSCSI / NFS / FC | Enterprise NAS/SAN with ONTAP arrays | Yes |
+| **Pure Storage FlashArray** | iSCSI / FC / NVMe-oF | All-flash arrays, high IOPS workloads | Yes |
+| **Dell PowerStore** | iSCSI / FC / NVMe-oF | Dell enterprise all-flash and hybrid arrays | Yes |
+| **HPE 3PAR / Primera** | iSCSI / FC | HPE enterprise SAN arrays | Yes |
+| **Hitachi VSP** | iSCSI / FC | Hitachi enterprise storage systems | Yes |
+| **IBM FlashSystem** | iSCSI / FC / NVMe-oF | IBM all-flash enterprise arrays | Yes |
+| **NFS** | NFS | Shared NAS appliances, legacy integrations | Depends on server |
+| **LVM** | iSCSI | Development and single-node testing only | No |
+
+---
+
+## Multi-Backend Configuration
+
+Cinder supports multiple backends in a single `cinder.conf`. Each backend is an independent section. The `[DEFAULT]` section lists all enabled backends by name.
+
+```ini title="cinder.conf — multi-backend example"
+[DEFAULT]
+enabled_backends = ceph-ssd,netapp-nas,pure-flash
+
+[ceph-ssd]
+volume_driver = cinder.volume.drivers.rbd.RBDDriver
+volume_backend_name = ceph-ssd
+rbd_pool = volumes
+rbd_ceph_conf = /etc/ceph/ceph.conf
+rbd_user = cinder
+rbd_secret_uuid = <libvirt-secret-uuid>
+
+[netapp-nas]
+volume_driver = cinder.volume.drivers.netapp.common.NetAppDriver
+volume_backend_name = netapp-nas
+netapp_storage_family = ontap_cluster
+netapp_transport_type = https
+netapp_server_hostname = 10.0.10.50
+netapp_server_port = 443
+netapp_login = admin
+netapp_password = <password>
+netapp_vserver = svm0
+
+[pure-flash]
+volume_driver = cinder.volume.drivers.pure.PureISCSIDriver
+volume_backend_name = pure-flash
+san_ip = 10.0.10.60
+pure_api_token = <api-token>
+```
+
+<Tip>
+  In XAVS deployments, backend configuration is managed through XDeploy globals. The `cinder.conf` file is generated from Ansible templates and should not be edited directly on the host. Use `xavs-ansible deploy --tags cinder` to apply changes.
+</Tip>
+
+---
+
+## Backend-Specific Configuration Examples
+
+<AccordionGroup>
+  <Accordion title="Ceph RBD" icon="database">
+    Ceph RBD is the native XAVS production backend. It supports thin provisioning by default and enables zero-copy clones between the image pool and volume pool for fast instance launches.
+
+    ```ini title="[ceph-ssd] section"
+    volume_driver = cinder.volume.drivers.rbd.RBDDriver
+    volume_backend_name = ceph-ssd
+    rbd_pool = volumes
+    rbd_ceph_conf = /etc/ceph/ceph.conf
+    rbd_user = cinder
+    rbd_keyring_conf = /etc/ceph/ceph.client.cinder.keyring
+    rbd_secret_uuid = <libvirt-secret-uuid>
+    rbd_cluster_name = ceph
+    rados_connect_timeout = 5
+    ```
+  </Accordion>
+
+  <Accordion title="NetApp ONTAP" icon="server">
+    NetApp ONTAP supports iSCSI, NFS, and Fibre Channel protocols. The `netapp_vserver` parameter specifies the storage virtual machine (SVM) on the array.
+
+    ```ini title="[netapp-iscsi] section"
+    volume_driver = cinder.volume.drivers.netapp.common.NetAppDriver
+    volume_backend_name = netapp-iscsi
+    netapp_storage_family = ontap_cluster
+    netapp_transport_type = https
+    netapp_server_hostname = 10.0.10.50
+    netapp_server_port = 443
+    netapp_login = admin
+    netapp_password = <password>
+    netapp_vserver = svm0
+    netapp_storage_protocol = iscsi
+    ```
+  </Accordion>
+
+  <Accordion title="Pure Storage FlashArray" icon="zap">
+    Pure Storage uses a REST API token for authentication. Both iSCSI and Fibre Channel drivers are available.
+
+    ```ini title="[pure-flash] section (iSCSI)"
+    volume_driver = cinder.volume.drivers.pure.PureISCSIDriver
+    volume_backend_name = pure-flash
+    san_ip = 10.0.10.60
+    pure_api_token = <api-token>
+    use_multipath_for_image_xfer = true
+    ```
+
+    ```ini title="[pure-flash-fc] section (Fibre Channel)"
+    volume_driver = cinder.volume.drivers.pure.PureFCDriver
+    volume_backend_name = pure-flash-fc
+    san_ip = 10.0.10.60
+    pure_api_token = <api-token>
+    ```
+  </Accordion>
+
+  <Accordion title="Dell PowerStore" icon="box">
+    Dell PowerStore supports iSCSI, NVMe-oF, and Fibre Channel. The management IP and credentials are required.
+
+    ```ini title="[dell-powerstore] section"
+    volume_driver = cinder.volume.drivers.dell_emc.powerstore.driver.PowerStoreDriver
+    volume_backend_name = dell-powerstore
+    san_ip = 10.0.10.70
+    san_login = admin
+    san_password = <password>
+    powerstore_appliances = Appliance-1
+    storage_protocol = iSCSI
+    ```
+  </Accordion>
+
+  <Accordion title="HPE 3PAR / Primera" icon="server">
+    HPE 3PAR and Primera share the same driver. The CPG (Common Provisioning Group) name maps to a storage pool on the array.
+
+    ```ini title="[hpe-3par] section"
+    volume_driver = cinder.volume.drivers.hpe.hpe_3par_iscsi.HPE3PARISCSIDriver
+    volume_backend_name = hpe-3par
+    san_ip = 10.0.10.80
+    san_login = 3parrc
+    san_password = <password>
+    hpe3par_api_url = https://10.0.10.80:8080/api/v1
+    hpe3par_username = 3parrc
+    hpe3par_password = <password>
+    hpe3par_cpg = SSD_r6
+    ```
+  </Accordion>
+
+  <Accordion title="IBM FlashSystem" icon="cpu">
+    IBM FlashSystem uses the Storwize/SVC driver. The `san_clustername` must match the system name on the array.
+
+    ```ini title="[ibm-flash] section"
+    volume_driver = cinder.volume.drivers.ibm.storwize_svc.storwize_svc_iscsi.StorwizeSVCISCSIDriver
+    volume_backend_name = ibm-flash
+    san_ip = 10.0.10.90
+    san_login = superuser
+    san_password = <password>
+    storwize_svc_volpool_name = Pool0
+    san_clustername = IBM_Flash_1
+    ```
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Register a Backend and Create a Volume Type
+
+After configuring a backend, create a volume type that maps to it. Tenants select the volume type when provisioning volumes to route requests to a specific backend.
+
+<Tabs>
+  <Tab title="Dashboard" icon="monitor">
+    <Steps titleSize="h3">
+      <Step title="Verify backend registration" icon="activity">
+        Navigate to **Storage > Storage Backends** (admin view) and confirm the volume service
+        host for the backend shows state **Up** and status **Enabled**.
+      </Step>
+      <Step title="Create a volume type" icon="plus">
+        Navigate to **Storage > Volume Types** (admin view) and click **Create Volume Type**.
+
+        Enter a name that communicates the backend to users — e.g., `SSD-Flash` or `Enterprise-NAS`.
+      </Step>
+      <Step title="Set the backend name extra spec" icon="settings">
+        After creating the type, click **View Extra Specs** and add:
+
+        | Key | Value |
+        |-----|-------|
+        | `volume_backend_name` | Must match the `volume_backend_name` in `cinder.conf` exactly |
+
+        Click **Confirm** to save the extra spec.
+      </Step>
+      <Step title="Validate" icon="circle-check">
+        Create a test volume using the new volume type and confirm it provisions successfully.
+
+        <Check>Volume type mapped — tenants can now select this backend when creating volumes.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    <Steps titleSize="h3">
+      <Step title="Authenticate" icon="key">
+        <CliAuth />
+      </Step>
+      <Step title="Verify backend is registered" icon="activity">
+        ```bash title="List all backend pools"
+        openstack volume backend pool list --long
+        ```
+
+        Confirm the backend name appears with `free_capacity_gb` greater than 0.
+      </Step>
+      <Step title="Create volume type" icon="plus">
+        ```bash title="Create a volume type"
+        openstack volume type create \
+          --description "Pure Storage all-flash backend" \
+          SSD-Flash
+        ```
+      </Step>
+      <Step title="Map type to backend" icon="link">
+        ```bash title="Set backend name extra spec"
+        openstack volume type set \
+          --property volume_backend_name=pure-flash \
+          SSD-Flash
+        ```
+      </Step>
+      <Step title="Verify" icon="circle-check">
+        ```bash title="Confirm extra spec"
+        openstack volume type show SSD-Flash
+        ```
+
+        ```bash title="Create a test volume"
+        openstack volume create \
+          --type SSD-Flash \
+          --size 10 \
+          test-pure-vol
+        ```
+        <Check>Volume type registered and backend verified.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+</Tabs>
+
+---
+
+## Failover Between Backends
+
+When a backend becomes unavailable, volumes can be migrated to an alternative backend using the volume migration API. This is an admin operation and results in data movement.
+
+```bash title="Migrate a volume to a different backend"
+openstack volume migrate \
+  --host <cinder-volume-host>@<target-backend>#<pool> \
+  <volume-id>
+```
+
+```bash title="Check migration status"
+openstack volume show <volume-id> -c migration_status
+```
+
+<Warning>
+  Volume migration copies all data from the source backend to the destination. Migration time depends on volume size and network throughput. The volume remains available (online migration) but may experience reduced I/O performance during the transfer.
+</Warning>
+
+For backends that support replication (such as Pure Storage and NetApp ONTAP), use the replication failover API instead of data migration:
+
+```bash title="Failover to replication target"
+cinder failover-host <cinder-volume-host> \
+  --backend_id <replication-target-backend-id>
+```
+
+---
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Backend does not appear in pool list" icon="triangle-alert">
+    **Cause**: The volume service failed to initialize the driver, or the backend configuration section is missing from `cinder.conf`.
+
+    **Resolution**:
+    - Verify the backend name is listed in `enabled_backends` in `[DEFAULT]`
+    - Check volume service logs for driver initialization errors
+    - Confirm network connectivity from the volume service node to the storage array management IP
+
+    ```bash title="Check volume service status"
+    openstack volume service list
+    ```
+  </Accordion>
+
+  <Accordion title="Volume creation fails with 'No valid host was found'" icon="x-circle">
+    **Cause**: No backend matches the scheduler filters for the requested volume type, or the backend is reporting no free capacity.
+
+    **Resolution**:
+    - Verify the `volume_backend_name` extra spec on the volume type matches the backend name exactly (case-sensitive)
+    - Check backend capacity: `openstack volume backend pool list --long`
+    - Confirm the volume service is in state `up` and status `enabled`
+  </Accordion>
+
+  <Accordion title="Authentication error connecting to storage array" icon="lock">
+    **Cause**: Incorrect credentials or the management IP is unreachable.
+
+    **Resolution**:
+    - Verify the `san_ip`, `san_login`, and `san_password` (or equivalent) values in `cinder.conf`
+    - Test network connectivity: `curl -k https://<san_ip>/api/v1` from the volume service node
+    - Check if a firewall or ACL is blocking access from the volume service node
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Volume Types Admin" href="/services/storage/volume-types-admin" color="#197560">
+    Create and manage volume types that expose backends to tenants
+  </Card>
+  <Card title="Thin Provisioning" href="/services/storage/thin-provisioning" color="#197560">
+    Configure thin and thick provisioning per backend
+  </Card>
+  <Card title="Storage Tiers" href="/services/storage/storage-tiers" color="#197560">
+    Configure multi-tier storage pools across different hardware classes
+  </Card>
+  <Card title="Backup Backends" href="/services/storage/backup-backends" color="#197560">
+    Configure backup destinations for volume data protection
+  </Card>
+</CardGroup>

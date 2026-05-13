@@ -1,0 +1,156 @@
+---
+title: "Security"
+description: "Secure XIMP with agent token management, dashboard role-based access control via Xloud identity, and TLS certificate lifecycle management."
+sidebarTitle: "Security"
+---
+
+import AdminWarning from '/snippets/admin-warning.mdx';
+
+## Overview
+
+XIMP security encompasses agent authentication via per-node tokens, dashboard access
+control through Xloud identity roles, and TLS certificate lifecycle management for
+all platform communications.
+
+<AdminWarning />
+
+---
+
+## Agent Authentication
+
+Each XIMP agent authenticates to the collector using a unique per-node token.
+Rotate tokens periodically and immediately when a node is decommissioned or
+suspected compromised.
+
+<Tabs>
+  <Tab title="Token Lifecycle" icon="key">
+    ```bash title="Generate a new agent token"
+    ximp agent token create --node compute-node-04 --expires 365d
+    ```
+
+    ```bash title="List all agent tokens with expiry"
+    ximp agent token list
+    ```
+
+    ```bash title="Revoke an agent token"
+    ximp agent token revoke <TOKEN_ID>
+    ```
+
+    <Warning>
+      Revoking a token immediately disconnects the associated agent. Ensure the
+      replacement token is deployed to the agent configuration before revoking
+      the old one, or the node will stop reporting metrics.
+    </Warning>
+  </Tab>
+  <Tab title="Token Rotation Procedure" icon="refresh-cw">
+    <Steps titleSize="h3">
+      <Step title="Generate new token" icon="plus">
+        ```bash title="Create replacement token"
+        ximp agent token create --node <HOSTNAME> --expires 365d
+        ```
+      </Step>
+      <Step title="Update agent configuration" icon="file-text">
+        Update `/etc/ximp/agent.yaml` on the node with the new token value:
+        ```yaml title="/etc/ximp/agent.yaml"
+        server:
+          auth_token: <NEW_TOKEN>
+        ```
+      </Step>
+      <Step title="Restart agent and verify" icon="circle-check">
+        ```bash title="Restart agent"
+        systemctl restart ximp-agent
+        ```
+
+        ```bash title="Verify agent reconnected"
+        ximp agent list --node <HOSTNAME>
+        ```
+
+        <Check>Agent shows `ACTIVE` with a recent last-seen timestamp.</Check>
+      </Step>
+      <Step title="Revoke old token" icon="trash">
+        ```bash title="Revoke old token"
+        ximp agent token revoke <OLD_TOKEN_ID>
+        ```
+      </Step>
+    </Steps>
+  </Tab>
+</Tabs>
+
+---
+
+## Dashboard Access Control
+
+XIMP dashboard access is controlled through Xloud identity roles. Assign roles
+based on job function to enforce least-privilege access.
+
+| Role | Access Level | Typical Assignees |
+|------|-------------|------------------|
+| `monitoring-viewer` | Read-only — dashboards and alert history | Developers, stakeholders |
+| `monitoring-editor` | Create and edit dashboards, rules, and channels | Operations engineers |
+| `monitoring-admin` | Full access — agents, retention, security settings | Platform administrators |
+
+Assign roles through **XDeploy → Identity → Role Assignments**.
+
+<Tip>
+  Use the `monitoring-viewer` role for application teams who need to observe their
+  service metrics without the ability to modify alert rules that affect other teams.
+</Tip>
+
+---
+
+## TLS Configuration
+
+All XIMP communication uses TLS:
+- Agent-to-collector: TLS 1.3 minimum
+- Dashboard and API: TLS 1.3 minimum, HSTS enabled
+- Internal service communication: mTLS for collector-to-store traffic
+
+Certificates are managed by XDeploy and renewed automatically 30 days before expiry.
+
+<Tabs>
+  <Tab title="Certificate Status" icon="shield">
+    ```bash title="Check all certificate expiry dates"
+    ximp tls status
+    ```
+
+    Expected output shows certificate subjects, expiry dates, and days remaining.
+    Certificates within 30 days of expiry trigger an automatic renewal.
+  </Tab>
+  <Tab title="Manual Renewal" icon="refresh-cw">
+    If automatic renewal fails (e.g., due to DNS misconfiguration):
+
+    ```bash title="Manually renew all certificates"
+    ximp tls renew --all
+    ```
+
+    ```bash title="Renew a specific certificate"
+    ximp tls renew --component collector
+    ```
+
+    After renewal, verify the new certificate is in effect:
+    ```bash title="Verify renewed certificate"
+    ximp tls status --component collector
+    ```
+
+    <Check>Certificate expiry date is at least 90 days in the future.</Check>
+  </Tab>
+</Tabs>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Agent Configuration" href="/services/monitoring/admin-guide/agent-config" color="#197560">
+    Deploy and configure agents whose tokens are managed here
+  </Card>
+  <Card title="Alert Channels" href="/services/monitoring/admin-guide/alert-channels" color="#197560">
+    Secure notification channel credentials and SMTP authentication
+  </Card>
+  <Card title="Troubleshooting" href="/services/monitoring/admin-guide/troubleshooting" color="#197560">
+    Diagnose TLS and authentication errors
+  </Card>
+  <Card title="Xloud Identity" href="/services/identity/admin-guide" color="#197560">
+    Manage the Xloud identity roles used for XIMP access control
+  </Card>
+</CardGroup>

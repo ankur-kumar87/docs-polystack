@@ -1,0 +1,58 @@
+---
+title: "Manage Volumes (Admin)"
+description: "Administer block storage — manage volume types, QoS specs, storage backends, and cross-project volumes."
+sidebarTitle: "Volumes (Admin)"
+---
+
+## Overview
+
+The admin sidebar Storage section includes additional pages not visible to regular users:
+**Volume Types** and **Storage Backends**.
+
+---
+
+## Volume Types
+
+Navigate to **Storage > Volume Types** (admin view). The page has two tabs:
+
+**Volume Types tab** — manage storage tiers:
+
+| Action | Location | Description |
+|--------|----------|-------------|
+| **Manage QoS Spec** | First row action | Associate a QoS spec with this type |
+| **Manage Access** | More dropdown | Control which projects can use this type |
+| **Create Encryption** | More dropdown | Add encryption provider (luks) |
+| **Delete Encryption** | More dropdown | Remove encryption settings |
+| **Edit** | More dropdown | Update name and description |
+| **Delete** | More dropdown / batch | Delete the volume type |
+
+**QoS Specs tab** — manage quality of service specifications:
+
+Create QoS specs with consumer (front-end/back-end/all) and bandwidth/IOPS rules.
+Associate specs with volume types via the **Manage QoS Spec** action on the Volume Types tab.
+
+---
+
+## Storage Backends
+
+Navigate to **Storage > Storage Backends** (admin view). Read-only list showing all
+configured storage pools with protocol, backend name, and host information.
+
+---
+
+## Detailed Guides
+
+<CardGroup cols={2}>
+  <Card title="Volume Types (Admin)" href="/services/storage/volume-types-admin" color="#197560">
+    Complete volume type management reference
+  </Card>
+  <Card title="QoS" href="/services/storage/qos" color="#197560">
+    QoS spec creation and association
+  </Card>
+  <Card title="Encryption" href="/services/storage/encryption" color="#197560">
+    Volume encryption configuration
+  </Card>
+  <Card title="Create a Volume" href="/services/storage/create-volume" color="#197560">
+    Volume creation with type selection
+  </Card>
+</CardGroup>

@@ -1,0 +1,148 @@
+---
+title: "Resize an Instance"
+description: "Change the flavor of an Xloud Compute instance to adjust vCPU, RAM, and disk allocation. Confirm or revert the resize before it is finalized."
+sidebarTitle: "Resize Instance"
+---
+
+## Overview
+
+Resizing an instance changes its flavor — adjusting the vCPU, RAM, and disk allocation
+profile. The resize operation stops the instance, moves it to a host that satisfies the
+new flavor requirements if necessary, and restarts it. After the resize completes, a
+confirmation window allows you to accept or revert to the original flavor.
+
+<Warning>
+  Resizing always requires a reboot. Schedule resize operations during a maintenance window
+  for production workloads. For zero-downtime vertical scaling on supported instances, use
+  [Live vCPU/RAM Scaling](/services/compute/live-resize) — available through the Dashboard
+  with no reboot required.
+</Warning>
+
+<Note>
+  **Prerequisites**
+  - An instance in `Active` or `Shutoff` status
+  - The instance must not be locked
+  - A target flavor with a root disk size greater than or equal to the current root disk
+  - Sufficient quota for the new flavor's vCPU and RAM requirements
+</Note>
+
+---
+
+## Resize Workflow
+
+| Phase | Instance Status | Action Required |
+|-------|----------------|-----------------|
+| **Resize initiated** | `Resize` | Automatic — no action required |
+| **Awaiting confirmation** | `Verify Resize` | Confirm or revert within the window |
+| **Confirmed** | `Active` | Instance running on new flavor |
+
+---
+
+## Resize an Instance
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Open the Resize dialog">
+        Navigate to **Compute > Instances**. Click the **More** dropdown on the
+        instance row, then select **Resize** under the **Configuration Update** group.
+
+        <Note>
+          The Resize action is only available for instances in `Active` or `Shutoff`
+          status that are not locked. It is not available on the admin page or for
+          bare metal instances.
+        </Note>
+      </Step>
+      <Step title="Select a new flavor">
+        The Resize dialog shows:
+
+        | Field | Description |
+        |-------|-------------|
+        | **Instance** | Current instance name (read-only) |
+        | **Current Flavor** | Current flavor details — vCPUs and RAM (read-only) |
+        | **Flavor** | Select a new flavor from the table |
+
+        The flavor table uses the same architecture and category filters as the
+        instance create wizard. Flavors that would exceed your quota are disabled.
+
+        Real-time quota usage is shown for **CPU** and **Memory (GiB)**.
+      </Step>
+      <Step title="Acknowledge the shutdown">
+        Check the **Forced Shutdown** checkbox ("Agree to force shutdown"). This is
+        required — the instance will be shut down during the resize operation.
+      </Step>
+      <Step title="Confirm the resize">
+        Click **Confirm**. The instance transitions to `Resize` status.
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Source credentials"
+    source openrc.sh
+    ```
+
+    ```bash title="Resize an instance"
+    openstack server resize \
+      --flavor <NEW_FLAVOR> \
+      <INSTANCE_ID>
+    ```
+
+    ```bash title="Check resize status"
+    openstack server show <INSTANCE_ID> -c status
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Confirm or Revert the Resize
+
+After the resize completes, the instance enters `Verify Resize` status. You must
+confirm or revert within the confirmation window (default: 24 hours).
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    Navigate to **Compute > Instances**. The instance shows status `Verify Resize`.
+    Click the **More** dropdown and select either:
+
+    - **Confirm Resize or Migrate** — accept the new flavor permanently
+    - **Revert Resize or Migrate** — roll back to the original flavor
+
+    <Check>After confirmation, the instance returns to `Active` status on the new flavor.</Check>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    <CodeGroup>
+    ```bash title="Confirm the resize"
+    openstack server resize confirm <INSTANCE_ID>
+    ```
+    ```bash title="Revert the resize"
+    openstack server resize revert <INSTANCE_ID>
+    ```
+    </CodeGroup>
+
+    <Note>
+      If you neither confirm nor revert within the confirmation window, the resize
+      is automatically confirmed. Contact your administrator to adjust the
+      confirmation window duration.
+    </Note>
+  </Tab>
+</Tabs>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Live vCPU/RAM Scaling" href="/services/compute/live-resize" color="#197560">
+    Scale vCPU and memory without rebooting on supported flavors
+  </Card>
+  <Card title="Launch an Instance" href="/services/compute/launch-instance" color="#197560">
+    Create a new instance with the desired flavor from the start
+  </Card>
+  <Card title="Flavors" href="/services/compute/flavors" color="#197560">
+    View available flavors and their specifications
+  </Card>
+  <Card title="Troubleshooting" href="/services/compute/troubleshooting" color="#197560">
+    Resolve stuck resize operations and confirmation timeouts
+  </Card>
+</CardGroup>

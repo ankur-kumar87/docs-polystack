@@ -1,0 +1,172 @@
+---
+title: "Action Plans"
+description: "Review Xloud Optimization action plans — understand recommended migrations, inspect individual actions, and approve or reject plans before execution."
+sidebarTitle: "Action Plans"
+---
+
+## Overview
+
+Every successful audit generates an action plan — an ordered list of workload migrations
+that achieve the selected optimization goal. Action plans must be reviewed and explicitly
+approved before execution begins. This approval step ensures operators have full visibility
+into what will be moved, and when, before any workload is disrupted.
+
+<Note>
+  **Prerequisites**
+  - A completed audit with state `SUCCEEDED`
+  - Project access with the `member` role or above
+</Note>
+
+---
+
+## Action Plan Structure
+
+An action plan contains:
+
+| Component | Description |
+|-----------|-------------|
+| **Plan UUID** | Unique identifier for the plan |
+| **State** | Current plan state: `RECOMMENDED`, `PENDING`, `ONGOING`, `SUCCEEDED`, `FAILED`, `CANCELLED` |
+| **Actions** | Ordered list of individual workload operations |
+| **Efficacy** | Estimated improvement percentage for the selected goal |
+| **Audit UUID** | Reference to the audit that generated this plan |
+
+Each action within the plan describes:
+- The operation type (e.g., `migrate`)
+- Source instance and source host
+- Destination host (pre-selected by the strategy)
+- Execution priority (lower numbers run first)
+
+---
+
+## View Action Plans
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Navigate to Action Plans" icon="compass">
+        Navigate to
+        **Optimization → Action Plans**.
+      </Step>
+      <Step title="Select a plan" icon="clipboard-list">
+        Click the action plan name or UUID to open the detail view.
+      </Step>
+      <Step title="Review individual actions" icon="eye">
+        The detail view shows the full list of recommended actions:
+
+        | Column | Description |
+        |--------|-------------|
+        | **Action** | Operation type: `migrate` |
+        | **Input Parameters** | Source instance ID and destination host |
+        | **State** | `RECOMMENDED` — awaiting approval |
+        | **Priority** | Execution order — lower numbers run first |
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="List all action plans"
+    watcher actionplan list
+    ```
+
+    ```bash title="Show action plan details"
+    watcher actionplan show <action-plan-uuid>
+    ```
+
+    ```bash title="List individual actions in a plan"
+    watcher action list \
+      --action-plan <action-plan-uuid>
+    ```
+
+    Each action shows: `action_type`, `input_parameters` (source + destination),
+    `state`, and `parents` (dependencies between actions).
+  </Tab>
+</Tabs>
+
+---
+
+## Start an Action Plan
+
+<Warning>
+  Approving an action plan initiates live migrations immediately on execution.
+  Verify that target hosts have sufficient capacity before approving. Review the
+  full action list to ensure no mission-critical instances are scheduled for migration
+  during active business hours.
+</Warning>
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    On the action plan detail page, click **Start**. The plan state changes from
+    `RECOMMENDED` to `PENDING`, indicating it is ready for execution.
+
+    <Tip>
+      Review the **Efficacy** metric on the plan detail page. A high efficacy score
+      (above 70%) indicates a meaningful optimization improvement.
+    </Tip>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    Action plan approval transitions the state to `PENDING`. In the CLI workflow,
+    you execute the plan directly — approval and execution are combined:
+
+    ```bash title="Execute (which implicitly approves) the plan"
+    watcher actionplan start <action-plan-uuid>
+    ```
+
+    To review before executing:
+    ```bash title="Review actions"
+    watcher action list \
+      --action-plan <action-plan-uuid> \
+      -f table -c uuid -c action_type -c input_parameters -c state
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Reject an Action Plan
+
+If the action plan is not appropriate — e.g., it targets instances that should
+not be migrated during the current window — reject it and run a new audit later.
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    On the action plan detail page, click **Delete**. The plan state changes to
+    `CANCELLED` and no migrations are executed.
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    Action plan cancellation is not directly supported via the CLI. The plan expires
+    automatically after the `action_plan_expiry` period configured by your administrator
+    (default: 24 hours). Run a new audit to generate a fresh plan.
+  </Tab>
+</Tabs>
+
+---
+
+## Action Plan States
+
+| State | Meaning |
+|-------|---------|
+| `RECOMMENDED` | Plan generated, awaiting approval |
+| `PENDING` | Started, queued for execution |
+| `ONGOING` | Execution in progress |
+| `SUCCEEDED` | All actions completed successfully |
+| `FAILED` | One or more actions failed |
+| `CANCELLED` | Plan was rejected or expired |
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Execute Actions" href="/services/optimization/user-guide/execute-actions" color="#197560">
+    Run an approved action plan and monitor migration progress.
+  </Card>
+  <Card title="Audit History" href="/services/optimization/user-guide/audit-history" color="#197560">
+    Review past audits and their associated action plans.
+  </Card>
+  <Card title="Troubleshooting" href="/services/optimization/user-guide/troubleshooting" color="#197560">
+    Resolve failed actions and cancelled plans.
+  </Card>
+  <Card title="Run an Audit" href="/services/optimization/user-guide/run-audit" color="#197560">
+    Generate a new action plan by running a fresh audit.
+  </Card>
+</CardGroup>

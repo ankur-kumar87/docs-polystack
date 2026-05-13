@@ -1,0 +1,150 @@
+---
+title: "Monitoring"
+description: "Monitor XSDS cluster health, OSD status, and I/O performance through XIMP integration — key metrics, alert thresholds, and observability configuration."
+sidebarTitle: "Monitoring"
+---
+
+import AdminWarning from '/snippets/admin-warning.mdx';
+
+## Overview
+
+XSDS cluster health and performance data is exported to XIMP for centralized monitoring
+and alerting. This page covers the key metrics to monitor, recommended alert thresholds,
+and how to configure the integration.
+
+<AdminWarning />
+
+<Note>
+  **Prerequisites**
+  - Administrator credentials with the `admin` role
+  - XIMP deployed and accessible (see [XIMP Admin Guide](/services/monitoring/admin-guide))
+  - Metric scrape target configured for the XSDS cluster metrics endpoint
+</Note>
+
+---
+
+## Key Metrics and Alert Thresholds
+
+| Metric | Namespace | Alert Threshold | Action |
+|--------|-----------|----------------|--------|
+| Cluster health | `xloud_storage_health` | `HEALTH_WARN` | Investigate immediately |
+| OSD `down` count | `xloud_storage_osd_down` | > 0 | Replace or recover failed OSD |
+| Pool used % | `xloud_storage_pool_used_pct` | > 70% | Plan capacity expansion |
+| Recovery I/O rate | `xloud_storage_recovery_bytes_sec` | Sustained > 200 MB/s | Consider I/O throttling |
+| PG `inconsistent` count | `xloud_storage_pg_inconsistent` | > 0 | Run `ceph health detail` and repair |
+| Replication lag (RGW) | `xloud_storage_rgw_sync_lag_sec` | Sustained > 30s | Check network bandwidth to RGW |
+| OSD apply latency | `xloud_storage_osd_apply_latency_ms` | > 20 ms | Investigate OSD or disk health |
+
+---
+
+## Configuring XIMP Integration
+
+<Steps titleSize="h3">
+  <Step title="Verify metrics endpoint" icon="activity">
+    The XSDS cluster exposes metrics on the management node. Verify the endpoint
+    is reachable:
+
+    ```bash title="Check metrics endpoint"
+    curl http://<MGMT_NODE_IP>:9283/metrics | head -20
+    ```
+
+    Port `9283` is the default metrics exporter port deployed by XDeploy.
+  </Step>
+  <Step title="Add scrape target in XIMP" icon="plus">
+    Navigate to **Monitoring → Administration → Scrape Targets → Add Target**:
+
+    | Field | Value |
+    |-------|-------|
+    | **URL** | `http://<MGMT_NODE_IP>:9283/metrics` |
+    | **Scrape Interval** | `60s` (storage metrics don't need sub-minute resolution) |
+    | **Labels** | `service=xsds`, `cluster=<CLUSTER_NAME>` |
+
+    Or via CLI:
+    ```bash title="Add XSDS scrape target"
+    ximp target add \
+      --url http://<MGMT_NODE_IP>:9283/metrics \
+      --interval 60s \
+      --label service=xsds \
+      --label cluster=prod-storage
+    ```
+  </Step>
+  <Step title="Create alert rules" icon="bell">
+    Navigate to **Monitoring → Alerting → Alert Rules** and create rules for each
+    threshold in the table above.
+
+    Example alert rule for pool utilization:
+    ```yaml title="alert-storage-capacity.yaml"
+    name: xsds-pool-capacity-warning
+    metric: xloud_storage_pool_used_pct
+    condition: ">"
+    threshold: 70
+    evaluation_period: 10m
+    severity: warning
+    notification_channels:
+      - ops-email
+    ```
+
+    <Check>Alert rules appear in the Active Rules list and evaluate against live storage metrics.</Check>
+  </Step>
+</Steps>
+
+---
+
+## Built-In Dashboards
+
+The XIMP portal includes pre-built XSDS dashboards. Navigate to
+**Monitoring → Dashboards** and search for "XSDS" or "Storage":
+
+| Dashboard | Shows |
+|-----------|-------|
+| **XSDS Cluster Overview** | Health state, OSD counts, capacity, recovery activity |
+| **XSDS Pool Utilization** | Per-pool used %, available bytes, PG counts |
+| **XSDS OSD Performance** | Per-OSD latency, IOPS, throughput |
+| **XSDS Recovery** | Active recovery operations, estimated completion time |
+
+<Tip>
+  Pin the "XSDS Cluster Overview" dashboard to your XIMP home screen for constant
+  visibility during on-call rotations.
+</Tip>
+
+---
+
+## Cluster CLI Health Check
+
+For quick health checks without opening the XIMP portal, use the management CLI
+directly from a cluster node:
+
+```bash title="Quick health overview"
+ceph status
+```
+
+```bash title="OSD performance snapshot"
+ceph osd perf
+```
+
+```bash title="Pool I/O statistics (5-second window)"
+ceph osd pool stats
+```
+
+```bash title="Active slow requests"
+ceph health detail | grep -i slow
+```
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="XIMP Admin Guide" href="/services/monitoring/admin-guide" color="#197560">
+    Configure the monitoring platform that collects and displays XSDS metrics
+  </Card>
+  <Card title="Capacity Planning" href="/services/sds/admin-guide/capacity-planning" color="#197560">
+    Use utilization metrics to plan cluster expansion before thresholds are reached
+  </Card>
+  <Card title="Troubleshooting" href="/services/sds/admin-guide/troubleshooting" color="#197560">
+    Diagnose the issues surfaced by monitoring alerts
+  </Card>
+  <Card title="XIMP Alert Rules" href="/services/monitoring/admin-guide/alert-channels" color="#197560">
+    Configure notification channels for storage health alerts
+  </Card>
+</CardGroup>

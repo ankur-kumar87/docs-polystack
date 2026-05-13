@@ -1,0 +1,157 @@
+---
+title: "Preflight Assessment"
+description: "Validate a discovered workload against the Xloud compatibility rules before submitting a migration — OS support, firmware, disk layout, and driver readiness."
+sidebarTitle: "Preflight Assessment"
+---
+
+## Overview
+
+Preflight assessment runs a set of read-only checks against a discovered
+workload and returns a compatibility verdict before you submit a migration
+job. The goal is to catch the issues that would cause a migration to fail or
+a post-migration boot problem — OS not supported, firmware mismatch, disk
+layout too complex — while you still have time to fix them on the source.
+
+<Note>
+  **Prerequisites**
+  - A successful [discovery scan](/services/migration/user-guide/discover-workloads)
+    for the source environment
+  - Credentials on the registered source with read access to VM configuration
+    and disk metadata
+</Note>
+
+---
+
+## Run Preflight
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Select candidate workloads" icon="check-square">
+        In **Migration → Discover**, tick the VMs you plan to migrate and click
+        **Preflight Selected**. You can preflight a single VM or an entire wave.
+      </Step>
+      <Step title="Start the assessment" icon="clipboard-check">
+        XMS inspects each VM through the vSphere API and applies the Xloud
+        compatibility ruleset. The scan is read-only and completes in seconds
+        for most workloads.
+      </Step>
+      <Step title="Review the verdict" icon="list">
+        Each VM receives one of three outcomes:
+
+        | Verdict | Meaning |
+        |---------|---------|
+        | **Pass** | All checks passed — safe to migrate |
+        | **Warn** | Migration can proceed but with caveats — review the warnings |
+        | **Block** | One or more checks failed — resolve before submitting a migration |
+
+        Expand a row to see every individual check, its status, and the
+        suggested remediation.
+
+        <Check>All target workloads reach **Pass** or **Warn** before you submit a migration.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash
+    # Run preflight against one or more VMs
+    xms preflight run --source prod-vcenter --vm win-ser-2022
+
+    # Preflight an entire wave from a file
+    xms preflight run --source prod-vcenter --from-file wave-1.txt
+
+    # Fetch the latest verdict
+    xms preflight show --source prod-vcenter --vm win-ser-2022
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Check Categories
+
+Preflight runs checks across five categories. Each category produces one or
+more individual checks that roll up into a category score.
+
+### Compute
+
+| Check | Description |
+|-------|-------------|
+| **Firmware type** | BIOS and UEFI are both supported. Secure Boot state is recorded for post-migration validation. |
+| **Hardware version** | vSphere hardware versions are checked against the supported range for the installed disk transport libraries. |
+| **Guest OS family** | The reported guest OS is matched against the supported Xloud guest catalog. |
+| **Resource shape** | vCPU count and memory are sanity-checked against project quotas in the target Xloud project. |
+
+### Storage
+
+| Check | Description |
+|-------|-------------|
+| **Disk count and size** | Total disk size is compared to available quota and to the target volume type's maximum size. |
+| **Disk layout** | Complex layouts (raw device mappings, shared disks, independent disks) are flagged. Standard thin and thick disks are supported. |
+| **Snapshot state** | Active snapshots at migration time may slow down export. XMS flags VMs with long snapshot chains. |
+
+### Network
+
+| Check | Description |
+|-------|-------------|
+| **Adapter count** | Each source adapter must map to a target Xloud network. |
+| **Port group names** | Port group names are captured for the later network mapping step. |
+| **MAC preservation** | The option to preserve MACs is flagged as informational — a network mapping with conflicting MACs will be rejected at submit time. |
+
+### Guest
+
+| Check | Description |
+|-------|-------------|
+| **Driver readiness** | The OS is matched against the VirtIO driver set that will be injected during guest conversion. |
+| **Boot loader** | GRUB (Linux) and the Windows BCD are confirmed present. Missing boot loaders are a hard block. |
+| **Filesystem type** | Supported filesystems include ext2/3/4, XFS, Btrfs, NTFS, FAT32, ReFS, and LVM with these underlying types. |
+
+### Protection
+
+| Check | Description |
+|-------|-------------|
+| **CBT enabled** | Warm migration requires Changed Block Tracking. XMS surfaces this as a warning and offers to enable it in-place. |
+| **Snapshot support** | Warm migration needs the ability to take a snapshot at sync start. Hosts with disabled snapshot support are blocked from warm. |
+
+---
+
+## Common Blockers and Remediation
+
+| Blocker | Root Cause | Fix |
+|---------|------------|-----|
+| **Unsupported guest OS** | The guest ID returned by vSphere does not match the Xloud guest catalog | Upgrade or reinstall the guest OS to a supported version before migrating |
+| **Raw Device Mappings** | A disk is mapped directly to a LUN on the source | Convert the RDM to a VMFS-backed disk before migration |
+| **Shared disks** | Two VMs share the same VMDK | Un-share or take an online copy before migration |
+| **CBT not enabled (warm)** | Change tracking has never been turned on | Enable CBT from preflight — XMS will write the config change through the vSphere API |
+| **Missing boot loader** | Damaged GRUB or BCD | Repair the boot loader on the source first; migration cannot recover a broken boot loader |
+
+<Tip>
+  Most warnings are safe to ignore for a first pass. Focus on blockers and
+  come back to the warnings if a post-migration boot issue appears.
+</Tip>
+
+---
+
+## Preflight vs Runtime Checks
+
+Preflight is a **read-only** prediction. XMS still performs runtime validation
+at every stage of the migration pipeline — disk reads, transport negotiation,
+guest conversion, and volume finalize each have their own checks. A preflight
+pass does not guarantee a successful migration, but a preflight block does
+guarantee a migration would fail.
+
+---
+
+## Next Steps
+
+<CardGroup cols={3}>
+  <Card title="Cold Migration" href="/services/migration/user-guide/cold-migration" color="#197560">
+    Run a single-pass migration against a powered-off workload
+  </Card>
+  <Card title="Warm Migration" href="/services/migration/user-guide/warm-migration" color="#197560">
+    Start a continuous sync against a running workload
+  </Card>
+  <Card title="Troubleshooting" href="/services/migration/user-guide/troubleshooting" color="#197560">
+    Diagnose preflight blockers and discovery errors
+  </Card>
+</CardGroup>

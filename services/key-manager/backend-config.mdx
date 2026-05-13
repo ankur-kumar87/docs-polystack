@@ -1,0 +1,266 @@
+---
+title: "Key Manager Backend Configuration"
+description: "Configure Barbican secret store backends for Xloud Key Manager — Simple Crypto, PKCS#11 HSM, KMIP, HashiCorp Vault, Dogtag KRA, and multi-backend deployments."
+sidebarTitle: "Backend Configuration"
+---
+
+import AdminWarning from '/snippets/admin-warning.mdx';
+
+## Overview
+
+The Key Manager (Barbican) secret store backend determines how secret payloads are encrypted and where ciphertext is stored. Xloud Key Manager supports five backend types — from a software-only AES plugin for development, to hardware HSMs, external KMIP servers, HashiCorp Vault, and Dogtag KRA for enterprise deployments. Configuration is managed through XDeploy; changing the backend after secrets exist requires a migration operation.
+
+<AdminWarning />
+
+---
+
+## Supported Backends
+
+| Backend | Plugin Name | External System | Best For |
+|---------|-------------|-----------------|----------|
+| **Simple Crypto** | `simple_crypto` | None — DB-stored encrypted blobs | Development, non-HSM deployments |
+| **PKCS#11 HSM** | `p11_crypto` | Hardware Security Module (Thales, nCipher, Utimaco, ATOS) | FIPS 140-2 / production HSM |
+| **KMIP** | `kmip_plugin` | Any OASIS KMIP server (Thales, SafeNet, Vormetric, IBM) | Enterprise KMS integration |
+| **HashiCorp Vault** | `vault_plugin` | HashiCorp Vault (self-hosted or HCP) | Cloud-native secrets management |
+| **Dogtag KRA** | `dogtag_plugin` | Red Hat Certificate System / FreeIPA | Software-HSM without hardware |
+
+---
+
+## View Current Backend
+
+The active backend is visible in the XDeploy configuration panel under **Key Manager → Secret Store**. Verify the API is operational:
+
+```bash title="Verify Key Manager API"
+openstack secret list --limit 1
+```
+
+---
+
+## Backend Configuration Reference
+
+<Tabs>
+  <Tab title="Simple Crypto" icon="cpu">
+    Software-based AES-256 encryption. The Key Encryption Key (KEK) is base64-encoded and stored in `barbican.conf`. Secrets are encrypted at rest in the Barbican database.
+
+    ```ini title="barbican.conf"
+    [secretstore]
+    enabled_secretstore_plugins = store_crypto
+    enabled_crypto_plugins = simple_crypto
+
+    [simple_crypto_plugin]
+    # 32-byte base64-encoded key encryption key
+    kek = dGhpcnR5X3R3b19ieXRlX2tleWtleWtleWtleWs=
+    ```
+
+    | Parameter | Description |
+    |-----------|-------------|
+    | `kek` | 32-byte AES key, base64-encoded — protects all project KEKs |
+
+    <Warning>
+      The `kek` value is stored in plaintext in `barbican.conf`. Any host compromise exposes all secrets. This backend is suitable only for development and testing environments. Use PKCS#11, KMIP, or Vault for production.
+    </Warning>
+  </Tab>
+  <Tab title="PKCS#11 HSM" icon="microchip">
+    Stores the Master KEK and HMAC signing key inside a hardware HSM. Per-project KEKs are wrapped by the MKEK and signed with HMAC before being stored in the database. Supports Thales Luna, nCipher nShield, ATOS Bull, and Utimaco HSMs.
+
+    ```ini title="barbican.conf"
+    [secretstore]
+    enabled_secretstore_plugins = store_crypto
+    enabled_crypto_plugins = p11_crypto
+
+    [p11_crypto_plugin]
+    library_path = /usr/lib/libCryptoki2_64.so
+    token_labels = barbican_token
+    login = <hsm-partition-pin>
+    mkek_label = barbican_mkek
+    mkek_length = 32
+    hmac_label = barbican_hmac
+    encryption_mechanism = CKM_AES_CBC
+    hmac_mechanism = CKM_SHA256_HMAC
+    key_wrap_mechanism = CKM_AES_KEY_WRAP_KWP
+    pkek_length = 32
+    pkek_cache_ttl = 900
+    pkek_cache_limit = 100
+    ```
+
+    | Parameter | Description |
+    |-----------|-------------|
+    | `library_path` | Path to HSM vendor's PKCS#11 `.so` shared library |
+    | `token_labels` | Label identifying the HSM token |
+    | `login` | HSM partition PIN |
+    | `mkek_label` | Label of the Master KEK inside the HSM |
+    | `hmac_label` | Label of the HMAC signing key inside the HSM (must differ from `mkek_label`) |
+    | `encryption_mechanism` | Encryption cipher, e.g. `CKM_AES_CBC` |
+    | `hmac_mechanism` | HMAC algorithm, e.g. `CKM_SHA256_HMAC` |
+    | `key_wrap_mechanism` | Project KEK wrapping algorithm |
+    | `pkek_cache_ttl` | Unwrapped project KEK cache lifetime (seconds) |
+
+    Generate master keys on first deployment:
+
+    ```bash title="Generate MKEK and HMAC keys on HSM"
+    barbican-manage hsm gen_mkek --label barbican_mkek
+    barbican-manage hsm gen_hmac --label barbican_hmac
+    ```
+
+    <Warning>
+      `mkek_label` and `hmac_label` must be different values. Identical labels cause authentication failures.
+    </Warning>
+  </Tab>
+  <Tab title="KMIP" icon="server">
+    Secrets are stored directly on the external KMIP device — Barbican's database holds only a reference/locator. Supports mutual TLS authentication. Compatible with any OASIS KMIP-compliant server.
+
+    ```ini title="barbican.conf"
+    [secretstore]
+    enabled_secretstore_plugins = kmip_plugin
+
+    [kmip_plugin]
+    host = kmip.internal.<your-domain>
+    port = 5696
+    keyfile = /etc/barbican/certs/client.key
+    certfile = /etc/barbican/certs/client.crt
+    ca_certs = /etc/barbican/certs/ca.crt
+    # Optional: username/password if required by the KMIP device
+    username = barbican-svc
+    password = <kmip-password>
+    ```
+
+    | Parameter | Description |
+    |-----------|-------------|
+    | `host` | KMIP server hostname or IP |
+    | `port` | KMIP port (default `5696`) |
+    | `keyfile` | Client TLS private key path |
+    | `certfile` | Client TLS certificate path |
+    | `ca_certs` | CA certificate for server validation |
+    | `username` | KMIP authentication username (optional) |
+    | `password` | KMIP authentication password (optional) |
+
+    <Tip>
+      Client certificates and private keys must be readable only by the `barbican` service user (`chmod 0400`). Store them on an encrypted volume.
+    </Tip>
+  </Tab>
+  <Tab title="HashiCorp Vault" icon="vault">
+    Secrets are stored in Vault's KV secrets engine. Barbican authenticates using either a root token (development) or AppRole (production). The Vault server can be self-hosted or HCP Vault.
+
+    ```ini title="barbican.conf"
+    [secretstore]
+    enabled_secretstore_plugins = vault_plugin
+
+    [vault_plugin]
+    vault_url = https://vault.internal.<your-domain>:8200
+    use_ssl = true
+    ssl_ca_crt_file = /etc/barbican/certs/vault-ca.crt
+    # Production: use AppRole (recommended)
+    approle_role_id = <vault-role-id>
+    approle_secret_id = <vault-secret-id>
+    kv_mountpoint = secret
+    # Development only (not recommended for production):
+    # root_token_id = <vault-root-token>
+    ```
+
+    | Parameter | Description |
+    |-----------|-------------|
+    | `vault_url` | Vault server address |
+    | `use_ssl` | Enable TLS for Vault communication |
+    | `ssl_ca_crt_file` | CA certificate for Vault TLS verification |
+    | `approle_role_id` | AppRole role ID (recommended for production) |
+    | `approle_secret_id` | AppRole secret ID paired with role ID |
+    | `kv_mountpoint` | KV secrets engine mount point (default: `secret`) |
+    | `root_token_id` | Root token auth — development only |
+
+    <Tip>
+      Use AppRole authentication in production. Root token auth works but is not rotatable and grants full Vault access. AppRole provides scoped, rotatable credentials.
+    </Tip>
+  </Tab>
+  <Tab title="Dogtag KRA" icon="certificate">
+    Integrates with Red Hat Certificate System's Key Recovery Authority. Secrets are stored in the KRA with master keys held in an NSS certificate database (software) or HSM. Supports optional FreeIPA integration.
+
+    ```ini title="barbican.conf"
+    [secretstore]
+    enabled_secretstore_plugins = dogtag_plugin
+
+    [dogtag_plugin]
+    dogtag_host = kra.internal.<your-domain>
+    dogtag_port = 8443
+    pem_path = /etc/barbican/kra_admin_cert.pem
+    nss_db_path = /etc/barbican/alias
+    nss_password = <nss-db-password>
+    ```
+
+    | Parameter | Description |
+    |-----------|-------------|
+    | `dogtag_host` | KRA server hostname |
+    | `dogtag_port` | KRA server port (default `8443`) |
+    | `pem_path` | KRA admin certificate PEM file path |
+    | `nss_db_path` | NSS certificate database directory |
+    | `nss_password` | NSS database password |
+
+    <Note>
+      Dogtag is the only backend offering software-HSM security (NSS database) without requiring physical HSM hardware. It is the recommended middle ground between Simple Crypto (no hardware) and PKCS#11 (requires HSM).
+    </Note>
+  </Tab>
+</Tabs>
+
+---
+
+## Multi-Backend Deployments
+
+Deploy multiple backends simultaneously — e.g., KMIP as the global default with Vault available for specific projects.
+
+```ini title="barbican.conf — multi-backend example"
+[secretstore]
+enable_multiple_secret_stores = True
+stores_lookup_suffix = software, kmip, vault
+
+[secretstore:software]
+secret_store_plugin = store_crypto
+crypto_plugin = simple_crypto
+
+[secretstore:kmip]
+secret_store_plugin = kmip_plugin
+global_default = True
+
+[secretstore:vault]
+secret_store_plugin = vault_plugin
+```
+
+| Rule | Description |
+|------|-------------|
+| `enable_multiple_secret_stores = True` | Activates multi-backend mode |
+| `stores_lookup_suffix` | Comma-separated list — each maps to a `[secretstore:SUFFIX]` section |
+| `global_default = True` | **Exactly one** backend must have this — handles secrets with no project preference |
+| `enabled_secretstore_plugins` | **Ignored** when multi-backend mode is active |
+
+<Warning>
+  When switching from single-backend to multi-backend, keep the existing backend configuration as the `global_default` to maintain access to existing secrets.
+</Warning>
+
+---
+
+## Apply Backend Configuration
+
+```bash title="Deploy Key Manager configuration via XDeploy"
+xavs-ansible deploy -t barbican
+```
+
+```bash title="Verify the service is healthy after deployment"
+openstack secret list --limit 1
+```
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Secret Stores" href="/services/key-manager/secret-stores" color="#197560">
+    Configure multiple backends and assign preferred stores to projects
+  </Card>
+  <Card title="Security" href="/services/key-manager/security" color="#197560">
+    Protect master keys, audit secret access, and certificate management
+  </Card>
+  <Card title="Architecture" href="/services/key-manager/architecture" color="#197560">
+    Understand Key Manager service topology and secret lifecycle
+  </Card>
+  <Card title="Admin Troubleshooting" href="/services/key-manager/admin-troubleshooting" color="#197560">
+    Diagnose backend connectivity and startup failures
+  </Card>
+</CardGroup>

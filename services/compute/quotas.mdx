@@ -1,0 +1,131 @@
+---
+title: "Quota Management"
+description: "Set and enforce per-project resource ceilings in Xloud Compute. Manage instance counts, vCPU allocations, RAM limits, and key pair quotas."
+sidebarTitle: "Quotas"
+---
+
+import AdminWarning from '/snippets/admin-warning.mdx';
+
+## Overview
+
+Quotas enforce per-project resource limits to prevent over-consumption and ensure fair
+resource distribution across tenants. Xloud Compute tracks quotas for instances, vCPUs,
+RAM, server groups, key pairs, and other compute resources.
+
+<AdminWarning />
+
+<Note>
+  **Prerequisites**
+  - Administrator access for modifying quotas
+  - Users can view their own project quota usage in the instance create wizard
+</Note>
+
+---
+
+## Default Compute Quotas
+
+| Resource | Default Limit | Description |
+|----------|--------------|-------------|
+| **Instances** | 10 | Maximum number of instances per project |
+| **Cores** | 20 | Maximum vCPUs across all instances |
+| **RAM** | 51200 MB | Maximum RAM across all instances |
+| **Key Pairs** | 100 | Maximum SSH key pairs per user |
+| **Server Groups** | 10 | Maximum server groups per project |
+| **Server Group Members** | 10 | Maximum instances per server group |
+
+---
+
+## View Quota Usage
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    Quota usage is displayed in real-time during instance creation. The
+    **Instance Create wizard** (Step 4: Confirm Config) shows a footer badge with
+    current usage for: Instances, CPU, Memory, Volumes, Volume Capacity, and
+    Server Group Members.
+
+    If any quota would be exceeded, the badge turns red and the submit button
+    is disabled.
+
+    <Note>
+      The Dashboard does not provide a dedicated quota management page. Quota
+      modifications are performed via the CLI or through
+      [XDeploy](/deployment) configuration.
+    </Note>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Source credentials"
+    source openrc.sh
+    ```
+
+    <CodeGroup>
+    ```bash title="Show quota for a project"
+    openstack quota show <PROJECT_ID>
+    ```
+    ```bash title="Show current usage"
+    openstack quota show --usage <PROJECT_ID>
+    ```
+    ```bash title="Show default quotas"
+    openstack quota show --default
+    ```
+    </CodeGroup>
+  </Tab>
+</Tabs>
+
+---
+
+## Modify Quotas
+
+<Tabs>
+  <Tab title="XDeploy" icon="settings">
+    <Steps titleSize="h3">
+      <Step title="Open XDeploy Configuration">
+        Open **XDeploy > Configuration > Advance Features**.
+      </Step>
+      <Step title="Adjust quota defaults">
+        Modify the default quota values in the configuration. Save and run
+        **Operations > Reconfigure** to apply.
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    <CodeGroup>
+    ```bash title="Increase instance quota for a project"
+    openstack quota set --instances 50 <PROJECT_ID>
+    ```
+    ```bash title="Increase vCPU quota"
+    openstack quota set --cores 100 <PROJECT_ID>
+    ```
+    ```bash title="Increase RAM quota (in MB)"
+    openstack quota set --ram 102400 <PROJECT_ID>
+    ```
+    ```bash title="Set unlimited quota (-1)"
+    openstack quota set --instances -1 <PROJECT_ID>
+    ```
+    </CodeGroup>
+
+    <Warning>
+      Setting a quota to `-1` removes the limit entirely. Use with caution —
+      unlimited quotas can lead to resource exhaustion on the cluster.
+    </Warning>
+  </Tab>
+</Tabs>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Launch an Instance" href="/services/compute/launch-instance" color="#197560">
+    See quota enforcement in action during instance creation
+  </Card>
+  <Card title="Flavors" href="/services/compute/flavors" color="#197560">
+    Manage flavor sizes that consume quota
+  </Card>
+  <Card title="Compute Hosts" href="/services/compute/compute-hosts" color="#197560">
+    Monitor cluster-wide resource availability
+  </Card>
+  <Card title="Storage Quotas" href="/services/storage/quotas" color="#197560">
+    Manage block storage volume and capacity quotas
+  </Card>
+</CardGroup>

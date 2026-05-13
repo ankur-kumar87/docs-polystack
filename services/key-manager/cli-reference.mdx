@@ -1,0 +1,147 @@
+---
+title: "Key Manager CLI Reference"
+description: "Complete openstack secret CLI commands for managing secrets, containers, certificates, and ACLs in Xloud Key Manager."
+sidebarTitle: "CLI Reference"
+---
+
+## Overview
+
+The `openstack secret` command group manages secrets, containers, and access control policies in the Xloud Key Manager service.
+
+<Note>
+  **Prerequisites**
+  - CLI installed and authenticated — see [CLI Setup](/cli-setup)
+  - Python barbicanclient installed: `pip install python-barbicanclient`
+</Note>
+
+---
+
+## Secrets
+
+<CodeGroup>
+```bash title="List secrets"
+openstack secret list
+```
+
+```bash title="Store a passphrase"
+openstack secret store \
+  --name db-password \
+  --secret-type passphrase \
+  --payload "my-secure-password"
+```
+
+```bash title="Store a symmetric key"
+openstack secret order create \
+  --name aes-key \
+  --algorithm aes \
+  --bit-length 256 \
+  --mode cbc \
+  key
+```
+
+```bash title="Store from file"
+openstack secret store \
+  --name tls-cert \
+  --secret-type certificate \
+  --file /path/to/cert.pem \
+  --payload-content-type "application/octet-stream"
+```
+
+```bash title="Show secret metadata"
+openstack secret get <secret-href>
+```
+
+```bash title="Retrieve secret payload"
+openstack secret get --payload <secret-href>
+```
+
+```bash title="Delete secret"
+openstack secret delete <secret-href>
+```
+</CodeGroup>
+
+---
+
+## Containers
+
+<CodeGroup>
+```bash title="List containers"
+openstack secret container list
+```
+
+```bash title="Create certificate container"
+openstack secret container create \
+  --name my-tls \
+  --type certificate \
+  --secret "certificate=<cert-href>" \
+  --secret "private_key=<key-href>"
+```
+
+```bash title="Show container"
+openstack secret container get <container-href>
+```
+
+```bash title="Delete container"
+openstack secret container delete <container-href>
+```
+</CodeGroup>
+
+---
+
+## Orders (Key Generation)
+
+<CodeGroup>
+```bash title="List orders"
+openstack secret order list
+```
+
+```bash title="Generate AES key"
+openstack secret order create \
+  --name my-key \
+  --algorithm aes \
+  --bit-length 256 \
+  key
+```
+
+```bash title="Show order"
+openstack secret order get <order-href>
+```
+
+```bash title="Delete order"
+openstack secret order delete <order-href>
+```
+</CodeGroup>
+
+---
+
+## ACLs
+
+<CodeGroup>
+```bash title="Show ACL for secret"
+openstack acl get <secret-href>
+```
+
+```bash title="Grant read access to a user"
+openstack acl submit \
+  --user <user-id> \
+  --operation-type read \
+  <secret-href>
+```
+
+```bash title="Delete ACL"
+openstack acl delete <secret-href>
+```
+</CodeGroup>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Store Secrets Guide" href="/services/key-manager/store-secrets" color="#197560">
+    Guide to storing and retrieving secrets securely
+  </Card>
+  <Card title="Certificates Guide" href="/services/key-manager/certificates" color="#197560">
+    Manage TLS certificates and certificate orders
+  </Card>
+</CardGroup>

@@ -1,0 +1,184 @@
+---
+title: "Data Sources"
+description: "Configure Xloud Optimization data sources — connect Prometheus, Telemetry, and the Compute API to enable metric-backed optimization strategies."
+sidebarTitle: "Data Sources"
+---
+
+## Overview
+
+The Decision Engine relies on data sources to build its cluster model and collect
+performance metrics. The available data source determines which optimization strategies
+can be used. The Compute API data source is always active. Prometheus and Telemetry
+are optional and unlock additional strategies.
+
+---
+
+## Data Source Overview
+
+| Data Source | Provides | Required For |
+|-------------|----------|--------------|
+| **Compute API** | Host inventory, vCPU/memory usage, instance placement | All strategies — always active |
+| **Prometheus** | Infrastructure metrics (node CPU, temperature) | `outlet_temperature`, `saving_energy` |
+| **Telemetry (Ceilometer)** | Historical per-instance CPU, memory metrics | `workload_stabilization`, `noisy_neighbor` |
+| **IPMI** | Server power state, inlet temperature | `outlet_temperature` (physical temperature) |
+
+---
+
+## Compute API Data Source
+
+The Compute API data source is enabled by default and requires no additional configuration.
+It provides:
+- Real-time host inventory and hypervisor utilization
+- Current instance placement (which instance runs on which host)
+- vCPU and memory allocation per host
+
+```bash title="Verify Compute API data source is working"
+docker exec -it watcher_decision_engine python3 -c "
+from watcher.decision_engine.model.collector.nova import NovaClusterDataModelCollector
+print('Compute collector loaded successfully')
+"
+```
+
+---
+
+## Prometheus Data Source
+
+<Tabs>
+  <Tab title="XDeploy" icon="browser">
+    <Steps titleSize="h3">
+      <Step title="Enable Prometheus Monitoring" icon="toggle-left">
+        Open **XDeploy** and navigate to **Configuration**. Select the **Monitoring** tab
+        and toggle **Enable Prometheus** to **Yes**.
+      </Step>
+      <Step title="Configure Custom Data Source Settings (Optional)" icon="settings">
+        For advanced Prometheus configuration, navigate to **Advanced Configuration**.
+        In the **Service Tree** (left panel), select **watcher**. Click **New File** or
+        select an existing `watcher.conf` from the **File Browser** (right panel).
+
+        Add the following in the **Code Editor** (center panel):
+
+        ```ini title="/etc/xavs/config/watcher/watcher.conf"
+        [watcher_cluster_data_model_collectors.prometheus]
+        enabled = True
+        host = 10.0.1.71
+        port = 9291
+
+        [prometheus_client]
+        host = 10.0.1.71
+        port = 9291
+        ```
+      </Step>
+      <Step title="Save and Apply" icon="circle-check">
+        Click **Save Current File**. Return to **Operations** and run **reconfigure** to
+        apply the changes to the Decision Engine.
+
+        <Check>Prometheus data source configured and applied via XDeploy.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    Edit the configuration file directly:
+
+    ```ini title="/etc/xavs/watcher/watcher.conf"
+    [watcher_cluster_data_model_collectors.prometheus]
+    enabled = True
+    host = 10.0.1.71
+    port = 9291
+
+    [prometheus_client]
+    host = 10.0.1.71
+    port = 9291
+    ```
+
+    Restart the Decision Engine after changes:
+
+    ```bash title="Restart Decision Engine"
+    docker restart watcher_decision_engine
+    ```
+  </Tab>
+</Tabs>
+
+<AccordionGroup>
+  <Accordion title="Validation" icon="circle-check">
+    ```bash title="Test Prometheus connectivity"
+    curl -s "http://10.0.1.71:9291/api/v1/query?query=up" \
+      | jq '.status'
+    ```
+
+    Expected: `"success"`
+
+    ```bash title="Verify temperature metrics are available"
+    curl -s "http://10.0.1.71:9291/api/v1/query?query=node_hwmon_temp_celsius" \
+      | jq '.data.result | length'
+    ```
+
+    Expected: a non-zero count of temperature sensor results.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Telemetry Data Source
+
+Telemetry integration requires the Xloud Telemetry service (Ceilometer) to be deployed
+and collecting per-instance metrics.
+
+<AccordionGroup>
+  <Accordion title="Configuration" icon="settings" defaultOpen>
+    ```ini title="/etc/xavs/watcher/watcher.conf"
+    [collector]
+    collector_plugins = compute, ceilometer
+
+    [ceilometer_client]
+    endpoint_type = internalURL
+    ```
+  </Accordion>
+  <Accordion title="Validation" icon="circle-check">
+    ```bash title="Check available metrics from Telemetry"
+    openstack metric metric list --limit 20
+    ```
+
+    Verify that per-instance CPU metrics are present:
+
+    ```bash title="Check cpu_util metrics"
+    openstack metric resource list \
+      --type instance \
+      | head -5
+    ```
+
+    For `workload_stabilization`, at least 2–4 hours of metric history is required
+    before the strategy produces meaningful recommendations.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Data Source and Strategy Matrix
+
+| Goal | Compute API | Prometheus | Telemetry |
+|------|:-----------:|:----------:|:---------:|
+| Server Consolidation | Required | - | - |
+| Energy Savings | Required | Optional | - |
+| Zone Rebalancing | Required | - | - |
+| Thermal Optimization | Required | Required (temp) | - |
+| Workload Stabilization | Required | - | Required |
+| Noisy Neighbor | Required | - | Required |
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Strategy Configuration" href="/services/optimization/admin-guide/strategy-config" color="#197560">
+    Tune strategy parameters for each configured data source.
+  </Card>
+  <Card title="Custom Strategies" href="/services/optimization/admin-guide/custom-strategies" color="#197560">
+    Build strategies using data from these configured sources.
+  </Card>
+  <Card title="Troubleshooting" href="/services/optimization/admin-guide/troubleshooting" color="#197560">
+    Diagnose data source connectivity failures.
+  </Card>
+  <Card title="Architecture" href="/services/optimization/admin-guide/architecture" color="#197560">
+    Review how data sources feed into the Decision Engine pipeline.
+  </Card>
+</CardGroup>

@@ -1,0 +1,287 @@
+---
+title: "Create a Linux VM from ISO"
+description: "Step-by-step guide to creating a Linux VM using ISO boot on the Xloud platform. Covers Ubuntu, CentOS, RHEL, and Debian installations."
+sidebarTitle: "Linux VM (ISO)"
+---
+
+## Overview
+
+This guide walks through creating a Linux virtual machine from an ISO image on the
+Xloud platform. While most Linux deployments use pre-built cloud images (QCOW2), ISO
+boot is useful when you need a custom installation — specific partitioning, encrypted
+root, minimal installs, or distributions not available as cloud images.
+
+<Info>**Xloud-Developed** — ISO boot with CD-ROM attachment in the instance create wizard is developed by Xloud and ships with XAVS / XPCI.</Info>
+
+---
+
+## Prerequisites
+
+<Note>
+  **Required Resources**
+  - A **Linux ISO** (Ubuntu Server, CentOS, RHEL, Debian, etc.) — uploaded to the Image Service
+  - A **network** available in your project
+  - A **flavor** with sufficient resources (minimum: 1 vCPU, 2 GiB RAM, 20 GiB disk)
+</Note>
+
+### Upload the ISO
+
+Navigate to **Compute > Images** and click **Create Image**.
+
+| Field | Value |
+|-------|-------|
+| **Name** | `ubuntu-24.04-iso` (or your distribution) |
+| **Upload Type** | Upload File |
+| **File** | Select your `.iso` file |
+| **Disk Format** | ISO |
+| **OS** | Ubuntu (or matching distribution) |
+| **OS Version** | 24.04 (or your version) |
+| **OS Admin** | root |
+
+Click **Confirm** and wait for status to reach **Active**.
+
+For detailed instructions, see [Upload an Image](/services/images/upload-image).
+
+---
+
+## Create the Linux VM
+
+<Steps titleSize="h3">
+  <Step title="Open the Create Instance wizard">
+    Navigate to **Compute > Instances** and click **Create Instance**.
+  </Step>
+
+  <Step title="Step 1 — Base Config">
+    **Available Zone** — Select your preferred zone.
+
+    **Flavor** — Select a flavor appropriate for your workload.
+
+    **Start Source** — Select **Image** and choose your **Linux ISO**.
+
+    **Boot From Volume** — Select **Yes - Create a new system disk**.
+
+    **System Disk** — This will be the root partition (`/`).
+    - Select a volume type
+    - Set the size (minimum 20 GiB, recommended 40+ GiB for production)
+    - Set Delete on Termination based on your preference
+
+    <Tip>
+      You can add **Data Disks** here for separate mount points (e.g., `/data`,
+      `/var/log`), or add them later after installation.
+    </Tip>
+  </Step>
+
+  <Step title="Step 2 — Network Config">
+    Select your **Network** and configure a **Security Group**.
+
+    <Tip>
+      Linux VirtIO network drivers are included in the kernel — network connectivity
+      works immediately during installation. No additional drivers needed.
+    </Tip>
+  </Step>
+
+  <Step title="Step 3 — System Config">
+    Enter a **Name** for the VM (e.g., `ubuntu-server-01`).
+
+    For **Login Type**, select either option — the credentials set here are not
+    injected into ISO installs. You will create your user account during the Linux
+    installation process.
+  </Step>
+
+  <Step title="Step 4 — Confirm and Launch">
+    Review the configuration and click **Confirm**.
+
+    The instance boots from the Linux ISO with the system disk attached as a
+    blank virtual drive.
+  </Step>
+</Steps>
+
+---
+
+## Install Linux
+
+<Steps titleSize="h3">
+  <Step title="Open the VNC console">
+    Navigate to **Compute > Instances**. Click the **Console** action (first row
+    action) on your instance to open the VNC console.
+
+    The Linux installer boot menu appears.
+  </Step>
+
+  <Step title="Follow the installation wizard">
+    Proceed through the standard installation for your distribution:
+
+    <Tabs>
+      <Tab title="Ubuntu Server" icon="terminal">
+        - Select language and keyboard layout
+        - Configure network (auto-detected via DHCP)
+        - Configure storage — select the virtual disk (e.g., `/dev/vda`)
+        - Create your user account and set password
+        - Optionally enable SSH server
+        - Complete installation and reboot
+      </Tab>
+      <Tab title="CentOS / RHEL" icon="terminal">
+        - Select language
+        - Click **Installation Destination** — select the virtual disk (`/dev/vda`)
+        - Configure network and hostname
+        - Set root password and create a user
+        - Click **Begin Installation**
+        - Reboot after completion
+      </Tab>
+      <Tab title="Debian" icon="terminal">
+        - Select language, location, keyboard
+        - Configure network (auto via DHCP)
+        - Set hostname and root password
+        - Partition the virtual disk (`/dev/vda`)
+        - Select packages
+        - Install GRUB to `/dev/vda`
+        - Complete and reboot
+      </Tab>
+    </Tabs>
+
+    <Note>
+      The virtual disk appears as `/dev/vda` (VirtIO block device). Linux kernels
+      include VirtIO drivers by default — no additional driver loading is needed.
+    </Note>
+  </Step>
+
+  <Step title="Verify the installation">
+    After reboot, the VM boots from the installed system disk. Log in via the
+    VNC console with the credentials you created during installation.
+
+    ```bash title="Verify network connectivity"
+    ip addr show
+    ping -c 3 8.8.8.8
+    ```
+
+    <Check>Linux is installed and running with network connectivity.</Check>
+  </Step>
+</Steps>
+
+---
+
+## Post-Installation
+
+<Steps titleSize="h3">
+  <Step title="Install the QEMU guest agent (recommended)">
+    The guest agent enables password changes and other management operations
+    from the Dashboard.
+
+    <CodeGroup>
+    ```bash title="Ubuntu / Debian"
+    sudo apt update && sudo apt install -y qemu-guest-agent
+    sudo systemctl enable --now qemu-guest-agent
+    ```
+    ```bash title="CentOS / RHEL"
+    sudo dnf install -y qemu-guest-agent
+    sudo systemctl enable --now qemu-guest-agent
+    ```
+    </CodeGroup>
+  </Step>
+
+  <Step title="Eject the ISO">
+    The Linux ISO is still mounted. To remove it:
+
+    **Shut down the VM** (`sudo shutdown -h now`).
+
+    In the Dashboard, navigate to **Compute > Instances**, click the instance
+    name, go to the **Volumes** tab. The ISO volume appears as an attached volume.
+
+    Click the **More** dropdown and select **Instance Related > Detach**.
+
+    For detailed instructions, see [Detach a Volume](/services/storage/attach-volume#detach-a-volume).
+  </Step>
+
+  <Step title="Associate a Floating IP (for SSH access)">
+    Navigate to **Compute > Instances**. Click the **More** dropdown on the
+    instance row, then select **Associate Floating IP** under **Related Resources**.
+
+    After association, connect via SSH:
+
+    ```bash title="SSH to the instance"
+    ssh your-username@<FLOATING_IP>
+    ```
+
+    Make sure your security group allows TCP port 22 (SSH) inbound.
+  </Step>
+</Steps>
+
+---
+
+## Optional — Create a Reusable Image
+
+If you want to use this Linux installation as a base for future VMs, create an
+image from the system disk.
+
+<Steps titleSize="h3">
+  <Step title="Prepare the system (recommended)">
+    Clean up the installation for reuse:
+
+    ```bash title="Clean package cache and logs"
+    sudo apt clean        # Ubuntu/Debian
+    sudo dnf clean all    # CentOS/RHEL
+    sudo rm -rf /var/log/*.log /tmp/*
+    sudo cloud-init clean --logs   # If cloud-init is installed
+    ```
+
+    Then shut down: `sudo shutdown -h now`
+  </Step>
+
+  <Step title="Create an image from the system disk">
+    Navigate to **Storage > Volumes**. Find the system disk volume (the one
+    Linux was installed on). Click the **More** dropdown and select
+    **Data Protection > Create Image**.
+
+    Enter a name (e.g., `ubuntu-24.04-custom`) and select the disk format.
+    Click **Confirm**.
+
+    <Check>The image appears in **Compute > Images** — ready for launching new VMs
+    without repeating the ISO installation.</Check>
+  </Step>
+</Steps>
+
+Alternatively, create a [VM Template](/services/compute/vm-templates) from the
+instance to capture the full configuration (flavor, network, security groups)
+alongside the disk image.
+
+---
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="VM boots to GRUB rescue or blank screen after installation" defaultOpen>
+    The boot order may be targeting the ISO instead of the installed disk. Shut down
+    the VM, detach the ISO volume from the Volumes tab, then start the VM again.
+    It will boot from the system disk.
+  </Accordion>
+  <Accordion title="No network during or after installation">
+    Verify that a network was selected during instance creation (Step 2). Check the
+    security group allows outbound traffic. Run `ip addr show` to verify the interface
+    is up. If no IP, try `sudo dhclient` to request a DHCP lease.
+  </Accordion>
+  <Accordion title="Cannot SSH after installation">
+    Ensure: (1) SSH server is installed and running (`sudo systemctl status sshd`),
+    (2) A floating IP is associated, (3) Security group allows TCP port 22 inbound,
+    (4) The correct username is used (not `root` on Ubuntu — use the account created
+    during installation).
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="VM Templates" href="/services/compute/vm-templates" color="#197560">
+    Save this Linux VM as a reusable template
+  </Card>
+  <Card title="Clone an Instance" href="/services/compute/clone-instance" color="#197560">
+    Create an exact copy of the configured Linux VM
+  </Card>
+  <Card title="Live vCPU/RAM Scaling" href="/services/compute/live-resize" color="#197560">
+    Scale resources without rebooting
+  </Card>
+  <Card title="Instance Snapshots" href="/services/compute/snapshots" color="#197560">
+    Create point-in-time snapshots for backup
+  </Card>
+</CardGroup>

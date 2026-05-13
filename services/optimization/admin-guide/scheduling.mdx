@@ -1,0 +1,206 @@
+---
+title: "Scheduling Audits"
+description: "Automate Xloud Optimization audits with audit templates and schedules — configure recurring optimization runs and manage the audit template lifecycle."
+sidebarTitle: "Scheduling"
+---
+
+## Overview
+
+Scheduled audits run automatically on a recurring basis without manual initiation.
+The scheduling workflow has two steps: create an audit template that defines the goal
+and scope, then create a scheduled audit from that template with a cron expression or
+interval. Scheduled audits are ideal for nightly consolidation runs, peak-hour workload
+stabilization checks, and post-recovery zone rebalancing.
+
+<Note>
+  **Prerequisites**
+  - Administrator privileges
+  - At least one data source configured for the selected goal
+</Note>
+
+---
+
+## Audit Templates
+
+Audit templates are reusable configurations that serve as the basis for both manual
+one-off audits and scheduled recurring audits.
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Navigate to Audit Templates" icon="compass">
+        Navigate to
+        **Optimization → Audit Templates**.
+      </Step>
+      <Step title="Create a template" icon="plus">
+        Click **Create Audit Template** and fill in:
+
+        | Field | Description | Example |
+        |-------|-------------|---------|
+        | **Name** | Template identifier | `daily-consolidation` |
+        | **Goal** | Optimization objective | `server_consolidation` |
+        | **Scope** | Target scope | `CLUSTER` |
+        | **Description** | Optional documentation note | `Nightly server consolidation` |
+      </Step>
+      <Step title="Save" icon="circle-check">
+        Click **Create**. The template is now available for manual audits and scheduling.
+
+        <Check>Audit template created and visible in the template list.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Create an audit template"
+    watcher audittemplate create daily-consolidation \
+      --goal server_consolidation \
+      --description "Nightly server consolidation"
+    ```
+
+    ```bash title="List audit templates"
+    watcher audittemplate list
+    ```
+
+    ```bash title="Show template details"
+    watcher audittemplate show daily-consolidation
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Schedule a Recurring Audit
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    Navigate to **Audit Templates** and click **Actions → Create Audit** on your
+    template. In the audit creation form, enable **Auto Trigger** and set a cron
+    expression in the scheduling field.
+
+    | Cron Example | Schedule |
+    |-------------|----------|
+    | `0 2 * * *` | Daily at 02:00 AM |
+    | `0 */6 * * *` | Every 6 hours |
+    | `0 2 * * 0` | Weekly on Sunday at 02:00 AM |
+
+    <Tip>
+      Schedule consolidation audits during off-peak hours (02:00–06:00 AM) to minimize
+      the impact of live migrations on active workloads.
+    </Tip>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Create a scheduled audit"
+    watcher audit create \
+      --audit-template daily-consolidation \
+      --auto-trigger True \
+      --goal server_consolidation
+    ```
+
+    ```bash title="List all audits including scheduled"
+    watcher audit list
+    ```
+
+    <Note>
+      The `--auto-trigger True` flag instructs the Decision Engine to execute the
+      resulting action plan automatically after audit completion, without manual approval.
+      Use this only for non-production environments or after thoroughly validating the
+      strategy on your topology.
+    </Note>
+  </Tab>
+</Tabs>
+
+---
+
+## Auto-Trigger vs Manual Approval
+
+| Mode | Behaviour | Recommended For |
+|------|-----------|----------------|
+| Manual approval (default) | Plan requires explicit `execute` call | Production environments |
+| Auto-trigger | Plan executes immediately after audit | Dev/test, or validated strategies only |
+
+<Warning>
+  Enable `auto_trigger` only after thoroughly testing the strategy behaviour on your
+  cluster topology. Auto-trigger can initiate live migrations during business hours
+  if the schedule is misconfigured.
+</Warning>
+
+---
+
+## Manage Scheduled Audits
+
+```bash title="List all audits"
+watcher audit list
+```
+
+```bash title="Delete a scheduled audit"
+watcher audit delete <audit-uuid>
+```
+
+```bash title="Delete an audit template"
+watcher audittemplate delete daily-consolidation
+```
+
+---
+
+## Action Plan Expiry
+
+Action plans become stale when the cluster state changes significantly after audit
+completion. Configure expiry to prevent old plans from being executed.
+
+<Tabs>
+  <Tab title="XDeploy" icon="browser">
+    <Steps titleSize="h3">
+      <Step title="Open Advanced Configuration" icon="settings">
+        Open **XDeploy** and navigate to **Advanced Configuration**. In the **Service Tree**
+        (left panel), select **watcher**.
+      </Step>
+      <Step title="Edit the Expiry Setting" icon="file-pen">
+        Click **New File** or select an existing `watcher.conf` from the **File Browser**
+        (right panel). Add the following in the **Code Editor** (center panel):
+
+        ```ini title="/etc/xavs/config/watcher/watcher.conf"
+        [DEFAULT]
+        action_plan_expiry = 24
+        ```
+
+        Plans older than `action_plan_expiry` hours are automatically invalidated. A new audit
+        must be run to generate a fresh plan.
+      </Step>
+      <Step title="Save and Apply" icon="circle-check">
+        Click **Save Current File**. Return to **Operations** and run **reconfigure** to
+        apply the expiry setting.
+
+        <Check>Action plan expiry configured and applied via XDeploy.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    Edit the configuration file directly:
+
+    ```ini title="/etc/xavs/watcher/watcher.conf"
+    [DEFAULT]
+    action_plan_expiry = 24
+    ```
+
+    Plans older than `action_plan_expiry` hours are automatically invalidated. A new audit
+    must be run to generate a fresh plan.
+  </Tab>
+</Tabs>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Action Plan Policies" href="/services/optimization/admin-guide/action-policies" color="#197560">
+    Configure manual vs automatic action plan execution policies.
+  </Card>
+  <Card title="Strategy Configuration" href="/services/optimization/admin-guide/strategy-config" color="#197560">
+    Tune strategy parameters for scheduled audits.
+  </Card>
+  <Card title="Audit History (User)" href="/services/optimization/user-guide/audit-history" color="#197560">
+    Review scheduled audit results and trends over time.
+  </Card>
+  <Card title="Troubleshooting" href="/services/optimization/admin-guide/troubleshooting" color="#197560">
+    Diagnose scheduled audit failures and data source issues.
+  </Card>
+</CardGroup>

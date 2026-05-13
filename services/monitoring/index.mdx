@@ -1,0 +1,94 @@
+---
+title: "Infrastructure Monitoring"
+description: "End-to-end observability for infrastructure, applications, networks, and security with the Xloud Infrastructure Monitoring Platform (XIMP)."
+icon: "activity"
+sidebarTitle: "Monitoring (XIMP)"
+mode: "wide"
+---
+
+The Xloud Infrastructure Monitoring Platform (XIMP) delivers comprehensive, end-to-end
+observability across your entire environment — from bare-metal hosts and virtual machines
+to applications, networks, and security events. Proactive alerting, unified dashboards,
+and intelligent analytics give operations teams the insight needed to detect, diagnose,
+and resolve issues before they impact workloads.
+
+<Card title="XIMP — Infrastructure Monitoring Platform" icon="external-link" href="https://xloud.tech/XIMP" color="#197560" horizontal>
+  Full platform overview, module descriptions, and datasheet on xloud.tech
+</Card>
+
+---
+
+<p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>XIMP Documentation</p>
+
+<CardGroup cols={2}>
+  <Card title="User Guide" icon="book-open" href="/services/monitoring/user-guide" color="#197560">
+    Navigate dashboards, configure alert rules, analyze logs, and monitor network traffic.
+    Step-by-step workflows for operations teams and application owners.
+  </Card>
+  <Card title="Admin Guide" icon="settings" href="/services/monitoring/admin-guide" color="#197560">
+    Deploy and configure monitoring agents, set up metric endpoints, configure log
+    collection pipelines, alert channels, and retention policies.
+  </Card>
+  <Card title="CLI Reference" icon="terminal" href="/services/monitoring/cli-reference" color="#197560">
+    Query metrics with PromQL, manage alerts via Alertmanager API, and retrieve
+    Ceilometer resource metrics from the command line.
+  </Card>
+  <Card title="Xloud Compute" icon="server" href="/services/compute" color="#197560">
+    Monitor virtual machine instances and hypervisor-level metrics through XIMP.
+  </Card>
+</CardGroup>
+
+---
+
+<p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Platform Modules</p>
+
+<CardGroup cols={2}>
+  <Card title="Metrics Collection" icon="chart-bar" href="/services/monitoring/admin-guide/metric-endpoints" color="#197560">
+    Collect time-series metrics from infrastructure hosts, virtual machines, containers,
+    and application endpoints with configurable scrape intervals.
+  </Card>
+  <Card title="Application Observability" icon="activity" href="/services/monitoring/user-guide/dashboards" color="#197560">
+    Trace application performance, measure latency, and correlate errors across distributed
+    services with end-to-end request visibility.
+  </Card>
+  <Card title="Log Analytics" icon="file-text" href="/services/monitoring/user-guide/log-analytics" color="#197560">
+    Centralize, index, and search log streams from all components. Detect anomalies and
+    correlate events across the entire infrastructure stack.
+  </Card>
+  <Card title="Network Traffic Monitoring" icon="network" href="/services/monitoring/user-guide/network-monitoring" color="#197560">
+    Deep packet inspection and flow analysis to identify bandwidth consumers, detect
+    anomalous traffic patterns, and baseline normal network behavior.
+  </Card>
+  <Card title="Security & IDS" icon="shield" href="/services/monitoring/admin-guide/security" color="#197560">
+    Intrusion detection, behavioral analysis, and security event correlation to surface
+    threats and unauthorized access attempts in real time.
+  </Card>
+  <Card title="DDoS Prevention" icon="shield-alert" href="/services/monitoring/admin-guide/ddos-protection" color="#197560">
+    Automated traffic analysis and mitigation to detect and block volumetric and
+    application-layer denial-of-service attacks before they reach workloads.
+  </Card>
+  <Card title="Alerting & Notifications" icon="bell" href="/services/monitoring/user-guide/alert-rules" color="#197560">
+    Rule-based alerting with configurable thresholds, severity levels, and notification
+    channels including email, webhook, and PagerDuty.
+  </Card>
+  <Card title="Configuration Management" icon="settings" href="/services/monitoring/admin-guide/agent-config" color="#197560">
+    Track configuration changes across all managed nodes with drift detection and
+    compliance reporting against defined baselines.
+  </Card>
+</CardGroup>
+
+---
+
+<p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Related Services</p>
+
+<CardGroup cols={3}>
+  <Card title="Xloud Compute" icon="server" href="/services/compute" color="#197560">
+    Monitor instance health, resource utilization, and live performance metrics
+  </Card>
+  <Card title="Disaster Recovery" icon="rotate-ccw" href="/services/disaster-recovery/index" color="#197560">
+    Combine monitoring insights with DR automation for resilient workload protection
+  </Card>
+  <Card title="Xloud Networking" icon="network" href="/services/networking/index" color="#197560">
+    Network traffic monitoring and security event correlation for virtual networks
+  </Card>
+</CardGroup>

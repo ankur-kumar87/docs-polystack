@@ -1,0 +1,146 @@
+---
+title: "Load Balancer Flavor Profiles"
+description: "Create and manage capacity tier definitions that users select when provisioning Xloud Load Balancer instances."
+sidebarTitle: "Flavor Profiles"
+---
+
+import AdminWarning from '/snippets/admin-warning.mdx';
+
+## Overview
+
+Flavor profiles define the compute capacity and topology configuration allocated to load
+balancing appliances. Administrators create named flavors that users select at load balancer
+provisioning time. Flavors abstract provider-specific settings into human-readable capacity
+tiers — e.g., `standard`, `ha`, and `high-performance`.
+
+<AdminWarning />
+
+---
+
+## Flavor Architecture
+
+| Concept | Description |
+|---------|-------------|
+| **Flavor Profile** | Provider-specific settings template (topology, compute class, etc.) |
+| **Flavor** | Named, user-visible tier based on a flavor profile. Users select flavors at provisioning. |
+
+A flavor profile is always associated with a specific provider. Multiple flavors can
+reference the same profile.
+
+---
+
+## Create a Flavor Profile
+
+<Steps titleSize="h3">
+  <Step title="Create a flavor profile" icon="settings">
+    A flavor profile wraps provider-specific settings:
+
+    ```bash title="Create standard single-topology profile"
+    openstack loadbalancer flavorprofile create \
+      --name standard-profile \
+      --provider amphora \
+      --flavor-data '{"loadbalancer_topology": "SINGLE"}'
+    ```
+
+    ```bash title="Create HA active-standby profile"
+    openstack loadbalancer flavorprofile create \
+      --name ha-profile \
+      --provider amphora \
+      --flavor-data '{"loadbalancer_topology": "ACTIVE_STANDBY"}'
+    ```
+  </Step>
+  <Step title="Create named flavors for users" icon="package">
+    Expose profiles as named flavors:
+
+    ```bash title="Create standard flavor"
+    openstack loadbalancer flavor create \
+      --name standard \
+      --flavorprofile standard-profile \
+      --description "Standard single-instance load balancer" \
+      --enable
+    ```
+
+    ```bash title="Create HA flavor"
+    openstack loadbalancer flavor create \
+      --name ha \
+      --flavorprofile ha-profile \
+      --description "High-availability active-standby load balancer" \
+      --enable
+    ```
+  </Step>
+  <Step title="Verify flavors are available" icon="circle-check">
+    ```bash title="List available flavors"
+    openstack loadbalancer flavor list
+    ```
+    <Check>Flavors appear in the list with status **enabled** — you can now select them when creating a load balancer.</Check>
+  </Step>
+</Steps>
+
+---
+
+## Flavor Profile Settings Reference
+
+| Setting | Provider | Description |
+|---------|----------|-------------|
+| `loadbalancer_topology` | amphora | `SINGLE` or `ACTIVE_STANDBY` |
+| `compute_flavor` | amphora | Nova flavor for the appliance instance |
+| `amp_image_tag` | amphora | Tag identifying the appliance image in the Image Service |
+| `availability_zone` | amphora | Restrict appliance placement to a specific AZ |
+
+---
+
+## Manage Flavors
+
+<CodeGroup>
+```bash title="List all flavors"
+openstack loadbalancer flavor list
+```
+```bash title="Show flavor details"
+openstack loadbalancer flavor show standard
+```
+```bash title="Disable a flavor (prevents new LBs from using it)"
+openstack loadbalancer flavor set standard --disable
+```
+```bash title="Delete a flavor"
+openstack loadbalancer flavor delete standard
+```
+```bash title="List flavor profiles"
+openstack loadbalancer flavorprofile list
+```
+</CodeGroup>
+
+<Warning>
+  Disabling a flavor prevents new load balancers from using it but does not affect
+  existing load balancers. Deleting a flavor profile that is referenced by a flavor
+  will fail — delete the flavor first.
+</Warning>
+
+---
+
+## Recommended Flavor Set
+
+For most production deployments, provide at least two flavors:
+
+| Flavor Name | Profile | Use Case |
+|-------------|---------|---------|
+| `standard` | Single topology | Development, testing, non-critical workloads |
+| `ha` | Active-standby | Production workloads requiring high availability |
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Provider Drivers" href="/services/load-balancer/provider-drivers" color="#197560">
+    Understand provider-specific flavor profile settings.
+  </Card>
+  <Card title="Quotas" href="/services/load-balancer/lb-quotas" color="#197560">
+    Control how many load balancers projects can provision across all flavors.
+  </Card>
+  <Card title="Architecture" href="/services/load-balancer/lb-architecture" color="#197560">
+    Understand how appliance topology affects data plane resilience.
+  </Card>
+  <Card title="Admin Troubleshooting" href="/services/load-balancer/lb-troubleshooting" color="#197560">
+    Diagnose flavor-related provisioning failures.
+  </Card>
+</CardGroup>

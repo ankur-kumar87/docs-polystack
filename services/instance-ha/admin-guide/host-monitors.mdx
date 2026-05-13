@@ -1,0 +1,252 @@
+---
+title: "Host Monitors"
+description: "Configure Xloud Instance HA host monitors — IPMI out-of-band and SSH in-band monitoring for compute hosts, with timing parameters and credential management."
+sidebarTitle: "Host Monitors"
+---
+
+## Overview
+
+Host monitors are the detection layer of Instance HA. They continuously poll registered
+compute hosts and emit fault notifications when a host becomes unreachable. Xloud Instance
+HA supports two monitor types: IPMI (out-of-band, recommended for production) and SSH
+(in-band, for environments without IPMI access). This page covers configuration for both
+types and the timing parameters that control detection sensitivity.
+
+<Warning>
+  Misconfigured monitor credentials or unreachable IPMI endpoints will cause false-negative
+  detections — the monitor reports success even when the host has failed. Validate all
+  monitor connections before enabling production workloads.
+</Warning>
+
+---
+
+## Monitor Types
+
+<CardGroup cols={2}>
+  <Card title="IPMI (Recommended)" icon="microchip" color="#197560">
+    Uses out-of-band management hardware. Detects failures even when the host OS,
+    kernel, or all network interfaces are completely unresponsive.
+  </Card>
+  <Card title="SSH" icon="terminal" color="#197560">
+    Attempts an SSH TCP connection to the host. Simpler to set up but dependent on
+    host network stack — may miss hardware failures that leave the SSH port unreachable.
+  </Card>
+</CardGroup>
+
+---
+
+## IPMI Host Monitor
+
+The IPMI monitor uses the host's `control_attributes` JSON field, set when registering
+the host in a segment.
+
+### Configure IPMI Credentials
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    When adding a host to a segment, set the **Control Attributes** field to a JSON
+    object with the IPMI endpoint:
+
+    ```json title="IPMI control attributes"
+    {
+      "host": "192.168.10.11",
+      "username": "admin",
+      "password": "ipmi-password"
+    }
+    ```
+
+    | Key | Description |
+    |----|-------------|
+    | `host` | IPMI management IP address |
+    | `username` | IPMI user with chassis status read permissions |
+    | `password` | IPMI user password |
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Register host with IPMI credentials"
+    openstack segment host create \
+      --type COMPUTE \
+      --control_attributes '{"host": "192.168.10.11", "username": "admin", "password": "ipmi-password"}' \
+      --on_maintenance False \
+      <segment-uuid>
+    ```
+
+    <Warning>
+      IPMI credentials are stored in the Instance HA database. Restrict database access
+      to the Instance HA service account only. Consider using Xloud Key Management to
+      manage IPMI secrets and inject them via a custom notification driver.
+    </Warning>
+  </Tab>
+</Tabs>
+
+### Validate IPMI Connectivity
+
+Before registering hosts, validate IPMI access from the controller node:
+
+```bash title="Test IPMI connectivity"
+ipmitool -I lanplus \
+  -H <ipmi-ip> \
+  -U <username> \
+  -P <password> \
+  chassis status
+```
+
+Expected output: `System Power State: on` confirms IPMI access is working.
+
+<Tip>
+  Ensure UDP port 623 is permitted between the Instance HA controller and all IPMI
+  management interfaces. IPMI uses RMCP+ protocol over UDP 623 by default.
+</Tip>
+
+---
+
+## SSH Host Monitor
+
+The SSH monitor attempts a TCP connection to port 22. It uses the SSH key configured
+for the Instance HA service account — no password authentication is used.
+
+### Deploy SSH Keys
+
+<Steps titleSize="h3">
+  <Step title="Locate the service key" icon="key">
+    The Instance HA host monitor generates an SSH key pair at service startup. Locate
+    the public key on the controller node:
+
+    ```bash title="Find service public key"
+    cat /etc/xavs/instance-ha/id_rsa.pub
+    ```
+  </Step>
+  <Step title="Deploy to compute hosts" icon="upload">
+    Append the public key to the `authorized_keys` of the user the monitor will connect
+    as (typically `root` or a dedicated service account):
+
+    ```bash title="Deploy key to compute host"
+    ssh-copy-id -i /etc/xavs/instance-ha/id_rsa.pub root@<compute-host>
+    ```
+  </Step>
+  <Step title="Register with SSH attributes" icon="terminal">
+    When registering the host in the segment, use the IP address only — no credentials:
+
+    ```bash title="Register host for SSH monitoring"
+    openstack segment host create \
+      --type COMPUTE \
+      --control_attributes '{"host": "10.0.1.72"}' \
+      <segment-uuid>
+    ```
+  </Step>
+  <Step title="Validate connectivity" icon="circle-check">
+    ```bash title="Test SSH from controller"
+    ssh -i /etc/xavs/instance-ha/id_rsa root@<compute-host> hostname
+    ```
+
+    <Check>SSH connection succeeds without password prompt.</Check>
+  </Step>
+</Steps>
+
+---
+
+## Timing Parameters
+
+Adjust monitoring sensitivity through the parameters below:
+
+| Section | Parameter | Default | Description |
+|---------|-----------|---------|-------------|
+| `[DEFAULT]` | `wait_period_after_service_update` | `180` | Seconds to wait after a host enters maintenance before triggering recovery -- prevents false alarms during planned restarts |
+| `[DEFAULT]` | `long_rpc_timeout` | `300` | Maximum seconds to wait for a Compute RPC call to complete before declaring it failed |
+| `[host_failure]` | `host_failure_recovery_interval` | `17` | Seconds between recovery retry attempts when the first evacuation attempt fails |
+| `[host_failure]` | `ignore_lease_seconds` | `0` | Seconds after host boot to suppress fault notifications -- set to 60-120 to avoid startup noise |
+
+<Tabs>
+  <Tab title="XDeploy" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Open Advanced Configuration" icon="settings">
+        In XDeploy, navigate to **Advanced Configuration**. In the **Service Tree**,
+        select **masakari**.
+      </Step>
+      <Step title="Edit timing parameters" icon="file-code">
+        Select or create `instance-ha.conf` in the Code Editor. Add or modify the
+        timing parameters:
+
+        ```ini title="Host monitor timing in XDeploy Advanced Configuration"
+        [DEFAULT]
+        wait_period_after_service_update = 180
+        long_rpc_timeout = 300
+
+        [host_failure]
+        host_failure_recovery_interval = 17
+        ignore_lease_seconds = 60
+        ```
+
+        Click **Save Current File**.
+      </Step>
+      <Step title="Apply changes" icon="play">
+        Navigate to **Operations** and run a **reconfigure** action. The host monitor
+        service restarts automatically with the updated parameters.
+
+        <Check>Host monitor is running with the new timing configuration.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    Edit the configuration file directly and restart the host monitor container:
+
+    ```bash title="Open Instance HA configuration"
+    vi /etc/xavs/instance-ha/instance-ha.conf
+    ```
+
+    ```ini title="Example timing configuration"
+    [DEFAULT]
+    wait_period_after_service_update = 180
+    long_rpc_timeout = 300
+
+    [host_failure]
+    host_failure_recovery_interval = 17
+    ignore_lease_seconds = 60
+    ```
+
+    ```bash title="Restart host monitor"
+    docker restart masakari_hostmonitor
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Monitor Health Check
+
+Verify the host monitor is running and detecting hosts correctly:
+
+```bash title="Check monitor service status"
+docker ps --filter name=masakari_hostmonitor
+```
+
+```bash title="View monitor logs"
+docker logs -f masakari_hostmonitor
+```
+
+Look for log entries confirming successful polls:
+```
+INFO masakari.hostmonitor: Host compute-01 is ALIVE
+INFO masakari.hostmonitor: Host compute-02 is ALIVE
+```
+
+A repeated `UNREACHABLE` log for a running host indicates a credential or network
+configuration issue — not a genuine host failure.
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Instance Monitors" href="/services/instance-ha/admin-guide/instance-monitors" color="#197560">
+    Configure guest-level instance heartbeat monitoring for per-instance fault detection.
+  </Card>
+  <Card title="Failover Segments" href="/services/instance-ha/admin-guide/failover-segments" color="#197560">
+    Register and manage compute hosts within protection segments.
+  </Card>
+  <Card title="Engine Configuration" href="/services/instance-ha/admin-guide/engine-config" color="#197560">
+    Tune recovery engine timing and retry parameters.
+  </Card>
+  <Card title="Security" href="/services/instance-ha/admin-guide/security" color="#197560">
+    Secure IPMI credentials and restrict access to Instance HA APIs.
+  </Card>
+</CardGroup>

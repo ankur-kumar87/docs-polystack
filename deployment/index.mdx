@@ -1,0 +1,207 @@
+---
+title: "XDeploy Platform"
+description: "Complete deployment and lifecycle management for your Xloud cloud infrastructure"
+icon: "play"
+sidebarTitle: "XDeploy"
+mode: "wide"
+---
+
+XDeploy is the deployment and management platform that transforms bare servers into a fully operational cloud infrastructure. It provides a guided wizard-style interface for every stage. This covers server preparation, hardware validation, production deployment, and ongoing lifecycle management.
+
+<Note>
+  **Prerequisites** — Before starting any deployment workflow, ensure you have:
+  - Physical or virtual servers running [XOS](/products/xos)
+  - Root or sudo access on all target nodes
+  - Network connectivity between all cluster nodes
+  - A valid XDeploy activation key from [license.xloud.tech](https://license.xloud.tech)
+</Note>
+
+---
+
+## Full Deployment Walkthrough
+
+<div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+  <div>
+    End-to-end XDEPLOY walkthrough — activation, hosts, XSDS storage, cluster configuration, load balancer, monitoring, advanced features, cluster licensing, and the Operations workflow that brings the cluster live.
+
+    Watch this before you begin — the 20-minute tour covers every module and decision point you will hit during a production deployment.
+  </div>
+  <iframe
+    className="w-full aspect-video rounded-xl"
+    src="https://www.youtube.com/embed/d3LdoBMgjSg"
+    title="How to Deploy Xloud with XDEPLOY — Full Walkthrough"
+    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+    allowFullScreen
+  ></iframe>
+</div>
+
+---
+
+## Deployment Workflow
+
+Follow this sequence for a successful deployment. Each stage builds on the previous one.
+
+<Steps titleSize="h3">
+  <Step title="Activate XDeploy" icon="fingerprint">
+    Enter your activation key to unlock the platform. Without activation, all tools remain locked.
+  </Step>
+  <Step title="Bootstrap" icon="check">
+    Validate hardware, install dependencies (Python, Ansible, CLI clients).
+  </Step>
+  <Step title="Hosts" icon="server">
+    Build cluster inventory, establish SSH, assign node roles.
+  </Step>
+  <Step title="XSDS Bootstrap" icon="database">
+    Deploy the distributed storage cluster. **Skip this step if not using XSDS as your storage backend.**
+  </Step>
+  <Step title="Configuration" icon="settings">
+    Set networking, storage, monitoring, and feature toggles.
+  </Step>
+  <Step title="Images" icon="package">
+    Pull or extract container images for all services.
+  </Step>
+  <Step title="Deploy" icon="play">
+    Run the deployment playbook (30-90 minutes).
+  </Step>
+  <Step title="License" icon="key">
+    Activate the deployed cluster with your license file.
+  </Step>
+  <Step title="Management" icon="users">
+    Create users, projects, quotas, and credentials.
+  </Step>
+</Steps>
+
+<Tip>
+  For production deployments, always run **Prechecks** before **Deploy** in the Operations tool. Prechecks validate ports, services, and configurations before committing to a full deployment.
+</Tip>
+
+---
+
+## Pre-Deployment Checklist
+
+Complete every step below before initiating your first deployment.
+
+<Steps titleSize="h3">
+  <Step title="Install XOS on All Nodes" icon="monitor">
+    All target servers must be running **XOS**. XOS includes all required kernel modules, drivers, and base packages pre-configured for cloud deployment.
+
+    <Info>XOS is available as an ISO from your Xloud representative or the [license portal](https://license.xloud.tech). See the [XOS product page](/products/xos) for details.</Info>
+  </Step>
+  <Step title="Verify Hardware Requirements" icon="cpu">
+    Confirm every target server meets or exceeds these minimums:
+
+    | Resource | Minimum | Production |
+    |----------|---------|-----------|
+    | CPU Cores | 4 | 16+ |
+    | RAM | 8 GB | 32-64 GB |
+    | Root Filesystem | 100 GB | 200+ GB |
+    | Network Interfaces | 2 | 4+ (bonded for redundancy) |
+
+    <Info>Each cloud service container consumes 200-500 MB of RAM. A production control plane with all services enabled requires 32 GB minimum.</Info>
+  </Step>
+  <Step title="Plan Your Network" icon="network">
+    Separate traffic types onto dedicated VLANs and subnets for security and performance:
+
+    | Network | Purpose | VLAN Required |
+    |---------|---------|--------------|
+    | API / Management | API endpoints, SSH, Ansible, internal services | Yes |
+    | VM Traffic (Tenant) | Instance-to-instance communication | Yes |
+    | Provider / External | Floating IPs, VM internet access | Yes |
+    | Load Balancer (Octavia) | Amphora management traffic | Yes (if LBaaS enabled) |
+    | Storage Client (XSDS) | Client-to-Ceph I/O | Recommended |
+    | Storage Replication (XSDS) | Ceph OSD-to-OSD replication | Recommended |
+    | Additional Provider VLANs | Customer-specific external networks | As needed |
+
+    <Warning>Never mix management and provider traffic on a single NIC. If tenant instance traffic saturates the interface, the control plane becomes unreachable.</Warning>
+  </Step>
+  <Step title="Prepare DNS and SSL" icon="globe">
+    For production deployments with HTTPS API endpoints:
+    - Configure DNS records pointing to your Internal and External VIP addresses
+    - Obtain TLS/SSL certificates for your domain (wildcard or per-service)
+    - XDeploy supports both internal and external API TLS independently
+
+    <Tip>Domain and SSL configuration is optional for lab/testing environments. You can use raw IP addresses without TLS for initial deployments.</Tip>
+  </Step>
+  <Step title="Gather Credentials" icon="key">
+    Collect the following before starting:
+    - **SSH credentials** from the deployment node to all target servers (password or key-based)
+    - **XDeploy activation key** (`.xlic`) from [license.xloud.tech](https://license.xloud.tech)
+    - **Cluster license key** (`.xlic`) from [license.xloud.tech](https://license.xloud.tech)
+  </Step>
+  <Step title="Choose Architecture and Node Roles" icon="layout">
+    Select the deployment architecture that matches your requirements:
+
+    <CardGroup cols={3}>
+      <Card title="All-in-One (AIO)" icon="square" color="#197560">
+        Single server runs all roles. For labs, demos, and development. Minimum 1 node.
+      </Card>
+      <Card title="Hyper-Converged (HCI)" icon="layers" color="#197560">
+        Each node runs compute + storage together. Reduces hardware count. Minimum 3 nodes for HA.
+      </Card>
+      <Card title="Distributed" icon="grid" color="#197560">
+        Dedicated nodes per role — separate controller, compute, and storage. Maximum performance and isolation. Minimum 5+ nodes.
+      </Card>
+    </CardGroup>
+
+    <Tip>For production environments, Xloud recommends HCI with a minimum of 3 nodes or Distributed with 5+ nodes for full high availability.</Tip>
+  </Step>
+</Steps>
+
+<Warning>
+  Deploying on servers that do not meet minimum requirements leads to failures 30-45 minutes into deployment. Always run [Bootstrap](/deployment/bootstrap) hardware checks first.
+</Warning>
+
+---
+
+## Platform Tools
+
+XDeploy provides 11 specialized tools, each handling a distinct stage of the deployment and management lifecycle.
+
+<CardGroup cols={3}>
+  <Card title="Bootstrap" icon="circle-check" href="/deployment/bootstrap" color="#197560">
+    Server readiness validation and dependency installation
+  </Card>
+  <Card title="Hosts" icon="server" href="/deployment/hosts" color="#197560">
+    Cluster inventory management and SSH connectivity setup
+  </Card>
+  <Card title="Configuration" icon="settings" href="/deployment/configuration" color="#197560">
+    Cloud settings via guided forms — networking, storage, features
+  </Card>
+  <Card title="Advanced Config" icon="file-text" href="/deployment/advanced-config" color="#197560">
+    Per-service configuration file editor with version tracking
+  </Card>
+  <Card title="Images" icon="package" href="/deployment/images" color="#197560">
+    Container image management, registry, and extraction
+  </Card>
+  <Card title="Operations" icon="play" href="/deployment/operations" color="#197560">
+    Deploy, upgrade, reconfigure, and destroy cloud services
+  </Card>
+  <Card title="Management" icon="users" href="/deployment/management" color="#197560">
+    Users, projects, quotas, and credential management
+  </Card>
+  <Card title="Cloud Fleet" icon="globe" href="/deployment/cloud-fleet" color="#197560">
+    Interactive infrastructure topology map
+  </Card>
+  <Card title="XSDS Storage" icon="database" href="/deployment/xsds" color="#197560">
+    Distributed storage deployment and tier management
+  </Card>
+  <Card title="Cluster License" icon="key" href="/deployment/cluster-license" color="#197560">
+    Cluster licensing and activation
+  </Card>
+  <Card title="XDeploy Key" icon="fingerprint" href="/deployment/xdeploy-key" color="#197560">
+    XDeploy tool activation and license management
+  </Card>
+</CardGroup>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="XDeploy Key" icon="fingerprint" href="/deployment/xdeploy-key" color="#197560">
+    Start here — activate XDeploy before using any other tools
+  </Card>
+  <Card title="Bootstrap" icon="circle-check" href="/deployment/bootstrap" color="#197560">
+    Validate server hardware and install all required dependencies
+  </Card>
+</CardGroup>

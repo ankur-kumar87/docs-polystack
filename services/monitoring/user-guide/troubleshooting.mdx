@@ -1,0 +1,164 @@
+---
+title: "Troubleshooting"
+description: "Diagnose common XIMP user-facing issues — alerts not firing, missing metrics, log ingestion delays, and dashboard data problems."
+sidebarTitle: "Troubleshooting"
+---
+
+## Overview
+
+This page covers the most common issues encountered when using XIMP — from alert
+rules that fail to fire, to dashboards showing no data, to missing or delayed logs.
+
+<Note>
+  **Prerequisites**
+  - An active Xloud account with project access
+  - For agent and infrastructure-level issues, contact your monitoring administrator. Your administrator can configure this through [XDeploy](/deployment).
+</Note>
+
+---
+
+## Common Issues
+
+<AccordionGroup>
+  <Accordion title="Alert not firing despite threshold being exceeded" icon="bell">
+    **Cause**: The evaluation period has not elapsed, the notification channel is
+    misconfigured, or the alert rule is in a silenced state.
+
+    **Resolution**:
+    1. Verify the rule's evaluation period — the condition must persist for the full
+       duration before the alert fires:
+       ```bash title="Check alert rule configuration"
+       ximp alert rule show <RULE_NAME>
+       ```
+    2. Check **Monitor Center > Monitoring** (Alert Channels, admin view) to confirm the notification channel
+       is active and credentials are valid
+    3. Check **Monitor Center > Monitoring** (Silences, admin view) — confirm no active silence covers
+       the alert:
+       ```bash title="List active silences"
+       ximp alert silence list --status active
+       ```
+    4. Verify the metric has data in the time window — navigate to the Dashboards and
+       check whether the metric panel shows values above the threshold
+
+    <Warning>
+      An alert rule evaluating `xloud_compute_cpu_utilization > 90` will only fire
+      if the metric is above 90% for the ENTIRE evaluation period. Brief spikes that
+      resolve within the period will not trigger the alert.
+    </Warning>
+  </Accordion>
+
+  <Accordion title="Metrics not appearing in dashboards" icon="activity">
+    **Cause**: The monitoring agent on the target host is not running, or the host
+    is not registered with XIMP.
+
+    **Resolution**:
+    ```bash title="Check agent registration"
+    ximp agent list --status all
+    ```
+
+    Look for hosts with status `offline` or `unknown`. If metrics are missing, contact your administrator. They can verify the monitoring agent status through [XDeploy](/deployment/operations).
+  </Accordion>
+
+  <Accordion title="Log ingestion delayed or missing" icon="file-text">
+    **Cause**: Log collector is not configured for the service, the log file path
+    has changed, or the collector is experiencing a backlog.
+
+    **Resolution**:
+    1. Navigate to **Monitor Center > Logging** (Log Sources, admin view) and verify the
+       log source configuration for the affected service
+    2. Confirm the file path pattern matches the current log file location
+    3. Check the collector queue depth:
+       ```bash title="Check ingestion queue depth"
+       ximp log ingest-status
+       ```
+
+    <Note>
+      Log ingestion uses file-based collection. If a service rotates logs to a new
+      path after an update, the collector configuration must be updated to match.
+      Contact your monitoring administrator to update log source configurations. Your administrator can configure this through [XDeploy](/deployment).
+    </Note>
+  </Accordion>
+
+  <Accordion title="Dashboard shows 'No data' for a metric" icon="gauge">
+    **Cause**: The scrape target is down, the agent is offline, or the metric name
+    has changed after a software update.
+
+    **Resolution**:
+    1. Check the target health: navigate to **Monitor Center > Monitoring** (Scrape Targets, admin view)
+       and look for targets in `DOWN` state
+    2. Verify the agent is active for that host:
+       ```bash title="Check agent status"
+       ximp agent list --node <HOSTNAME>
+       ```
+    3. Search for the metric to verify it exists and find the correct name:
+       ```bash title="Search metrics by prefix"
+       ximp metric search --prefix xloud_compute_cpu
+       ```
+  </Accordion>
+
+  <Accordion title="Alert notifications not delivered" icon="send">
+    **Cause**: The notification channel configuration is invalid, credentials have
+    expired, or the destination is temporarily unreachable.
+
+    **Resolution**:
+    1. Navigate to **Monitor Center > Monitoring** (Alert Channels, admin view) and use the **Test** button
+       to send a test notification
+    2. If the test fails, review the channel configuration:
+       ```bash title="Check channel configuration"
+       ximp alert channel show <CHANNEL_NAME>
+       ```
+    3. For email channels: verify SMTP credentials and server reachability
+    4. For webhook channels: verify the URL is accessible from the XIMP server
+    5. For PagerDuty: verify the integration key has not been rotated
+
+    <Tip>
+      Send a test notification immediately after creating or modifying a channel.
+      Do not rely on a real alert event to discover that a channel is broken.
+    </Tip>
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Diagnostics Reference
+
+| Issue | First Step |
+|-------|-----------|
+| Alert not firing | `ximp alert rule show <RULE_NAME>` |
+| Agent offline | Contact your administrator to verify agent status via [XDeploy](/deployment/operations) |
+| Missing metric | `ximp metric search --prefix <METRIC_PREFIX>` |
+| Log ingestion backlog | `ximp log ingest-status` |
+| Channel test | Use **Test** button in Dashboard or `ximp alert channel test <NAME>` |
+
+---
+
+## When to Contact Your Administrator
+
+Contact your monitoring administrator if any of the following persist. Your administrator can configure this through [XDeploy](/deployment).
+
+- A host does not appear in `ximp agent list` after restarting the agent service
+- All metrics are missing for multiple hosts simultaneously
+- Log ingestion queue depth has been growing for more than 1 hour
+- TLS certificate errors prevent agent communication
+
+See the [XIMP Admin Guide](/services/monitoring/admin-guide) for administrator-level
+diagnostics and configuration.
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="XIMP Admin Guide" href="/services/monitoring/admin-guide" color="#197560">
+    Infrastructure-level XIMP administration and agent configuration
+  </Card>
+  <Card title="Metrics & Alerts" href="/services/monitoring/user-guide/metrics-alerts" color="#197560">
+    Review and adjust alert rule configurations
+  </Card>
+  <Card title="Dashboards" href="/services/monitoring/user-guide/dashboards" color="#197560">
+    Verify metric availability in dashboard panels
+  </Card>
+  <Card title="Support" href="mailto:support@xloud.tech" color="#197560">
+    Contact Xloud support for issues requiring platform-level investigation
+  </Card>
+</CardGroup>

@@ -1,0 +1,249 @@
+---
+title: "Backup Backends"
+description: "Configure Cinder backup backends including Ceph, Swift, NFS, S3, Google Cloud Storage, and TSM for volume data protection."
+sidebarTitle: "Backup Backends"
+---
+
+import AdminWarning from '/snippets/admin-warning.mdx';
+import CliAuth from '/snippets/cli-auth.mdx';
+
+## Overview
+
+Xloud Block Storage backups are managed by the `cinder-backup` service, which stores volume backup data in a configurable backend. The backup backend is independent of the volume backend — backups from any volume backend (Ceph, NetApp, LVM) can be stored in any backup backend (Ceph, Swift, NFS, S3). Selecting the right backup backend depends on your recovery time objectives, storage capacity, and existing infrastructure.
+
+<AdminWarning />
+
+<Note>
+  **Prerequisites**
+  - The `cinder-backup` service must be deployed and running
+  - The backup backend must be network-accessible from the backup service nodes
+  - Credentials and endpoint configuration must be available before deployment
+</Note>
+
+---
+
+## Supported Backup Backends
+
+| Backend | Driver | Transport | Use Case |
+|---------|--------|-----------|----------|
+| **Ceph RBD** | `ceph` | RBD protocol | Native XAVS — incremental backups, fast restores |
+| **Swift** | `swift` | HTTP/S | Built-in object storage, multi-node replication |
+| **NFS** | `nfs` | NFS | Shared NAS appliances, on-premises tape replacement |
+| **S3-compatible** | `s3` | HTTPS | AWS S3, Ceph RGW, MinIO, Dell ECS, any S3 endpoint |
+| **Google Cloud Storage** | `google` | HTTPS | Off-site cloud backup to GCS buckets |
+| **IBM Spectrum Protect (TSM)** | `tsm` | TSM API | Mainframe-connected enterprise backup with TSM |
+
+---
+
+## Backend Configuration
+
+All backup backend settings are placed in the `[DEFAULT]` section of `cinder.conf`. Only one backup backend is active at a time.
+
+<AccordionGroup>
+  <Accordion title="Ceph RBD — recommended for XAVS" icon="database">
+    The Ceph backup driver stores backups as RBD images in a dedicated backup pool. It supports **incremental backups** — only changed blocks are transferred after the first full backup, making subsequent backups fast and space-efficient.
+
+    ```ini title="cinder.conf — Ceph backup backend"
+    [DEFAULT]
+    backup_driver = cinder.backup.drivers.ceph.CephBackupDriver
+    backup_ceph_pool = backups
+    backup_ceph_user = cinder-backup
+    backup_ceph_conf = /etc/ceph/ceph.conf
+    backup_ceph_keyring = /etc/ceph/ceph.client.cinder-backup.keyring
+    backup_ceph_chunk_size = 134217728
+    backup_ceph_stripe_unit = 0
+    backup_ceph_stripe_count = 0
+    restore_discard_excess_bytes = true
+    ```
+
+    <Tip>
+      When both the volume backend and backup backend are Ceph, the backup driver can perform server-side RBD-to-RBD copies without moving data through the backup service node, reducing network load and backup time significantly.
+    </Tip>
+  </Accordion>
+
+  <Accordion title="Swift (Object Storage)" icon="box">
+    The Swift backup driver stores backup data as objects in a Swift container. Each backup chunk is stored as a separate object. This backend benefits from Swift's built-in replication for durability.
+
+    ```ini title="cinder.conf — Swift backup backend"
+    [DEFAULT]
+    backup_driver = cinder.backup.drivers.swift.SwiftBackupDriver
+    backup_swift_url = http://10.0.1.71:8080/v1/AUTH_
+    backup_swift_auth = per_user
+    backup_swift_auth_version = 3
+    backup_swift_user = cinder
+    backup_swift_key = <swift-key>
+    backup_swift_container = volumes_backup
+    backup_swift_object_size = 52428800
+    backup_swift_retry_attempts = 3
+    backup_swift_retry_backoff = 2
+    backup_compression_algorithm = zlib
+    ```
+  </Accordion>
+
+  <Accordion title="NFS" icon="hard-drive">
+    The NFS backup driver mounts a remote NFS share and writes backup files to the mount point. It is suitable for organizations with existing NAS infrastructure.
+
+    ```ini title="cinder.conf — NFS backup backend"
+    [DEFAULT]
+    backup_driver = cinder.backup.drivers.nfs.NFSBackupDriver
+    backup_mount_point_base = /var/lib/cinder/backup_nfs
+    backup_share = 10.0.10.100:/export/cinder-backup
+    backup_file_size = 1999999999
+    backup_sha_block_size_bytes = 32768
+    backup_enable_progress_timer = true
+    ```
+
+    The NFS share must be exported with write permissions for the cinder-backup service account. Add the export to `/etc/exports` on the NFS server:
+
+    ```bash title="NFS server — /etc/exports"
+    /export/cinder-backup  10.0.0.0/8(rw,sync,no_subtree_check,no_root_squash)
+    ```
+  </Accordion>
+
+  <Accordion title="S3-Compatible" icon="cloud">
+    The S3 backup driver works with any S3-compatible endpoint including AWS S3, Ceph RADOS Gateway, MinIO, Dell ECS, and Wasabi. Set `backup_s3_endpoint_url` for non-AWS endpoints.
+
+    ```ini title="cinder.conf — S3-compatible backup backend"
+    [DEFAULT]
+    backup_driver = cinder.backup.drivers.s3.S3BackupDriver
+    backup_s3_endpoint_url = https://s3.example.com
+    backup_s3_store_access_key = <access-key>
+    backup_s3_store_secret_key = <secret-key>
+    backup_s3_store_bucket = cinder-backups
+    backup_s3_object_size = 52428800
+    backup_s3_retry_attempts = 3
+    backup_s3_retry_backoff = 2
+    backup_compression_algorithm = zlib
+    backup_s3_ssl_insecure = false
+    ```
+
+    For AWS S3 without a custom endpoint, omit `backup_s3_endpoint_url` and set the region:
+
+    ```ini title="cinder.conf — AWS S3 backend"
+    [DEFAULT]
+    backup_driver = cinder.backup.drivers.s3.S3BackupDriver
+    backup_s3_store_access_key = <aws-access-key>
+    backup_s3_store_secret_key = <aws-secret-key>
+    backup_s3_store_bucket = my-cinder-backups
+    backup_s3_store_region = ap-south-1
+    backup_compression_algorithm = zlib
+    ```
+  </Accordion>
+
+  <Accordion title="Google Cloud Storage" icon="cloud">
+    The GCS backup driver stores backups in a Google Cloud Storage bucket. Authentication uses a service account credentials file.
+
+    ```ini title="cinder.conf — Google Cloud Storage backend"
+    [DEFAULT]
+    backup_driver = cinder.backup.drivers.google.GoogleBackupDriver
+    backup_gcs_bucket = my-cinder-backups
+    backup_gcs_object_size = 52428800
+    backup_gcs_block_size = 32768
+    backup_gcs_retry_attempts = 3
+    backup_gcs_retry_backoff = 2
+    backup_gcs_credential_file = /etc/cinder/gcs-credentials.json
+    backup_compression_algorithm = zlib
+    ```
+
+    The service account must have `storage.buckets.get`, `storage.objects.create`, `storage.objects.get`, and `storage.objects.delete` permissions on the target bucket.
+  </Accordion>
+
+  <Accordion title="IBM Spectrum Protect (TSM)" icon="server">
+    The TSM backup driver integrates with IBM Spectrum Protect (formerly Tivoli Storage Manager) for enterprise tape and disk backup workflows.
+
+    ```ini title="cinder.conf — TSM backup backend"
+    [DEFAULT]
+    backup_driver = cinder.backup.drivers.tsm.TSMBackupDriver
+    backup_tsm_volume_prefix = cinder
+    backup_tsm_password = <dsm-password>
+    backup_tsm_compression = true
+    ```
+
+    The TSM client (`dsmc`) must be installed and configured on the backup service node, and the `DSMI_CONFIG` environment variable must point to the active `dsm.sys` configuration file.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Apply Backup Backend Configuration
+
+In XAVS deployments, backup backend settings are configured through XDeploy and applied via Ansible. Do not edit `cinder.conf` directly.
+
+```bash title="Apply backup configuration changes"
+xavs-ansible deploy --tags cinder
+```
+
+After deployment, verify the backup service is running:
+
+```bash title="Check backup service status"
+openstack volume service list --service cinder-backup
+```
+
+---
+
+## Verify a Backup
+
+<Tabs>
+  <Tab title="Dashboard" icon="monitor">
+    <Steps titleSize="h3">
+      <Step title="Create a test backup" icon="plus">
+        Navigate to **Storage > Volumes**, select a volume, and click
+        the **More** dropdown and select **Data Protection > Create Backup**.
+
+        Set a name and leave the snapshot field empty for a full backup.
+      </Step>
+      <Step title="Monitor backup status" icon="activity">
+        Navigate to **Storage > Volume Backups**. The backup transitions through
+        `creating` to `available`.
+      </Step>
+      <Step title="Restore the backup" icon="rotate-ccw">
+        Click the **More** dropdown and select **Restore** to restore to a new volume.
+        Confirm the restored volume matches the original in size and status.
+
+        <Check>Backup created and restored successfully — backend is operational.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    <CliAuth />
+
+    ```bash title="Create a backup"
+    openstack volume backup create \
+      --name test-backup \
+      <volume-id>
+    ```
+
+    ```bash title="Wait for backup to reach available state"
+    openstack volume backup show <backup-id> -c status
+    ```
+
+    ```bash title="Restore backup to a new volume"
+    openstack volume backup restore \
+      --name restored-vol \
+      <backup-id>
+    ```
+
+    ```bash title="Verify restored volume"
+    openstack volume show restored-vol -c status -c size
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Backups (User Guide)" href="/services/storage/backups" color="#197560">
+    End-user guide for creating, managing, and restoring volume backups
+  </Card>
+  <Card title="Storage Backends" href="/services/storage/storage-backends" color="#197560">
+    Configure primary volume backends for block storage
+  </Card>
+  <Card title="External Storage" href="/services/storage/external-storage" color="#197560">
+    Connect to NetApp, Pure Storage, Dell, and HPE enterprise arrays
+  </Card>
+  <Card title="Encryption" href="/services/storage/encryption" color="#197560">
+    Encrypt volumes at rest — works independently of backup backend
+  </Card>
+</CardGroup>

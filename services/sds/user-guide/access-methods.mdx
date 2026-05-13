@@ -1,0 +1,295 @@
+---
+title: "Access Methods"
+description: "Connect to XSDS block, object, and file storage through the Dashboard, CLI, S3-compatible API, and native mount protocols."
+sidebarTitle: "Access Methods"
+---
+
+## Overview
+
+XSDS exposes storage through multiple access protocols. The appropriate method depends
+on the consumer application and the storage type being accessed. This page covers all
+supported access methods with configuration steps for each.
+
+<Note>
+  **Prerequisites**
+  - An active Xloud account with project member access
+  - For CLI access: `openstack` CLI installed ([CLI Setup](/cli-setup))
+  - For S3 API access: S3 access keys generated from the Dashboard
+</Note>
+
+---
+
+## Access Method Overview
+
+| Access Method | Storage Type | Typical User |
+|---------------|--------------|--------------|
+| **Xloud Dashboard** | Block, Object | GUI-based management and exploration |
+| **`openstack` CLI** | Block, Object | Scripted management and automation |
+| **S3-compatible API** | Object | Application integration, SDK access |
+| **NFS / SMB mount** | Shared File | Legacy application and workstation access |
+| **iSCSI / RBD** | Block | Hypervisor-level attachment (managed automatically) |
+
+---
+
+## Dashboard Access
+
+<Tabs>
+  <Tab title="Block Storage" icon="hard-drive">
+    <Steps titleSize="h3">
+      <Step title="Navigate to Volumes" icon="hard-drive">
+        Log in to the **Xloud Dashboard** (`https://connect.<your-domain>`) and navigate to
+        **Project → Volumes → Volumes**.
+      </Step>
+      <Step title="Manage volumes" icon="settings">
+        From the volume list you can:
+        - **Create** a new volume (click **Create Volume**)
+        - **Attach/Detach** volumes to instances (via the Actions menu)
+        - **Create Snapshot** for point-in-time backup
+        - **Extend** volume size
+        - **Transfer** volume to another project
+
+        <Tip>
+          Use the **Filter** bar to search volumes by name, status, or volume type across
+          large projects.
+        </Tip>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="Object Storage" icon="box">
+    <Steps titleSize="h3">
+      <Step title="Navigate to Object Store" icon="box">
+        Navigate to **Project → Object Store → Containers**. Containers in the Dashboard
+        correspond to S3 buckets.
+      </Step>
+      <Step title="Manage containers and objects" icon="folder">
+        - **Create Container** to provision a new bucket
+        - **Upload** files directly from the browser
+        - **Set Access** to configure public or private access
+        - **Generate Temp URL** for time-limited pre-signed links
+
+        <Note>
+          The Dashboard uses the Swift API naming convention ("containers") while the
+          S3-compatible API uses "buckets". Both refer to the same underlying objects.
+        </Note>
+      </Step>
+    </Steps>
+  </Tab>
+</Tabs>
+
+---
+
+## CLI Access
+
+<Tabs>
+  <Tab title="Block Storage CLI" icon="terminal">
+    <Steps titleSize="h3">
+      <Step title="Authenticate" icon="key">
+        ```bash title="Load credentials"
+        source openrc.sh
+        ```
+      </Step>
+      <Step title="Common volume commands" icon="hard-drive">
+        ```bash title="List volumes"
+        openstack volume list
+        ```
+
+        ```bash title="Create a volume"
+        openstack volume create \
+          --size 50 \
+          --type ceph-ssd \
+          --description "Application data disk" \
+          app-data-01
+        ```
+
+        ```bash title="Show volume details"
+        openstack volume show app-data-01
+        ```
+
+        ```bash title="Attach to a running instance"
+        openstack server add volume <INSTANCE_ID> app-data-01
+        ```
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="Object Storage CLI" icon="terminal">
+    <Steps titleSize="h3">
+      <Step title="Authenticate" icon="key">
+        ```bash title="Load credentials"
+        source openrc.sh
+        ```
+      </Step>
+      <Step title="Common object storage commands" icon="box">
+        ```bash title="List containers"
+        openstack container list
+        ```
+
+        ```bash title="Create a container"
+        openstack container create my-bucket
+        ```
+
+        ```bash title="Upload an object"
+        openstack object create my-bucket /local/path/to/file.tar.gz
+        ```
+
+        ```bash title="Download an object"
+        openstack object save my-bucket file.tar.gz
+        ```
+
+        ```bash title="List objects in a container"
+        openstack object list my-bucket
+        ```
+      </Step>
+    </Steps>
+  </Tab>
+</Tabs>
+
+---
+
+## S3-Compatible API
+
+The XSDS object storage service exposes a fully S3-compatible API. Any application or
+tool that supports the AWS S3 API can connect to XSDS without modification.
+
+<Tabs>
+  <Tab title="Generate Credentials" icon="key">
+    <Steps titleSize="h3">
+      <Step title="Navigate to Access Keys" icon="key">
+        In the Xloud Dashboard, navigate to **Project → Object Store → Access Keys**
+        and click **Create Key**.
+      </Step>
+      <Step title="Save your credentials" icon="file-text">
+        The Access Key ID and Secret Access Key are shown once. Store them securely
+        — they cannot be retrieved after the dialog is closed.
+
+        <Warning>
+          Treat S3 access keys as sensitive credentials. Do not commit them to source
+          control. Use environment variables or a secrets manager in application code.
+        </Warning>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="Python (boto3)" icon="code">
+    ```python title="Connect with boto3"
+    import boto3
+
+    s3 = boto3.client(
+        's3',
+        endpoint_url='https://object.<your-domain>',
+        aws_access_key_id='YOUR_ACCESS_KEY',
+        aws_secret_access_key='YOUR_SECRET_KEY',
+        region_name='xloud-region-1'
+    )
+
+    # List buckets
+    response = s3.list_buckets()
+    for bucket in response['Buckets']:
+        print(bucket['Name'])
+
+    # Upload a file
+    s3.upload_file('local_file.txt', 'my-bucket', 'remote_object.txt')
+
+    # Download a file
+    s3.download_file('my-bucket', 'remote_object.txt', 'downloaded_file.txt')
+    ```
+  </Tab>
+  <Tab title="CLI (aws s3)" icon="terminal">
+    ```bash title="Configure AWS CLI profile"
+    aws configure --profile xloud
+    # AWS Access Key ID: YOUR_ACCESS_KEY
+    # AWS Secret Access Key: YOUR_SECRET_KEY
+    # Default region name: xloud-region-1
+    # Default output format: json
+    ```
+
+    ```bash title="List buckets"
+    aws s3 ls --endpoint-url https://object.<your-domain> --profile xloud
+    ```
+
+    ```bash title="Upload a file"
+    aws s3 cp local_file.txt \
+      s3://my-bucket/remote_object.txt \
+      --endpoint-url https://object.<your-domain> \
+      --profile xloud
+    ```
+
+    ```bash title="Sync a directory"
+    aws s3 sync ./local-dir/ \
+      s3://my-bucket/remote-dir/ \
+      --endpoint-url https://object.<your-domain> \
+      --profile xloud
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## NFS / SMB Mount (Shared File Storage)
+
+<Tabs>
+  <Tab title="NFS (Linux)" icon="terminal">
+    <Steps titleSize="h3">
+      <Step title="Get the NFS export path" icon="folder-open">
+        Navigate to **Project → Shared File Systems → Shares** and note the export
+        path for your share (format: `<gateway-ip>:/<share-path>`).
+      </Step>
+      <Step title="Mount the share" icon="hard-drive">
+        ```bash title="Create mount point"
+        mkdir -p /mnt/shared-data
+        ```
+
+        ```bash title="Mount via NFS"
+        mount -t nfs \
+          -o vers=4,rw,hard,intr \
+          <gateway-ip>:/<share-path> \
+          /mnt/shared-data
+        ```
+      </Step>
+      <Step title="Persist mount across reboots" icon="file-text">
+        Add to `/etc/fstab`:
+        ```bash title="/etc/fstab entry"
+        <gateway-ip>:/<share-path>  /mnt/shared-data  nfs  vers=4,rw,hard,intr  0  0
+        ```
+
+        <Check>Mount is accessible at `/mnt/shared-data` and persists after reboot.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="SMB (Windows)" icon="monitor">
+    <Steps titleSize="h3">
+      <Step title="Get the SMB share path" icon="folder-open">
+        Navigate to **Project → Shared File Systems → Shares** and note the SMB
+        UNC path for your share (format: `\\<gateway-ip>\<share-name>`).
+      </Step>
+      <Step title="Map network drive" icon="hard-drive">
+        In Windows Explorer, right-click **This PC** and select **Map network drive**.
+        Enter the UNC path and provide your Xloud credentials when prompted.
+
+        Or from PowerShell:
+        ```powershell title="Map network drive (PowerShell)"
+        net use Z: \\<gateway-ip>\<share-name> /user:<USERNAME> <PASSWORD> /persistent:yes
+        ```
+
+        <Check>Drive Z: appears in Windows Explorer and is accessible to applications.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+</Tabs>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Data Protection" href="/services/sds/user-guide/data-protection" color="#197560">
+    Configure replication and erasure coding to protect your data
+  </Card>
+  <Card title="Snapshots" href="/services/sds/user-guide/snapshots" color="#197560">
+    Create and restore point-in-time snapshots for volumes and buckets
+  </Card>
+  <Card title="Performance" href="/services/sds/user-guide/performance" color="#197560">
+    Storage tiering, deduplication, and caching to optimize I/O
+  </Card>
+  <Card title="Troubleshooting" href="/services/sds/user-guide/troubleshooting" color="#197560">
+    Diagnose and resolve common access and connectivity issues
+  </Card>
+</CardGroup>

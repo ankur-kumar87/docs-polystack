@@ -1,0 +1,98 @@
+---
+title: "Rescue an Instance"
+description: "Boot an Xloud Compute instance from a rescue image to recover from OS boot failures, corrupted filesystems, or lost SSH access."
+sidebarTitle: "Rescue Instance"
+---
+
+## Overview
+
+Rescue mode boots an instance from a temporary rescue image while preserving the
+original root disk as a secondary device. This allows you to diagnose and repair
+boot failures, corrupted filesystems, or locked-out SSH configurations without
+destroying the instance.
+
+<Note>
+  **Prerequisites**
+  - An instance in `Active` or `Shutoff` status
+  - The instance must not be locked
+  - CLI access required — the Rescue action is not available in the Dashboard GUI
+</Note>
+
+<Warning>
+  The **Rescue** and **Unrescue** actions are **CLI-only** operations. They are not
+  available in the Xloud Dashboard. Use the CLI commands below to enter and exit
+  rescue mode.
+</Warning>
+
+---
+
+## Enter Rescue Mode
+
+<Tabs>
+  <Tab title="CLI" icon="terminal">
+    <Steps titleSize="h3">
+      <Step title="Authenticate">
+        ```bash title="Load credentials"
+        source openrc.sh
+        ```
+      </Step>
+      <Step title="Rescue the instance">
+        ```bash title="Enter rescue mode (default rescue image)"
+        openstack server rescue <INSTANCE_ID>
+        ```
+
+        ```bash title="Rescue with a specific image"
+        openstack server rescue \
+          --image <RESCUE_IMAGE_ID> \
+          <INSTANCE_ID>
+        ```
+
+        The instance reboots into rescue mode. The original root disk is attached
+        as a secondary device (typically `/dev/vdb`).
+      </Step>
+      <Step title="Connect and repair">
+        SSH into the instance using the rescue image credentials. Mount the
+        original root disk and perform repairs:
+
+        ```bash title="Mount the original root disk"
+        sudo mount /dev/vdb1 /mnt
+        ```
+
+        ```bash title="Example: fix SSH config"
+        sudo vi /mnt/etc/ssh/sshd_config
+        ```
+      </Step>
+    </Steps>
+  </Tab>
+</Tabs>
+
+---
+
+## Exit Rescue Mode
+
+```bash title="Unrescue the instance"
+openstack server unrescue <INSTANCE_ID>
+```
+
+The instance reboots from its original root disk with the repairs applied.
+
+<Check>Instance returns to `Active` status on its original root disk.</Check>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Instance Snapshots" href="/services/compute/snapshots" color="#197560">
+    Create a snapshot before rescue as a safety measure
+  </Card>
+  <Card title="Reboot an Instance" href="/services/compute/reboot-instance" color="#197560">
+    Try a reboot before rescue for less severe issues
+  </Card>
+  <Card title="Console Access" href="/services/compute/console-access" color="#197560">
+    Use the VNC console for out-of-band diagnostics
+  </Card>
+  <Card title="Troubleshooting" href="/services/compute/troubleshooting" color="#197560">
+    Resolve boot failures and rescue mode issues
+  </Card>
+</CardGroup>

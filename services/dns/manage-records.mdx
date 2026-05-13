@@ -1,0 +1,336 @@
+---
+title: "Manage DNS Record Sets"
+description: "Create, update, and delete DNS record sets in Xloud DNS zones. Covers all 12 record types with the exact Dashboard form fields and CLI commands."
+sidebarTitle: "Manage Records"
+---
+
+import PrerequisitesAuth from '/snippets/prerequisites-auth.mdx';
+
+## Overview
+
+Record sets are the DNS entries within a zone that map hostnames to values. Each record
+set has a type (A, CNAME, MX, etc.), a fully qualified name, a TTL, and one or more
+values. Record sets are project-scoped through their parent zone.
+
+<PrerequisitesAuth />
+
+<Note>
+  A zone must be in **Active** status before record sets can be created within it. See
+  [Create a Zone](/services/dns/create-zone) if you have not yet provisioned a zone.
+</Note>
+
+---
+
+## Create a Record Set
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+
+    The Create Record Set form provides dynamic help text and validation based on
+    the selected record type.
+
+    <Steps titleSize="h3">
+      <Step title="Open the zone">
+        Navigate to **Network > DNS Zones** and click a zone name to
+        open the detail page. Go to the **Record Sets** tab.
+
+        Click **Create Record Set**.
+      </Step>
+      <Step title="Select the record type">
+        Choose the **Type** from the dropdown. This selection controls the
+        validation rules and format hints for the Records field.
+
+        | Type | Description |
+        |------|-------------|
+        | **A** | Address Record — maps to IPv4 address |
+        | **AAAA** | IPv6 Address Record |
+        | **CAA** | Certificate Authority Authorization |
+        | **CNAME** | Canonical Name (alias) |
+        | **MX** | Mail Exchange |
+        | **NS** | Name Server delegation |
+        | **PTR** | Pointer Record (reverse DNS) |
+        | **SOA** | Start Of Authority |
+        | **SPF** | Sender Policy Framework |
+        | **SRV** | Service Locator |
+        | **SSHFP** | SSH Public Key Fingerprint |
+        | **TXT** | Text Record |
+
+        The default selection is **A**.
+
+        <Note>
+          The Type field cannot be changed after creation. If you need a different
+          type, delete the record set and create a new one.
+        </Note>
+      </Step>
+      <Step title="Enter the record name">
+        Enter the **Name** — the fully qualified hostname for this record.
+
+        <Warning>
+          The name **must end with a trailing dot** (e.g., `www.example.com.`).
+          Omitting the trailing dot will cause a validation error.
+        </Warning>
+
+        The form shows a format example based on the selected type:
+
+        | Type | Name Example |
+        |------|-------------|
+        | A, AAAA, CAA, MX, NS, PTR, SOA, SPF, SSHFP, TXT | `example.com.` |
+        | CNAME | `first.example.com.` |
+        | SRV | `_sip._tcp.example.com.` (with protocol and service name) |
+      </Step>
+      <Step title="Add a description (optional)">
+        Enter an optional **Description** for this record set.
+      </Step>
+      <Step title="Set the TTL">
+        Enter the **TTL (Time To Live)** in seconds. Default: `3600` (1 hour).
+
+        This controls how long resolvers cache this record before re-querying.
+      </Step>
+      <Step title="Add record values">
+        Click the add button in the **Records** field to add one or more values.
+        At least one record value is required.
+
+        The form shows format examples and validation rules based on the selected type:
+
+        | Type | Format Example | Validation |
+        |------|---------------|------------|
+        | **A** | `192.168.1.1` | Must be a valid IPv4 address |
+        | **AAAA** | `2001:db8:3333:4444:5555:6666:7777:8888` | Must be a valid IPv6 address |
+        | **CAA** | `0 iodef mailto:security@example.com` | Flag (0-255), tag (issue/issuewild/iodef), value |
+        | **CNAME** | `other-example.com` | Target FQDN |
+        | **MX** | `10 mail.example.com` | Priority number followed by mail server FQDN |
+        | **NS** | `ns1.example.com` | Nameserver FQDN |
+        | **PTR** | `1.1.0.192.in-addr.arpa.` | Reverse FQDN |
+        | **SOA** | `ns1.example.com admin.example.com 2013022001 86400 7200 604800 300` | Primary NS, admin email, serial, refresh, retry, expire, minimum |
+        | **SPF** | `"v=spf1 ipv4=192.1.1.1 include:examplesender.email +all"` | SPF policy string |
+        | **SRV** | `10 0 5060 server1.example.com.` | Priority, weight, port, target FQDN |
+        | **SSHFP** | `4 2 123456789abcdef...` | Algorithm, fingerprint type, hex fingerprint |
+        | **TXT** | *(no format hint shown)* | Any text string |
+
+        <Tip>
+          Add multiple record values for round-robin distribution (e.g., multiple
+          A records for the same hostname). Each value is returned to resolvers
+          in rotating order.
+        </Tip>
+      </Step>
+      <Step title="Create the record set">
+        Click **Confirm**. The record set enters **Pending** momentarily and then
+        transitions to **Active**.
+
+        <Check>Record set appears in the zone's Record Sets tab with status **Active**.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+
+    ```bash title="Source credentials"
+    source openrc.sh
+    ```
+
+    <CodeGroup>
+    ```bash title="Create A record"
+    openstack recordset create \
+      --type A \
+      --record 192.168.1.10 \
+      --record 192.168.1.11 \
+      --ttl 3600 \
+      example.com. www
+    ```
+    ```bash title="Create AAAA record"
+    openstack recordset create \
+      --type AAAA \
+      --record 2001:db8::1 \
+      --ttl 3600 \
+      example.com. www
+    ```
+    ```bash title="Create CNAME record"
+    openstack recordset create \
+      --type CNAME \
+      --record app.example.com. \
+      example.com. api
+    ```
+    ```bash title="Create MX record"
+    openstack recordset create \
+      --type MX \
+      --record "10 mail.example.com." \
+      --record "20 mail-backup.example.com." \
+      example.com. @
+    ```
+    ```bash title="Create TXT record (SPF)"
+    openstack recordset create \
+      --type TXT \
+      --record '"v=spf1 include:_spf.example.com ~all"' \
+      example.com. @
+    ```
+    ```bash title="Create SRV record"
+    openstack recordset create \
+      --type SRV \
+      --record "10 20 5060 sip.example.com." \
+      example.com. _sip._tcp
+    ```
+    ```bash title="Create CAA record"
+    openstack recordset create \
+      --type CAA \
+      --record '0 issue "letsencrypt.org"' \
+      example.com. @
+    ```
+    ```bash title="Create NS record (subdomain delegation)"
+    openstack recordset create \
+      --type NS \
+      --record "ns1.partner.com." \
+      --record "ns2.partner.com." \
+      example.com. sub
+    ```
+    </CodeGroup>
+  </Tab>
+</Tabs>
+
+---
+
+## View Record Sets
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="View the record list">
+        Navigate to a zone's detail page and go to the **Record Sets** tab. The list shows:
+
+        | Column | Description |
+        |--------|-------------|
+        | **ID/Name** | Record set FQDN (clickable to view details) |
+        | **Type** | Record type with description (e.g., "A - Address Record") |
+        | **Records** | All values displayed as individual tags |
+        | **Status** | Active, Pending, or Error |
+        | **Created At** | Creation timestamp |
+      </Step>
+      <Step title="Filter records">
+        Use the search/filter bar to narrow the list:
+
+        | Filter | Options |
+        |--------|---------|
+        | **Name** | Text search by record name |
+        | **Type** | Dropdown with all 12 record types |
+        | **Status** | Active, Pending, Error |
+      </Step>
+      <Step title="View record detail">
+        Click a record name to open the detail page showing:
+
+        | Section | Fields |
+        |---------|--------|
+        | **Summary** | Name, Description, Type (with description), Status |
+        | **Base Info** | Action, Records (all values listed), TTL, Version |
+        | **Modification Times** | Created At, Updated At |
+        | **Associations** | Zone ID, Zone Name, Project ID |
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    <CodeGroup>
+    ```bash title="List all record sets in a zone"
+    openstack recordset list example.com.
+    ```
+    ```bash title="Show a specific record set"
+    openstack recordset show example.com. www
+    ```
+    </CodeGroup>
+  </Tab>
+</Tabs>
+
+---
+
+## Update a Record Set
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Open the update dialog">
+        Navigate to the zone's **Record Sets** tab. Click the **Update** action
+        on the record row, or open the record detail page and click **Update**.
+      </Step>
+      <Step title="Edit the record">
+        The **Name** and **Type** fields are locked and cannot be changed. You can
+        update:
+
+        - **Description**
+        - **TTL**
+        - **Records** — add, remove, or modify values
+
+        <Note>
+          To change a record's type (e.g., A to AAAA), delete the existing record
+          set and create a new one with the correct type.
+        </Note>
+      </Step>
+      <Step title="Save the update">
+        Click **Confirm**. The record set enters **Pending** briefly during the update.
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Update record value"
+    openstack recordset set \
+      --record 192.168.1.20 \
+      example.com. www
+    ```
+
+    ```bash title="Update TTL only"
+    openstack recordset set \
+      --ttl 300 \
+      example.com. www
+    ```
+
+    <Tip>
+      Use a low TTL (e.g., 300 seconds) before planned IP changes, then increase it after
+      the change is confirmed stable. This minimizes propagation delay during migrations.
+    </Tip>
+  </Tab>
+</Tabs>
+
+---
+
+## Delete Record Sets
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Select records to delete">
+        Navigate to the zone's **Record Sets** tab. Select one or more records using
+        the checkboxes and click **Delete** in the batch actions bar.
+
+        Alternatively, click the **More** menu on a record row and select **Delete**.
+      </Step>
+      <Step title="Confirm deletion">
+        Confirm the deletion in the dialog. The confirmation shows both the record name
+        and ID.
+
+        <Warning>
+          Deleting a record set is immediate on the server side. Resolvers that have
+          cached the record will continue returning the value until their cache TTL expires.
+        </Warning>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Delete a record set"
+    openstack recordset delete example.com. www
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Record Types Reference" href="/services/dns/record-types" color="#197560">
+    Detailed reference for every supported record type and its value format
+  </Card>
+  <Card title="Reverse DNS" href="/services/dns/reverse-dns" color="#197560">
+    Configure PTR records for IP-to-hostname resolution
+  </Card>
+  <Card title="Troubleshooting" href="/services/dns/troubleshooting" color="#197560">
+    Resolve propagation delays and CNAME conflicts
+  </Card>
+  <Card title="Create a Zone" href="/services/dns/create-zone" color="#197560">
+    Provision a new authoritative zone for a domain
+  </Card>
+</CardGroup>

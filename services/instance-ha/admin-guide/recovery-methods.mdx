@@ -1,0 +1,216 @@
+---
+title: "Recovery Methods"
+description: "Configure Xloud Instance HA recovery methods per segment — auto, reserved_host, and rh_priority evacuation strategies with capacity planning guidance."
+sidebarTitle: "Recovery Methods"
+---
+
+## Overview
+
+The recovery method defines how the Instance HA engine selects evacuation targets when
+a host fails. The method is configured at the segment level and applies to all hosts
+and instances within that segment. Choosing the right method for each workload tier is
+critical to meeting recovery time and availability objectives.
+
+<Note>
+  **Prerequisites**
+  - Administrator privileges
+  - At least one failover segment created
+  - Compute hosts registered in the segment
+</Note>
+
+---
+
+## Method Comparison
+
+| Method | Target Selection | Capacity Guarantee | Cost | Best For |
+|--------|-----------------|-------------------|------|----------|
+| `auto` | Any healthy host in segment | None — first-come, first-served | Lowest | General-purpose workloads |
+| `reserved_host` | Pre-designated standby hosts only | Guaranteed | Highest (idle nodes) | SLA-critical, regulated workloads |
+| `rh_priority` | Reserved hosts first, then `auto` | Best-effort | Moderate | Mixed critical and standard |
+
+---
+
+## auto — Evacuate to Any Host
+
+The `auto` method instructs the recovery engine to select any available host in the
+segment with sufficient vCPU and memory to accept the evacuating instances.
+
+<AccordionGroup>
+  <Accordion title="How target selection works" icon="shuffle" defaultOpen>
+    The engine queries all registered, non-maintenance hosts in the segment and selects
+    those with the most available capacity. Instances are distributed across multiple
+    target hosts if no single host can accept all evacuees.
+
+    Selection order: hosts with the most free vCPU are preferred, then memory, then
+    any remaining host with capacity above the minimum threshold.
+  </Accordion>
+  <Accordion title="Capacity planning for auto segments" icon="gauge">
+    Maintain a minimum 20–30% unused vCPU and memory headroom across all hosts in
+    the segment. Calculate the headroom needed to absorb the largest host's workload:
+
+    ```
+    Headroom needed = max(host vCPU) / total segment vCPU
+    ```
+
+    Example: segment with 4 hosts × 40 vCPU = 160 vCPU total.
+    Largest host uses 32 vCPU → required headroom = 32/160 = 20%.
+  </Accordion>
+</AccordionGroup>
+
+### Create an auto Segment
+
+```bash title="Create auto-recovery segment"
+openstack segment create \
+  --recovery_method auto \
+  --enabled True \
+  prod-general
+```
+
+---
+
+## reserved_host — Dedicated Standby
+
+The `reserved_host` method restricts evacuation to hosts explicitly designated as
+reserved standby nodes. Reserved hosts do not accept regular instance scheduling —
+they remain idle until a failover event.
+
+<AccordionGroup>
+  <Accordion title="Reserved host sizing" icon="server" defaultOpen>
+    A reserved host must have sufficient vCPU and memory to absorb all instances from
+    the largest non-reserved host in the segment. Size the reserved host generously
+    to handle burst workloads:
+
+    ```
+    Reserved vCPU >= max(non-reserved host vCPU used)
+    Reserved RAM >= max(non-reserved host RAM used)
+    ```
+
+    For a host running 20 × `m1.large` (4 vCPU, 8 GB each): the reserved host needs
+    80 vCPU and 160 GB RAM minimum.
+  </Accordion>
+  <Accordion title="Designate a reserved host" icon="shield-check">
+    ```bash title="Create segment with reserved_host method"
+    openstack segment create \
+      --recovery_method reserved_host \
+      --enabled True \
+      prod-critical
+    ```
+
+    ```bash title="Register compute hosts in segment"
+    openstack segment host create \
+      --type COMPUTE \
+      --control_attributes '{"host": "compute-01"}' \
+      --reserved False \
+      <segment-uuid>
+
+    openstack segment host create \
+      --type COMPUTE \
+      --control_attributes '{"host": "compute-standby"}' \
+      --reserved True \
+      <segment-uuid>
+    ```
+
+    <Warning>
+      The reserved host must not be a target for regular workload scheduling.
+      Apply a compute service aggregate or availability zone restriction to prevent
+      the scheduler from placing non-HA instances on it.
+    </Warning>
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## rh_priority — Reserved First, Fall Back
+
+The `rh_priority` method attempts reserved hosts first. If all reserved hosts are at
+capacity, it falls back to the `auto` behaviour and selects any available host.
+
+```bash title="Create rh_priority segment"
+openstack segment create \
+  --recovery_method rh_priority \
+  --enabled True \
+  prod-mixed
+```
+
+This method is suitable for segments with heterogeneous workloads where some instances
+need guaranteed failover capacity and others can tolerate best-effort recovery.
+
+<Tip>
+  Use `rh_priority` as the default method when you have at least one reserved host
+  but want recovery to succeed even if the reserved host is exhausted.
+</Tip>
+
+---
+
+## Change Recovery Method on an Existing Segment
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    Navigate to **Instance-HA > Segments (admin view)**, click the segment,
+    and select **Edit Segment**. Change the **Recovery Method** field and save.
+
+    <Warning>
+      Changing the recovery method on an active segment takes effect immediately.
+      Ongoing recovery workflows complete with the previous method. New fault events
+      use the updated method.
+    </Warning>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Update segment recovery method"
+    openstack segment update \
+      --recovery_method rh_priority \
+      <segment-uuid>
+    ```
+
+    ```bash title="Verify the change"
+    openstack segment show <segment-uuid> \
+      -f value -c recovery_method
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Validation
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    Navigate to **Instance-HA > Segments (admin view)** and verify:
+    - Each segment shows the intended `Recovery Method`
+    - Reserved hosts are flagged with `RESERVED: True` in the host list
+
+    <Check>Segments are configured with correct methods and reserved hosts are designated.</Check>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Verify all segments and their methods"
+    openstack segment list \
+      -f table -c name -c recovery_method -c enabled
+    ```
+
+    ```bash title="Verify reserved hosts in a segment"
+    openstack segment host list <segment-uuid> \
+      -f table -c name -c reserved -c on_maintenance
+    ```
+
+    <Check>All segments show expected recovery methods and reserved hosts are flagged.</Check>
+  </Tab>
+</Tabs>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Failover Segments" href="/services/instance-ha/admin-guide/failover-segments" color="#197560">
+    Create segments and register compute hosts within them.
+  </Card>
+  <Card title="Engine Configuration" href="/services/instance-ha/admin-guide/engine-config" color="#197560">
+    Tune recovery timing, retry intervals, and instance failure behaviour.
+  </Card>
+  <Card title="Host Monitors" href="/services/instance-ha/admin-guide/host-monitors" color="#197560">
+    Configure the IPMI and SSH monitors that trigger recovery workflows.
+  </Card>
+  <Card title="Security" href="/services/instance-ha/admin-guide/security" color="#197560">
+    Secure segment access and enforce role-based recovery policies.
+  </Card>
+</CardGroup>

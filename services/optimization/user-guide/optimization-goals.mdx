@@ -1,0 +1,134 @@
+---
+title: "Optimization Goals"
+description: "Understand Xloud Optimization goals — server consolidation, thermal optimization, workload stabilization, energy savings, and noisy neighbor mitigation."
+sidebarTitle: "Optimization Goals"
+---
+
+## Overview
+
+An optimization goal defines the objective of an audit. When you create an audit, you
+select a goal and the Optimization automatically chooses the most appropriate
+strategy algorithm to achieve it. Goals translate high-level operational intent — "reduce
+my host footprint" or "fix noisy-neighbor complaints" — into concrete migration plans.
+
+<Note>
+  **Prerequisites**
+  - Optimization enabled on your platform
+  - Project access with the `member` role or above
+  - Metrics collected for the look-back period (typically 1 hour minimum)
+</Note>
+
+---
+
+## Available Goals
+
+<CardGroup cols={2}>
+  <Card title="Server Consolidation" icon="layers" color="#197560">
+    Migrate workloads from underutilized hosts to consolidate the active footprint.
+    Idle hosts can enter low-power states after workloads are moved off.
+  </Card>
+  <Card title="Thermal Optimization" icon="thermometer" color="#197560">
+    Redistribute workloads away from compute racks with high inlet temperatures,
+    protecting hardware and extending operational lifespan.
+  </Card>
+  <Card title="Workload Stabilization" icon="activity" color="#197560">
+    Identify instances with erratic CPU or memory consumption and migrate them to
+    hosts where they achieve consistent, stable performance.
+  </Card>
+  <Card title="Energy Savings" icon="zap" color="#197560">
+    Consolidate workloads to the minimum number of hosts during off-peak periods,
+    enabling idle nodes to reduce power draw.
+  </Card>
+  <Card title="Zone Rebalancing" icon="network" color="#197560">
+    Evenly redistribute workloads across availability zones after recovery events
+    or uneven initial placement.
+  </Card>
+  <Card title="Noisy Neighbor Mitigation" icon="volume-x" color="#197560">
+    Detect instances causing CPU or memory contention and isolate them from
+    co-located workloads to restore performance for affected instances.
+  </Card>
+</CardGroup>
+
+---
+
+## Goal Reference
+
+| Goal | CLI Name | Strategy | Data Required | Trigger Scenario |
+|------|----------|----------|--------------|-----------------|
+| Server Consolidation | `server_consolidation` | Bin-packing | Compute API | High host count, low average utilization |
+| Thermal Optimization | `thermal_optimization` | Outlet temperature heatmap | Prometheus (temperature) | High temperature alerts from monitoring |
+| Workload Stabilization | `workload_stabilization` | Statistical variance analysis | Telemetry time-series | Sporadic guest performance complaints |
+| Energy Savings | `saving_energy` | Consolidate + mark idle hosts | Compute API | Off-peak scheduled run |
+| Zone Rebalancing | `zone_migration` | Even zone distribution | Compute API | Post-recovery or uneven initial placement |
+| Noisy Neighbor | `noisy_neighbor` | CPU steal contention detection | Telemetry per-instance | Guest CPU steal complaints |
+
+---
+
+## Selecting a Goal
+
+Choose the goal that matches the problem you are solving:
+
+<AccordionGroup>
+  <Accordion title="My cluster has too many active hosts" icon="layers" defaultOpen>
+    Use **Server Consolidation** (`server_consolidation`). The strategy identifies hosts
+    running below the utilization threshold (default: 20%) and generates migrations that
+    pack those workloads onto fewer hosts.
+  </Accordion>
+  <Accordion title="Some instances are performing erratically" icon="activity">
+    Use **Workload Stabilization** (`workload_stabilization`). The strategy analyzes
+    per-instance CPU and memory time-series data to identify high-variance instances
+    and moves them to less-contended hosts.
+
+    Requires Telemetry metrics to be collected for the look-back period (minimum 2 hours
+    of data recommended).
+  </Accordion>
+  <Accordion title="A compute rack is running hot" icon="thermometer">
+    Use **Thermal Optimization** (`thermal_optimization`). The strategy reads inlet
+    temperature data from Prometheus and generates a plan to move workloads away from
+    the hottest racks.
+
+    Requires Prometheus with temperature sensor metrics configured as a data source.
+  </Accordion>
+  <Accordion title="After a failover, zones are imbalanced" icon="network">
+    Use **Zone Rebalancing** (`zone_migration`). The strategy redistributes instances
+    evenly across availability zones without requiring external metric data.
+  </Accordion>
+  <Accordion title="Guests are complaining about noisy neighbors" icon="volume-x">
+    Use **Noisy Neighbor** (`noisy_neighbor`). The strategy detects instance pairs with
+    high CPU contention co-located on the same host and separates them.
+
+    Requires per-instance CPU steal metrics from Telemetry.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Goal Availability
+
+Not all goals may be available on your deployment. Available goals depend on the data
+sources and strategies enabled by your administrator.
+
+```bash title="List available goals"
+watcher goal list
+```
+
+If a goal is not listed, contact your administrator to enable the required data source. Your administrator can configure this through [XDeploy](/deployment).
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Run an Audit" href="/services/optimization/user-guide/run-audit" color="#197560">
+    Create and run an audit using one of the available optimization goals.
+  </Card>
+  <Card title="Action Plans" href="/services/optimization/user-guide/action-plans" color="#197560">
+    Review the migration plan generated by a completed audit.
+  </Card>
+  <Card title="Audit History" href="/services/optimization/user-guide/audit-history" color="#197560">
+    Review past audits and track optimization trends over time.
+  </Card>
+  <Card title="Optimization Admin Guide" href="/services/optimization/admin-guide" color="#197560">
+    Administrator reference for configuring strategies and data sources.
+  </Card>
+</CardGroup>

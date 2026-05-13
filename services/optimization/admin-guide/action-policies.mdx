@@ -1,0 +1,182 @@
+---
+title: "Action Plan Policies"
+description: "Configure Xloud Optimization action plan execution policies — manual approval workflows, automatic execution for trusted strategies, and plan expiry controls."
+sidebarTitle: "Action Policies"
+---
+
+## Overview
+
+Action plan policies control whether migration plans require human approval before
+execution or execute automatically after audit completion. The default policy requires
+explicit approval — ensuring operators review every migration before it occurs. Automatic
+execution is available for trusted, validated strategies in controlled environments.
+
+---
+
+## Policy Options
+
+<CardGroup cols={2}>
+  <Card title="Manual Approval (Default)" icon="eye" color="#197560">
+    All action plans require an explicit `execute` call. Operators review each
+    migration before approving. No workloads move without human oversight.
+  </Card>
+  <Card title="Automatic Execution" icon="play" color="#197560">
+    Plans execute immediately after audit completion without operator review.
+    Suitable for fully tested strategies in non-production environments.
+  </Card>
+</CardGroup>
+
+---
+
+## Manual Approval Policy
+
+The default policy. All action plans are created in `RECOMMENDED` state and require
+explicit execution via the Dashboard or CLI.
+
+This policy is appropriate for:
+- Production environments with change management requirements
+- Strategies involving mission-critical instances
+- Clusters where maintenance windows must be respected
+
+No configuration change is needed — this is the platform default.
+
+---
+
+## Automatic Execution Policy
+
+Enable automatic execution by setting `auto_trigger` at audit creation:
+
+```bash title="Create auto-executing audit"
+watcher audit create \
+  --goal server_consolidation \
+  --auto-trigger True
+```
+
+For scheduled audits, include `--auto-trigger True` in the audit creation command. All
+resulting action plans execute automatically within 5–10 minutes of audit completion.
+
+<Warning>
+  Enable automatic execution only for non-production environments or after thorough
+  testing of the strategy on your cluster topology. Automatic execution can trigger
+  live migrations at any time — including during business hours if the audit schedule
+  is misconfigured.
+</Warning>
+
+---
+
+## Action Plan Expiry
+
+Plans become stale when the cluster state changes significantly after audit completion.
+Configure a maximum plan age to prevent outdated migrations from executing.
+
+<Tabs>
+  <Tab title="XDeploy" icon="browser">
+    <Steps titleSize="h3">
+      <Step title="Open Advanced Configuration" icon="settings">
+        Open **XDeploy** and navigate to **Advanced Configuration**. In the **Service Tree**
+        (left panel), select **watcher**.
+      </Step>
+      <Step title="Edit the Expiry Setting" icon="file-pen">
+        Click **New File** or select an existing `watcher.conf` from the **File Browser**
+        (right panel). Add the following in the **Code Editor** (center panel):
+
+        ```ini title="/etc/xavs/config/watcher/watcher.conf"
+        [DEFAULT]
+        action_plan_expiry = 24
+        ```
+
+        Plans older than `action_plan_expiry` hours are automatically set to `CANCELLED` state.
+        A new audit must run to generate a current plan.
+      </Step>
+      <Step title="Save and Apply" icon="circle-check">
+        Click **Save Current File**. Return to **Operations** and run **reconfigure** to
+        apply the expiry policy to the API and Decision Engine.
+
+        <Check>Action plan expiry policy configured and applied via XDeploy.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    Edit the configuration file directly:
+
+    ```ini title="/etc/xavs/watcher/watcher.conf"
+    [DEFAULT]
+    action_plan_expiry = 24
+    ```
+
+    Plans older than `action_plan_expiry` hours are automatically set to `CANCELLED` state.
+    A new audit must run to generate a current plan.
+
+    ```bash title="Restart API and Decision Engine after config change"
+    docker restart watcher_api watcher_decision_engine
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Role-Based Execution Control
+
+By default, the `admin` role can create audits, approve plans, and execute them.
+The `member` role has read-only access to audits and plans.
+
+To restrict execution to cloud administrators only, verify the default policy:
+
+```bash title="Check RBAC policy"
+docker exec watcher_api \
+  oslopolicy-list-redundant \
+  --config-file /etc/watcher/watcher.conf
+```
+
+The default policies ensure:
+- Plan **execution** requires the `admin` role
+- Plan **viewing** is available to `member` and `reader` roles
+- Plan **creation** (via audit) requires the `admin` role
+
+---
+
+## Validation
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    Create a test audit and verify the resulting action plan shows `RECOMMENDED`
+    state (not auto-executed) when manual approval is configured.
+
+    <Check>Action plan requires explicit approval before execution can begin.</Check>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Create test audit without auto-trigger"
+    watcher audit create \
+      --goal server_consolidation \
+      --name policy-test
+    ```
+
+    ```bash title="Verify plan requires approval"
+    watcher actionplan list \
+      -f value -c state
+    ```
+
+    Expected: `RECOMMENDED` (not `PENDING` or `ONGOING`)
+
+    <Check>Plan state is `RECOMMENDED` confirming manual approval is required.</Check>
+  </Tab>
+</Tabs>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Scheduling" href="/services/optimization/admin-guide/scheduling" color="#197560">
+    Set up recurring audits and configure their execution policy.
+  </Card>
+  <Card title="Security" href="/services/optimization/admin-guide/security" color="#197560">
+    Configure RBAC to restrict execution to the admin role.
+  </Card>
+  <Card title="Compute Integration" href="/services/optimization/admin-guide/compute-integration" color="#197560">
+    Ensure compute hosts support live migration for action execution.
+  </Card>
+  <Card title="Troubleshooting" href="/services/optimization/admin-guide/troubleshooting" color="#197560">
+    Diagnose auto-trigger failures and execution policy issues.
+  </Card>
+</CardGroup>

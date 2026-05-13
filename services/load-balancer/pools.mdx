@@ -1,0 +1,189 @@
+---
+title: "Load Balancer Pools"
+description: "Create and manage backend member pools, configure traffic distribution algorithms, and handle session persistence in Xloud Load Balancer."
+sidebarTitle: "Pools"
+---
+
+import PrerequisitesAuth from '/snippets/prerequisites-auth.mdx';
+
+## Overview
+
+A pool is a collection of backend member instances that receive traffic from a listener.
+Pools define how traffic is distributed across members (algorithm), whether sessions are
+sticky (persistence), and which protocol the pool uses internally. Each listener has a
+default pool; additional pools can be used for L7 policy-based routing.
+
+<PrerequisitesAuth />
+
+---
+
+## Distribution Algorithms
+
+| Algorithm | Description | Best For |
+|-----------|-------------|---------|
+| `ROUND_ROBIN` | Distributes requests evenly across all UP members | Stateless applications with equal capacity members |
+| `LEAST_CONNECTIONS` | Sends new requests to the member with fewest active connections | Long-lived connections with variable request duration |
+| `SOURCE_IP` | Routes requests from the same client IP to the same member | Stateful applications without cookie-based persistence |
+| `SOURCE_IP_PORT` | Routes based on client IP + port combination | Symmetric NAT environments requiring deterministic mapping |
+
+---
+
+## Create a Pool
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Navigate to Pools tab" icon="users">
+        Open your load balancer in **Network > Load Balancers** and select
+        the **Pools** tab. Click **Create Pool**.
+      </Step>
+      <Step title="Configure the pool" icon="settings">
+        | Field | Description |
+        |-------|-------------|
+        | **Name** | Pool display name |
+        | **Protocol** | Must match or be compatible with the listener protocol |
+        | **Algorithm** | Traffic distribution method |
+        | **Session Persistence** | Sticky session configuration (optional) |
+      </Step>
+      <Step title="Add members" icon="user-plus">
+        After pool creation, select the pool and click the **Members** sub-tab.
+        Click **Add Member** to register backend instances.
+
+        | Field | Description |
+        |-------|-------------|
+        | **IP Address** | Backend instance IP |
+        | **Protocol Port** | Port your application listens on |
+        | **Weight** | Relative traffic weight (default: 1) |
+        | **Monitor Address/Port** | Override health check target if different from member address |
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Create pool linked to listener"
+    openstack loadbalancer pool create \
+      --name pool-http \
+      --lb-algorithm ROUND_ROBIN \
+      --listener listener-http \
+      --protocol HTTP
+    ```
+
+    ```bash title="Create standalone pool (for L7 routing)"
+    openstack loadbalancer pool create \
+      --name pool-api \
+      --lb-algorithm LEAST_CONNECTIONS \
+      --loadbalancer prod-web-lb \
+      --protocol HTTP
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Manage Pool Members
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    Navigate to your pool and click the **Members** sub-tab. Use **Add Member** to register
+    instances and **Delete** to remove members that are decommissioned.
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    <CodeGroup>
+    ```bash title="Add a member"
+    openstack loadbalancer member create \
+      --subnet-id <instance-subnet-id> \
+      --address <instance-ip> \
+      --protocol-port 8080 \
+      pool-http
+    ```
+    ```bash title="List pool members with health status"
+    openstack loadbalancer member list pool-http \
+      -c name -c address -c protocol_port -c operating_status
+    ```
+    ```bash title="Update member weight"
+    openstack loadbalancer member set pool-http <member-id> \
+      --weight 2
+    ```
+    ```bash title="Remove a member"
+    openstack loadbalancer member delete pool-http <member-id>
+    ```
+    </CodeGroup>
+  </Tab>
+</Tabs>
+
+---
+
+## Session Persistence
+
+Session persistence routes subsequent requests from the same client to the same backend
+member, enabling stateful applications to work behind the load balancer.
+
+<Tabs>
+  <Tab title="HTTP Cookie (recommended)" icon="cookie">
+    The load balancer inserts a session cookie. Clients are routed to the member that
+    served their first request:
+    ```bash title="Create pool with HTTP cookie persistence"
+    openstack loadbalancer pool create \
+      --name pool-stateful \
+      --lb-algorithm ROUND_ROBIN \
+      --listener listener-http \
+      --protocol HTTP \
+      --session-persistence type=HTTP_COOKIE
+    ```
+  </Tab>
+  <Tab title="Source IP" icon="network">
+    Routes requests from the same client IP to the same member. Works at Layer 4 but
+    breaks when clients are behind NAT with shared IP addresses:
+    ```bash title="Create pool with source IP persistence"
+    openstack loadbalancer pool create \
+      --name pool-sourceip \
+      --lb-algorithm ROUND_ROBIN \
+      --listener listener-http \
+      --protocol HTTP \
+      --session-persistence type=SOURCE_IP
+    ```
+  </Tab>
+  <Tab title="Application Cookie" icon="code">
+    The load balancer reads an existing cookie set by your application:
+    ```bash title="Create pool with application cookie persistence"
+    openstack loadbalancer pool create \
+      --name pool-appcookie \
+      --lb-algorithm ROUND_ROBIN \
+      --listener listener-http \
+      --protocol HTTP \
+      --session-persistence "type=APP_COOKIE,cookie_name=JSESSIONID"
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Update Pool Settings
+
+```bash title="Change distribution algorithm"
+openstack loadbalancer pool set pool-http \
+  --lb-algorithm LEAST_CONNECTIONS
+```
+
+```bash title="Remove session persistence"
+openstack loadbalancer pool set pool-http \
+  --no-session-persistence
+```
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Health Monitors" href="/services/load-balancer/health-monitors" color="#197560">
+    Configure health probes to automatically remove unhealthy members from pools.
+  </Card>
+  <Card title="Listeners" href="/services/load-balancer/listeners" color="#197560">
+    Configure the listeners that route traffic to your pools.
+  </Card>
+  <Card title="Create Load Balancer" href="/services/load-balancer/create-lb" color="#197560">
+    Full walkthrough for creating a load balancer with pool and health monitor.
+  </Card>
+  <Card title="Troubleshooting" href="/services/load-balancer/troubleshooting" color="#197560">
+    Resolve member OFFLINE status and pool connectivity issues.
+  </Card>
+</CardGroup>

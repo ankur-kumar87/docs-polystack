@@ -1,0 +1,80 @@
+---
+title: "Object Storage User Guide"
+description: "Create containers, upload objects, configure access control, enable versioning, and work with large objects in Xloud Object Storage."
+sidebarTitle: "User Guide"
+mode: "wide"
+---
+
+import PrerequisitesAuth from '/snippets/prerequisites-auth.mdx';
+
+<p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Overview</p>
+
+Xloud Object Storage provides a scalable, durable store for unstructured data. Data is
+organized into containers (buckets) within your project account. Each container holds
+objects of any size along with user-defined metadata. Access is controlled through ACLs,
+enabling secure sharing within and across projects.
+
+<PrerequisitesAuth />
+
+<Note>
+  Object Storage is accessed via the Object Storage API endpoint. Ensure your credentials
+  file sets `OS_AUTH_URL` and that your project has the `object-store` service available.
+  Verify access with `openstack object store account show`.
+</Note>
+
+---
+
+<p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Topics in This Guide</p>
+
+<CardGroup cols={4}>
+  <Card title="Create a Container" icon="folder-plus" href="/services/object-storage/create-container" color="#197560">
+    Provision object storage containers with storage policy selection and access settings
+  </Card>
+  <Card title="Upload Objects" icon="upload" href="/services/object-storage/upload-objects" color="#197560">
+    Upload, download, list, and delete objects using the Dashboard and CLI
+  </Card>
+  <Card title="Access Control" icon="list-checks" href="/services/object-storage/access-control" color="#197560">
+    Configure read and write ACLs on containers for cross-project sharing
+  </Card>
+  <Card title="Versioning" icon="history" href="/services/object-storage/versioning" color="#197560">
+    Enable object version retention to protect against accidental overwrites
+  </Card>
+  <Card title="Large Objects" icon="file-archive" href="/services/object-storage/large-objects" color="#197560">
+    Upload files over 5 GB using Static and Dynamic Large Object mechanisms
+  </Card>
+  <Card title="Troubleshooting" icon="wrench" href="/services/object-storage/troubleshooting" color="#197560">
+    Resolve 403 errors, upload timeouts, versioning failures, and temp URL issues
+  </Card>
+</CardGroup>
+
+---
+
+<p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Storage Hierarchy</p>
+
+| Concept | Description |
+|---------|-------------|
+| **Account** | Your project's top-level object storage namespace — holds all containers |
+| **Container** | A logical bucket within the account — all objects reside in a container |
+| **Object** | A stored data item — any file, document, image, or binary blob |
+| **Metadata** | Custom key-value pairs on accounts, containers, or objects |
+| **Storage Policy** | Named configuration defining how container data is replicated |
+| **Temporary URL** | A time-limited signed URL for sharing object access without tokens |
+
+---
+
+<p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Next Steps</p>
+
+<CardGroup cols={4}>
+  <Card title="Object Storage Admin Guide" icon="shield-check" href="/services/object-storage/admin-guide" color="#197560">
+    Configure storage policies, rings, replication, and quotas
+  </Card>
+  <Card title="Key Manager" icon="lock" href="/services/key-manager/user-guide" color="#197560">
+    Manage encryption keys for server-side object storage encryption
+  </Card>
+  <Card title="Identity" icon="fingerprint" href="/cli-setup" color="#197560">
+    Configure authentication tokens for programmatic object storage access
+  </Card>
+  <Card title="Load Balancer" icon="combine" href="/services/load-balancer/user-guide" color="#197560">
+    Distribute object storage proxy requests behind a load balancer
+  </Card>
+</CardGroup>

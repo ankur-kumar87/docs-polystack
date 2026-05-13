@@ -1,0 +1,487 @@
+---
+title: "Third-Party Backup Support"
+description: "Use enterprise backup vendors alongside the native Xloud backup — agentless and agent-based options for compliance and application-aware protection."
+sidebarTitle: "Third-Party Backup"
+---
+
+## Overview
+
+In addition to the **Xloud Native Backup** for block storage volumes, the Xloud Platform
+is fully open to enterprise third-party backup solutions. Customers who need
+application-aware protection, long-term off-site retention, regulatory archive depths,
+or a single backup pane across multi-cloud and on-premises infrastructure can plug in
+the backup vendor of their choice.
+
+Third-party backup tools integrate with Xloud through standard APIs and snapshot
+mechanisms — no proprietary backend changes are required.
+
+<Note>
+  Xloud Native Backup is the recommended starting point for most workloads. Adopt a
+  third-party solution when you need capabilities Xloud Native Backup doesn't cover —
+  such as application-consistent quiescing for databases, indexed file-level recovery
+  across thousands of guests, or cross-cluster / cross-cloud lifecycle policies.
+</Note>
+
+---
+
+## Native vs Third-Party Backup
+
+| Concern | Xloud Native Backup | Third-Party Backup |
+|---------|--------------------|--------------------|
+| **Volume-level full + incremental backup** | Yes | Yes |
+| **Restore to original or new volume** | Yes | Yes |
+| **Off-cluster retention** | Yes (S3/NFS/SMB targets) | Yes (vendor-managed) |
+| **Application-aware backup (DB quiesce)** | No | Yes (with agent) |
+| **Indexed file-level search across many VMs** | Limited | Yes |
+| **Multi-cluster / multi-cloud catalog** | No | Yes |
+| **Long-term archive (years, tape, glacier)** | Limited | Yes |
+| **Per-VM auto-enrollment via tags / policies** | Manual scheduling | Yes (most vendors) |
+| **Compliance certifications (SOC2, HIPAA archive)** | Underlying storage | Vendor-supplied |
+
+For most general-purpose workloads, the native backup is sufficient. Third-party tools
+shine when you have complex application stacks, multi-cluster fleets, or audit/archive
+requirements that need a dedicated backup product.
+
+---
+
+## Two Integration Approaches
+
+Third-party backup tools integrate with Xloud in one of two architectural patterns.
+
+<CardGroup cols={2}>
+  <Card title="Agentless" icon="server" color="#197560">
+    The backup tool talks to Xloud APIs (Block Storage, Image, Compute) and reads VM
+    disks via snapshots. **No software is installed inside the guest.** Best for
+    standardized fleets and snapshot-consistent backups.
+  </Card>
+  <Card title="With Agent" icon="cpu" color="#197560">
+    A small agent runs inside each guest VM. The backup tool coordinates with the agent
+    to quiesce applications, capture file-level metadata, and stream changed data.
+    Best for application-aware and granular file-level recovery.
+  </Card>
+</CardGroup>
+
+---
+
+## Agentless Backup
+
+Agentless backup uses Xloud's snapshot APIs to read VM disks. The backup tool calls
+Xloud, asks for a snapshot, reads the snapshot's data through standard storage APIs,
+and stores it in its own catalog.
+
+### How agentless backup works
+
+<Steps titleSize="h3">
+  <Step title="Discovery" icon="search">
+    The backup tool authenticates with Xloud Identity and lists projects, instances,
+    and volumes the backup user can see.
+  </Step>
+  <Step title="Snapshot" icon="camera">
+    The tool calls Xloud Block Storage to take a snapshot of the target volume. The
+    snapshot is crash-consistent (the same as a power-off + power-on).
+  </Step>
+  <Step title="Read snapshot" icon="download">
+    The tool streams the snapshot data through the storage API and stores it in its
+    own backup repository (object storage, NAS, dedup appliance, tape, etc.).
+  </Step>
+  <Step title="Catalog and retain" icon="archive">
+    The tool indexes the backup, applies the retention policy, and is ready to
+    restore when needed.
+  </Step>
+</Steps>
+
+### Strengths of agentless
+
+<CardGroup cols={2}>
+  <Card title="No guest footprint" icon="check" color="#197560">
+    Nothing runs inside the VM — no extra package to install, patch, or troubleshoot.
+    Works for any guest OS, including hardened or appliance images.
+  </Card>
+  <Card title="Fleet-wide auto-discovery" icon="layers" color="#197560">
+    The backup tool sees every VM through the Xloud API. New VMs are picked up
+    automatically by tag-based or project-based policies.
+  </Card>
+  <Card title="Lower operational overhead" icon="users" color="#197560">
+    No agent rollouts, no agent-version drift across the fleet. Upgrades happen on
+    the backup-tool side only.
+  </Card>
+  <Card title="Snapshot-fast" icon="zap" color="#197560">
+    Backup windows are short — the snapshot takes seconds, and reading happens
+    asynchronously without locking the running VM.
+  </Card>
+</CardGroup>
+
+### Limitations of agentless
+
+- **Crash-consistent only** by default — a snapshot captures disk state without
+  flushing application buffers. Databases may need replay on restore.
+- **Limited application awareness** — without an agent, the backup tool cannot quiesce
+  Microsoft SQL, Oracle, Exchange, or similar transactional applications cleanly.
+- **File-level restore needs extra work** — the backup tool must mount and parse the
+  guest filesystem to expose individual files (most agentless tools do support this).
+
+### Vendors that integrate with Xloud APIs (agentless)
+
+<Info>
+  **Recommended — Commvault** has explicit, link-backed documentation for the four
+  capabilities most commonly required of a third-party backup integration:
+  deep VM-provisioning integration, rule-based auto-enrollment of newly created VMs,
+  schedule + retention count, and on-demand backup. The full per-capability matrix
+  is below the table.
+</Info>
+
+| Vendor | Xloud-native | Notes |
+|--------|:------------:|-------|
+| **Commvault IntelliSnap** | Yes | VM Groups with rule-based selection (project, name pattern, power state); schedule + retention on assigned Server Backup Plan; on-demand backup per VM Group |
+| **Trilio** | Yes | Workload Manager dashboard plugin, policy-based protection (hourly / daily / weekly / monthly / yearly), workload-level restores |
+| **Storware vProtect** | Yes | Dashboard plugin, SLA Policy with schedule + retention per policy, full and incremental |
+| **Veeam** | Yes | Cluster-level API integration, image-based backup, GFS retention schemes |
+| **Cohesity** | Partial | Protection Policy with min 12 h interval + retention; Extended Retention for longer cycles |
+
+#### Commvault capability matrix (with dedicated URLs)
+
+| # | Capability | Commvault feature | Reference |
+|---|-------------------|-------------------|-----------|
+| **1** | Third-party backup software named with OEM documentation | Commvault IntelliSnap (agentless) and Commvault (with-agent) | [Commvault for Xloud — overview](https://documentation.commvault.com/saas/openstack.html) |
+| **2** | Deeply integrated into VM provisioning so newly created VMs are protected automatically | **VM Group** with rule-based content (Project / Instance name pattern / Power state) — every new VM matching the rule is picked up on the next backup cycle | [Adding a VM Group for Xloud](https://documentation.commvault.com/saas/adding_vm_group_for_openstack.html) |
+| **3a** | Backup scheduling | **Server Backup Plan** controls the schedule (granularity from minutes to weekly / monthly / yearly via secondary copies) | [Performing Backups](https://documentation.commvault.com/2024e/software/performing_backups_for_openstack_instances_or_vm_groups.html) |
+| **3b** | Backup retention counts | **Days-Based Retention** (keep N days) or count-based for IntelliSnap; secondary copies have separate counts for monthly-full / yearly-full | [Days-Based Retention](https://documentation.commvault.com/v11/commcell-console/days_based_retention.html) |
+| **3c** | On-demand backup from the same workflow | Manual backup action triggered against any VM Group or instance, independent of the schedule | [Performing Backups (on-demand)](https://documentation.commvault.com/2024e/software/performing_backups_for_openstack_instances_or_vm_groups.html) |
+
+<Tip>
+  Other strong agentless choices: **Trilio** and **Storware** also ship rule-based
+  policy engines that pick up newly created VMs, but their public docs are slightly
+  less explicit about "auto-enroll on VM create" enforcement. See their accordions
+  below for the exact docs.
+</Tip>
+
+### Schedule + retention reference docs (agentless)
+
+<AccordionGroup>
+  <Accordion title="Commvault — VM Group + Server Backup Plan (recommended)" icon="server" defaultOpen>
+    Commvault organizes Xloud VMs into **VM Groups** with rule-based content selection.
+    The schedule + retention live on the **Server Backup Plan** assigned to the group.
+
+    Available VM-Group rule types:
+    - **Project** — every VM in a chosen project
+    - **Instance name or pattern** — name `Contains` operator
+    - **Power state** — On / Off / Other
+    - **Browse / Instance** — explicit single-VM selection
+
+    **Retention count** — configured on the Server Backup Plan as **Days-Based
+    Retention** (keep backups for N days) or as the **number of snapshots to retain**
+    for IntelliSnap. Secondary copies have separate retention counts for monthly-full
+    and yearly-full tiers.
+
+    **On-demand backup** — yes. The Performing Backups page documents the manual
+    backup action that can be triggered against any VM Group or instance independent
+    of the schedule.
+
+    - [Commvault for Xloud (overview)](https://documentation.commvault.com/saas/openstack.html)
+    - [Adding a VM Group for Xloud](https://documentation.commvault.com/saas/adding_vm_group_for_openstack.html)
+    - [Performing Backups (on-demand)](https://documentation.commvault.com/2024e/software/performing_backups_for_openstack_instances_or_vm_groups.html)
+    - [Days-Based Retention](https://documentation.commvault.com/v11/commcell-console/days_based_retention.html)
+  </Accordion>
+  <Accordion title="Trilio — Workload Policies, Schedulers, Workloads" icon="shield">
+    Trilio's protection model has two parts:
+    - **Workload Policies** — admins define schedule + retention and assign policies to projects.
+    - **Workloads** — group VMs to be backed up together with one of those policies.
+
+    **Retention count** — configured as the `retention` parameter on the policy
+    (e.g. `--hourly interval=1,retention=30,snapshot_type=incremental` keeps 30
+    snapshots; default for hourly is 30, incremental). For one-off jobs the syntax is
+    `--manual retention=<count>,retention_days_to_keep=<days>`.
+
+    **On-demand backup** — yes. From the **Workloads** page in the dashboard, you can
+    trigger a snapshot manually for any workload at any time, independent of the
+    scheduled policy.
+
+    For *fully automatic* discovery of newly created VMs, confirm the exact behavior in
+    the current Trilio release notes — public docs describe policy-driven workload
+    backup, not turnkey auto-enrollment of every new VM.
+
+    - [Workload Policies](https://docs.trilio.io/openstack/admin-guide/workload-policies)
+    - [Schedulers](https://docs.trilio.io/openstack/user-guide/schedulers)
+    - [Workloads](https://docs.trilio.io/openstack/user-guide/workloads)
+    - [Snapshots (on-demand)](https://docs.trilio.io/openstack/user-guide/snapshots)
+  </Accordion>
+  <Accordion title="Storware vProtect — SLA Policy" icon="tag">
+    Storware's **SLA Policy** combines schedule (daily / weekly / etc.) and retention
+    in one policy. New VMs matching the policy's project / tag selector are picked up
+    on the next protection cycle. Full and incremental backups both supported.
+
+    **Retention count** — configured per policy as a count of backups to keep, or as
+    a time window. Storware moved retention from backup destination to the policy
+    itself, so different policies can have different retention without changing the
+    backup target.
+
+    **On-demand backup** — yes. The Storware OpenStack plugin dashboard exposes a
+    direct backup action per VM, independent of the SLA Policy schedule.
+
+    - [Storware Xloud integration docs](https://docs.storware.eu/protecting-virtual-machines/virtual-machines/openstack)
+    - [Solution overview](https://storware.eu/solutions/virtual-machine-backup-and-recovery/openstack-backup-and-recovery/)
+  </Accordion>
+  <Accordion title="Veeam — Backup Retention + GFS Schedules" icon="rotate-cw">
+    Veeam uses a job-level schedule combined with retention policies; GFS
+    (Grandfather-Father-Son) schemes give you long-term tiered retention.
+
+    - [Backup Retention](https://helpcenter.veeam.com/docs/vbr/userguide/sch_backup_retention.html)
+    - [Retention Policies](https://helpcenter.veeam.com/docs/vbr/userguide/sch_retention_policy.html)
+    - [GFS Policy Schedules](https://helpcenter.veeam.com/docs/vbr/userguide/sch_backup_job_create_gfs.html)
+  </Accordion>
+  <Accordion title="Cohesity — Protection Policies + Extended Retention" icon="layers">
+    Cohesity Protection Policies define backup interval (minimum 12 h) and primary
+    retention; Extended Retention adds longer hourly / daily / weekly / monthly /
+    yearly snapshots beyond the primary policy.
+
+    - [Policies](https://docs.cohesity.com/baas/data-protect/policies.htm)
+    - [Extended Retention](https://docs.cohesity.com/baas/data-protect/extended-retention.htm)
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## With-Agent Backup
+
+Agent-based backup runs a small piece of software inside each guest VM. The agent
+coordinates with the backup tool over the network to capture data with
+application-aware consistency and full file-level granularity.
+
+### How agent-based backup works
+
+<Steps titleSize="h3">
+  <Step title="Install the agent" icon="download">
+    A backup agent package is installed inside the guest OS (Linux .deb / .rpm,
+    Windows .msi). The agent registers with the backup server.
+  </Step>
+  <Step title="Quiesce the application" icon="pause">
+    Before each backup, the agent calls application hooks (VSS on Windows, scripts on
+    Linux) to flush database buffers, lock log writers, and ensure the on-disk state
+    is consistent.
+  </Step>
+  <Step title="Stream changed data" icon="upload">
+    The agent identifies changed blocks or files since the last backup and streams
+    them to the backup server over the network.
+  </Step>
+  <Step title="Catalog with file-level index" icon="list">
+    The backup tool catalogs every file, registry key, or database object captured —
+    enabling granular restore by name, not just full-volume restore.
+  </Step>
+</Steps>
+
+### Strengths of with-agent
+
+<CardGroup cols={2}>
+  <Card title="Application-consistent backup" icon="database" color="#197560">
+    Microsoft SQL, Oracle, MySQL, PostgreSQL, Exchange, Active Directory, SAP, and
+    other transactional apps are backed up cleanly with no replay needed at restore.
+  </Card>
+  <Card title="Granular file-level restore" icon="file" color="#197560">
+    Recover a single email, table row, registry key, or document from a backup —
+    without restoring the whole volume.
+  </Card>
+  <Card title="Cross-platform consistency" icon="globe" color="#197560">
+    The same backup tool protects VMs on Xloud, on-prem hypervisors, public clouds,
+    and physical machines — one console, one policy framework.
+  </Card>
+  <Card title="In-guest encryption + dedup" icon="shield" color="#197560">
+    Source-side deduplication and encryption reduce network traffic and protect
+    backup data in transit and at rest.
+  </Card>
+</CardGroup>
+
+### Limitations of with-agent
+
+- **Operational overhead** — agent installation, version upgrades, and patching across
+  the fleet require lifecycle management.
+- **Guest OS coupling** — agents are OS-specific (Linux distro, Windows version) and
+  may not be available for some appliance images or hardened guests.
+- **In-guest resource use** — the agent consumes a small amount of guest CPU, memory,
+  and network capacity during backup windows.
+- **Doesn't protect non-running VMs** — if the VM is powered off, the agent isn't
+  running, so the backup tool falls back to agentless or snapshot mode.
+
+### Vendors that support agent-based backup on Xloud guests
+
+| Vendor | Notes |
+|--------|-------|
+| **Veritas NetBackup** | Comprehensive enterprise agent suite; very strong app-aware coverage (SQL, Oracle, Exchange, SAP). Schedule + retention live on the policy |
+| **Commvault** | Agent-based or agentless. Schedule + retention managed on the assigned Server Backup Plan |
+| **Veeam** | Veeam Agent for Linux / Windows. Often paired with the agentless plugin |
+| **Acronis Cyber Protect** | Agent + cloud catalog. Strong endpoint + workload protection. Backup Plan defines schedule and retention together |
+| **Bacula Enterprise** | Open-source-rooted agent, Xloud-aware module available. Per-Job File/Job Retention + per-Pool Volume Retention |
+| **IBM Storage Protect** | Enterprise agent for large heterogeneous fleets (formerly IBM Spectrum Protect). Retention defined in Management Class within a Policy Domain |
+
+### Schedule + retention reference docs (with-agent)
+
+<AccordionGroup>
+  <Accordion title="Veritas NetBackup — Policy schedules + Retention Periods" icon="shield">
+    Schedule + retention live on the NetBackup policy.
+
+    - [Admin Guide for Xloud](https://www.veritas.com/support/en_US/doc/147269993-149461653-0/index)
+    - [Edit a protection (schedules)](https://www.veritas.com/support/en_US/doc/147269993-165972820-0/v148941437-165972820)
+    - [Retention Periods](https://www.veritas.com/support/en_US/doc/18716246-126559472-0/v40229538-126559472)
+  </Accordion>
+  <Accordion title="Commvault — Server Backup Plan + Days-Based Retention" icon="server">
+    Schedule + retention are managed on the Server Backup Plan assigned to a VM Group.
+
+    - [Adding a VM Group for Xloud](https://documentation.commvault.com/saas/adding_vm_group_for_openstack.html)
+    - [Days-Based Retention](https://documentation.commvault.com/v11/commcell-console/days_based_retention.html)
+  </Accordion>
+  <Accordion title="Veeam — Backup Retention + Retention Policies" icon="rotate-cw">
+    - [Backup Retention](https://helpcenter.veeam.com/docs/vbr/userguide/sch_backup_retention.html)
+    - [Retention Policies](https://helpcenter.veeam.com/docs/vbr/userguide/sch_retention_policy.html)
+  </Accordion>
+  <Accordion title="Acronis Cyber Protect — Backup Plan schedule + retention" icon="cloud">
+    Schedule and retention live in the Backup Plan together.
+
+    - [Set up backup schedule](https://kb.acronis.com/content/59296)
+    - [Retention rules — how & when they work](https://kb.acronis.com/content/68304)
+    - [Retention of Backups](https://kb.acronis.com/content/12366)
+  </Accordion>
+  <Accordion title="Bacula Enterprise — Schedules + Retentions" icon="cog">
+    Bacula uses per-Job File/Job Retention and per-Pool Volume Retention.
+
+    - [Schedules and Retentions](https://docs.baculasystems.com/BEPlanningAndPreparation/BackupPolicy/SchedulesAndRetentions/index.html)
+    - [Retention Period Configuration](https://docs.baculasystems.com/BEPlanningAndPreparation/BackupPolicy/Configuration/RetentionPeriod/index.html)
+    - [Xloud Backup & Restore Strategies](https://docs.baculasystems.com/BEDedicatedBackupSolutions/Virtualization/Hypervisors/openstack/BackupAndRestoreStrategies/index.html)
+  </Accordion>
+  <Accordion title="IBM Storage Protect — Policy Domain + Management Class" icon="database">
+    Retention is defined in a **Management Class** within a **Policy Domain**.
+
+    - [Define Policy Domain](https://www.ibm.com/docs/en/storage-protect/8.1.25?topic=commands-define-objectdomain-define-policy-domain-object-clients)
+    - [Storage Protect product page](https://www.ibm.com/products/storage-protect)
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Hybrid: Agentless + Agent
+
+Many production environments use **both** approaches together:
+
+- **Agentless** for the bulk of the fleet — fast snapshot-based backups of stateless
+  workloads, web tiers, and standard application servers.
+- **With-agent** for specific high-value VMs — databases, mail servers, ERP/SAP,
+  domain controllers, and any workload where a few minutes of replay-on-restore is
+  unacceptable.
+
+A single backup tool typically supports both modes from the same console — pick the
+backup method per workload class via policy, not per-tool.
+
+---
+
+## Choosing the Right Approach
+
+<AccordionGroup>
+  <Accordion title="Standard application servers and web tiers" icon="server">
+    **Pick agentless.** Snapshot-based backups are fast, fleet-wide, and good enough
+    for stateless or session-replicated workloads.
+  </Accordion>
+  <Accordion title="Database VMs (SQL, Oracle, MySQL, PostgreSQL)" icon="database">
+    **Pick with-agent.** Application-aware quiescing prevents database replay or
+    corruption on restore. Trilio also offers app-aware workload types for databases
+    via in-guest helper scripts.
+  </Accordion>
+  <Accordion title="Microsoft Exchange / SharePoint / SQL Always-On" icon="mail">
+    **Pick with-agent.** VSS integration is essential. Veeam, Commvault, and Veritas
+    all have strong Exchange and SQL Always-On support.
+  </Accordion>
+  <Accordion title="Hardened or appliance VMs (no shell access)" icon="lock">
+    **Pick agentless.** You cannot install an agent into a sealed appliance image.
+    Snapshot-based backup is the only viable option.
+  </Accordion>
+  <Accordion title="Long-term compliance archive (HIPAA, SOC2, financial)" icon="archive">
+    **Pick whatever your audit framework prefers** — most enterprise backup vendors
+    offer immutable retention, write-once tiers, and audit reporting designed for
+    these frameworks.
+  </Accordion>
+  <Accordion title="Multi-cluster, multi-cloud fleet under one console" icon="globe">
+    **Pick agentless** for the Xloud side and use the same vendor's connectors
+    for AWS / Azure / GCP / on-prem. Veeam, Commvault, Cohesity, Trilio, and Veritas
+    all support multi-cloud.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## How to Integrate a Third-Party Backup Tool
+
+<Steps titleSize="h3">
+  <Step title="Provision a backup service account" icon="user">
+    Create a dedicated user in Xloud Identity with read access to all projects you
+    want backed up. Grant the minimum roles required by the vendor (typically
+    `member` plus `volume:create_snapshot` on Block Storage).
+  </Step>
+  <Step title="Open Xloud APIs to the backup server" icon="network">
+    Ensure the backup tool can reach Xloud's Identity, Compute, Block Storage, and
+    Image API endpoints. Open required network paths, configure TLS trust, and (for
+    agent-based mode) ensure guest VMs can reach the backup server on its data port.
+  </Step>
+  <Step title="Configure the vendor's Xloud connector" icon="plug">
+    Each vendor ships an Xloud connector module. Point it at your Xloud Identity
+    endpoint, supply the service account credentials, and select the projects to
+    discover.
+
+    <Info>
+      For Trilio, this is the **Workload Manager** Dashboard panel. For Veeam and
+      Commvault, it's a connector wizard inside the vendor console.
+    </Info>
+  </Step>
+  <Step title="Define protection policies" icon="shield">
+    Create backup policies — typically by tag, project, or VM list. Most vendors
+    let you specify schedule, retention, target repository, and (for agent-based)
+    application-quiesce settings.
+  </Step>
+  <Step title="Verify the first backup and restore" icon="check">
+    Run a test backup of a single VM, then perform a test restore to a new VM in a
+    sandbox project. Confirm boot, network, and application functionality before
+    enabling the policy fleet-wide.
+
+    <Check>The test VM restores successfully and applications start cleanly.</Check>
+  </Step>
+</Steps>
+
+<Warning>
+  Always test restores on a regular cadence — quarterly at minimum. A backup you
+  cannot restore is not a backup.
+</Warning>
+
+---
+
+## What Xloud Provides for Backup Vendors
+
+Xloud exposes the standard cloud APIs that every modern backup vendor expects:
+
+| API | Used for |
+|-----|----------|
+| **Identity** | Authentication, project scoping, role-based access for the backup service account |
+| **Compute** | List instances, query state, attach/detach volumes, snapshot instances |
+| **Block Storage** | Create/list/delete volume snapshots, mount snapshots for backup reads |
+| **Image** | List images, create/delete snapshot-type images |
+| **Object Storage** | Direct backup target for native and many third-party tools |
+
+For low-level integration, Xloud also exposes:
+
+- **File-level read of snapshots** through the [File-Level Restore](/services/storage/file-level-restore)
+  service — useful for backup tools that want to verify snapshot contents or build
+  a file index.
+- **Standard storage protocols** — RBD for storage running on XSDS, NFS, iSCSI, and
+  Fibre Channel for external arrays — so backup tools that prefer direct storage
+  access can also integrate.
+
+---
+
+## Related Topics
+
+<CardGroup cols={3}>
+  <Card title="Xloud Native Backup" href="/services/storage/backups" color="#197560">
+    Volume backup with full + incremental modes — the built-in option
+  </Card>
+  <Card title="File-Level Restore" href="/services/storage/file-level-restore" color="#197560">
+    Recover individual files from a snapshot without a full restore
+  </Card>
+  <Card title="Disaster Recovery (XDR)" href="/services/disaster-recovery" color="#197560">
+    Replication, failover, and continuous protection beyond backup
+  </Card>
+</CardGroup>

@@ -1,0 +1,157 @@
+---
+title: "Image Service CLI Reference"
+description: "Complete openstack image CLI commands for managing Xloud Images — upload, download, share, set properties, and manage image metadata."
+sidebarTitle: "CLI Reference"
+---
+
+## Overview
+
+The `openstack image` command group manages the full lifecycle of VM images — uploading, downloading, sharing across projects, and managing properties.
+
+<Note>
+  **Prerequisites**
+  - CLI installed and authenticated — see [CLI Setup](/cli-setup)
+  - Python glanceclient installed: `pip install python-glanceclient`
+</Note>
+
+---
+
+## List and Inspect
+
+<CodeGroup>
+```bash title="List images"
+openstack image list
+openstack image list --status active
+openstack image list --public
+openstack image list --private
+openstack image list --shared
+```
+
+```bash title="Show image details"
+openstack image show <image>
+```
+
+```bash title="Show image properties"
+openstack image show <image> --format json | jq .properties
+```
+</CodeGroup>
+
+---
+
+## Upload Images
+
+<CodeGroup>
+```bash title="Upload QCOW2 image"
+openstack image create \
+  --container-format bare \
+  --disk-format qcow2 \
+  --file ubuntu-22.04.qcow2 \
+  --public \
+  Ubuntu-22.04
+```
+
+```bash title="Upload RAW image"
+openstack image create \
+  --container-format bare \
+  --disk-format raw \
+  --file ubuntu-22.04.raw \
+  Ubuntu-22.04-raw
+```
+
+```bash title="Upload with minimum requirements"
+openstack image create \
+  --container-format bare \
+  --disk-format qcow2 \
+  --file image.qcow2 \
+  --min-ram 1024 \
+  --min-disk 10 \
+  my-image
+```
+</CodeGroup>
+
+---
+
+## Download Images
+
+```bash title="Download image to file"
+openstack image save --file ubuntu-22.04.qcow2 <image>
+```
+
+---
+
+## Set Properties
+
+<CodeGroup>
+```bash title="Set image visibility"
+openstack image set --public <image>
+openstack image set --private <image>
+openstack image set --shared <image>
+openstack image set --community <image>
+```
+
+```bash title="Set OS and boot properties"
+openstack image set \
+  --property os_type=linux \
+  --property os_distro=ubuntu \
+  --property hw_firmware_type=uefi \
+  <image>
+```
+
+```bash title="Enable Secure Boot"
+openstack image set \
+  --property hw_firmware_type=uefi \
+  --property os_secure_boot=required \
+  <image>
+```
+
+```bash title="Remove a property"
+openstack image unset --property hw_firmware_type <image>
+```
+</CodeGroup>
+
+---
+
+## Share Images
+
+<CodeGroup>
+```bash title="Share image with a project"
+openstack image add project <image> <project-id>
+```
+
+```bash title="Accept shared image (recipient project)"
+openstack image set --accept <image>
+```
+
+```bash title="List projects image is shared with"
+openstack image member list <image>
+```
+
+```bash title="Unshare image"
+openstack image remove project <image> <project-id>
+```
+</CodeGroup>
+
+---
+
+## Delete
+
+```bash title="Delete image"
+openstack image delete <image>
+```
+
+```bash title="Delete multiple images"
+openstack image delete <image1> <image2>
+```
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Upload Image Guide" href="/services/images/upload-image" color="#197560">
+    Detailed guide for preparing and uploading images
+  </Card>
+  <Card title="Compute CLI" href="/services/compute/cli-reference" color="#197560">
+    Launch instances from uploaded images
+  </Card>
+</CardGroup>

@@ -1,0 +1,176 @@
+---
+title: "Recovery Plans"
+description: "Define ordered resource groups, health check criteria, and automation hooks that govern how XDR recovers workloads during a failover event."
+sidebarTitle: "Recovery Plans"
+---
+
+## Overview
+
+Recovery plans define the complete failover procedure — which resources are protected,
+in what order they recover, what health checks confirm readiness, and what automation
+scripts run at each stage. A well-designed recovery plan is the foundation of a
+reliable DR strategy with predictable RTO.
+
+<Note>
+  **Prerequisites**
+  - Sites registered and replication link verified (see [Replication Configuration](/services/disaster-recovery/admin-guide/replication-config))
+  - Administrator credentials on both sites
+  - Instances and volumes to protect must exist in the project
+</Note>
+
+---
+
+## Creating a Recovery Plan
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Open Recovery Plans" icon="shield">
+        Navigate to **Disaster Recovery → Recovery Plans → Create Plan**.
+      </Step>
+      <Step title="Define plan parameters" icon="settings">
+        | Field | Description |
+        |-------|-------------|
+        | **Plan Name** | Descriptive label identifying the workload tier (e.g., `prod-database-dr`) |
+        | **Primary Site** | Source site for replication |
+        | **DR Site** | Target site for recovery |
+        | **RPO Target** | Maximum acceptable data loss (e.g., `5 minutes`) |
+        | **RTO Target** | Maximum acceptable recovery time (e.g., `30 minutes`) |
+        | **Failover Trigger** | `Manual` or `Automatic` |
+        | **Consistency Mode** | `Crash-consistent` or `Application-consistent` |
+        | **Replication Mode** | `Asynchronous` or `Synchronous` |
+      </Step>
+      <Step title="Add resource groups" icon="layers">
+        Organize protected resources into ordered recovery groups. Resources within
+        a group recover in parallel; groups recover sequentially.
+
+        | Group | Resources | Recovery Order |
+        |-------|-----------|---------------|
+        | **Group 1** | Database instances | 1 — first to recover |
+        | **Group 2** | Application servers | 2 — start after databases healthy |
+        | **Group 3** | Load balancers / frontends | 3 — start after app tier healthy |
+
+        <Tip>
+          Model recovery groups on the actual application dependency chain.
+          Starting an application server before its database is ready causes
+          service errors and may require manual intervention during a real failover.
+        </Tip>
+      </Step>
+      <Step title="Configure automation hooks" icon="cpu">
+        Add pre/post scripts to each resource group:
+
+        | Hook Type | Trigger | Example Use |
+        |-----------|---------|-------------|
+        | **Pre-Failover** | Before group starts recovering | Notify on-call; update DNS TTL |
+        | **Post-Recover** | After group is running | Run health check; update service registry |
+        | **Pre-Failback** | Before reversing replication | Drain connections from DR instances |
+        | **Post-Failback** | After primary site is restored | Re-enable scheduled jobs |
+      </Step>
+      <Step title="Set health check criteria" icon="heart-pulse">
+        Define what "recovered" means for each resource group:
+        - **HTTP health check** — URL and expected response code
+        - **TCP port check** — host and port number
+        - **Script** — custom validation command (exit 0 = healthy)
+
+        <Note>
+          A recovery group advances to the next group only when all health checks
+          in the current group pass. This prevents cascading failures where
+          dependent services start before their dependencies are ready.
+        </Note>
+      </Step>
+      <Step title="Activate the plan" icon="circle-check">
+        Click **Activate**. XDR begins replicating all protected resources to
+        the DR site. Initial sync time depends on data volume.
+
+        <Check>Plan status shows `ACTIVE` and initial replication sync progress is visible in the replication dashboard.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    <Info>
+      XDR disaster recovery operations are managed exclusively through the XDR Dashboard.
+      CLI access is not available for DR operations. Use the **Dashboard** tab above to
+      create and configure recovery plans.
+    </Info>
+  </Tab>
+</Tabs>
+
+---
+
+## Managing Existing Plans
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    Navigate to **Disaster Recovery → Recovery Plans** to see all plans with
+    their current status and replication lag.
+
+    Available actions per plan:
+    - **Edit** — update RPO/RTO targets, add/remove resources, modify health checks
+    - **Deactivate** — pause replication without deleting the plan
+    - **Delete** — permanently remove the plan (stops replication)
+    - **Failover** — initiate failover (see [Failover](/services/disaster-recovery/user-guide/failover))
+    - **Test Failover** — run an isolated DR test without cutting over production traffic
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    <Info>
+      XDR disaster recovery operations are managed exclusively through the XDR Dashboard.
+      CLI access is not available for DR operations. Use the **Dashboard** tab above to
+      manage existing recovery plans.
+    </Info>
+  </Tab>
+</Tabs>
+
+---
+
+## Consistency Modes
+
+| Mode | How It Works | RPO Accuracy | Overhead |
+|------|-------------|-------------|---------|
+| **Crash-consistent** | Replicates data as written — like a power failure at the recovery point | May require fsck on recovery; databases may need recovery | Minimal |
+| **Application-consistent** | Coordinates with the XAVS Guest Agent to quiesce writes before snapshot (includes VSS provider for Windows) | Application-clean recovery point; no database recovery needed | XAVS Guest Agent round-trip per snapshot interval |
+
+<Tip>
+  Use application-consistent mode for databases and transactional workloads.
+  Crash-consistent mode is suitable for stateless compute instances where
+  data integrity depends on the application rather than the storage layer.
+</Tip>
+
+---
+
+## Recovery Point Retention
+
+XDR retains a configurable number of recovery points, allowing historical
+restore targets during failover:
+
+Configure retention settings from **Disaster Recovery → Recovery Plans → [Plan] → Retention**:
+
+| Retention Setting | Behavior |
+|------------------|---------|
+| **Count** | Number of recovery points to retain (older points are pruned) |
+| **Interval** | Minimum time between recovery points |
+| **Maximum age** | Absolute oldest recovery point to retain |
+
+<Warning>
+  Increasing recovery point retention consumes additional storage on the DR site.
+  Each recovery point is an incremental snapshot — for high-change workloads,
+  deep retention can accumulate significant storage overhead.
+</Warning>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="DR Automation" href="/services/disaster-recovery/admin-guide/dr-automation" color="#197560">
+    Configure runbook scripts and automatic failover triggers
+  </Card>
+  <Card title="Monitoring" href="/services/disaster-recovery/admin-guide/monitoring" color="#197560">
+    Monitor plan replication health and RPO adherence
+  </Card>
+  <Card title="Compliance" href="/services/disaster-recovery/admin-guide/compliance" color="#197560">
+    Generate RPO/RTO compliance reports from plan history
+  </Card>
+  <Card title="XDR User Guide — Protection Plans" href="/services/disaster-recovery/user-guide/protection-plans" color="#197560">
+    User-facing protection plan management
+  </Card>
+</CardGroup>

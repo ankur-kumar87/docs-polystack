@@ -1,0 +1,419 @@
+---
+title: "DNS Record Types Reference"
+description: "Complete reference for the 12 DNS record types supported by Xloud DNS — A, AAAA, CAA, CNAME, MX, NS, PTR, SOA, SPF, SRV, SSHFP, and TXT with format examples."
+sidebarTitle: "Record Types"
+---
+
+## Overview
+
+Xloud DNS supports 12 standard DNS record types. Each type serves a specific purpose
+in DNS resolution. This reference covers the supported types, their value format,
+and usage examples for both Dashboard and CLI.
+
+<Note>
+  When creating records in the Dashboard, the form provides format hints and
+  validation for each type automatically. See [Manage Records](/services/dns/manage-records)
+  for the step-by-step creation workflow.
+</Note>
+
+---
+
+## Quick Reference
+
+| Record Type | Full Name | Purpose |
+|-------------|-----------|---------|
+| **A** | Address Record | Maps hostname to IPv4 address |
+| **AAAA** | IPv6 Address Record | Maps hostname to IPv6 address |
+| **CAA** | Certificate Authority Authorization Record | Controls which CAs can issue certificates |
+| **CNAME** | Canonical Name Record | Hostname alias pointing to another name |
+| **MX** | Mail Exchange Record | Routes email to mail servers |
+| **NS** | Name Server | Delegates a subdomain to other nameservers |
+| **PTR** | Pointer Record | Reverse DNS — maps IP to hostname |
+| **SOA** | Start Of Authority | Zone authority metadata (auto-managed) |
+| **SPF** | Sender Policy Framework | Email sender validation policy |
+| **SRV** | Service Locator | Service discovery with host, port, priority |
+| **SSHFP** | SSH Public Key Fingerprint | Publishes SSH host key fingerprints |
+| **TXT** | Text Record | Arbitrary text data |
+
+---
+
+## Record Type Details
+
+<AccordionGroup>
+  <Accordion title="A — Address Record" defaultOpen>
+    Maps a hostname to one or more IPv4 addresses. The most common record type.
+
+    | Field | Value |
+    |-------|-------|
+    | **Format** | IPv4 address |
+    | **Example** | `192.168.1.1` |
+    | **Validation** | Must be a valid IPv4 address |
+    | **Multiple values** | Supported — creates round-robin distribution |
+
+    <Tabs>
+      <Tab title="Dashboard" icon="gauge">
+        Select type **A**, enter the FQDN (e.g., `www.example.com.`), and add one or
+        more IPv4 addresses in the Records field.
+      </Tab>
+      <Tab title="CLI" icon="terminal">
+        ```bash title="Create A record with multiple values"
+        openstack recordset create \
+          --type A \
+          --record 192.168.1.10 \
+          --record 192.168.1.11 \
+          --ttl 3600 \
+          example.com. www
+        ```
+      </Tab>
+    </Tabs>
+
+    <Tip>
+      Multiple A records for the same name create DNS round-robin distribution — each
+      resolver query cycles through the values. This is not a replacement for a proper
+      load balancer but useful for simple traffic spreading.
+    </Tip>
+  </Accordion>
+
+  <Accordion title="AAAA — IPv6 Address Record">
+    Maps a hostname to an IPv6 address. Identical to A records but uses IPv6 notation.
+
+    | Field | Value |
+    |-------|-------|
+    | **Format** | Full or abbreviated IPv6 address |
+    | **Example** | `2001:db8:3333:4444:5555:6666:7777:8888` |
+    | **Validation** | Must be a valid IPv6 address |
+
+    <Tabs>
+      <Tab title="Dashboard" icon="gauge">
+        Select type **AAAA** and enter one or more IPv6 addresses in the Records field.
+      </Tab>
+      <Tab title="CLI" icon="terminal">
+        ```bash title="Create AAAA record"
+        openstack recordset create \
+          --type AAAA \
+          --record 2001:db8::1 \
+          --ttl 3600 \
+          example.com. www
+        ```
+      </Tab>
+    </Tabs>
+  </Accordion>
+
+  <Accordion title="CAA — Certificate Authority Authorization">
+    Restricts which Certificate Authorities can issue TLS certificates for the domain.
+    Supported by major CAs to prevent unauthorized certificate issuance.
+
+    | Field | Value |
+    |-------|-------|
+    | **Format** | `<flags> <tag> "<value>"` |
+    | **Example** | `0 iodef mailto:security@example.com` |
+
+    **Flags**: `0` = non-critical (CA may issue even if tag is unknown), `128` = critical (CA must not issue if tag is unknown)
+
+    **Tags**:
+
+    | Tag | Purpose |
+    |-----|---------|
+    | `issue` | Authorizes a CA to issue certificates for this domain |
+    | `issuewild` | Authorizes a CA to issue wildcard certificates |
+    | `iodef` | Reporting URI for policy violations (e.g., `mailto:security@example.com`) |
+
+    <Tabs>
+      <Tab title="Dashboard" icon="gauge">
+        Select type **CAA** and enter the flag, tag, and value in the Records field
+        (e.g., `0 issue "letsencrypt.org"`).
+      </Tab>
+      <Tab title="CLI" icon="terminal">
+        ```bash title="Allow only Let's Encrypt"
+        openstack recordset create \
+          --type CAA \
+          --record '0 issue "letsencrypt.org"' \
+          --record '0 iodef "mailto:security@example.com"' \
+          example.com. @
+        ```
+      </Tab>
+    </Tabs>
+  </Accordion>
+
+  <Accordion title="CNAME — Canonical Name (Alias)">
+    Creates an alias that points one hostname to another. The target must resolve
+    to an A or AAAA record.
+
+    | Field | Value |
+    |-------|-------|
+    | **Format** | Fully qualified domain name |
+    | **Example** | `other-example.com` |
+    | **Name example** | `first.example.com.` |
+
+    <Warning>
+      CNAME records cannot coexist with other record types at the same name, and cannot
+      be created at the zone apex (`@`). Use an A record for the root domain hostname.
+    </Warning>
+
+    <Tabs>
+      <Tab title="Dashboard" icon="gauge">
+        Select type **CNAME** and enter the target FQDN in the Records field.
+      </Tab>
+      <Tab title="CLI" icon="terminal">
+        ```bash title="Create CNAME record"
+        openstack recordset create \
+          --type CNAME \
+          --record app.example.com. \
+          example.com. api
+        ```
+      </Tab>
+    </Tabs>
+  </Accordion>
+
+  <Accordion title="MX — Mail Exchange">
+    Specifies the mail servers responsible for receiving email for the domain.
+    Multiple MX records with different priorities enable failover.
+
+    | Field | Value |
+    |-------|-------|
+    | **Format** | `<priority> <hostname>` |
+    | **Example** | `10 mail.example.com` |
+
+    Lower priority numbers have higher precedence. If the primary fails, resolvers
+    try the next lowest priority.
+
+    <Tabs>
+      <Tab title="Dashboard" icon="gauge">
+        Select type **MX** and enter each record as `priority hostname.`
+        (e.g., `10 mail.example.com.`).
+      </Tab>
+      <Tab title="CLI" icon="terminal">
+        ```bash title="Create MX records with primary and backup"
+        openstack recordset create \
+          --type MX \
+          --record "10 mail.example.com." \
+          --record "20 mail-backup.example.com." \
+          example.com. @
+        ```
+      </Tab>
+    </Tabs>
+  </Accordion>
+
+  <Accordion title="NS — Name Server">
+    Delegates a subdomain to a different set of nameservers. Zone apex NS records
+    are auto-managed — do not modify them manually.
+
+    | Field | Value |
+    |-------|-------|
+    | **Format** | Nameserver FQDN |
+    | **Example** | `ns1.example.com` |
+
+    <Tabs>
+      <Tab title="Dashboard" icon="gauge">
+        Select type **NS** and enter nameserver FQDNs in the Records field.
+      </Tab>
+      <Tab title="CLI" icon="terminal">
+        ```bash title="Delegate a subdomain"
+        openstack recordset create \
+          --type NS \
+          --record "ns1.partner.com." \
+          --record "ns2.partner.com." \
+          example.com. sub
+        ```
+      </Tab>
+    </Tabs>
+  </Accordion>
+
+  <Accordion title="PTR — Pointer Record (Reverse DNS)">
+    Maps an IP address back to a hostname. PTR records live in reverse zones
+    (`in-addr.arpa.` for IPv4, `ip6.arpa.` for IPv6).
+
+    | Field | Value |
+    |-------|-------|
+    | **Format** | Reverse FQDN |
+    | **Example** | `1.1.0.192.in-addr.arpa.` |
+
+    <Note>
+      For floating IP reverse DNS, use the dedicated **Reverse DNS** interface
+      at **Network > DNS Reverse** instead of creating PTR records
+      manually. See [Reverse DNS](/services/dns/reverse-dns).
+    </Note>
+  </Accordion>
+
+  <Accordion title="SOA — Start Of Authority">
+    Defines zone authority parameters. SOA records are auto-managed by the DNS
+    service — you typically do not create or modify them directly.
+
+    | Field | Value |
+    |-------|-------|
+    | **Format** | `<primary-ns> <admin-email> <serial> <refresh> <retry> <expire> <minimum>` |
+    | **Example** | `ns1.example.com admin.example.com 2013022001 86400 7200 604800 300` |
+
+    | Component | Description |
+    |-----------|-------------|
+    | Primary NS | Primary nameserver for the zone |
+    | Admin email | Contact email (with `.` instead of `@`) |
+    | Serial | Version number, incremented on each change |
+    | Refresh | Seconds between slave refresh checks |
+    | Retry | Seconds between retry after failed refresh |
+    | Expire | Seconds before slave stops serving stale data |
+    | Minimum | Negative caching TTL |
+  </Accordion>
+
+  <Accordion title="SPF — Sender Policy Framework">
+    Defines which mail servers are authorized to send email for the domain.
+    Helps prevent email spoofing.
+
+    | Field | Value |
+    |-------|-------|
+    | **Format** | SPF policy string |
+    | **Example** | `"v=spf1 ipv4=192.1.1.1 include:examplesender.email ~all"` |
+
+    <Tabs>
+      <Tab title="Dashboard" icon="gauge">
+        Select type **SPF** and enter the SPF policy string in the Records field.
+      </Tab>
+      <Tab title="CLI" icon="terminal">
+        ```bash title="Create SPF record"
+        openstack recordset create \
+          --type SPF \
+          --record '"v=spf1 include:_spf.example.com ~all"' \
+          example.com. @
+        ```
+      </Tab>
+    </Tabs>
+
+    <Tip>
+      Modern practice is to publish SPF data as a TXT record rather than the
+      dedicated SPF type. Most mail systems check TXT records for SPF. Consider
+      creating both for maximum compatibility.
+    </Tip>
+  </Accordion>
+
+  <Accordion title="SRV — Service Locator">
+    Specifies the host and port for a specific service. Used by SIP, XMPP, LDAP,
+    and other service-discovery protocols.
+
+    | Field | Value |
+    |-------|-------|
+    | **Format** | `<priority> <weight> <port> <target>.` |
+    | **Example** | `10 0 5060 server1.example.com.` |
+    | **Name format** | `_service._protocol.example.com.` (e.g., `_sip._tcp.example.com.`) |
+
+    | Component | Description |
+    |-----------|-------------|
+    | Priority | Lower = higher priority (like MX) |
+    | Weight | Load balancing between same-priority targets (higher = more traffic) |
+    | Port | TCP/UDP port number for the service |
+    | Target | FQDN of the server hosting the service |
+
+    <Tabs>
+      <Tab title="Dashboard" icon="gauge">
+        Select type **SRV**. Enter the name as `_service._protocol.domain.`
+        (e.g., `_sip._tcp.example.com.`) and the record as `priority weight port target.`
+      </Tab>
+      <Tab title="CLI" icon="terminal">
+        ```bash title="Create SIP SRV record"
+        openstack recordset create \
+          --type SRV \
+          --record "10 20 5060 sip.example.com." \
+          example.com. _sip._tcp
+        ```
+      </Tab>
+    </Tabs>
+  </Accordion>
+
+  <Accordion title="SSHFP — SSH Public Key Fingerprint">
+    Publishes SSH host key fingerprints in DNS, allowing SSH clients to verify
+    host keys via DNSSEC-secured lookups.
+
+    | Field | Value |
+    |-------|-------|
+    | **Format** | `<algorithm> <fingerprint-type> <hex-fingerprint>` |
+    | **Example** | `4 2 123456789abcdef67890123456789abcdef67890123456789abcdef123456789` |
+
+    | Algorithm | Key Type |
+    |-----------|----------|
+    | 1 | RSA |
+    | 2 | DSA |
+    | 3 | ECDSA |
+    | 4 | Ed25519 |
+    | 6 | Ed448 |
+
+    | Fingerprint Type | Hash |
+    |-----------------|------|
+    | 1 | SHA-1 |
+    | 2 | SHA-256 |
+
+    <Tabs>
+      <Tab title="Dashboard" icon="gauge">
+        Select type **SSHFP** and enter the algorithm, fingerprint type, and hex
+        fingerprint in the Records field.
+      </Tab>
+      <Tab title="CLI" icon="terminal">
+        ```bash title="Generate and create SSHFP record"
+        # Generate fingerprints from host keys
+        ssh-keygen -r example.com -f /etc/ssh/ssh_host_ed25519_key.pub
+
+        # Create the record
+        openstack recordset create \
+          --type SSHFP \
+          --record "4 2 $(ssh-keygen -l -E sha256 -f /etc/ssh/ssh_host_ed25519_key.pub | awk '{print $2}' | cut -d: -f2- | tr -d ':')" \
+          example.com. @
+        ```
+      </Tab>
+    </Tabs>
+  </Accordion>
+
+  <Accordion title="TXT — Text Record">
+    Stores arbitrary text data. Widely used for domain ownership verification,
+    SPF policies, DKIM keys, and DMARC.
+
+    | Field | Value |
+    |-------|-------|
+    | **Format** | Any text string |
+    | **Dashboard hint** | *(no format hint shown — enter any text value)* |
+
+    <Tabs>
+      <Tab title="Dashboard" icon="gauge">
+        Select type **TXT** and enter the text value in the Records field.
+      </Tab>
+      <Tab title="CLI" icon="terminal">
+        <CodeGroup>
+        ```bash title="Create SPF TXT record"
+        openstack recordset create \
+          --type TXT \
+          --record '"v=spf1 include:_spf.example.com ~all"' \
+          example.com. @
+        ```
+        ```bash title="Create DKIM TXT record"
+        openstack recordset create \
+          --type TXT \
+          --record '"v=DKIM1; k=rsa; p=MIGfMA0GCSqGSIb3..."' \
+          example.com. mail._domainkey
+        ```
+        ```bash title="Create domain verification TXT record"
+        openstack recordset create \
+          --type TXT \
+          --record '"google-site-verification=abc123..."' \
+          example.com. @
+        ```
+        </CodeGroup>
+      </Tab>
+    </Tabs>
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Manage Records" href="/services/dns/manage-records" color="#197560">
+    Create, update, and delete record sets using the Dashboard and CLI
+  </Card>
+  <Card title="Reverse DNS" href="/services/dns/reverse-dns" color="#197560">
+    Configure PTR records for your zone's IP addresses
+  </Card>
+  <Card title="Create a Zone" href="/services/dns/create-zone" color="#197560">
+    Provision a new authoritative DNS zone
+  </Card>
+  <Card title="Troubleshooting" href="/services/dns/troubleshooting" color="#197560">
+    Resolve record conflicts and propagation issues
+  </Card>
+</CardGroup>

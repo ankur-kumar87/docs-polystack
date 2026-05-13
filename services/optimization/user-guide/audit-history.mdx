@@ -1,0 +1,149 @@
+---
+title: "Audit History"
+description: "Review Xloud Optimization audit history — track optimization trends, view past action plan outcomes, and validate ongoing cluster efficiency improvements."
+sidebarTitle: "Audit History"
+---
+
+## Overview
+
+Every optimization audit is persisted with its full timeline — goal, strategy, start
+time, completion time, and the associated action plan outcome. Reviewing audit history
+helps you track optimization trends, identify recurring imbalance patterns, and validate
+that executed plans have produced lasting improvements.
+
+<Note>
+  **Prerequisites**
+  - At least one completed audit in your environment
+  - Project access with the `member` role or above
+</Note>
+
+---
+
+## View Audit History
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Navigate to Audits" icon="compass">
+        Navigate to
+        **Optimization → Audits**.
+      </Step>
+      <Step title="Review audit list" icon="eye">
+        The audit list shows all historical audits sorted by creation time (newest first).
+
+        | Column | Description |
+        |--------|-------------|
+        | **Name** | Audit display name |
+        | **Goal** | Optimization objective |
+        | **State** | `SUCCEEDED`, `FAILED`, or `CANCELLED` |
+        | **Created At** | Audit creation timestamp |
+        | **Interval** | Scope of the audit (CLUSTER or ZONE) |
+      </Step>
+      <Step title="Open an audit" icon="zoom-in">
+        Click any audit to view its full detail, including:
+        - The strategy that was applied
+        - Any parameters that overrode the defaults
+        - A link to the associated action plan
+
+        Click the **Action Plan UUID** to view the migration plan and its execution outcome.
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="List all audits"
+    watcher audit list
+    ```
+
+    ```bash title="Filter by goal"
+    watcher audit list \
+      --goal server_consolidation
+    ```
+
+    ```bash title="Show audit summary"
+    watcher audit show <audit-uuid> -f json
+    ```
+
+    ```bash title="List action plan for an audit"
+    watcher actionplan list \
+      --audit <audit-uuid>
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Audit State Reference
+
+| State | Meaning |
+|-------|---------|
+| `PENDING` | Queued, not yet started |
+| `ONGOING` | Decision Engine is running the analysis |
+| `SUCCEEDED` | Audit complete and action plan generated |
+| `FAILED` | Audit could not complete due to a data source or engine error |
+| `CANCELLED` | Manually cancelled before completion |
+
+---
+
+## Analyze Optimization Trends
+
+Use audit history to identify patterns that indicate structural cluster issues:
+
+<AccordionGroup>
+  <Accordion title="Recurring empty action plans" icon="clipboard">
+    If `server_consolidation` audits consistently produce empty action plans (no
+    recommended migrations), the cluster is already well-balanced — or the utilization
+    threshold is set too high and no hosts fall below it.
+
+    Check current host utilization:
+    ```bash title="Check host utilization"
+    openstack hypervisor list --long
+    ```
+
+    If hosts are genuinely well-distributed, no action is needed. If hosts appear
+    underutilized but no plan is generated, ask your administrator to lower the
+    `threshold` parameter in the strategy configuration.
+  </Accordion>
+  <Accordion title="Frequent noisy-neighbor audits" icon="volume-x">
+    If `noisy_neighbor` audits consistently find high-contention pairs, the cluster
+    may have insufficient capacity to separate contending workloads. Consider adding
+    compute capacity or reviewing instance sizing.
+  </Accordion>
+  <Accordion title="Plans generated but never executed" icon="pause-circle">
+    Review the action plan list for plans in `PENDING` (approved but not executed)
+    or `RECOMMENDED` (not yet approved) state. Stale plans are outdated within 24 hours
+    by default — run a new audit to generate a current plan.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Export Audit History
+
+```bash title="Export audit list to JSON"
+watcher audit list -f json > audit-history.json
+```
+
+```bash title="Export with full details for each audit"
+for audit_id in $(watcher audit list -f value -c uuid); do
+  watcher audit show $audit_id -f json
+done > audit-details.json
+```
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Run an Audit" href="/services/optimization/user-guide/run-audit" color="#197560">
+    Start a new optimization audit to continue improving cluster efficiency.
+  </Card>
+  <Card title="Action Plans" href="/services/optimization/user-guide/action-plans" color="#197560">
+    Review and approve pending action plans from past audits.
+  </Card>
+  <Card title="Troubleshooting" href="/services/optimization/user-guide/troubleshooting" color="#197560">
+    Diagnose failed audits and strategies reporting insufficient data.
+  </Card>
+  <Card title="Admin Guide — Scheduling" href="/services/optimization/admin-guide/scheduling" color="#197560">
+    Automate recurring audits on a schedule for continuous optimization.
+  </Card>
+</CardGroup>

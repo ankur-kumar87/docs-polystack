@@ -1,0 +1,166 @@
+---
+title: "DNS Troubleshooting"
+description: "Troubleshoot common DNS issues in Xloud DNS — zone errors, record propagation delays, PTR failures, and CNAME conflicts."
+sidebarTitle: "Troubleshooting"
+---
+
+## Overview
+
+This guide covers user-facing DNS issues: zones stuck in error states, records not
+resolving after creation, PTR record failures, and CNAME conflicts. For platform-level
+issues such as service outages or nameserver synchronization failures, see the
+[Admin Troubleshooting](/services/dns/admin-troubleshooting) guide.
+
+---
+
+## Common Issues
+
+<AccordionGroup>
+  <Accordion title="Zone stuck in PENDING or ERROR status" icon="clock" defaultOpen>
+    **Cause**: The DNS backend could not create the zone due to a configuration conflict
+    or backend connectivity issue.
+
+    **Diagnosis**:
+    ```bash title="Show zone detail with action and status"
+    openstack zone show example.com. \
+      -c name -c status -c action
+    ```
+
+    **Resolution**:
+    - If status is `ERROR`, check whether a zone with the same name already exists under a
+      different project. The DNS service prevents duplicate zone names across all projects.
+    - Contact your platform administrator if the zone remains in `ERROR` after the
+      conflicting zone is removed.
+    - If the zone shows `action: CREATE` and `status: PENDING` for more than 60 seconds,
+      the DNS worker may be unable to reach the backend nameserver pool.
+  </Accordion>
+
+  <Accordion title="Record set not resolving after creation" icon="search">
+    **Cause**: DNS propagation is still in progress, or the client resolver is caching a
+    negative (NXDOMAIN) response from before the record was created.
+
+    **Diagnosis**:
+    ```bash title="Query the authoritative nameserver directly"
+    dig @<nameserver-ip> www.example.com A
+    ```
+
+    **Resolution**:
+    - If the authoritative nameserver returns the correct value, the record was created
+      successfully. The issue is resolver caching.
+    - Flush the local resolver cache:
+      ```bash title="Flush resolver cache (Linux)"
+      systemd-resolve --flush-caches
+      ```
+    - If the authoritative nameserver also returns NXDOMAIN, verify the record set status:
+      ```bash title="Check record set status"
+      openstack recordset show example.com. www
+      ```
+      A status of `ERROR` indicates a backend provisioning failure — contact your
+      platform administrator.
+  </Accordion>
+
+  <Accordion title="PTR record set fails with zone not found" icon="map-pin">
+    **Cause**: The reverse zone for the IP range has not been created or delegated to
+    the Xloud DNS service.
+
+    **Diagnosis**:
+    ```bash title="Show PTR record error"
+    openstack ptr record show <region>:<floating-ip-id>
+    ```
+
+    **Resolution**: Contact your platform administrator to verify that the reverse zone
+    for the IP range is provisioned in the DNS service and that nameserver delegation
+    is configured correctly for the `in-addr.arpa.` or `ip6.arpa.` parent zone.
+  </Accordion>
+
+  <Accordion title="CNAME conflict with existing records" icon="triangle-alert">
+    **Cause**: A CNAME cannot coexist with other record types at the same name. If an
+    A or MX record already exists at the target name, the CNAME creation fails.
+
+    **Diagnosis**:
+    ```bash title="List all records at the target name"
+    openstack recordset list example.com. | grep <target-name>
+    ```
+
+    **Resolution**:
+    - Delete any conflicting record sets at the target hostname before creating the CNAME.
+    - Note that CNAMEs cannot be created at the zone apex (`@`) — use an A record or
+      contact your administrator about ALIAS record support for root domain aliases.
+  </Accordion>
+
+  <Accordion title="Record changes not propagating to all clients" icon="refresh-cw">
+    **Cause**: Different clients are hitting different resolvers with different cache states,
+    or the zone's SOA serial number has not been incremented.
+
+    **Diagnosis**:
+    ```bash title="Check SOA serial on the authoritative nameserver"
+    dig @<nameserver-ip> example.com. SOA
+    ```
+    Compare this serial number with what recursive resolvers have cached:
+    ```bash title="Query a public resolver"
+    dig @8.8.8.8 example.com. SOA
+    ```
+
+    **Resolution**:
+    - If serials match, the update has propagated — wait for resolver TTL to expire.
+    - If serials differ, the zone update has not yet synchronized to the queried nameserver.
+      Wait for the zone's TTL, or contact your administrator to verify nameserver sync.
+  </Accordion>
+
+  <Accordion title="Cannot delete a zone — delete returns 400 or 409" icon="trash-2">
+    **Cause**: The zone contains record sets that must be removed first, or a transfer
+    request for this zone is pending.
+
+    **Resolution**:
+    ```bash title="List all record sets in the zone"
+    openstack recordset list example.com.
+    ```
+    Delete non-SOA and non-NS records, then retry the zone deletion. If a transfer
+    request is pending, cancel it first:
+    ```bash title="List and delete transfer requests"
+    openstack zone transfer request list
+    openstack zone transfer request delete <transfer-id>
+    ```
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Diagnostic Commands
+
+<CodeGroup>
+```bash title="Show zone status and error detail"
+openstack zone show example.com.
+```
+```bash title="List record sets in a zone"
+openstack recordset list example.com.
+```
+```bash title="Check authoritative nameserver response"
+dig @<nameserver-ip> www.example.com A +norecurse
+```
+```bash title="Validate DNSSEC chain"
+dig @<resolver-ip> example.com. A +dnssec
+```
+```bash title="Flush local DNS cache"
+systemd-resolve --flush-caches
+```
+</CodeGroup>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Admin Troubleshooting" href="/services/dns/admin-troubleshooting" color="#197560">
+    Platform-level DNS issues — API outages, worker failures, nameserver sync errors
+  </Card>
+  <Card title="Create a Zone" href="/services/dns/create-zone" color="#197560">
+    Start fresh with a properly configured zone
+  </Card>
+  <Card title="Manage Records" href="/services/dns/manage-records" color="#197560">
+    Add or correct record sets in an existing zone
+  </Card>
+  <Card title="Reverse DNS" href="/services/dns/reverse-dns" color="#197560">
+    Configure PTR records for your IP addresses
+  </Card>
+</CardGroup>

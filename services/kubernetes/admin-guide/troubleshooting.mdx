@@ -1,0 +1,175 @@
+---
+title: "Kubernetes Admin Troubleshooting"
+description: "Diagnose and resolve Xloud K8SaaS platform issues — Conductor failures, Heat stack errors, certificate problems, and cross-project cluster failures."
+sidebarTitle: "Troubleshooting"
+---
+
+## Overview
+
+This guide covers administrator-level troubleshooting for the K8SaaS platform — from
+Conductor startup failures and Heat stack errors to certificate issues and quota
+enforcement problems. For user-facing issues such as individual cluster access failures,
+see the [Kubernetes User Troubleshooting](/services/kubernetes/user-guide/troubleshooting) guide.
+
+---
+
+## Common Issues
+
+<AccordionGroup>
+  <Accordion title="Clusters fail to create across projects" icon="circle-x">
+    **Cause**: The K8SaaS Conductor cannot reach the Orchestration service, or the
+    cluster template references an image or flavor that does not exist.
+
+    **Resolution**:
+
+    ```bash title="Check Conductor logs"
+    docker logs -f magnum_conductor
+    ```
+
+    Look for `ConnectionError`, `NotFound`, or `AuthenticationRequired` messages.
+
+    ```bash title="Verify Orchestration service is healthy"
+    openstack stack list
+    ```
+
+    ```bash title="Verify node image exists"
+    openstack image show fedora-coreos-39
+    ```
+
+    If the image is missing, upload it and ask project teams to retry cluster creation.
+  </Accordion>
+
+  <Accordion title="Heat stack in FAILED state" icon="layers">
+    **Cause**: The Orchestration template failed during resource creation — quota
+    exhaustion, a dependency failure (LB or DNS), or a template rendering error.
+
+    **Resolution**:
+
+    ```bash title="Show failed stack events"
+    openstack stack event list <cluster-stack-name> \
+      --nested-depth 3 \
+      | grep -i fail
+    ```
+
+    ```bash title="Find the stack name for a cluster"
+    openstack coe cluster show <cluster-name> \
+      -f value -c stack_id
+    ```
+
+    Address the root cause (quota, network, service availability) and then delete
+    the failed cluster before retrying:
+
+    ```bash title="Delete failed cluster"
+    openstack coe cluster delete <cluster-name>
+    ```
+  </Accordion>
+
+  <Accordion title="Certificate errors after node replacement" icon="lock">
+    **Cause**: Replaced nodes received new TLS certificates that do not match the
+    cluster CA recorded in the K8SaaS database.
+
+    **Resolution**: Rotate the cluster CA to regenerate consistent certificates:
+
+    ```bash title="Rotate cluster CA"
+    openstack coe ca rotate <cluster-name>
+    ```
+
+    Notify all project users to refresh their kubeconfig after the rotation completes.
+  </Accordion>
+
+  <Accordion title="DELETE_FAILED — cluster cannot be removed" icon="trash-2">
+    **Cause**: The underlying Heat stack has resources in a failed state that prevent
+    cleanup, or a resource dependency is blocking deletion.
+
+    **Resolution**:
+
+    ```bash title="Show stack deletion error"
+    openstack stack show <stack-id> -f value -c stack_status_reason
+    ```
+
+    Manually delete the blocking resource (e.g., a floating IP still attached to a
+    deleted VM):
+
+    ```bash title="List stack resources"
+    openstack stack resource list <stack-id>
+    ```
+
+    ```bash title="Force-delete the Heat stack"
+    openstack stack delete --yes <stack-id>
+    ```
+
+    After manual cleanup, delete the cluster record from K8SaaS:
+
+    ```bash title="Force delete cluster record"
+    openstack coe cluster delete --force <cluster-name>
+    ```
+  </Accordion>
+
+  <Accordion title="Conductor not processing cluster tasks" icon="cpu">
+    **Cause**: The Conductor is overloaded, has lost database connectivity, or crashed
+    due to an unhandled exception.
+
+    **Resolution**:
+
+    ```bash title="Check Conductor status and logs"
+    docker ps --filter name=magnum_conductor
+    docker logs --tail 50 magnum_conductor
+    ```
+
+    Restart the Conductor if it shows as unhealthy or has no recent log output:
+
+    ```bash title="Restart Conductor"
+    docker restart magnum_conductor
+    ```
+
+    Increase the worker count if the Conductor is consistently behind:
+
+    ```ini title="/etc/xavs/kubernetes/kubernetes.conf"
+    [DEFAULT]
+    workers = 4
+    ```
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Diagnostic Commands Reference
+
+```bash title="Check all K8SaaS container statuses"
+docker ps --filter name=magnum
+```
+
+```bash title="List all clusters across all projects"
+openstack coe cluster list --all
+```
+
+```bash title="Show cluster with full detail"
+openstack coe cluster show <cluster-name> -f json
+```
+
+```bash title="Show Orchestration stack events"
+openstack stack event list <stack-id> --nested-depth 2
+```
+
+```bash title="Check K8SaaS API logs"
+docker logs --tail 100 magnum_api
+```
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Monitoring" href="/services/kubernetes/admin-guide/monitoring" color="#197560">
+    Monitor all clusters for failed and stuck lifecycle states.
+  </Card>
+  <Card title="Certificates" href="/services/kubernetes/admin-guide/certificates" color="#197560">
+    Resolve certificate errors with CA rotation.
+  </Card>
+  <Card title="Quotas" href="/services/kubernetes/admin-guide/quotas" color="#197560">
+    Resolve quota-related cluster creation failures.
+  </Card>
+  <Card title="User Troubleshooting" href="/services/kubernetes/user-guide/troubleshooting" color="#197560">
+    User-facing guide for individual cluster access and health issues.
+  </Card>
+</CardGroup>

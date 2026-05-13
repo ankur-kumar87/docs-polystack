@@ -1,0 +1,148 @@
+---
+title: "Object Storage Monitoring"
+description: "Monitor Xloud Object Storage cluster health — track capacity utilization, proxy request metrics, replication latency, and quarantined object counts."
+sidebarTitle: "Monitoring"
+---
+
+import AdminWarning from '/snippets/admin-warning.mdx';
+
+## Overview
+
+Effective monitoring of the object storage cluster ensures early detection of capacity
+constraints, performance degradation, and data integrity issues. This guide covers the
+key metrics and commands for ongoing operational visibility.
+
+<AdminWarning />
+
+---
+
+## Cluster Capacity
+
+<Tabs>
+  <Tab title="Capacity overview" icon="database">
+    ```bash title="Storage capacity across all nodes"
+    xavs-storage-recon --diskusage --verbose
+    ```
+
+    Capacity thresholds:
+
+    | Metric | Warning | Critical | Action |
+    |--------|---------|----------|--------|
+    | Node capacity used | 70% | 85% | Plan capacity expansion |
+    | Single drive capacity | 80% | 90% | Add drives or rebalance ring |
+    | Cluster-wide free space | < 20% | < 10% | Immediate expansion required |
+
+    <Warning>
+      When any storage node exceeds 85% capacity, the ring rebalancer may be unable to
+      place new replicas, causing `507 Insufficient Storage` errors for writes.
+      Plan capacity expansion before reaching 70% utilization.
+    </Warning>
+  </Tab>
+  <Tab title="Per-node usage" icon="hard-drive">
+    ```bash title="Disk usage summary per node"
+    xavs-storage-recon --diskusage
+    ```
+
+    The output shows each node's total capacity, used bytes, and percentage utilized.
+    Identify outliers — nodes significantly above the cluster average indicate uneven
+    data distribution, which may require ring weight adjustments.
+  </Tab>
+</Tabs>
+
+---
+
+## Proxy Metrics
+
+<Tabs>
+  <Tab title="Recon endpoint" icon="gauge">
+    The proxy-server exposes metrics on the recon middleware endpoint:
+
+    ```bash title="Check proxy load"
+    curl -s http://<proxy-node-ip>:6000/recon/load
+    ```
+
+    ```bash title="Check proxy memory"
+    curl -s http://<proxy-node-ip>:6000/recon/mem
+    ```
+
+    ```bash title="Check proxy async pending updates"
+    curl -s http://<proxy-node-ip>:6000/recon/async
+    ```
+  </Tab>
+  <Tab title="Key proxy metrics" icon="activity">
+    Monitor these proxy-level metrics:
+
+    | Metric | Description | Alert Threshold |
+    |--------|-------------|-----------------|
+    | **Request rate** | Requests per second per proxy node | Baseline + 3× standard deviation |
+    | **Error rate** | 4xx and 5xx responses as % of total | > 5% 5xx errors |
+    | **GET latency** | p95 response time for object reads | > 500ms p95 |
+    | **PUT latency** | p95 response time for object writes | > 1000ms p95 |
+    | **Async pending** | Container/account updates queued | > 1000 pending |
+  </Tab>
+</Tabs>
+
+---
+
+## Replication Health
+
+```bash title="Replication status across all nodes"
+xavs-storage-recon --replication
+```
+
+```bash title="Check for quarantined (corrupted) objects"
+xavs-storage-recon --quarantined
+```
+
+```bash title="Verify ring file consistency across nodes"
+xavs-storage-recon --md5
+```
+
+Replication health alerts:
+
+| Condition | Severity | Response |
+|-----------|----------|----------|
+| `replication_time` > 300s | Warning | Investigate slow nodes |
+| `replication_last` > 600s | Critical | Check replicator daemon status |
+| Quarantine count increasing | Critical | Check drive health, replace failed drives |
+| MD5 mismatch | Critical | Redistribute ring files immediately |
+
+---
+
+## Integration with XIMP
+
+For continuous monitoring, connect the object storage recon endpoint to XIMP
+(Xloud Infrastructure Monitoring Platform):
+
+```yaml title="Prometheus scrape config for object storage"
+scrape_configs:
+  - job_name: 'xavs-object-storage-recon'
+    static_configs:
+      - targets: ['<proxy-node-1>:6000', '<proxy-node-2>:6000']
+    metrics_path: '/recon/metrics'
+```
+
+<Tip>
+  Configure alerting rules in XIMP for the critical thresholds above. Set notification
+  channels for the on-call team to respond to 507 storage errors and quarantine
+  count spikes promptly.
+</Tip>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Replication" href="/services/object-storage/replication" color="#197560">
+    Deep-dive into replication health and quarantine management
+  </Card>
+  <Card title="Ring Management" href="/services/object-storage/ring-management" color="#197560">
+    Expand capacity by adding drives and rebalancing rings
+  </Card>
+  <Card title="Admin Troubleshooting" href="/services/object-storage/admin-troubleshooting" color="#197560">
+    Respond to monitoring alerts and diagnose failures
+  </Card>
+  <Card title="Quotas" href="/services/object-storage/quotas" color="#197560">
+    Set limits to prevent individual projects from consuming all capacity
+  </Card>
+</CardGroup>

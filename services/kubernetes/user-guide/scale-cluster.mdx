@@ -1,0 +1,176 @@
+---
+title: "Scale a Kubernetes Cluster"
+description: "Scale Xloud K8SaaS cluster node counts up or down — resize the default node group, monitor scale progress, and apply best practices for safe scale-down."
+sidebarTitle: "Scale Cluster"
+---
+
+## Overview
+
+Scaling a Kubernetes cluster adjusts the worker node count in the default node group.
+Scale up to handle increased workload demand; scale down to reduce infrastructure cost
+during low-utilization periods. Node scaling is non-disruptive for scale-up operations.
+Scale-down operations drain and remove nodes — ensure workloads are properly distributed
+before reducing node count.
+
+<Note>
+  **Prerequisites**
+  - A running cluster in `CREATE_COMPLETE` or `UPDATE_COMPLETE` status
+  - Sufficient compute quota for the new node count (scale-up only)
+</Note>
+
+---
+
+## Scale Up (Add Nodes)
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Navigate to the cluster" icon="compass">
+        Navigate to
+        **Container > Clusters**.
+      </Step>
+      <Step title="Resize the cluster" icon="sliders">
+        Click **Actions → Resize Cluster** next to your cluster.
+        Enter the new total node count in the **Node Count** field.
+      </Step>
+      <Step title="Confirm" icon="circle-check">
+        Click **Resize**. The cluster enters `UPDATE_IN_PROGRESS` status while new
+        nodes are provisioned and join the cluster.
+
+        <Check>Cluster returns to `UPDATE_COMPLETE` once nodes are ready.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Scale cluster up"
+    openstack coe cluster resize prod-cluster-01 \
+      --node-count 6
+    ```
+
+    ```bash title="Monitor progress"
+    openstack coe cluster show prod-cluster-01 \
+      -f value -c status -c node_count
+    ```
+
+    Wait for `status` to return to `UPDATE_COMPLETE`.
+
+    ```bash title="Verify new nodes"
+    kubectl get nodes
+    ```
+
+    <Check>All new nodes show `STATUS: Ready` in kubectl output.</Check>
+  </Tab>
+</Tabs>
+
+---
+
+## Scale Down (Remove Nodes)
+
+<Warning>
+  Scaling down removes nodes from the cluster. Pods running on removed nodes are
+  evicted before the node is deleted. Ensure Pod Disruption Budgets (PDBs) and
+  workload replicas are configured to tolerate node removal without service interruption.
+</Warning>
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Prepare workloads" icon="shield-check">
+        Before scaling down, verify that no stateful or single-replica workloads are
+        running on the nodes that will be removed. Use the Kubernetes Dashboard or
+        `kubectl` to inspect current pod placement.
+      </Step>
+      <Step title="Resize the cluster" icon="sliders">
+        Navigate to **Container > Clusters** → **Actions → Resize Cluster**.
+        Enter the reduced node count and click **Resize**.
+      </Step>
+      <Step title="Verify" icon="circle-check">
+        Wait for the cluster to reach `UPDATE_COMPLETE`. Confirm remaining nodes
+        are healthy and workloads have been rescheduled.
+
+        <Check>Cluster is `UPDATE_COMPLETE` and all pods are running on remaining nodes.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    <Steps titleSize="h3">
+      <Step title="Identify nodes to remove" icon="search">
+        ```bash title="List nodes and their workloads"
+        kubectl get pods -A -o wide | grep <node-name>
+        ```
+      </Step>
+      <Step title="Drain the target node (optional)" icon="arrow-right">
+        If you want to control which nodes are removed, cordon and drain them first:
+
+        ```bash title="Cordon node to prevent new scheduling"
+        kubectl cordon <node-name>
+        ```
+
+        ```bash title="Drain node"
+        kubectl drain <node-name> \
+          --ignore-daemonsets \
+          --delete-emptydir-data
+        ```
+      </Step>
+      <Step title="Scale down" icon="minus">
+        ```bash title="Scale cluster down"
+        openstack coe cluster resize prod-cluster-01 \
+          --node-count 3
+        ```
+
+        ```bash title="Monitor scale-down"
+        openstack coe cluster show prod-cluster-01 \
+          -f value -c status -c node_count
+        ```
+      </Step>
+      <Step title="Verify" icon="circle-check">
+        ```bash title="Check remaining nodes"
+        kubectl get nodes
+        ```
+
+        <Check>Node count matches the new target and all remaining nodes are `Ready`.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+</Tabs>
+
+---
+
+## Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Maintain Minimum Replicas" icon="layers" color="#197560">
+    Configure `PodDisruptionBudget` resources for stateful workloads to ensure a
+    minimum number of replicas remain available during node removal.
+  </Card>
+  <Card title="Use Node Groups for Fine-Grained Scaling" icon="sliders" color="#197560">
+    Use separate node groups for different workload types to scale them independently
+    without affecting other workloads on the cluster.
+  </Card>
+  <Card title="Scale During Low-Traffic Windows" icon="clock" color="#197560">
+    Perform scale-down operations during low-traffic periods when evicted pods have
+    minimal user impact.
+  </Card>
+  <Card title="Check Compute Quota Before Scale-Up" icon="gauge" color="#197560">
+    Verify sufficient compute quota before adding nodes to avoid partial scale-up failures.
+  </Card>
+</CardGroup>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Node Groups" href="/services/kubernetes/user-guide/node-groups" color="#197560">
+    Create and manage separate node pools for specialized workloads.
+  </Card>
+  <Card title="Access Cluster" href="/services/kubernetes/user-guide/access-cluster" color="#197560">
+    Verify cluster access after scaling via kubectl.
+  </Card>
+  <Card title="Cluster Upgrades" href="/services/kubernetes/user-guide/cluster-upgrades" color="#197560">
+    Upgrade your cluster to a newer Kubernetes version.
+  </Card>
+  <Card title="Troubleshooting" href="/services/kubernetes/user-guide/troubleshooting" color="#197560">
+    Resolve scaling failures and node health issues.
+  </Card>
+</CardGroup>

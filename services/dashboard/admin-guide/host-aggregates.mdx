@@ -1,0 +1,66 @@
+---
+title: "Host Aggregates"
+description: "Organize compute hosts into logical groups for workload placement and availability zones through the Xloud Dashboard."
+sidebarTitle: "Host Aggregates"
+---
+
+## Overview
+
+Navigate to **Compute > Host Aggregates** (admin view). The page has two tabs:
+**Host Aggregate** (manage groups) and **Availability Zones** (read-only zone list).
+
+---
+
+## Create a Host Aggregate
+
+Click **Create Host Aggregate**. The modal form includes:
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| **Name** | Text | Yes | Aggregate name |
+| **Create New AZ** | Radio (Yes/No) | Yes | Whether to create a new availability zone |
+| **Availability Zone** | Dropdown | If not creating new | Select existing zone |
+| **New AZ Name** | Text | If creating new | Name for the new zone |
+
+---
+
+## Manage Aggregates
+
+| Action | Location | Description |
+|--------|----------|-------------|
+| **Edit** | First row action | Change name and availability zone |
+| **Manage Host** | More dropdown | Add/remove compute hosts (multi-select table showing Host, Zone, Status, State) |
+| **Manage Metadata** | More dropdown | Set key-value metadata for scheduler matching |
+| **Delete** | More dropdown | Delete the aggregate |
+
+---
+
+## Availability Zones
+
+The **Availability Zones** tab shows a read-only list of all configured zones.
+Zones are created through host aggregates — assign an aggregate to a zone name
+to define a new availability zone.
+
+<Note>
+  For the complete scheduling and host aggregate reference, see
+  [Compute Scheduling](/services/compute/scheduling).
+</Note>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Compute Scheduling" href="/services/compute/scheduling" color="#197560">
+    Complete host aggregate and scheduling reference
+  </Card>
+  <Card title="Availability Zones" href="/services/compute/availability-zones" color="#197560">
+    Zone selection during instance launch
+  </Card>
+  <Card title="Compute Hosts" href="/services/compute/compute-hosts" color="#197560">
+    Monitor hypervisor resources
+  </Card>
+  <Card title="Flavors" href="/services/dashboard/admin-guide/flavors" color="#197560">
+    Create flavors with aggregate-matching extra specs
+  </Card>
+</CardGroup>

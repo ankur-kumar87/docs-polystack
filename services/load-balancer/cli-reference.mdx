@@ -1,0 +1,188 @@
+---
+title: "Load Balancer CLI Reference"
+description: "Complete openstack loadbalancer CLI commands for creating and managing load balancers, listeners, pools, members, and health monitors."
+sidebarTitle: "CLI Reference"
+---
+
+## Overview
+
+The `openstack loadbalancer` command group manages the full lifecycle of load balancers, listeners, backend pools, pool members, and health monitors.
+
+<Note>
+  **Prerequisites**
+  - CLI installed and authenticated — see [CLI Setup](/cli-setup)
+  - Python octaviaclient installed: `pip install python-octaviaclient`
+</Note>
+
+---
+
+## Load Balancers
+
+<CodeGroup>
+```bash title="List load balancers"
+openstack loadbalancer list
+```
+
+```bash title="Create load balancer"
+openstack loadbalancer create \
+  --name my-lb \
+  --vip-subnet-id private-subnet \
+  --wait
+```
+
+```bash title="Show load balancer"
+openstack loadbalancer show my-lb
+```
+
+```bash title="Delete load balancer"
+openstack loadbalancer delete --cascade my-lb
+```
+</CodeGroup>
+
+---
+
+## Listeners
+
+<CodeGroup>
+```bash title="List listeners"
+openstack loadbalancer listener list
+```
+
+```bash title="Create HTTP listener"
+openstack loadbalancer listener create \
+  --name my-listener \
+  --protocol HTTP \
+  --protocol-port 80 \
+  my-lb
+```
+
+```bash title="Create HTTPS listener with TLS"
+openstack loadbalancer listener create \
+  --name https-listener \
+  --protocol TERMINATED_HTTPS \
+  --protocol-port 443 \
+  --default-tls-container-ref <barbican-container-ref> \
+  my-lb
+```
+
+```bash title="Show listener"
+openstack loadbalancer listener show my-listener
+```
+
+```bash title="Delete listener"
+openstack loadbalancer listener delete my-listener
+```
+</CodeGroup>
+
+---
+
+## Pools
+
+<CodeGroup>
+```bash title="List pools"
+openstack loadbalancer pool list
+```
+
+```bash title="Create pool (round-robin)"
+openstack loadbalancer pool create \
+  --name my-pool \
+  --lb-algorithm ROUND_ROBIN \
+  --listener my-listener \
+  --protocol HTTP
+```
+
+```bash title="Create pool (least connections)"
+openstack loadbalancer pool create \
+  --name my-pool \
+  --lb-algorithm LEAST_CONNECTIONS \
+  --listener my-listener \
+  --protocol HTTP
+```
+
+```bash title="Show pool"
+openstack loadbalancer pool show my-pool
+```
+
+```bash title="Delete pool"
+openstack loadbalancer pool delete my-pool
+```
+</CodeGroup>
+
+---
+
+## Members
+
+<CodeGroup>
+```bash title="List pool members"
+openstack loadbalancer member list my-pool
+```
+
+```bash title="Add member"
+openstack loadbalancer member create \
+  --name web-01 \
+  --address 10.0.1.10 \
+  --protocol-port 80 \
+  --subnet-id private-subnet \
+  my-pool
+```
+
+```bash title="Show member"
+openstack loadbalancer member show my-pool web-01
+```
+
+```bash title="Remove member"
+openstack loadbalancer member delete my-pool web-01
+```
+</CodeGroup>
+
+---
+
+## Health Monitors
+
+<CodeGroup>
+```bash title="List health monitors"
+openstack loadbalancer healthmonitor list
+```
+
+```bash title="Create HTTP health monitor"
+openstack loadbalancer healthmonitor create \
+  --name my-hm \
+  --type HTTP \
+  --delay 5 \
+  --timeout 3 \
+  --max-retries 3 \
+  --url-path /health \
+  my-pool
+```
+
+```bash title="Create TCP health monitor"
+openstack loadbalancer healthmonitor create \
+  --name tcp-hm \
+  --type TCP \
+  --delay 5 \
+  --timeout 3 \
+  --max-retries 3 \
+  my-pool
+```
+
+```bash title="Show health monitor"
+openstack loadbalancer healthmonitor show my-hm
+```
+
+```bash title="Delete health monitor"
+openstack loadbalancer healthmonitor delete my-hm
+```
+</CodeGroup>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Create Load Balancer Guide" href="/services/load-balancer/create-lb" color="#197560">
+    End-to-end walkthrough for creating a load balancer
+  </Card>
+  <Card title="Networking CLI" href="/services/networking/cli-reference" color="#197560">
+    Floating IP and security group commands
+  </Card>
+</CardGroup>

@@ -1,0 +1,255 @@
+---
+title: "Compute Troubleshooting"
+description: "Resolve common Xloud Compute issues — instances stuck in BUILD/ERROR, migration failures, scheduling errors, and quota issues."
+sidebarTitle: "Troubleshooting"
+---
+
+import AdminWarning from '/snippets/admin-warning.mdx';
+
+## Overview
+
+This guide covers the most common operational issues encountered in Xloud Compute
+environments. Each section provides the diagnostic commands, root cause analysis,
+and resolution steps needed to restore normal operation.
+
+<AdminWarning />
+
+<Note>
+  **Prerequisites**
+  - Administrator credentials sourced (`source openrc.sh`)
+  - `openstack` CLI installed and configured
+  - SSH access to compute nodes for log inspection when needed
+</Note>
+
+---
+
+## Common Issues
+
+<AccordionGroup>
+  <Accordion title="Instance stuck in BUILD status" icon="clock">
+    **Cause**: The scheduler placed the instance on a host but the Compute Agent failed
+    to complete provisioning. Common causes include image download failure, networking
+    misconfiguration, or storage attachment failure.
+
+    **Diagnosis**:
+
+    ```bash title="Check instance event log"
+    openstack server event list <instance-id>
+    ```
+
+    ```bash title="Identify the target host"
+    openstack server show <instance-id> \
+      -f value -c OS-EXT-SRV-ATTR:host
+    ```
+
+    ```bash title="Check Compute Agent logs on the target host (via XDeploy terminal)"
+    journalctl -u nova-compute --since "1 hour ago" | grep <instance-id>
+    ```
+
+    **Common causes and resolutions**:
+
+    | Symptom in Event Log | Resolution |
+    |---------------------|-----------|
+    | `Image download failed` | Verify Xloud Image Service reachability from the compute node |
+    | `Quota exceeded on host` | Check host capacity with `openstack hypervisor show <host>` |
+    | `Network interface allocation failed` | Verify network agent status on the host |
+    | `Volume attachment failed` | Check Xloud Block Storage service health |
+
+    <Tip>
+      If the instance is permanently stuck, force-delete it with
+      `openstack server delete --force <instance-id>` and re-launch on a healthy host.
+      Verify the target host is `up` and `enabled` before retrying.
+    </Tip>
+  </Accordion>
+
+  <Accordion title="Instance in ERROR state" icon="circle-x">
+    **Cause**: A fatal error occurred during instance creation, a running operation, or
+    hypervisor interaction. The fault details are stored in the instance record.
+
+    **Diagnosis**:
+
+    ```bash title="Show error fault details"
+    openstack server show <instance-id> | grep -A5 fault
+    ```
+
+    ```bash title="View full instance event log"
+    openstack server event list <instance-id>
+    ```
+
+    **Resolution**:
+
+    If the error is recoverable (e.g., a temporary network partition that has since
+    resolved), attempt to rebuild the instance from its original image:
+
+    ```bash title="Rebuild instance from original image"
+    openstack server rebuild <instance-id> --image <original-image-id>
+    ```
+
+    If the error is caused by a host-level hardware failure, migrate the instance to
+    a healthy host before attempting a rebuild. See
+    [Live Migration](/services/compute/live-migration) for instructions.
+
+    <Warning>
+      Rebuilding an instance replaces the root disk. Any data written to the root
+      disk after initial provisioning will be lost. Ensure the instance owner has
+      backed up root disk data before issuing a rebuild.
+    </Warning>
+  </Accordion>
+
+  <Accordion title="Live migration fails" icon="arrow-right-arrow-left">
+    **Cause**: CPU compatibility mismatch, insufficient destination capacity, or a
+    network timeout during the migration data transfer.
+
+    **Diagnosis**:
+
+    ```bash title="Check migration status and error message"
+    openstack server migration list --server <instance-id>
+    ```
+
+    ```bash title="Show detailed migration information"
+    openstack server migration show <instance-id> <migration-id>
+    ```
+
+    **Common errors and resolutions**:
+
+    | Error Message | Root Cause | Resolution |
+    |--------------|-----------|-----------|
+    | `guest CPU doesn't match specification: missing features` | CPU microarchitecture difference between hosts | Configure a common CPU baseline model on all hosts via XDeploy under **Compute → Advanced Settings → CPU Compatibility** |
+    | `No valid host found` | Destination host lacks capacity or is disabled | Check destination host capacity with `openstack hypervisor show <host>`; verify host is `enabled` and `up` |
+    | `Connection timeout` | Network disruption on migration network | Verify network connectivity between compute nodes; check firewall rules on the management interface |
+    | `Block migration disk copy failed` | Insufficient free disk on destination | Check available disk with `openstack hypervisor show <host>` |
+
+    See [Live Migration](/services/compute/live-migration) for a full walkthrough of
+    the migration procedure.
+  </Accordion>
+
+  <Accordion title="No valid host found (scheduling failure)" icon="server">
+    **Cause**: All compute hosts were eliminated by the scheduler filter chain — no
+    eligible host satisfies the combined instance requirements.
+
+    **Diagnosis**:
+
+    ```bash title="Check cluster-wide capacity"
+    openstack hypervisor stats show
+    ```
+
+    ```bash title="List all hosts with capacity details"
+    openstack hypervisor list --long
+    ```
+
+    **Common causes**:
+
+    | Cause | Resolution |
+    |-------|-----------|
+    | All hosts at vCPU or RAM capacity | Scale out the cluster or increase over-commit ratios via XDeploy |
+    | Availability zone constraint too restrictive | Verify target AZ has active hosts with `openstack availability zone list --long` |
+    | Host aggregate metadata mismatch | Verify flavor extra specs match aggregate metadata keys on target hosts |
+    | Server group anti-affinity exhausted | Group has used all distinct hosts; scale out or remove anti-affinity constraint |
+    | Flavor requires PCI device not available | Verify PCI passthrough devices are configured on target hosts |
+
+    <Warning>
+      If `openstack hypervisor stats show` reports available capacity but scheduling
+      still fails, the Placement service inventory may be out of sync with actual host
+      state. Trigger a resource reconciliation through XDeploy under **Compute →
+      Diagnostics → Reconcile Inventory**.
+    </Warning>
+  </Accordion>
+
+  <Accordion title="Console connection refused" icon="monitor-x">
+    **Cause**: The VNC or SPICE console proxy service is not running, the firewall
+    is blocking the console port, or the console token has expired.
+
+    **Diagnosis**:
+
+    ```bash title="Verify console proxy service status"
+    openstack compute service list | grep consoleauth
+    ```
+
+    ```bash title="Check all compute services for degraded state"
+    openstack compute service list
+    ```
+
+    **Resolution**:
+
+    1. Verify ports 6080 (VNC), 6082 (SPICE), and 6083 (serial) are open in your
+       firewall rules from the administrator's workstation to the controller node.
+
+    2. If the console proxy service is `down`, restart it through XDeploy under
+       **Compute → Services → Console Proxy**.
+
+    3. If the connection is refused immediately after generating a URL, the token
+       may have expired. Generate a new console URL:
+
+    ```bash title="Generate a fresh console URL"
+    openstack console url show --novnc <instance-id>
+    ```
+
+    <Note>
+      Console tokens expire after a short period. If the browser reports an
+      authentication error when accessing the console URL, always generate a new URL
+      rather than refreshing the page.
+    </Note>
+
+    See [Console Access](/services/compute/console-access) for firewall port requirements
+    and proxy configuration details.
+  </Accordion>
+
+  <Accordion title="Quota exceeded errors" icon="chart-bar">
+    **Cause**: The project has reached its allocation limit for instances, vCPUs,
+    or RAM. New instance creation or resize operations are blocked until the quota
+    is increased or existing resources are released.
+
+    **Diagnosis**:
+
+    ```bash title="Show current quota usage"
+    openstack quota show --compute <project-id>
+    ```
+
+    ```bash title="List instances consuming quota in the project"
+    openstack server list \
+      --project <project-id> \
+      --all-projects \
+      --long
+    ```
+
+    **Resolution**:
+
+    Option 1 — Increase the project quota:
+
+    ```bash title="Increase quota for instances, vCPUs, and RAM"
+    openstack quota set \
+      --instances 50 \
+      --cores 100 \
+      --ram 204800 \
+      <project-id>
+    ```
+
+    Option 2 — Free capacity by removing unused instances:
+
+    Coordinate with the project owner to identify and delete instances that are no
+    longer in use. Do not delete instances without explicit confirmation from the
+    project owner.
+
+    <Tip>
+      Before increasing quotas, verify the cluster has sufficient physical capacity
+      with `openstack hypervisor stats show`. See
+      [Quota Management](/services/compute/quotas) for quota adjustment procedures.
+    </Tip>
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Next Steps
+
+<CardGroup cols={3}>
+  <Card title="Compute Hosts" href="/services/compute/compute-hosts" color="#197560">
+    Monitor and manage hypervisor host health to prevent scheduling failures.
+  </Card>
+  <Card title="Live Migration" href="/services/compute/live-migration" color="#197560">
+    Move instances off degraded hosts before performing maintenance.
+  </Card>
+  <Card title="Admin Guide" href="/services/compute/admin-guide" color="#197560">
+    Return to the Compute Administration Guide index.
+  </Card>
+</CardGroup>

@@ -1,0 +1,238 @@
+---
+title: "Grafana Dashboards"
+description: "Configure Grafana data sources for Prometheus and Xloud services, import pre-built operational dashboards, and build custom visualizations for compute, storage, and networking."
+sidebarTitle: "Grafana"
+---
+
+## Overview
+
+Grafana connects to Prometheus and other Xloud data sources to provide operational dashboards
+for infrastructure metrics, service health, storage utilization, and network performance.
+Grafana is included in the XIMP monitoring stack and is pre-configured with a Prometheus
+data source pointing to the cluster's Prometheus instance.
+
+<Note>
+  **Prerequisites**
+  - Grafana 9.0 or later (included in XIMP stack)
+  - Prometheus deployed and scraping targets ([Prometheus integration](/integrations/prometheus))
+  - Grafana admin credentials (default: sourced from XDeploy configuration)
+  - Network access from the Grafana host to Prometheus on port 9090
+</Note>
+
+---
+
+## Data Source Configuration
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Open data source settings" icon="database">
+        Log in to Grafana and navigate to **Configuration → Data Sources → Add data source**.
+        Select **Prometheus** from the time series databases section.
+      </Step>
+      <Step title="Configure connection" icon="settings">
+        | Field | Value | Description |
+        |-------|-------|-------------|
+        | Name | `Xloud Prometheus` | Display name in dashboard queries |
+        | URL | `http://10.0.1.71:9090` | Prometheus server address |
+        | Scrape interval | `15s` | Must match `global.scrape_interval` in prometheus.yml |
+        | HTTP Method | `POST` | Required for long queries |
+
+        Leave authentication blank if Prometheus has no auth configured. If basic auth is
+        enabled, enter credentials under the **Auth** section.
+      </Step>
+      <Step title="Test and save" icon="circle-check">
+        Click **Save & Test**. Grafana sends a test query to Prometheus.
+
+        <Check>Status shows **Data source is working** with a sample metric count.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI (API)" icon="terminal">
+    Provision data sources programmatically using the Grafana HTTP API — useful for
+    automated deployments:
+
+    ```bash title="Add Prometheus data source via API"
+    curl -X POST http://admin:$GRAFANA_PASS@localhost:3000/api/datasources \
+      -H "Content-Type: application/json" \
+      -d '{
+        "name": "Xloud Prometheus",
+        "type": "prometheus",
+        "url": "http://10.0.1.71:9090",
+        "access": "proxy",
+        "isDefault": true,
+        "jsonData": {
+          "httpMethod": "POST",
+          "scrapeInterval": "15s"
+        }
+      }'
+    ```
+
+    <Check>Response returns `{"message": "Datasource added", "id": 1}` with the new data source ID.</Check>
+  </Tab>
+</Tabs>
+
+---
+
+## Pre-Built Dashboard Templates
+
+### Node Exporter Full Dashboard
+
+The Node Exporter Full dashboard (Grafana ID `1860`) provides comprehensive per-host metrics
+including CPU, memory, disk I/O, network throughput, and system load.
+
+<Tabs>
+  <Tab title="Import via ID" icon="download">
+    <Steps titleSize="h3">
+      <Step title="Open import dialog" icon="folder-open">
+        Navigate to **Dashboards → Import**. Enter dashboard ID `1860` in the
+        **Import via grafana.com** field and click **Load**.
+      </Step>
+      <Step title="Select data source" icon="database">
+        Select **Xloud Prometheus** from the data source dropdown. Set the dashboard
+        name and folder, then click **Import**.
+      </Step>
+    </Steps>
+
+    <Check>The Node Exporter Full dashboard appears with live data for all scraped instances.</Check>
+  </Tab>
+  <Tab title="Import via JSON" icon="file-code">
+    For air-gapped environments, download and import the dashboard JSON directly:
+
+    ```bash title="Import dashboard JSON via API"
+    curl -X POST http://admin:$GRAFANA_PASS@localhost:3000/api/dashboards/import \
+      -H "Content-Type: application/json" \
+      -d @node-exporter-full.json
+    ```
+  </Tab>
+</Tabs>
+
+### Recommended Dashboard IDs
+
+| Dashboard | Grafana ID | Description |
+|-----------|-----------|-------------|
+| Node Exporter Full | `1860` | Complete per-host metrics — CPU, memory, disk, network |
+| Ceph Cluster | `2842` | Ceph OSD, pool, and IOPS metrics |
+| Prometheus Stats | `2` | Prometheus internal metrics and scrape health |
+| Alertmanager | `9578` | Alert routing and notification delivery status |
+
+---
+
+## Custom Dashboard Configuration
+
+### Infrastructure Overview Panel
+
+Create a summary row with stat panels for key fleet metrics:
+
+```json title="CPU Usage Stat Panel (panel JSON fragment)"
+{
+  "type": "stat",
+  "title": "Average CPU Usage",
+  "targets": [
+    {
+      "expr": "100 - avg(rate(node_cpu_seconds_total{mode='idle'}[5m])) * 100",
+      "legendFormat": "CPU %"
+    }
+  ],
+  "fieldConfig": {
+    "defaults": {
+      "unit": "percent",
+      "thresholds": {
+        "steps": [
+          { "color": "green", "value": 0 },
+          { "color": "yellow", "value": 60 },
+          { "color": "red", "value": 80 }
+        ]
+      }
+    }
+  }
+}
+```
+
+### Auto-Scaling Group Size Panel
+
+Track the current size of Orchestration auto-scaling groups using a time series panel:
+
+```promql title="Auto-scaling group size query"
+# Requires the Heat exporter or custom metric pushed from Orchestration stack outputs
+xloud_asg_current_size{stack="web-asg-stack"}
+```
+
+<Tip>
+  Export stack outputs to Prometheus using a cron job that calls the Orchestration API and
+  pushes a gauge metric via the Prometheus Pushgateway. This provides real-time ASG size
+  visibility in Grafana without a dedicated Heat exporter.
+</Tip>
+
+---
+
+## Alerting in Grafana
+
+Grafana can evaluate alert rules against Prometheus queries and route notifications
+independently of Alertmanager. Use this for dashboard-level alerts that notify specific
+teams via Slack, email, or PagerDuty.
+
+```yaml title="Grafana alert rule example"
+# Configured via Grafana UI: Alerting → Alert rules → New alert rule
+# Expression: avg(rate(node_cpu_seconds_total{mode!="idle"}[5m])) > 0.8
+# For: 2m
+# Labels: severity=warning, team=ops
+# Annotations: summary="High CPU detected on {{ $labels.instance }}"
+```
+
+Configure notification channels:
+
+<Steps titleSize="h3">
+  <Step title="Add a contact point" icon="bell">
+    Navigate to **Alerting → Contact points → Add contact point**.
+    Select the notification type (Email, Slack, PagerDuty, Webhook) and configure
+    the destination.
+  </Step>
+  <Step title="Create a notification policy" icon="route">
+    Navigate to **Alerting → Notification policies**. Create a policy that matches
+    your alert labels (e.g., `severity=critical`) and routes to the appropriate
+    contact point.
+  </Step>
+  <Step title="Create an alert rule" icon="circle-x">
+    Navigate to **Alerting → Alert rules → New alert rule**. Select the Prometheus
+    data source, write the PromQL expression, set evaluation parameters, and assign
+    the notification policy.
+  </Step>
+</Steps>
+
+---
+
+## Dashboard Variables
+
+Use template variables to make dashboards interactive across multiple instances, projects,
+and availability zones:
+
+```promql title="Instance variable query"
+label_values(node_uname_info, instance)
+```
+
+```promql title="Job variable query"
+label_values(up, job)
+```
+
+Add variables under **Dashboard Settings → Variables → Add variable**. Set query type
+to **Query**, select the Prometheus data source, and enter the label values query.
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Prometheus Integration" href="/integrations/prometheus" color="#197560">
+    Configure Prometheus scrape targets and alert rules that feed Grafana data sources
+  </Card>
+  <Card title="XIMP Monitoring" href="/services/monitoring/user-guide/dashboards" color="#197560">
+    Explore the built-in XIMP monitoring stack that includes pre-configured Grafana
+  </Card>
+  <Card title="Auto-Scaling" href="/services/orchestration/autoscaling" color="#197560">
+    Visualize auto-scaling group size changes on Grafana time series dashboards
+  </Card>
+  <Card title="Wazuh SIEM" href="/integrations/wazuh" color="#197560">
+    Integrate Wazuh security events into Grafana for unified security dashboards
+  </Card>
+</CardGroup>

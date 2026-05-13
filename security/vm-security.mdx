@@ -1,0 +1,286 @@
+---
+title: "Virtual Machine Security"
+description: "Secure virtual machines at the hypervisor level with isolation controls, vTPM, encrypted volumes, Secure Boot, anti-affinity, and live migration TLS."
+sidebarTitle: "VM Security"
+---
+
+## Overview
+
+Xloud enforces virtual machine security at the hypervisor layer — below the guest OS — through a combination of isolation controls, hardware security features, and network policy enforcement. This agentless model means security policies apply regardless of what runs inside the VM, making it suitable for your regulated environments, multi-tenant deployments, and zero-trust architectures.
+
+<Note>
+  **Prerequisites**
+  - Xloud Platform with XAVS or XPCI
+  - Administrator or project-member role in Xloud Identity
+  - For vTPM: XPCI license with Barbican key management enabled
+  - For Secure Boot: UEFI-compatible image with the appropriate properties set
+</Note>
+
+---
+
+## Hypervisor Isolation
+
+Each virtual machine runs in a fully isolated compute process. The hypervisor enforces the following isolation primitives:
+
+| Control | Description |
+|---------|-------------|
+| Process isolation | Each VM runs as a separate process owned by a dedicated service account |
+| Namespace separation | Virtual network and storage namespaces are per-tenant |
+| seccomp filtering | Restricts system calls available to the hypervisor process |
+| AppArmor confinement | Mandatory access control profile limits hypervisor file and network access |
+| Resource limits | CPU pinning and memory hard limits prevent noisy-neighbor interference |
+
+<Info>
+  Xloud uses dedicated service users for the compute hypervisor process. These accounts have no login shell and no home directory. The AppArmor profile runs in complain mode by default. You can switch it to enforce mode using the hardening guide.
+</Info>
+
+---
+
+## Security Groups
+
+Security groups provide stateful L3/L4 firewalling for virtual machine network interfaces. The hypervisor enforces rules at the virtual switch layer — traffic that does not match an allow rule is silently dropped before reaching the VM.
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Open Security Groups" icon="shield">
+        Navigate to **Project → Network → Security Groups** in the Xloud Dashboard.
+      </Step>
+      <Step title="Create a new security group" icon="plus">
+        Click **Create Security Group**. Provide a name (e.g., `web-servers`) and an optional description.
+      </Step>
+      <Step title="Add inbound rules" icon="arrow-right">
+        Click **Manage Rules** on the new group, then **Add Rule**:
+
+        | Field | Example Value | Notes |
+        |-------|--------------|-------|
+        | Rule | Custom TCP Rule | Or use presets: SSH, HTTP, HTTPS |
+        | Direction | Ingress | Inbound to the VM |
+        | Port Range | 443 | Single port or range (e.g., 8000-8080) |
+        | Remote | CIDR | Restrict by IP range |
+        | CIDR | 10.0.0.0/8 | Limit to internal network only |
+
+        <Warning>The default security group permits all outbound traffic and blocks all inbound traffic. Always create explicit inbound rules for required ports.</Warning>
+      </Step>
+      <Step title="Attach to an instance" icon="link">
+        Navigate to **Project → Compute → Instances**, open the instance, and select **Edit Security Groups** from the **Actions** menu. Add the new group and remove the `default` group if not needed.
+
+        <Check>The security group is listed in the instance details. Test connectivity using `nc` or `curl` from an allowed source.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Create security group"
+    openstack security group create web-servers \
+      --description "Inbound HTTPS from internal network"
+    ```
+
+    ```bash title="Add inbound HTTPS rule"
+    openstack security group rule create web-servers \
+      --protocol tcp \
+      --dst-port 443 \
+      --remote-ip 10.0.0.0/8 \
+      --ingress
+    ```
+
+    ```bash title="Add inbound SSH rule (restricted)"
+    openstack security group rule create web-servers \
+      --protocol tcp \
+      --dst-port 22 \
+      --remote-ip 192.168.100.0/24 \
+      --ingress
+    ```
+
+    ```bash title="Attach security group to instance"
+    openstack server add security group my-instance web-servers
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## vTPM (Virtual Trusted Platform Module)
+
+<Badge color="purple" size="sm" shape="pill">Enterprise</Badge>
+
+Virtual TPM provides a hardware-backed cryptographic identity to virtual machines. Xloud Key Management (Barbican) encrypts vTPM state using a stored key, and the state is portable across live migrations.
+
+### Use Cases
+
+- Full-disk encryption (BitLocker, LUKS with TPM unsealing)
+- Measured boot and attestation
+- Certificate and secret sealing to the platform
+
+### Enable vTPM on an Instance
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Create a vTPM-enabled flavor" icon="cpu">
+        Navigate to **Admin → Compute → Flavors**. Create or edit a flavor and set the extra specification:
+
+        | Key | Value |
+        |-----|-------|
+        | `hw:tpm_model` | `tpm-crb` |
+        | `hw:tpm_version` | `2.0` |
+      </Step>
+      <Step title="Launch instance with vTPM flavor" icon="play">
+        Launch the instance using the vTPM-enabled flavor. The hypervisor provisions a software TPM process backed by the platform key management service.
+
+        <Check>Inside the VM, verify TPM presence: `ls /dev/tpm0` or `tpm2_getcap properties-fixed`.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Create vTPM flavor"
+    openstack flavor create --vcpus 4 --ram 8192 --disk 50 secure-vm-medium
+    openstack flavor set secure-vm-medium \
+      --property hw:tpm_model=tpm-crb \
+      --property hw:tpm_version=2.0
+    ```
+
+    ```bash title="Launch instance with vTPM"
+    openstack server create \
+      --flavor secure-vm-medium \
+      --image ubuntu-24.04 \
+      --network private-net \
+      my-tpm-instance
+    ```
+
+    ```bash title="Verify vTPM inside VM"
+    # Run inside the virtual machine
+    ls -la /dev/tpm*
+    tpm2_getcap properties-fixed | grep TPMVendorID
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Encrypted Volumes
+
+You can encrypt block storage volumes using LUKS (Linux Unified Key Setup). Xloud Key Management manages the encryption keys and never stores them on the compute node.
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Create an encrypted volume type" icon="key">
+        Navigate to **Admin → Volume → Volume Types**. Create a new type (e.g., `encrypted-ssd`) and configure the encryption provider:
+
+        | Field | Value |
+        |-------|-------|
+        | Provider | `nova.volume.encryptors.luks.LuksEncryptor` |
+        | Cipher | `aes-xts-plain64` |
+        | Key Size | `256` |
+        | Control Location | `front-end` |
+      </Step>
+      <Step title="Create an encrypted volume" icon="hard-drive">
+        Navigate to **Project → Volumes → Create Volume**. Select the encrypted volume type. The system generates and stores the encryption key in Xloud Key Management automatically.
+
+        <Check>The volume details page shows **Encryption** as **Yes**.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Create encrypted volume type"
+    openstack volume type create encrypted-ssd
+
+    openstack volume type set encrypted-ssd \
+      --encryption-provider nova.volume.encryptors.luks.LuksEncryptor \
+      --encryption-cipher aes-xts-plain64 \
+      --encryption-key-size 256 \
+      --encryption-control-location front-end
+    ```
+
+    ```bash title="Create encrypted volume"
+    openstack volume create \
+      --size 100 \
+      --type encrypted-ssd \
+      my-encrypted-volume
+    ```
+
+    ```bash title="Verify encryption is active"
+    openstack volume show my-encrypted-volume -c encrypted -f value
+    # Returns: True
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Secure Boot (UEFI)
+
+Secure Boot prevents unsigned bootloaders and kernels from loading on virtual machines. It is supported for images that include UEFI firmware.
+
+```bash title="Enable Secure Boot on an image"
+openstack image set --property hw_firmware_type=uefi \
+  --property hw_machine_type=q35 \
+  --property os_secure_boot=required \
+  ubuntu-24.04-secure
+```
+
+```bash title="Verify Secure Boot properties"
+openstack image show ubuntu-24.04-secure \
+  -c properties -f json | python3 -m json.tool
+```
+
+<Tip>Use `os_secure_boot=optional` to allow instances to boot with or without Secure Boot. Use `required` to enforce it — instances will fail to boot if the image does not support UEFI Secure Boot.</Tip>
+
+---
+
+## Anti-Affinity for Workload Isolation
+
+Server groups with anti-affinity rules distribute your critical workloads across separate physical hosts, preventing a single hypervisor failure from taking down multiple replicas simultaneously.
+
+```bash title="Create anti-affinity server group"
+openstack server group create \
+  --policy anti-affinity \
+  production-web-tier
+```
+
+```bash title="Launch instances in the group"
+openstack server create \
+  --flavor m1.large \
+  --image ubuntu-24.04 \
+  --network private-net \
+  --hint group=<server-group-id> \
+  web-node-01
+```
+
+<Warning>
+  Anti-affinity placement may fail if there are insufficient compute hosts. Xloud returns a scheduling error rather than placing instances on the same host when the policy cannot be satisfied.
+</Warning>
+
+---
+
+## Live Migration Security
+
+Live migrations transmit VM memory state across the network. Xloud encrypts migration streams using TLS to prevent eavesdropping on in-transit memory contents.
+
+```yaml title="/etc/xavs/globals.d/_60_migration_security.yml"
+nova_live_migration_tunnelled: "yes"
+nova_console_allowed_origins: "https://<dashboard-hostname>"
+```
+
+<Info>
+  When `nova_live_migration_tunnelled` is enabled, migration traffic is routed through the compute service's encrypted channel rather than directly between hypervisors. This adds a small latency overhead but ensures the migration stream is protected end-to-end.
+</Info>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Network Security" href="/security/network-security" color="#197560">
+    Security groups, FWaaS micro-segmentation, and VLAN/VXLAN isolation
+  </Card>
+  <Card title="Data Security" href="/security/data-security" color="#197560">
+    Volume encryption, key management, and encrypted backups
+  </Card>
+  <Card title="Hardening Guide" href="/security/hardening-guide" color="#197560">
+    AppArmor enforcement, SSH hardening, and hypervisor node hardening
+  </Card>
+  <Card title="Security Groups (Compute)" href="/services/compute/security-groups" color="#197560">
+    Detailed security group management for compute instances
+  </Card>
+</CardGroup>

@@ -1,0 +1,158 @@
+---
+title: "Network Quotas"
+description: "Manage networking resource quotas per project in Xloud Cloud Platform. Set limits for networks, subnets, routers, floating IPs, and security groups."
+sidebarTitle: "Network Quotas"
+---
+
+import AdminWarning from '/snippets/admin-warning.mdx';
+import CliAuth from '/snippets/cli-auth.mdx';
+
+## Overview
+
+Quotas limit the number of networking resources a project can consume. Default quotas
+are set cluster-wide during deployment. You can override them per project to
+accommodate workloads that require higher limits or to restrict projects that should
+operate within a strict budget.
+
+<AdminWarning />
+
+<Note>
+  **Prerequisites**
+  - Admin credentials sourced from `openrc.sh`
+  - The target project ID or name
+</Note>
+
+---
+
+## Default Quota Reference
+
+| Resource | Default Limit | Notes |
+|----------|--------------|-------|
+| Networks | 10 | Per project |
+| Subnets | 10 | Per project |
+| Ports | 50 | Per project |
+| Routers | 10 | Per project |
+| Floating IPs | 50 | Per project |
+| Security Groups | 10 | Per project |
+| Security Group Rules | 100 | Per project |
+
+---
+
+## View Current Quotas
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    Navigate to **Identity > Projects** (admin view). Select the project, then click
+    **Edit Quota**. Scroll to the **Network** section to review and update networking
+    quotas.
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    <Steps titleSize="h3">
+      <Step title="Authenticate" icon="key">
+        <CliAuth />
+      </Step>
+      <Step title="Show all quotas for a project" icon="list">
+        ```bash title="Show project quotas"
+        openstack quota show <project-id>
+        ```
+        The output includes all service quotas — filter with `grep` for networking
+        resources:
+        ```bash title="Filter networking quotas"
+        openstack quota show <project-id> | grep -E "network|subnet|port|router|floating|secgroup"
+        ```
+      </Step>
+    </Steps>
+  </Tab>
+</Tabs>
+
+---
+
+## Update Quotas for a Project
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    Navigate to **Identity > Projects** (admin view), select the project, click
+    **Edit Quota**, update the values in the **Network** section, and click **Save**.
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Update networking quotas for a project"
+    openstack quota set \
+      --networks 20 \
+      --subnets 20 \
+      --ports 100 \
+      --routers 10 \
+      --floating-ips 100 \
+      --secgroups 20 \
+      --secgroup-rules 200 \
+      <project-id>
+    ```
+
+    <Tip>
+      Set a quota to `0` to completely block a resource type for a project. Set to
+      `-1` for unlimited — use with caution in multi-tenant environments as unlimited
+      quotas allow a single project to exhaust shared IP address pools.
+    </Tip>
+  </Tab>
+</Tabs>
+
+---
+
+## Reset Quotas to Defaults
+
+```bash title="Reset project quotas to cluster defaults"
+openstack quota delete <project-id>
+```
+
+This removes all per-project quota overrides. The project reverts to the cluster-wide
+default quotas.
+
+---
+
+## View Quota Usage
+
+```bash title="Show quota usage for a project"
+openstack quota show --usage <project-id>
+```
+
+The `--usage` flag adds `In Use` and `Reserved` columns alongside the quota limit, making
+it easy to identify projects approaching their limits.
+
+---
+
+## Floating IP Pool Management
+
+Floating IPs are allocated from the external network's address pool. Monitor pool
+exhaustion at the cluster level:
+
+```bash title="List all floating IPs across all projects"
+openstack floating ip list --all-projects
+```
+
+```bash title="Count floating IPs by status"
+openstack floating ip list --all-projects -f value -c Status | sort | uniq -c
+```
+
+<Warning>
+  If the external network's address pool is exhausted, no new floating IPs can be
+  allocated regardless of per-project quota limits. Coordinate with your network
+  administrator to expand the provider network's address range.
+</Warning>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Quality of Service" href="/services/networking/qos" color="#197560">
+    Control bandwidth alongside quota management for fair resource sharing
+  </Card>
+  <Card title="Security Hardening" href="/services/networking/security" color="#197560">
+    Harden network security policies across all projects
+  </Card>
+  <Card title="Provider Networks" href="/services/networking/provider-networks" color="#197560">
+    Expand the external network pool to support more floating IP allocations
+  </Card>
+  <Card title="Admin Troubleshooting" href="/services/networking/admin-troubleshooting" color="#197560">
+    Diagnose quota exhaustion and resource allocation failures
+  </Card>
+</CardGroup>

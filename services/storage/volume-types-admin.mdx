@@ -1,0 +1,225 @@
+---
+title: "Volume Types and QoS (Admin)"
+description: "Create and manage Xloud Block Storage volume types, set backend associations via extra specs, and configure QoS policies to enforce I/O limits per storage tier."
+sidebarTitle: "Volume Types & QoS"
+---
+
+import AdminWarning from '/snippets/admin-warning.mdx';
+import CliAuth from '/snippets/cli-auth.mdx';
+
+## Overview
+
+Volume types are the mechanism through which administrators expose storage tiers to users. Each volume type maps to a specific backend through the `volume_backend_name` extra spec and optionally enforces I/O quality-of-service limits. Well-defined volume types are essential for predictable workload performance and efficient backend utilization.
+
+<AdminWarning />
+
+<Note>
+  **Prerequisites**
+  - Administrator credentials with the `admin` role
+  - At least one storage backend configured and registered with the scheduler
+  - Backend names available via `openstack volume backend pool list --long`
+</Note>
+
+---
+
+## Create a Volume Type
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Navigate to Volume Types" icon="compass">
+        Navigate to
+        **Storage > Volume Types** (admin view).
+      </Step>
+      <Step title="Create the type" icon="plus">
+        Click **Create Volume Type**. Enter a descriptive name (e.g., `nvme`, `ssd`,
+        `standard`) and an optional description. Click **Confirm**.
+      </Step>
+      <Step title="Set the backend association" icon="link">
+        In the volume type list, click the type name to open its details page. Under
+        **Extra Specs**, click **Create** and add:
+
+        | Key | Value | Purpose |
+        |-----|-------|---------|
+        | `volume_backend_name` | `<backend-name>` | Routes volumes to the correct backend |
+
+        <Tip>
+          The value of `volume_backend_name` must exactly match the `volume_backend_name`
+          configured in the backend driver settings. Use `openstack volume backend pool list`
+          to confirm the correct name.
+        </Tip>
+      </Step>
+      <Step title="Verify" icon="circle-check">
+        Create a test volume using the new type and confirm it reaches `available` status:
+
+        ```bash title="Test volume type"
+        openstack volume create --size 1 --type <type-name> test-vol
+        openstack volume show test-vol -c status -c type
+        openstack volume delete test-vol
+        ```
+
+        <Check>Volume type created and validated against the backend.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    <Steps titleSize="h3">
+      <Step title="Authenticate" icon="key">
+        <CliAuth />
+      </Step>
+      <Step title="Create the volume type" icon="plus">
+        ```bash title="Create volume type"
+        openstack volume type create \
+          --description "NVMe-backed high-performance storage" \
+          nvme
+        ```
+      </Step>
+      <Step title="Set the backend association" icon="link">
+        ```bash title="Set extra spec for backend routing"
+        openstack volume type set \
+          --property volume_backend_name=nvme-backend \
+          nvme
+        ```
+      </Step>
+      <Step title="Set as default (optional)" icon="star">
+        ```bash title="Set default volume type"
+        openstack volume type set --default ssd
+        ```
+
+        The default type is used when users create volumes without specifying a type.
+      </Step>
+      <Step title="Verify" icon="circle-check">
+        ```bash title="List volume types with properties"
+        openstack volume type list --long
+        ```
+
+        <Check>Volume type visible with correct backend association.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+</Tabs>
+
+---
+
+## Configure QoS Policies
+
+Quality-of-Service specs enforce I/O limits on volumes associated with a type. QoS
+policies are applied at the hypervisor (`front-end`), at the storage backend (`back-end`),
+or at both layers.
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Create a QoS Spec" icon="gauge">
+        Navigate to **Storage > Volume Types** (QoS Specs tab, admin view). Click **Create QoS Spec**.
+        Enter a name (e.g., `ssd-standard-qos`) and set the consumer:
+
+        | Consumer | Effect |
+        |----------|--------|
+        | `front-end` | Limits enforced at the hypervisor (recommended for RBD) |
+        | `back-end` | Limits enforced at the storage backend |
+        | `both` | Limits enforced at both layers |
+      </Step>
+      <Step title="Add I/O limit specs" icon="sliders">
+        After creation, open the QoS Spec and add limits:
+
+        | Key | Example Value | Description |
+        |-----|--------------|-------------|
+        | `total_iops_sec` | `5000` | Maximum combined read + write IOPS |
+        | `read_iops_sec` | `3000` | Read IOPS limit |
+        | `write_iops_sec` | `2000` | Write IOPS limit |
+        | `total_bytes_sec` | `524288000` | Throughput cap in bytes/sec (500 MiB/s) |
+        | `read_bytes_sec` | `314572800` | Read throughput cap (300 MiB/s) |
+        | `write_bytes_sec` | `209715200` | Write throughput cap (200 MiB/s) |
+      </Step>
+      <Step title="Associate with a volume type">
+        Switch to the **Volume Types** tab. On the target volume type row, click
+        **Manage QoS Spec** (the first row action). In the dialog, select the
+        QoS spec from the table and click **Confirm**.
+
+        <Check>QoS spec associated with volume type — limits active on all new volumes.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    <Steps titleSize="h3">
+      <Step title="Create a QoS spec" icon="gauge">
+        ```bash title="Create QoS spec for SSD tier"
+        openstack volume qos create \
+          --consumer front-end \
+          --property total_iops_sec=10000 \
+          --property total_bytes_sec=1073741824 \
+          ssd-standard-qos
+        ```
+      </Step>
+      <Step title="Associate with volume type" icon="link">
+        ```bash title="Associate QoS spec with volume type"
+        openstack volume qos associate ssd-standard-qos ssd
+        ```
+      </Step>
+      <Step title="Verify association" icon="circle-check">
+        ```bash title="Show volume type with QoS"
+        openstack volume type show ssd
+        ```
+
+        <Check>Volume type `ssd` is now enforcing QoS limits for all new volumes.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+</Tabs>
+
+---
+
+## Restrict Volume Type Access
+
+By default, volume types are available to all projects. Sensitive types (e.g., encrypted
+or high-performance tiers) can be restricted to specific projects:
+
+```bash title="Make a volume type private"
+openstack volume type set --private <type-name>
+```
+
+```bash title="Grant access to a specific project"
+openstack volume type access add \
+  --project <project-id> \
+  <type-name>
+```
+
+```bash title="List projects with access"
+openstack volume type access list <type-name>
+```
+
+---
+
+## Recommended QoS Values by Tier
+
+| Tier | total_iops_sec | total_bytes_sec | Consumer |
+|------|---------------|-----------------|---------|
+| **NVMe** | 50,000 – 200,000 | 4,294,967,296 (4 GB/s) | `front-end` |
+| **SSD** | 5,000 – 20,000 | 1,073,741,824 (1 GB/s) | `front-end` |
+| **Standard** | 500 – 2,000 | 314,572,800 (300 MB/s) | `front-end` |
+
+<Tip>
+  Start with conservative limits and adjust based on observed workload behavior. Overly
+  restrictive QoS on shared backends can throttle legitimate I/O and cause application
+  timeouts.
+</Tip>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Storage Tiers" href="/services/storage/storage-tiers" color="#197560">
+    Configure NVMe, SSD, and HDD tier mappings and set the default volume type
+  </Card>
+  <Card title="Encryption" href="/services/storage/encryption" color="#197560">
+    Enable at-rest encryption on volume types
+  </Card>
+  <Card title="Storage Backends" href="/services/storage/storage-backends" color="#197560">
+    Configure and manage the underlying backend drivers
+  </Card>
+  <Card title="Volume Types (User)" href="/services/storage/volume-types" color="#197560">
+    User guide for selecting the correct volume type for a workload
+  </Card>
+</CardGroup>

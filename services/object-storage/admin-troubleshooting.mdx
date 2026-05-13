@@ -1,0 +1,176 @@
+---
+title: "Object Storage Admin Troubleshooting"
+description: "Diagnose and resolve platform-level Xloud Object Storage issues — 507 storage errors, proxy latency, ring inconsistencies, and slow replication."
+sidebarTitle: "Troubleshooting"
+---
+
+import AdminWarning from '/snippets/admin-warning.mdx';
+
+## Overview
+
+This guide covers platform-level object storage issues that require administrator access.
+For user-facing issues such as 403 access errors or upload timeouts, see the
+[Object Storage Troubleshooting](/services/object-storage/troubleshooting) guide.
+
+<AdminWarning />
+
+---
+
+## Diagnostic Checklist
+
+```bash title="Overall cluster health"
+xavs-storage-recon --all
+```
+
+```bash title="Disk usage across all nodes"
+xavs-storage-recon --diskusage
+```
+
+```bash title="Replication status"
+xavs-storage-recon --replication
+```
+
+```bash title="Ring file consistency"
+xavs-storage-recon --md5
+```
+
+---
+
+## Platform Issues
+
+<AccordionGroup>
+  <Accordion title="507 Insufficient Storage on object PUT" icon="hard-drive" defaultOpen>
+    **Cause**: One or more storage nodes targeted by the ring have insufficient free space
+    to accept the write.
+
+    **Diagnosis**:
+    ```bash title="Check disk usage per node"
+    xavs-storage-recon --diskusage
+    ```
+
+    **Resolution**:
+    - Identify nodes or drives above 85% utilization
+    - Expand storage capacity by adding new drives (see [Ring Management](/services/object-storage/ring-management))
+    - Alternatively, rebalance the ring to shift weight toward nodes with available space:
+      ```bash title="Adjust weight on high-capacity node"
+      xavs-ring-builder object.builder set_weight <device-id> <reduced-weight>
+      xavs-ring-builder object.builder rebalance
+      xavs-ring-builder object.builder write_ring
+      ```
+  </Accordion>
+
+  <Accordion title="Slow reads or high proxy latency" icon="clock">
+    **Cause**: Replication traffic competing with foreground I/O, or a storage node
+    with degraded drives experiencing high read latency.
+
+    **Diagnosis**:
+    ```bash title="Check replication load"
+    xavs-storage-recon --replication --verbose
+    ```
+
+    If a specific node shows high `replication_time`, inspect that node's disk I/O:
+    ```bash title="Check disk I/O on storage node (SSH required)"
+    iostat -x 1 5
+    ```
+
+    **Resolution**:
+    - Consider throttling the replicator with `--concurrency 1` during peak hours
+    - If a specific drive is degraded, reduce its ring weight to shift load away
+    - Replace drives showing high latency or recurring I/O errors in `dmesg`
+  </Accordion>
+
+  <Accordion title="Ring inconsistency between nodes" icon="git-branch">
+    **Cause**: The updated ring file was not distributed to all nodes after a rebalance.
+
+    **Diagnosis**:
+    ```bash title="Check MD5 of ring files on all nodes"
+    xavs-storage-recon --md5
+    ```
+
+    **Resolution**: Nodes with mismatched MD5 hashes have stale ring files. Redistribute
+    the ring to affected nodes:
+    ```bash title="Copy ring files to an affected node"
+    scp /etc/xavs-object-storage/*.ring.gz <node-ip>:/etc/xavs-object-storage/
+    ```
+
+    Restart the object-server and replicator on the affected node after distribution.
+  </Accordion>
+
+  <Accordion title="High quarantine count on a specific node" icon="shield-alert">
+    **Cause**: Drive failure, bit-rot, or network errors during replication causing
+    data corruption detected by the auditor.
+
+    **Diagnosis**:
+    ```bash title="Check quarantine counts"
+    xavs-storage-recon --quarantined --verbose
+    ```
+
+    ```bash title="Check drive health (SSH to node)"
+    smartctl -a /dev/<device>
+    dmesg | grep -i "error\|fail\|ata"
+    ```
+
+    **Resolution**:
+    1. If the drive is failing, set its ring weight to 0 and rebalance to drain data
+    2. Replace the physical drive
+    3. Add the replacement drive to the ring and rebalance
+    4. The replicator will restore the quarantined objects from healthy replicas
+
+    <Warning>
+      Do not simply delete quarantined objects — they may be the only remaining copy
+      if other replicas are also corrupted. Always verify healthy replicas exist before
+      any quarantine cleanup.
+    </Warning>
+  </Accordion>
+
+  <Accordion title="Proxy service returns 503 Service Unavailable" icon="server">
+    **Cause**: The proxy-server cannot reach a quorum of storage nodes for an operation.
+
+    **Diagnosis**:
+    ```bash title="Check proxy container status"
+    docker ps --filter name=swift-proxy
+    docker logs swift-proxy --tail 50
+    ```
+
+    ```bash title="Verify storage nodes are reachable from proxy"
+    xavs-storage-recon --all | grep -i "error\|fail"
+    ```
+
+    **Resolution**:
+    - Verify storage node containers are running: `docker ps --filter name=swift`
+    - Check network connectivity from proxy hosts to storage nodes on ports 6200, 6201, 6202
+    - If nodes are degraded, the proxy will still serve reads from available replicas but
+      writes require the configured replica quorum
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Log Locations
+
+| Component | Log Command |
+|-----------|-------------|
+| Proxy server | `docker logs swift-proxy` |
+| Object server | `docker logs swift-object` |
+| Container server | `docker logs swift-container` |
+| Account server | `docker logs swift-account` |
+| Replicator | `docker logs swift-object-replicator` |
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Object Storage Troubleshooting (User)" href="/services/object-storage/troubleshooting" color="#197560">
+    User-facing issues — 403 errors, upload timeouts, versioning failures
+  </Card>
+  <Card title="Ring Management" href="/services/object-storage/ring-management" color="#197560">
+    Add capacity and redistribute data after failures
+  </Card>
+  <Card title="Replication" href="/services/object-storage/replication" color="#197560">
+    Monitor and restore data durability
+  </Card>
+  <Card title="Monitoring" href="/services/object-storage/monitoring" color="#197560">
+    Proactively catch issues before they become outages
+  </Card>
+</CardGroup>

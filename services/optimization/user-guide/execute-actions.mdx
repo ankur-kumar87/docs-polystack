@@ -1,0 +1,167 @@
+---
+title: "Execute Actions"
+description: "Execute approved Xloud Optimization action plans — trigger live migrations, monitor execution progress, and verify optimization outcomes."
+sidebarTitle: "Execute Actions"
+---
+
+## Overview
+
+After reviewing and approving an action plan, you execute it to trigger the live
+migrations. Actions execute sequentially in priority order — each migration must complete
+before the next begins. Live migrations are non-disruptive for running instances: the
+workload continues serving requests while its memory state is transferred to the
+destination host. Plan execution can be cancelled at any time — in-progress migrations
+complete, pending actions are halted.
+
+<Note>
+  **Prerequisites**
+  - An action plan in `RECOMMENDED` or `PENDING` state
+  - All compute hosts with sufficient capacity to accept migrating instances
+  - Shared storage (Xloud Distributed Storage) for all instances in the plan
+</Note>
+
+---
+
+## Execute an Action Plan
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Open the action plan" icon="compass">
+        Navigate to **Optimization → Action Plans** and click the plan name.
+      </Step>
+      <Step title="Start the action plan" icon="circle-check">
+        If the plan state is `RECOMMENDED`, click **Start** first.
+      </Step>
+      <Step title="Execute" icon="play">
+        Click **Start**. The plan state transitions to `ONGOING`.
+
+        Action statuses update in real time:
+
+        | Status | Meaning |
+        |--------|---------|
+        | `PENDING` | Action queued |
+        | `ONGOING` | Migration in progress |
+        | `SUCCEEDED` | Action completed |
+        | `FAILED` | Action failed — execution halts |
+        | `CANCELLED` | Execution cancelled before this action ran |
+      </Step>
+      <Step title="Monitor completion" icon="activity">
+        Watch the action list update as each migration completes. The plan state changes
+        to `SUCCEEDED` when all actions finish.
+
+        <Check>Plan state is `SUCCEEDED` and all actions show `SUCCEEDED`.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    <Steps titleSize="h3">
+      <Step title="Execute the plan" icon="play">
+        ```bash title="Start action plan"
+        watcher actionplan start <action-plan-uuid>
+        ```
+      </Step>
+      <Step title="Monitor plan progress" icon="clock">
+        ```bash title="Check plan state"
+        watcher actionplan show <action-plan-uuid> \
+          -f value -c state
+        ```
+      </Step>
+      <Step title="Watch individual actions" icon="eye">
+        ```bash title="List action states"
+        watcher action list \
+          --action-plan <action-plan-uuid> \
+          -f table -c uuid -c action_type -c state
+        ```
+      </Step>
+      <Step title="Verify completion" icon="circle-check">
+        ```bash title="Confirm all actions succeeded"
+        watcher actionplan show <action-plan-uuid> \
+          -f value -c state
+        ```
+
+        Expected: `SUCCEEDED`
+
+        <Check>Plan state is `SUCCEEDED` and migrations are complete.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+</Tabs>
+
+---
+
+## Verify Post-Execution Placement
+
+After execution, verify that instances have been redistributed as expected.
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    Navigate to **Compute > Hypervisors** (admin view) to view the updated host utilization.
+    Compare the host instance counts and resource utilization before and after execution.
+
+    <Check>Previously underutilized hosts now show reduced instance counts.</Check>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Check hypervisor utilization"
+    openstack hypervisor list --long
+    ```
+
+    ```bash title="Verify instance placement"
+    openstack server list --all \
+      -f table -c ID -c Name -c Status -c "OS-EXT-SRV-ATTR:host"
+    ```
+
+    Compare `running_vms` and `memory_mb_used` against pre-execution values.
+
+    <Check>Host utilization is more balanced and the active host footprint is reduced.</Check>
+  </Tab>
+</Tabs>
+
+---
+
+## Cancel Execution Mid-Plan
+
+If a plan needs to be stopped after execution has started:
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    On the action plan detail page, click **Cancel**. The in-progress migration
+    completes; all pending actions are marked `CANCELLED`.
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Cancel a running action plan"
+    watcher actionplan cancel <action-plan-uuid>
+    ```
+
+    ```bash title="Verify cancellation"
+    watcher actionplan show <action-plan-uuid> \
+      -f value -c state
+    ```
+
+    Expected: `CANCELLED`
+  </Tab>
+</Tabs>
+
+<Tip>
+  After cancellation, run a new audit to generate an updated action plan that reflects
+  the current (partially optimized) cluster state.
+</Tip>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Audit History" href="/services/optimization/user-guide/audit-history" color="#197560">
+    Review the completed audit and its execution results over time.
+  </Card>
+  <Card title="Action Plans" href="/services/optimization/user-guide/action-plans" color="#197560">
+    Review the action plan detail and individual action outcomes.
+  </Card>
+  <Card title="Troubleshooting" href="/services/optimization/user-guide/troubleshooting" color="#197560">
+    Resolve failed actions and migration errors.
+  </Card>
+  <Card title="Run an Audit" href="/services/optimization/user-guide/run-audit" color="#197560">
+    Run another audit to continue optimization after the current plan completes.
+  </Card>
+</CardGroup>

@@ -1,0 +1,270 @@
+---
+title: "vTPM and Secure Boot"
+description: "Enable Virtual TPM and UEFI Secure Boot on an instance from the Create Instance wizard — for BitLocker, LUKS, measured boot, and Windows 11 workloads."
+sidebarTitle: "vTPM & Secure Boot"
+---
+
+## Overview
+
+When you launch an instance, you can attach a **Virtual TPM (vTPM)** device and enforce
+**UEFI Secure Boot** directly from the launch wizard. These options harden the guest
+against bootloader tampering, unlock BitLocker / LUKS disk encryption, and satisfy the
+hardware requirements for modern guest operating systems such as Windows 11.
+
+<Warning>
+  **Both vTPM and Secure Boot require the Xloud Key Management service (Xloud KMS)** to
+  be enabled on the cluster. When Xloud KMS is not available, both checkboxes are
+  disabled in the launch wizard with the hint *"Key management service is not enabled.
+  Ask your administrator to enable it before using vTPM or Secure Boot."*
+</Warning>
+
+<Note>
+  **Prerequisites**
+  - An active image in the Xloud Image Service (UEFI-capable for Secure Boot)
+  - A flavor appropriate for your workload
+  - **Xloud KMS** enabled on the cluster
+  - For Secure Boot: a guest image that ships signed bootloaders and kernel modules
+</Note>
+
+---
+
+## Video Walkthrough
+
+<iframe
+  className="w-full aspect-video rounded-xl"
+  src="https://www.youtube.com/embed/q75rpH0iwvs"
+  title="How to Enable vTPM and Secure Boot on Xloud"
+  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+  allowFullScreen
+></iframe>
+
+---
+
+## Where to Find These Options
+
+Both settings live in the **Create Instance** wizard at:
+
+**Compute → Instances → Create Instance → Step 3 (System Config) → Advanced Options**
+
+<Steps titleSize="h3">
+  <Step title="Start Create Instance" icon="server">
+    From the Xloud Dashboard, go to **Compute → Instances** and click **Create Instance**.
+  </Step>
+  <Step title="Complete Base Config and Network Config" icon="network">
+    Pick the image or boot source, flavor, and networks in the first two wizard steps.
+  </Step>
+  <Step title="Open Advanced Options in System Config" icon="settings">
+    In **Step 3 — System Config**, scroll down and click **Advanced Options** to expand
+    the additional settings panel. **Virtual TPM** and **Secure Boot** appear as
+    checkboxes near the bottom of this panel.
+  </Step>
+</Steps>
+
+<Info>
+  If Xloud KMS is disabled, both the **Virtual TPM** and **Secure Boot** checkboxes are
+  grayed out. Contact your administrator and point them at the **Key Manager** service
+  setup.
+</Info>
+
+---
+
+## Virtual TPM (vTPM)
+
+A Virtual TPM emulates a hardware Trusted Platform Module inside the instance. It enables
+measured boot, stores disk-encryption keys securely (BitLocker, LUKS with TPM unsealing),
+and satisfies TPM-based attestation requirements. The per-instance TPM state is protected
+by a key managed by Xloud KMS.
+
+### Enabling vTPM
+
+<Steps titleSize="h3">
+  <Step title="Tick Virtual TPM" icon="shield-check">
+    In the Advanced Options panel, select the **Virtual TPM** checkbox
+    (*"Attach a virtual TPM device to this instance"*). Two new fields appear.
+  </Step>
+  <Step title="Choose a vTPM Version" icon="tag">
+    Pick the TPM specification version from the dropdown:
+
+    | Option | When to use |
+    |--------|-------------|
+    | **TPM 2.0** | Recommended default. Required for Windows 11, modern Linux distributions |
+    | **TPM 1.2** | Legacy compatibility only — older operating systems |
+  </Step>
+  <Step title="Choose a vTPM Model" icon="cpu">
+    Pick the virtual TPM hardware interface:
+
+    | Option | When to use |
+    |--------|-------------|
+    | **Auto** | Default. The platform picks the best interface for the chosen version |
+    | **tpm-crb** | TPM 2.0 guests (Windows 11, RHEL 9+, Ubuntu 22.04+). Recommended for modern workloads |
+    | **tpm-tis** | Legacy TPM 1.2 interface for older operating systems |
+
+    <Tip>Leave the model as **Auto** unless the guest OS requires a specific TPM interface.</Tip>
+  </Step>
+</Steps>
+
+<Check>
+  After the instance boots, verify the vTPM is present inside the guest:
+  - **Linux**: `ls /dev/tpm0` and `tpm2_getcap properties-fixed`
+  - **Windows**: open **tpm.msc** — the management console should show a TPM manufactured
+    by `swtpm` with spec version 2.0
+</Check>
+
+### What vTPM Enables
+
+<CardGroup cols={2}>
+  <Card title="BitLocker on Windows" icon="lock" color="#197560">
+    Windows 10 / 11 can use the vTPM to seal BitLocker keys, so the disk only decrypts on
+    the same virtual machine.
+  </Card>
+  <Card title="LUKS on Linux" icon="key" color="#197560">
+    Linux guests can store LUKS unlock keys in the vTPM with tools like
+    `clevis tpm2 bind` — no boot-time passphrase prompt.
+  </Card>
+  <Card title="Measured Boot" icon="list-checks" color="#197560">
+    The vTPM records a cryptographic measurement of the boot chain, enabling remote
+    attestation of the guest's boot integrity.
+  </Card>
+  <Card title="Windows 11 Hardware Requirements" icon="monitor" color="#197560">
+    Windows 11 installation requires TPM 2.0 — vTPM satisfies this without any physical
+    hardware.
+  </Card>
+</CardGroup>
+
+---
+
+## UEFI Secure Boot
+
+Secure Boot is a UEFI firmware feature that prevents unsigned bootloaders, kernels, and
+drivers from loading — shutting down rootkits and bootkits at the earliest stage of the
+boot process. Xloud stores the per-instance Secure Boot variables in Xloud KMS so they
+persist across reboots and live migrations.
+
+### Enabling Secure Boot
+
+<Steps titleSize="h3">
+  <Step title="Tick Secure Boot" icon="shield">
+    In the Advanced Options panel, select the **Secure Boot** checkbox
+    (*"Require Secure Boot for this instance (UEFI + q35)"*). A **Secure Boot Mode**
+    dropdown appears.
+
+    <Info>
+      Selecting Secure Boot automatically configures the instance to use **UEFI firmware**
+      and the **q35 machine type** — you do not need to set these manually.
+    </Info>
+  </Step>
+  <Step title="Choose a Secure Boot Mode" icon="sliders">
+    Pick how strict the enforcement should be:
+
+    | Mode | Behavior |
+    |------|----------|
+    | **Required** | The instance **will not start** if Secure Boot cannot be activated — for example, if the image is not UEFI-capable |
+    | **Optional** | Secure Boot is used when available but falls back gracefully if the image or hypervisor cannot support it |
+
+    <Tip>Use **Required** for production Windows 11 and hardened Linux images. Use **Optional** while you are validating image compatibility.</Tip>
+  </Step>
+</Steps>
+
+<Check>
+  After boot, confirm Secure Boot is active inside the guest:
+  - **Linux**: `mokutil --sb-state` returns `SecureBoot enabled`
+  - **Windows**: open **msinfo32** — under System Summary, **Secure Boot State** reads `On`
+</Check>
+
+### Image Requirements
+
+For Secure Boot to succeed, the guest image must:
+
+- Be **UEFI-compatible** (not BIOS-only)
+- Ship with bootloaders and kernels signed by a Certificate Authority recognized by the
+  UEFI firmware (Microsoft UEFI CA for most Windows and Linux distributions)
+- Use a recent kernel and `shim` / `grub` version with Secure Boot enforcement enabled
+
+Modern stock images (Windows Server 2019+, Ubuntu 20.04+, RHEL 8+, openSUSE Leap 15+)
+meet these requirements by default.
+
+---
+
+## Using vTPM and Secure Boot Together
+
+You can enable both features on the same instance — this is the **recommended configuration**
+for Windows 11, hardened Linux workloads, and any guest that uses TPM-backed disk encryption
+with measured boot.
+
+<CardGroup cols={2}>
+  <Card title="Windows 11 hardened VM" icon="monitor" color="#197560">
+    vTPM 2.0 (tpm-crb) + Secure Boot (Required). BitLocker auto-seals keys to the vTPM
+    and Secure Boot blocks unsigned drivers.
+  </Card>
+  <Card title="Hardened Linux VM" icon="terminal" color="#197560">
+    vTPM 2.0 (tpm-crb) + Secure Boot (Required) + LUKS with `clevis tpm2 bind`.
+    Full-disk encryption unlocks automatically on the correct hypervisor only.
+  </Card>
+</CardGroup>
+
+---
+
+## Live Migration Compatibility
+
+Both vTPM state and Secure Boot variables are protected by a key managed by Xloud KMS
+and are transferred between hypervisors during **live migration** with no operator
+intervention. You can move a vTPM-enabled Windows 11 or hardened Linux VM between
+compute hosts without shutting it down and without re-registering the TPM inside the
+guest.
+
+<Info>**Xloud-Developed** — Live migration of vTPM-enabled instances with automatic key transfer is developed by Xloud and ships with XAVS / XPCI.</Info>
+
+---
+
+## Confirm Config Summary
+
+When you reach **Step 4 — Confirm Config**, the review pane shows the vTPM and Secure
+Boot settings you selected:
+
+| Field | Example value |
+|-------|--------------|
+| **Virtual TPM** | `Enabled — TPM 2.0 (auto)` — or `(tpm-crb)` / `(tpm-tis)` if you picked a specific model |
+| **Secure Boot** | `Enabled (required, UEFI + q35)` — or `(optional, UEFI + q35)` |
+
+Click the **System Config** section heading to go back and adjust any setting before
+launching.
+
+---
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="The vTPM or Secure Boot checkbox is grayed out" icon="circle-x">
+    Xloud KMS is not enabled on the cluster. Ask your administrator to enable the Key
+    Manager service in XDeploy, then refresh the wizard.
+  </Accordion>
+  <Accordion title="Instance fails to start with Secure Boot = Required" icon="triangle-alert">
+    The image is not UEFI-capable or does not ship signed bootloaders. Either switch the
+    mode to **Optional**, or rebuild the image with a UEFI-compatible distribution.
+  </Accordion>
+  <Accordion title="Windows 11 installer does not detect a TPM" icon="monitor">
+    The vTPM was not enabled at launch. You cannot add vTPM to an existing instance —
+    create a new instance with vTPM ticked, or migrate the workload.
+  </Accordion>
+  <Accordion title="BitLocker or LUKS cannot unseal the key after migration" icon="lock">
+    Xloud transfers the encrypted vTPM state with the instance. If unsealing fails,
+    verify Xloud KMS is healthy on both source and destination hosts and that the
+    instance's TPM secret still exists in the key manager.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Next Steps
+
+<CardGroup cols={3}>
+  <Card title="Create Instance" href="/services/compute/launch-instance" color="#197560">
+    Full 4-step wizard walkthrough for launching instances
+  </Card>
+  <Card title="Security Hardening" href="/services/compute/security-hardening" color="#197560">
+    Additional hypervisor-level hardening for sensitive workloads
+  </Card>
+  <Card title="Key Manager" href="/services/key-manager" color="#197560">
+    Xloud KMS setup and secret lifecycle
+  </Card>
+</CardGroup>

@@ -1,0 +1,104 @@
+---
+title: "Release Notes & Changelog"
+description: "Version history, release notes, and changelog for XAVS, XPCI, XDeploy, and XOS."
+icon: "newspaper"
+sidebarTitle: "Release Notes"
+mode: "wide"
+---
+
+Release history and version notes for all Xloud products.
+
+---
+
+## Current Releases
+
+| Product | Version | Status | Release Date |
+|---------|---------|--------|-------------|
+| **XAVS** | 2025.1 LTS | Stable | March 2026 |
+| **XPCI** | 2025.1 | Stable | March 2026 |
+| **XDeploy** | 2025.1-beta | Beta | March 2026 |
+| **XOS** | 3.1 | Stable | March 2026 |
+
+---
+
+## XAVS 2025.1 LTS
+
+<Update label="March 2026" description="XAVS 2025.1 LTS — General Availability" tags={["Stable", "LTS"]}>
+  Long-term support release for the Xloud Advanced Virtualization Suite.
+
+  | Category | What's included |
+  |----------|----------------|
+  | Compute | Instance lifecycle improvements, scheduling enhancements, resource management |
+  | Storage | Multi-tier storage support with automated data placement |
+  | Networking | Enhanced network provisioning, security group management |
+  | Security | Strengthened identity, access control, encryption capabilities |
+  | Management | Updated resource optimization and operational monitoring |
+
+  <Note>XAVS 2025.1 LTS receives security patches and critical bug fixes for **3 years** from release date.</Note>
+</Update>
+
+---
+
+## XPCI 2025.1
+
+<Update label="March 2026" description="XPCI 2025.1 — General Availability" tags={["Stable"]}>
+  Complete private cloud infrastructure platform with all enterprise services.
+
+  | Category | What's included |
+  |----------|----------------|
+  | Compute | Virtual machine management, live migration, vertical scaling |
+  | Storage | Block storage, object storage, software-defined storage |
+  | Networking | SDN, load balancing, DNS, floating IPs |
+  | Identity | Multi-domain authentication, federation, RBAC |
+  | Security | Key management, encryption, vTPM, compliance |
+  | Operations | Monitoring, disaster recovery, cluster optimization |
+  | Kubernetes | Container orchestration as a service |
+  | High Availability | Instance HA with automatic failover |
+</Update>
+
+---
+
+## XDeploy 2025.1-beta
+
+<Update label="March 2026" description="XDeploy 2025.1-beta" tags={["Beta"]}>
+  Deployment and lifecycle management tool for Xloud infrastructure.
+
+  | Category | What's included |
+  |----------|----------------|
+  | Cluster deployment | Guided wizard for initial cluster setup and node provisioning |
+  | Configuration | Centralized service configuration with validation and templating |
+  | Lifecycle | Start, stop, upgrade, and reconfigure services across the cluster |
+  | Licensing | Built-in activation and validation via [license.xloud.tech](https://license.xloud.tech) |
+
+  <Warning>XDeploy 2025.1-beta is a pre-release version. Some features may change before general availability.</Warning>
+</Update>
+
+---
+
+## XOS 3.1
+
+<Update label="March 2026" description="XOS 3.1 — Stable Release" tags={["Stable"]}>
+  Purpose-built operating system for Xloud cluster nodes.
+
+  | Category | What's included |
+  |----------|----------------|
+  | Base OS | Updated kernel, system libraries, package repositories |
+  | Pre-configured | All required runtime dependencies installed and configured |
+  | Security | Hardened OS defaults, SSH configuration, system-level protections |
+  | Deployment | Integrated tooling for cluster bootstrapping and node enrollment |
+
+  <Tip>XOS is distributed as a bootable ISO. Existing nodes can be upgraded in-place using XDeploy.</Tip>
+</Update>
+
+---
+
+## Support & Lifecycle
+
+| Product | Support Model | Duration |
+|---------|--------------|----------|
+| **XAVS LTS** | Security patches + critical bug fixes | 3 years |
+| **XPCI** | Security patches + critical bug fixes | 3 years |
+| **XDeploy** | Active development | Until GA release |
+| **XOS** | Security patches + driver updates | 3 years |
+
+<Note>For support inquiries, contact [support@xloud.tech](mailto:support@xloud.tech).</Note>

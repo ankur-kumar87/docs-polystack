@@ -1,0 +1,198 @@
+---
+title: "Instance HA Security"
+description: "Secure Xloud Instance HA deployments — RBAC policy enforcement, service account credential management, IPMI credential handling, and audit logging."
+sidebarTitle: "Security"
+---
+
+## Overview
+
+Instance HA operates with elevated compute privileges — it can initiate instance
+evacuations, modify host states, and access IPMI credentials stored in the database.
+Proper security configuration limits the blast radius of a compromised service account,
+prevents unauthorized recovery triggers, and protects sensitive infrastructure credentials.
+
+<Warning>
+  Incorrectly configured RBAC policies may allow project users to trigger instance
+  evacuations across other projects. Review the default policy rules before production deployment.
+</Warning>
+
+---
+
+## RBAC Policy Enforcement
+
+Instance HA enforces role-based access control via the Oslo policy engine. Default roles:
+
+| Role | Permissions |
+|------|-------------|
+| `admin` | Full access — create/modify/delete segments, approve and trigger recovery |
+| `member` | Read access to notifications and segment listings |
+| `reader` | Read-only access to all Instance HA resources |
+
+### Review Default Policies
+
+```bash title="List effective policies"
+docker exec masakari_api \
+  oslopolicy-list-redundant --config-file /etc/masakari/masakari.conf
+```
+
+### Restrict Segment Management
+
+To restrict segment creation and deletion to cloud administrators only, verify the
+default policy rules are not overridden in your deployment:
+
+```bash title="Check policy overrides"
+cat /etc/xavs/instance-ha/policy.yaml
+```
+
+If the file does not exist or is empty, the built-in defaults apply. The built-in
+defaults correctly restrict destructive operations to the `admin` role.
+
+---
+
+## Service Account Credentials
+
+Instance HA authenticates to Xloud Identity and the Compute API using a dedicated
+`masakari` service account. Manage these credentials securely.
+
+<AccordionGroup>
+  <Accordion title="Rotate service account password" icon="rotate" defaultOpen>
+    <Steps titleSize="h3">
+      <Step title="Generate a new password" icon="key">
+        ```bash title="Generate secure password"
+        openssl rand -base64 32
+        ```
+      </Step>
+      <Step title="Update the Identity service" icon="fingerprint">
+        ```bash title="Update service account password"
+        openstack user set --password <new-password> masakari
+        ```
+      </Step>
+      <Step title="Update the configuration file" icon="file">
+        ```bash title="Edit configuration"
+        vi /etc/xavs/instance-ha/instance-ha.conf
+        ```
+
+        Update the `[keystone_authtoken]` section:
+        ```ini
+        [keystone_authtoken]
+        password = <new-password>
+        ```
+      </Step>
+      <Step title="Restart the service" icon="rotate">
+        ```bash title="Restart Instance HA containers"
+        docker restart masakari_api masakari_engine masakari_hostmonitor
+        ```
+
+        <Check>Service restarts without authentication errors in logs.</Check>
+      </Step>
+    </Steps>
+  </Accordion>
+
+  <Accordion title="Minimum required roles for service account" icon="shield-check">
+    The `masakari` service account requires the following minimum roles:
+
+    | Service | Role | Purpose |
+    |---------|------|---------|
+    | Xloud Compute | `admin` | Initiate evacuations, query host state |
+    | Xloud Identity | `service` | Authenticate API tokens |
+
+    Do not grant broader roles than required. The `admin` role on Compute is necessary
+    for evacuation operations and cannot be reduced.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## IPMI Credential Security
+
+IPMI credentials are stored in the Instance HA database within the `hosts.control_attributes`
+column. These credentials grant physical access to compute hardware.
+
+<AccordionGroup>
+  <Accordion title="Database access restriction" icon="database" defaultOpen>
+    Limit database access to the Instance HA service account only:
+
+    ```sql title="Grant minimum database privileges"
+    GRANT SELECT, INSERT, UPDATE, DELETE ON masakari.* TO 'masakari'@'%';
+    REVOKE ALL ON masakari.* FROM 'root'@'%';
+    ```
+
+    Verify no other service accounts have access to the `masakari` database.
+  </Accordion>
+  <Accordion title="Disable debug logging in production" icon="eye-off">
+    Debug logging may write `control_attributes` contents (including IPMI passwords)
+    to log files. Ensure debug logging is disabled:
+
+    ```ini title="/etc/xavs/instance-ha/instance-ha.conf"
+    [DEFAULT]
+    debug = False
+    ```
+
+    ```bash title="Verify debug is disabled"
+    grep -i debug /etc/xavs/instance-ha/instance-ha.conf
+    ```
+
+    <Warning>
+      Enabling `debug = True` in production exposes IPMI credentials in log output.
+      Never enable debug logging on production controllers without log file access controls.
+    </Warning>
+  </Accordion>
+  <Accordion title="Key Management integration (advanced)" icon="key">
+    For the highest security posture, manage IPMI credentials using Xloud Key Management
+    (Barbican) and inject them into Instance HA via a custom notification driver that
+    fetches credentials at runtime rather than storing them in the database.
+
+    This requires a custom `control_attributes` resolver plugin — consult the
+    [Instance HA architecture](/services/instance-ha/admin-guide/architecture) page
+    for the plugin interface documentation.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Network Access Controls
+
+<CardGroup cols={2}>
+  <Card title="IPMI Network Isolation" icon="network" color="#197560">
+    Place IPMI management interfaces on a dedicated management VLAN. Only the Instance
+    HA controller should have network access to IPMI interfaces (UDP port 623).
+  </Card>
+  <Card title="API Endpoint Protection" icon="shield-check" color="#197560">
+    The Instance HA API (port 15868) should only be accessible from trusted management
+    networks. Do not expose it to project tenant networks.
+  </Card>
+</CardGroup>
+
+---
+
+## Audit Logging
+
+All Instance HA operations are logged with the requesting user's token identity.
+Retain API access logs for at least 90 days to support incident investigations.
+
+```bash title="Check API access logs"
+docker logs masakari_api | grep -E "POST|DELETE|PUT"
+```
+
+```bash title="Review recent notification events"
+openstack notification list --limit 100 -f json
+```
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Engine Configuration" href="/services/instance-ha/admin-guide/engine-config" color="#197560">
+    Tune recovery parameters including debug logging settings.
+  </Card>
+  <Card title="Troubleshooting" href="/services/instance-ha/admin-guide/troubleshooting" color="#197560">
+    Diagnose authentication failures and policy enforcement issues.
+  </Card>
+  <Card title="Architecture" href="/services/instance-ha/admin-guide/architecture" color="#197560">
+    Review the full Instance HA deployment topology and trust boundaries.
+  </Card>
+  <Card title="Notification Drivers" href="/services/instance-ha/admin-guide/notification-drivers" color="#197560">
+    Secure the webhook notification endpoint with appropriate authentication.
+  </Card>
+</CardGroup>

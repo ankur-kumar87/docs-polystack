@@ -1,0 +1,265 @@
+---
+title: "Block Storage Troubleshooting (Admin)"
+description: "Diagnose block storage service issues — volume service failures, backend connectivity, stuck migrations, and encryption errors."
+sidebarTitle: "Troubleshooting"
+---
+
+import AdminWarning from '/snippets/admin-warning.mdx';
+import CliAuth from '/snippets/cli-auth.mdx';
+
+## Overview
+
+This guide covers service-level troubleshooting for Xloud Block Storage administrators. It addresses issues with the volume service, scheduler, backend connectivity, and data operations that are not visible to or resolvable by end users.
+
+<AdminWarning />
+
+<Note>
+  **Before troubleshooting**
+  - Authenticate with admin credentials: `source openrc.sh`
+  - Access service logs via XDeploy for detailed error messages
+  - For critical production issues, contact [Xloud Support](mailto:support@xloud.tech)
+    with the affected volume IDs and log excerpts
+</Note>
+
+---
+
+## Service Health Checks
+
+Run these commands first to establish the overall service state:
+
+```bash title="Check all volume service states"
+openstack volume service list
+```
+
+```bash title="List all backend pools and capacity"
+openstack volume backend pool list --long
+```
+
+```bash title="Check API endpoint health"
+openstack volume list --all-projects --limit 1
+```
+
+All services should show `state = up` and `status = enabled`. Any service showing
+`down` requires immediate investigation.
+
+---
+
+## Volume Service Issues
+
+<AccordionGroup>
+  <Accordion title="Volume service is 'down'" icon="circle-x">
+    **Symptom**: `openstack volume service list` shows one or more services with
+    state `down`.
+
+    **Cause**: The volume service container has stopped, lost message queue connectivity,
+    or the storage backend driver failed to initialize.
+
+    **Resolution**:
+
+    1. Access the affected node through XDeploy and check the volume service container:
+       ```bash title="Check container status (on storage node)"
+       docker ps | grep cinder
+       ```
+
+    2. Review container logs for initialization errors:
+       Access logs via XDeploy → **Logs → cinder-volume** on the affected node.
+
+    3. Common causes:
+       - Message queue (RabbitMQ) connectivity lost — check network and RabbitMQ status
+       - Database connection failure — verify MariaDB/Galera cluster health
+       - Backend driver error (keyring file missing, pool name wrong) — review driver-specific log entries
+
+    4. After resolving the root cause, restart the volume service via XDeploy.
+
+    <Tip>
+      Run `openstack volume service list` 60 seconds after restarting to confirm
+      the service re-registers with the scheduler.
+    </Tip>
+  </Accordion>
+
+  <Accordion title="Scheduler fails to place volumes — 'No valid backend'" icon="triangle-alert">
+    **Symptom**: Volume creation fails with "No valid host was found" or scheduler
+    filter messages appear in the logs.
+
+    **Cause**: All backends were eliminated by the scheduler filters. Common causes:
+    - All backends are at capacity
+    - The requested volume type's `volume_backend_name` does not match any active backend
+    - The requested availability zone has no active backend
+
+    **Resolution**:
+    ```bash title="Verify backend capacity"
+    openstack volume backend pool list --long
+    ```
+
+    ```bash title="Verify volume type extra specs"
+    openstack volume type show <type-name> -c extra_specs
+    ```
+
+    Confirm that `volume_backend_name` in the type's extra specs matches the `name`
+    column in the backend pool list.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Backend Connectivity Issues
+
+<AccordionGroup>
+  <Accordion title="Backend reporting zero or unknown capacity" icon="database">
+    **Symptom**: `openstack volume backend pool list` shows `free_capacity_gb = 0`
+    or the backend pool does not appear in the list.
+
+    **Cause**: The volume service cannot connect to the storage cluster to query capacity.
+
+    **Resolution**:
+
+    1. Verify storage cluster health from the storage administration interface.
+    2. Verify the authentication keyring file is present on the volume service node:
+       ```bash title="Check keyring file (on storage node)"
+       ls -la /etc/ceph/ceph.client.xloud-volume.keyring
+       ```
+    3. Verify the pool name matches the configured backend:
+       ```bash title="List storage pools"
+       # Run on a node with storage admin access
+       # (command varies by storage backend)
+       ```
+    4. Restart the volume service via XDeploy after resolving connectivity issues.
+  </Accordion>
+
+  <Accordion title="Volume creation succeeds but attachment fails" icon="link">
+    **Symptom**: Volumes reach `available` status but fail when attaching to instances.
+    Error typically references connection initialization or iSCSI/RBD target.
+
+    **Cause**: The compute node cannot connect to the storage backend to initialize
+    the volume attachment. Common causes:
+    - Missing storage client package on the compute node
+    - Authentication keyring not present on the compute node
+    - Network routing between compute and storage nodes is blocked
+
+    **Resolution**:
+    1. Verify the storage client package is installed on the compute node
+       (e.g., `librbd-dev`, `ceph-common`, or iSCSI initiator packages)
+    2. Verify the keyring file is present on the compute node
+    3. Test connectivity from the compute node to the storage cluster monitors
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Data Operation Issues
+
+<AccordionGroup>
+  <Accordion title="Volume migration stuck in 'migrating' status" icon="move">
+    **Symptom**: Volume status remains `migrating` for more than 30 minutes with no
+    completion.
+
+    **Resolution**:
+    ```bash title="Check migration status"
+    openstack volume show <volume-id> -c migration_status -c status
+    ```
+
+    Check volume service logs on both source and destination nodes via XDeploy for
+    migration-related errors.
+
+    If permanently stuck and data integrity has been verified:
+    ```bash title="Reset volume state (admin only)"
+    openstack volume set --state available <volume-id>
+    ```
+
+    <Warning>
+      Resetting the state does not undo a partial migration. Verify data integrity on
+      both source and destination backends before resetting. Consult your storage
+      backend documentation for checking partial migration state.
+    </Warning>
+  </Accordion>
+
+  <Accordion title="Snapshot stuck in 'deleting' state" icon="clock">
+    **Symptom**: A snapshot remains in `deleting` state for an extended period.
+
+    **Cause**: The backend could not complete the deletion — typically because dependent
+    volumes still reference the snapshot, or the storage cluster is degraded.
+
+    **Resolution**:
+    1. Check for volumes created from the snapshot:
+       ```bash title="List dependent volumes"
+       openstack volume list --all-projects
+       ```
+       Look for volumes with `source_volid` matching the snapshot.
+    2. Delete dependent volumes first, then retry the snapshot deletion.
+    3. If the storage cluster is degraded, restore cluster health before retrying.
+  </Accordion>
+
+  <Accordion title="Encryption errors on volume attach" icon="lock">
+    **Symptom**: Encrypted volume attachment fails with a key management or dm-crypt error.
+
+    **Diagnosis**:
+    1. Verify the Key Management service is running and accessible from the compute node:
+       ```bash title="Check key manager connectivity"
+       openstack secret list
+       ```
+    2. Confirm the compute service on the affected node can reach the Key Management
+       service API (network path, port 9311).
+    3. Check compute service logs on the affected node via XDeploy for messages
+       containing `barbican`, `secret`, or `crypt`.
+
+    <Warning>
+      Encryption key loss means the volume data is permanently inaccessible. Ensure
+      the Key Management service is in a high-availability configuration and has a
+      database backup before enabling volume encryption in production.
+    </Warning>
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Recovering Orphaned Volumes
+
+Volumes can become orphaned (in-use with no valid attachment) when compute instances
+are force-deleted without detaching their volumes first:
+
+```bash title="Find orphaned volumes (in-use with no valid instance)"
+openstack volume list --all-projects --status in-use
+```
+
+For each result, verify the attached instance still exists:
+```bash title="Check attached instance"
+openstack server show <instance-id>
+```
+
+If the instance no longer exists, reset the volume state:
+```bash title="Reset orphaned volume to available"
+openstack volume set --state available <volume-id>
+```
+
+---
+
+## Diagnostic Commands Reference
+
+| Command | Purpose |
+|---------|---------|
+| `openstack volume service list` | Check all service states |
+| `openstack volume backend pool list --long` | Verify backend capacity |
+| `openstack volume list --all-projects --status error` | Find volumes in error state |
+| `openstack volume snapshot list --all-projects` | Audit all snapshots |
+| `openstack quota list --detail` | Check quota usage across projects |
+| `openstack volume show <id> -c migration_status` | Check migration state |
+| `openstack volume set --state <state> <id>` | Force-reset volume state (admin) |
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="User Troubleshooting" href="/services/storage/troubleshooting" color="#197560">
+    Common issues from the user perspective
+  </Card>
+  <Card title="Storage Backends" href="/services/storage/storage-backends" color="#197560">
+    Review backend configuration and connectivity requirements
+  </Card>
+  <Card title="Architecture" href="/services/storage/architecture" color="#197560">
+    Understand service components to narrow down failure domains
+  </Card>
+  <Card title="Contact Support" href="mailto:support@xloud.tech" color="#197560">
+    Open a support ticket for unresolved production issues
+  </Card>
+</CardGroup>

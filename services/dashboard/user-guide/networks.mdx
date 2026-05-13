@@ -1,0 +1,66 @@
+---
+title: "Manage Networks"
+description: "Create and configure virtual networks, subnets, routers, and floating IPs through the Xloud Dashboard."
+sidebarTitle: "Networks"
+---
+
+## Overview
+
+The **Network** sidebar section provides pages for: Networks, Ports, QoS Policies,
+Routers, Floating IPs, Topology, Load Balancers, Certificates, VPNs, Security Groups,
+Firewalls, DNS Zones, and DNS Reverse.
+
+---
+
+## Create a Network
+
+Navigate to **Network > Networks** and click **Create Network**. The modal form includes:
+
+| Field | Description |
+|-------|-------------|
+| **Network Name** | Display name (required) |
+| **Description** | Optional notes |
+| **Available Zone** | Zone selection |
+| **MTU** | Maximum transmission unit (68-9000) |
+| **Create Subnet** | Toggle to add a subnet with the network |
+| **Port Security Enabled** | Enable/disable port security (default: on) |
+
+When **Create Subnet** is checked, additional fields appear: Subnet Name, IP Version
+(IPv4/IPv6), CIDR, plus advanced options (Gateway, DHCP, DNS, Allocation Pools, Host Routes).
+
+<Note>
+  For the complete field reference, see [Create a Network](/services/networking/create-network).
+</Note>
+
+---
+
+## Network Topology
+
+Navigate to **Network > Topology** for a visual graph showing all networks, routers,
+and instances in your project. Click elements to view details. Use the controls to
+toggle instance visibility, and create resources directly from the topology view.
+
+---
+
+## Key Pages
+
+<CardGroup cols={2}>
+  <Card title="Create a Network" href="/services/networking/create-network" color="#197560">
+    Full network creation reference
+  </Card>
+  <Card title="Routers" href="/services/networking/routers" color="#197560">
+    Create routers and manage gateways
+  </Card>
+  <Card title="Floating IPs" href="/services/networking/floating-ips" color="#197560">
+    Allocate and associate public IPs
+  </Card>
+  <Card title="Security Groups" href="/services/networking/security-groups" color="#197560">
+    Create firewall rules for instances
+  </Card>
+  <Card title="VPN" href="/services/networking/vpn" color="#197560">
+    IPsec site-to-site VPN tunnels
+  </Card>
+  <Card title="DNS" href="/services/dns/user-guide" color="#197560">
+    Manage DNS zones and records
+  </Card>
+</CardGroup>

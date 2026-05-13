@@ -1,0 +1,264 @@
+---
+title: "Engine Configuration"
+description: "Tune the Xloud Instance HA recovery engine — configure detection timeouts, retry intervals, instance failure behaviour, and service endpoints."
+sidebarTitle: "Engine Configuration"
+---
+
+## Overview
+
+The Instance HA engine processes fault notifications and orchestrates the recovery
+workflow. Its timing and behaviour parameters determine how quickly recovery begins,
+how many retries are attempted, and how edge-case scenarios (instances in ERROR state,
+short-lived faults) are handled. This page documents all key configuration parameters
+and their production recommendations.
+
+<Warning>
+  Engine configuration changes require a service restart. The engine will not process
+  new notifications during the restart window. Schedule configuration changes during
+  low-risk periods.
+</Warning>
+
+---
+
+## Configuration File Location
+
+<Tree>
+  <Tree.Folder name="etc" defaultOpen>
+    <Tree.Folder name="xavs" defaultOpen>
+      <Tree.Folder name="instance-ha" defaultOpen>
+        <Tree.File name="instance-ha.conf — Primary configuration file" />
+      </Tree.Folder>
+    </Tree.Folder>
+  </Tree.Folder>
+</Tree>
+
+Apply changes by restarting the engine container:
+
+```bash title="Restart Instance HA engine"
+docker restart masakari_engine
+```
+
+---
+
+## Core Parameters
+
+### DEFAULT Section
+
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| `host` | `<hostname>` | Service identifier used for distributed locking |
+| `long_rpc_timeout` | `300` | Max seconds to wait for a Compute RPC call |
+| `wait_period_after_service_update` | `180` | Seconds to wait after a host service update before triggering recovery — prevents false alarms from planned restarts |
+| `notification_service_endpoint` | — | External webhook endpoint for incoming notifications |
+
+### [host_failure] Section
+
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| `host_failure_recovery_interval` | `17` | Seconds between recovery retry attempts |
+| `ignore_lease_seconds` | `0` | Seconds after host boot to suppress failure notifications |
+| `evacuate_all_instances` | `True` | Evacuate all instances from failed host, not just those with HA protection |
+
+### [instance_failure] Section
+
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| `recover_ignoring_error_instances` | `False` | Attempt recovery for instances already in `ERROR` state |
+| `recover_instance_failure_method` | `auto` | Recovery method for instance-level faults |
+
+---
+
+## Example Production Configuration
+
+<Tabs>
+  <Tab title="XDeploy" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Enable Host HA" icon="toggle-right">
+        In XDeploy, navigate to **Configuration → Advance Features** and toggle
+        **Enable Host HA** to **Yes**. Click **Save Configuration**.
+
+        <Info>
+          Database connection strings (`[database]`) and Xloud Identity credentials
+          (`[keystone_authtoken]`) are **auto-managed** by XDeploy. Do not edit these
+          sections manually -- they are generated during deployment and kept in sync
+          with the cluster identity service automatically.
+        </Info>
+      </Step>
+      <Step title="Customize engine parameters (optional)" icon="file-code">
+        To tune timing or behaviour parameters beyond the defaults, open
+        **Advanced Configuration** in XDeploy. In the **Service Tree**, select
+        **masakari** and open (or create) `instance-ha.conf`.
+
+        Edit the parameters in the Code Editor:
+
+        ```ini title="Engine parameters in XDeploy Advanced Configuration"
+        [DEFAULT]
+        host = controller-01
+        long_rpc_timeout = 300
+        wait_period_after_service_update = 180
+
+        [host_failure]
+        host_failure_recovery_interval = 17
+        ignore_lease_seconds = 60
+        evacuate_all_instances = True
+
+        [instance_failure]
+        recover_ignoring_error_instances = False
+        recover_instance_failure_method = auto
+        ```
+
+        Click **Save Current File**.
+      </Step>
+      <Step title="Apply changes" icon="play">
+        Navigate to **Operations** and run a **reconfigure** action to apply the
+        updated engine configuration.
+
+        <Check>Engine restarts with the new parameters. Verify via container logs.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    Edit the configuration file directly and restart the engine container:
+
+    ```ini title="/etc/xavs/instance-ha/instance-ha.conf"
+    [DEFAULT]
+    host = controller-01
+    long_rpc_timeout = 300
+    wait_period_after_service_update = 180
+
+    [host_failure]
+    host_failure_recovery_interval = 17
+    ignore_lease_seconds = 60
+    evacuate_all_instances = True
+
+    [instance_failure]
+    recover_ignoring_error_instances = False
+    recover_instance_failure_method = auto
+
+    [database]
+    connection = mysql+pymysql://masakari:password@10.0.1.70/masakari
+
+    [keystone_authtoken]
+    auth_url = http://10.0.1.70:5000/v3
+    project_name = service
+    username = masakari
+    password = <service-account-password>
+    ```
+
+    ```bash title="Restart the engine"
+    docker restart masakari_engine
+    ```
+
+    <Warning>
+      The `[database]` and `[keystone_authtoken]` sections are generated by
+      xavs-ansible during deployment. Edit them only if you are managing the
+      configuration entirely through CLI without XDeploy.
+    </Warning>
+  </Tab>
+</Tabs>
+
+---
+
+## Timing Tuning Guidance
+
+<AccordionGroup>
+  <Accordion title="Reduce false positives from planned restarts" icon="clock" defaultOpen>
+    Increase `wait_period_after_service_update` and `ignore_lease_seconds` to prevent
+    recovery from triggering during planned host reboots:
+
+    ```ini title="Recommended for environments with frequent planned maintenance"
+    [DEFAULT]
+    wait_period_after_service_update = 300
+
+    [host_failure]
+    ignore_lease_seconds = 120
+    ```
+
+    This adds up to 2 minutes of tolerance for hosts coming back online after a reboot
+    before Instance HA declares them permanently failed.
+  </Accordion>
+
+  <Accordion title="Faster recovery for latency-sensitive workloads" icon="zap">
+    Reduce retry intervals for faster recovery at the cost of increased sensitivity
+    to transient network partitions:
+
+    ```ini title="Faster recovery (higher false-positive risk)"
+    [host_failure]
+    host_failure_recovery_interval = 10
+    ignore_lease_seconds = 30
+    ```
+
+    <Warning>
+      Reducing intervals increases the risk of unnecessary evacuations during brief
+      network interruptions. Use conservative values in shared or multi-tenant clusters.
+    </Warning>
+  </Accordion>
+
+  <Accordion title="Enable recovery for instances in ERROR state" icon="circle-x">
+    For environments where instances frequently enter `ERROR` state due to transient
+    issues, enable recovery for error-state instances:
+
+    ```ini title="Recover ERROR-state instances"
+    [instance_failure]
+    recover_ignoring_error_instances = True
+    ```
+
+    This setting is disabled by default because attempting to evacuate an instance
+    that is in `ERROR` due to a configuration issue (rather than a host failure)
+    may repeatedly fail and generate noise in the notification log.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Verify Engine Configuration
+
+```bash title="View active configuration"
+docker exec masakari_engine \
+  python3 -c "from masakari.conf import CONF; CONF(['--config-file', '/etc/masakari/masakari.conf']); print(CONF.long_rpc_timeout)"
+```
+
+```bash title="Check engine logs for configuration errors"
+docker logs masakari_engine | grep -E "ERROR|WARNING|ConfigFileNotFound"
+```
+
+---
+
+## Validation
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    Navigate to **Instance-HA > Notifications (admin view)** after a test event.
+    Verify that recovery workflow timing aligns with the configured parameters.
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Check engine service status"
+    docker ps --filter name=masakari_engine
+    ```
+
+    ```bash title="Confirm engine is processing notifications"
+    docker logs masakari_engine | tail -50
+    ```
+
+    <Check>Engine shows active log output and no configuration-related error messages.</Check>
+  </Tab>
+</Tabs>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Recovery Methods" href="/services/instance-ha/admin-guide/recovery-methods" color="#197560">
+    Configure how instances are evacuated after fault detection.
+  </Card>
+  <Card title="Security" href="/services/instance-ha/admin-guide/security" color="#197560">
+    Manage service credentials and RBAC policies for Instance HA.
+  </Card>
+  <Card title="Troubleshooting" href="/services/instance-ha/admin-guide/troubleshooting" color="#197560">
+    Diagnose engine startup failures and notification processing issues.
+  </Card>
+  <Card title="Notification Drivers" href="/services/instance-ha/admin-guide/notification-drivers" color="#197560">
+    Configure the notification driver that feeds fault events to the engine.
+  </Card>
+</CardGroup>

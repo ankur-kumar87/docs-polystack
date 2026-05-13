@@ -1,0 +1,202 @@
+---
+title: "Orchestration Admin Troubleshooting"
+description: "Diagnose and resolve Xloud Orchestration service-level issues — engine failures, API errors, stack domain problems, and resource plugin faults."
+sidebarTitle: "Troubleshooting"
+---
+
+import AdminWarning from '/snippets/admin-warning.mdx';
+
+## Overview
+
+Admin-level Orchestration issues differ from user-facing stack failures. They typically
+involve the service itself — engine workers not starting, the API becoming unreachable,
+trust or stack domain misconfiguration, or a resource plugin failing to load. Use the
+service log files and `openstack orchestration service list` as primary diagnostic tools.
+
+<AdminWarning />
+
+---
+
+## Diagnostic Reference
+
+<AccordionGroup>
+  <Accordion title="Engine workers not processing stacks" icon="circle-x">
+    **Symptoms**: Stacks remain in `CREATE_IN_PROGRESS` indefinitely. No events appear
+    in `openstack stack event list`. `openstack orchestration service list` shows engine
+    workers as `down`.
+
+    **Diagnosis**:
+    ```bash title="Check service status"
+    openstack orchestration service list
+    ```
+
+    ```bash title="Check engine container logs (XDeploy/XAVS deployment)"
+    docker logs heat_engine --tail=100
+    ```
+
+    ```bash title="Check message queue connectivity"
+    docker exec heat_engine python3 -c "
+    import kombu
+    conn = kombu.Connection('amqp://user:pass@rabbitmq/')
+    conn.ensure_connection()
+    print('RabbitMQ connection OK')
+    "
+    ```
+
+    **Common causes and resolutions**:
+
+    | Cause | Resolution |
+    |-------|-----------|
+    | Engine container exited on startup | Check `docker logs heat_engine` for the error. Common causes: database connection failure, misconfigured `heat.conf` |
+    | RabbitMQ connection refused | Verify RabbitMQ is running: `docker ps \| grep rabbit`. Check `transport_url` in engine configuration |
+    | Database migration not applied | Run `docker exec heat_engine heat-manage db_sync` to apply pending migrations |
+    | Stack domain not configured | Check `stack_domain_admin` and `stack_domain_admin_password` in `heat.conf` |
+
+    **Restart the engine**:
+    ```bash title="Restart engine container"
+    docker restart heat_engine
+    ```
+  </Accordion>
+
+  <Accordion title="API returning 500 or refusing connections" icon="server-crash">
+    **Symptoms**: Dashboard shows Orchestration as unavailable. CLI commands return
+    `503 Service Unavailable` or connection refused on port 8004.
+
+    **Diagnosis**:
+    ```bash title="Check API container status"
+    docker ps --filter name=heat_api
+    docker logs heat_api --tail=50
+    ```
+
+    ```bash title="Test API endpoint directly"
+    curl -s http://localhost:8004/
+    ```
+
+    ```bash title="Check HAProxy backend health"
+    echo "show stat" | socat stdio /var/run/haproxy/admin.sock | grep heat
+    ```
+
+    **Common causes and resolutions**:
+
+    | Cause | Resolution |
+    |-------|-----------|
+    | API container not running | `docker start heat_api` |
+    | Keystone endpoint not registered | Verify: `openstack endpoint list \| grep orchestration` |
+    | SSL certificate expired (if TLS enabled) | Renew certificate and restart API container |
+    | HAProxy backend marked DOWN | Check network connectivity between HAProxy and the API container; restart the API |
+  </Accordion>
+
+  <Accordion title="Stack domain user creation fails" icon="user-x">
+    **Symptoms**: Stacks containing `WaitCondition` or auto-scaling resources fail
+    with errors mentioning `StackDomainUser` or `TrustActionMismatch`. Users cannot
+    create stacks that require credentials delegation.
+
+    **Diagnosis**:
+    ```bash title="Verify stack domain exists"
+    openstack domain list | grep heat
+    ```
+
+    ```bash title="Verify stack domain admin user"
+    openstack user list --domain heat
+    ```
+
+    ```bash title="Test stack domain admin credentials"
+    openstack --os-username heat_domain_admin \
+              --os-user-domain-name heat \
+              --os-password <password> \
+              token issue
+    ```
+
+    **Common causes and resolutions**:
+
+    | Cause | Resolution |
+    |-------|-----------|
+    | `heat` domain does not exist | Re-run `xavs-ansible deploy -t heat` to recreate the domain |
+    | Stack domain admin password incorrect | Update `heat_domain_admin_password` in `passwords.yml` and redeploy |
+    | `stack_domain_admin` setting missing from `heat.conf` | Verify XDeploy configuration and redeploy |
+    | Xloud Identity service unreachable from engine | Check network connectivity between the engine container and port 5000 |
+  </Accordion>
+
+  <Accordion title="Resource plugin fails to load or raises errors" icon="puzzle-x">
+    **Symptoms**: Specific resource types consistently fail with `InvalidTemplateVersion`
+    or `ResourceTypeUnavailable`. The engine log shows import errors.
+
+    **Diagnosis**:
+    ```bash title="List available resource types"
+    openstack orchestration resource type list
+    ```
+
+    ```bash title="Show resource type schema"
+    openstack orchestration resource type show Xloud::Compute::Server
+    ```
+
+    ```bash title="Check engine log for plugin errors"
+    docker logs heat_engine 2>&1 | grep -i "plugin\|resource_type\|ImportError"
+    ```
+
+    **Common causes and resolutions**:
+
+    | Cause | Resolution |
+    |-------|-----------|
+    | Dependent service not enabled | Some resource types require specific services. `Xloud::Networking::FloatingIP` requires networking; verify the service is enabled |
+    | Plugin version mismatch after upgrade | Restart the engine after upgrades: `docker restart heat_engine` |
+    | Custom plugin missing | If using custom resource plugins, verify the plugin file exists in the engine's plugin directory and has correct permissions |
+  </Accordion>
+
+  <Accordion title="Large stacks time out or fail under load" icon="clock">
+    **Symptoms**: Stacks with many resources (100+) frequently time out or take much
+    longer than expected. Engine workers appear idle despite stacks being queued.
+
+    **Diagnosis**:
+    ```bash title="Check engine worker count"
+    openstack orchestration service list | grep heat-eng | wc -l
+    ```
+
+    ```bash title="Check message queue depth"
+    docker exec rabbitmq rabbitmqctl list_queues name messages
+    ```
+
+    **Resolutions**:
+
+    | Action | Setting |
+    |--------|---------|
+    | Increase engine workers | `heat_engine_workers: 8` (or higher) |
+    | Increase RPC timeout | `heat_rpc_response_timeout: 300` |
+    | Increase database pool | `heat_db_max_pool_size: 20` |
+    | Verify convergence mode is on | `heat_convergence_engine: true` |
+
+    Apply changes by updating globals and redeploying:
+    ```bash title="Redeploy with new settings"
+    xavs-ansible deploy -t heat
+    ```
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Log Locations
+
+| Service | Log Path |
+|---------|---------|
+| Orchestration Engine | `docker logs heat_engine` or `/var/log/kolla/heat/heat-engine.log` |
+| Orchestration API | `docker logs heat_api` or `/var/log/kolla/heat/heat-api.log` |
+| CloudWatch API | `docker logs heat_api_cfn` or `/var/log/kolla/heat/heat-api-cfn.log` |
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Configuration" href="/services/orchestration/configuration" color="#197560">
+    Review and update service configuration through XDeploy
+  </Card>
+  <Card title="Scaling the Service" href="/services/orchestration/scaling" color="#197560">
+    Add engine workers to resolve throughput and timeout issues
+  </Card>
+  <Card title="Security" href="/services/orchestration/security" color="#197560">
+    Diagnose stack domain and trust authorization problems
+  </Card>
+  <Card title="User Troubleshooting" href="/services/orchestration/troubleshooting" color="#197560">
+    Stack-level diagnostics for CREATE_FAILED and template errors
+  </Card>
+</CardGroup>

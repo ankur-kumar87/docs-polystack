@@ -1,0 +1,197 @@
+---
+title: "Alert Rules"
+description: "Advanced XIMP alert rule configuration — compound conditions, silences, inhibition rules, on-call escalation, and GitOps-based rule management."
+sidebarTitle: "Alert Rules"
+---
+
+## Overview
+
+This page covers advanced alert rule configuration beyond basic threshold alerts —
+including compound multi-condition rules, silencing active alerts during maintenance
+windows, inhibition rules that suppress lower-severity alerts when a critical one
+is already firing, and escalation policies.
+
+<Note>
+  **Prerequisites**
+  - An active Xloud account with project access
+  - At least one notification channel configured
+    (see [XIMP Admin — Alert Channels](/services/monitoring/admin-guide/alert-channels))
+</Note>
+
+---
+
+## Compound Alert Rules
+
+Combine multiple conditions in a single rule using AND/OR logic:
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    Navigate to **Monitor Center > Monitoring** (Create Alert Rule, admin view) and
+    click **Advanced Mode**.
+
+    In Advanced Mode, add multiple conditions:
+
+    | Field | Value |
+    |-------|-------|
+    | **Condition A** | `xloud_compute_cpu_utilization > 85` |
+    | **Operator** | `AND` |
+    | **Condition B** | `xloud_compute_memory_free_pct < 15` |
+
+    This rule fires only when both CPU is above 85% AND available memory is below
+    15% — reducing false positives from transient CPU spikes.
+  </Tab>
+  <Tab title="Rule File" icon="code">
+    ```yaml title="alert-resource-pressure.yaml"
+    name: resource-pressure-critical
+    severity: critical
+    evaluation_period: 5m
+    conditions:
+      - metric: xloud_compute_cpu_utilization
+        condition: ">"
+        threshold: 85
+      - metric: xloud_compute_memory_free_pct
+        condition: "<"
+        threshold: 15
+    logic: AND
+    notification_channels:
+      - ops-pagerduty
+    ```
+
+    ```bash title="Create compound alert rule"
+    ximp alert rule create --file alert-resource-pressure.yaml
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Silencing Alerts
+
+Silences temporarily suppress alert notifications during planned maintenance.
+The alert rule continues to evaluate — only notifications are suppressed.
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Create a silence" icon="bell-slash">
+        Navigate to **Monitor Center > Monitoring** (Create Silence, admin view).
+
+        | Field | Description |
+        |-------|-------------|
+        | **Matchers** | Label selectors that match the alerts to silence (e.g., `host=compute-node-03`) |
+        | **Duration** | How long the silence is active (e.g., `2h`) |
+        | **Comment** | Reason for the silence (required — links to change ticket) |
+        | **Creator** | Your username (auto-populated) |
+      </Step>
+      <Step title="Verify silence is active" icon="circle-check">
+        Navigate to the Silences section in **Monitor Center > Monitoring**. Active silences show their matcher,
+        creator, and expiry time.
+
+        <Check>Any alerts matching the silence matchers show status `Silenced` instead of firing notifications.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Create a 2-hour silence for a host"
+    ximp alert silence create \
+      --matcher 'host=compute-node-03' \
+      --duration 2h \
+      --comment "Scheduled maintenance window - firmware update"
+    ```
+
+    ```bash title="List active silences"
+    ximp alert silence list --status active
+    ```
+
+    ```bash title="Expire a silence early"
+    ximp alert silence expire <SILENCE_ID>
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Inhibition Rules
+
+Inhibition rules suppress lower-severity alerts when a higher-severity alert is
+already active for the same source. This prevents alert storms during major incidents.
+
+```yaml title="Example: Suppress warnings when critical is firing"
+inhibit_rules:
+  - source_matchers:
+      - severity="critical"
+    target_matchers:
+      - severity="warning"
+    equal:
+      - host
+```
+
+This rule suppresses all `warning` alerts for a host when a `critical` alert is
+already firing for that same host — reducing notification noise during a major outage.
+
+Configure inhibition rules via **Monitor Center > Monitoring** (Inhibition Rules, admin view).
+
+---
+
+## Escalation Policies
+
+Configure multi-tier escalation for critical alerts:
+
+<Steps titleSize="h3">
+  <Step title="Define escalation tiers" icon="arrow-up">
+    Navigate to **Monitor Center > Monitoring** (Escalation Policies, admin view).
+
+    | Tier | Channel | Delay | Condition |
+    |------|---------|-------|-----------|
+    | Tier 1 | PagerDuty on-call | Immediate | Alert fires |
+    | Tier 2 | Slack ops channel | 5 minutes | Not acknowledged |
+    | Tier 3 | Page on-call manager | 15 minutes | Still unacknowledged |
+  </Step>
+  <Step title="Assign to alert rules" icon="link">
+    Open an existing alert rule and set the **Escalation Policy** field to the
+    policy you created. The policy applies to all future alert events for that rule.
+
+    <Tip>
+      Create separate escalation policies for different severity levels — critical
+      infrastructure alerts may warrant a 3-tier escalation while informational
+      alerts can go to a single team Slack channel with no escalation.
+    </Tip>
+  </Step>
+</Steps>
+
+---
+
+## GitOps-Based Rule Management
+
+Manage alert rules as code for version-controlled, auditable configurations:
+
+```bash title="Export all current alert rules"
+ximp alert rule export --format yaml --output ./alert-rules/
+```
+
+```bash title="Import rules from directory"
+ximp alert rule import --dir ./alert-rules/ --apply
+```
+
+Store rule files in your infrastructure repository and apply changes through
+your CI/CD pipeline. This enables peer review of alert rule changes and
+automatic rollback if a rule causes issues.
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Metrics & Alerts" href="/services/monitoring/user-guide/metrics-alerts" color="#197560">
+    Basic alert rule creation for metric thresholds
+  </Card>
+  <Card title="XIMP Admin — Alert Channels" href="/services/monitoring/admin-guide/alert-channels" color="#197560">
+    Configure the notification channels referenced by alert rules
+  </Card>
+  <Card title="Dashboards" href="/services/monitoring/user-guide/dashboards" color="#197560">
+    Visualize metrics alongside alert thresholds
+  </Card>
+  <Card title="Troubleshooting" href="/services/monitoring/user-guide/troubleshooting" color="#197560">
+    Diagnose alert rules that are not firing or delivering notifications
+  </Card>
+</CardGroup>

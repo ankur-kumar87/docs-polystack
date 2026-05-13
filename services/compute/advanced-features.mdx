@@ -1,0 +1,359 @@
+---
+title: "Advanced Compute Features"
+description: "Configure CPU pinning, huge pages, GPU passthrough, vTPM, UEFI Secure Boot, and PCI passthrough for high-performance workloads."
+sidebarTitle: "Advanced"
+---
+
+import AdminWarning from '/snippets/admin-warning.mdx';
+
+## Overview
+
+Xloud Compute exposes advanced hypervisor capabilities for workloads that require
+dedicated hardware resources, hardware-enforced security, or accelerated computing.
+These features are activated through flavor extra specs and require corresponding
+host-level configuration on participating compute nodes.
+
+<AdminWarning />
+
+<Note>
+  **Prerequisites**
+  - Administrator credentials sourced (`source openrc.sh`)
+  - Host-level hardware features configured through XDeploy (IOMMU, huge pages, VFIO)
+  - Relevant scheduler filters active in the scheduler configuration
+</Note>
+
+---
+
+## Features
+
+<AccordionGroup>
+  <Accordion title="NUMA-Aware Scheduling" icon="cpu">
+    <Badge color="purple" size="sm" shape="pill" icon="building">Enterprise</Badge>
+
+    <Info>**Xloud-Developed** — NUMA-aware scheduling with per-flavor granularity is developed by Xloud and ships with XAVS / XPCI.</Info>
+
+    NUMA-aware scheduling ensures that an instance's vCPUs and memory are allocated
+    from the same physical NUMA cell on the host, avoiding cross-node memory access
+    penalties. The `NUMATopologyFilter` in the scheduler evaluates each host's NUMA
+    topology and rejects placements that would split an instance across cells.
+
+    Unlike VMware's cluster-wide EVC setting, Xloud provides **per-flavor NUMA
+    granularity** — each flavor can define its own NUMA cell count and CPU/memory
+    distribution, allowing mixed workload profiles on the same compute cluster.
+
+    ```bash title="Create a NUMA-aware flavor (2 NUMA nodes, 8 vCPUs)"
+    openstack flavor create \
+      --vcpus 8 \
+      --ram 16384 \
+      --disk 100 \
+      numa.8xlarge
+
+    openstack flavor set numa.8xlarge \
+      --property hw:numa_nodes=2
+    ```
+
+    | Extra Spec | Values | Description |
+    |------------|--------|-------------|
+    | `hw:numa_nodes` | Integer | Number of guest NUMA nodes (vCPUs and memory split evenly across nodes) |
+    | `hw:numa_cpus.N` | CPU list | Pin specific vCPUs to NUMA node N (e.g., `0,1,2,3`) |
+    | `hw:numa_mem.N` | Integer (MB) | Memory allocation for NUMA node N |
+
+    <Tip>
+      For most workloads, setting `hw:numa_nodes=1` is sufficient to ensure all
+      resources are allocated from a single NUMA cell. Use `hw:numa_nodes=2` only for
+      large instances that exceed a single cell's capacity.
+    </Tip>
+  </Accordion>
+
+  <Accordion title="CPU Pinning" icon="microchip">
+    <Badge color="purple" size="sm" shape="pill" icon="building">Enterprise</Badge>
+
+    <Info>**Xloud-Developed** — CPU pinning with mixed-policy support is developed by Xloud and ships with XAVS / XPCI.</Info>
+
+    CPU pinning dedicates physical CPU threads exclusively to a single instance,
+    eliminating scheduling jitter and improving performance predictability for
+    latency-sensitive workloads such as real-time databases, financial applications,
+    and telco VNFs.
+
+    Xloud supports three CPU policy modes:
+
+    - **`dedicated`** — all vCPUs are pinned to exclusive physical threads
+    - **`shared`** — vCPUs float across all available host CPUs (default behavior)
+    - **`mixed`** — some vCPUs are pinned while others float, enabling a balance between deterministic performance for critical threads and flexible scheduling for background threads
+
+    **Host requirements**: NUMA topology support must be enabled on the compute node.
+    The `NUMATopologyFilter` must be active in the scheduler filter chain.
+
+    Create a flavor with dedicated CPU policy:
+
+    ```bash title="Create CPU-pinned flavor"
+    openstack flavor create \
+      --vcpus 8 \
+      --ram 16384 \
+      --disk 100 \
+      rt.8xlarge
+    ```
+
+    <CodeGroup>
+      ```bash title="Dedicated pinning (all vCPUs pinned)"
+      openstack flavor set rt.8xlarge \
+        --property hw:cpu_policy=dedicated \
+        --property hw:cpu_thread_policy=prefer
+      ```
+      ```bash title="Mixed pinning (pin specific vCPUs only)"
+      openstack flavor set rt.8xlarge \
+        --property hw:cpu_policy=mixed \
+        --property hw:cpu_dedicated_mask=0-3 \
+        --property hw:cpu_thread_policy=prefer
+      ```
+    </CodeGroup>
+
+    | Extra Spec | Values | Description |
+    |------------|--------|-------------|
+    | `hw:cpu_policy` | `dedicated`, `shared`, `mixed` | Controls whether vCPUs are pinned to exclusive physical threads |
+    | `hw:cpu_dedicated_mask` | CPU mask (e.g., `0-3`) | When `mixed` policy is used, specifies which vCPUs are pinned |
+    | `hw:cpu_thread_policy` | `prefer`, `isolate`, `require` | Controls whether sibling hyperthreads are used |
+    | `hw:numa_nodes` | Integer | Number of NUMA nodes to expose inside the instance |
+
+    <Tip>
+      Configure CPU pinning host requirements on participating nodes through XDeploy
+      under **Compute → Advanced → NUMA Configuration**. Only hosts with NUMA support
+      enabled accept CPU-pinned instances.
+    </Tip>
+  </Accordion>
+
+  <Accordion title="CPU Feature Masking (EVC Equivalent)" icon="shield">
+    <Badge color="purple" size="sm" shape="pill" icon="building">Enterprise</Badge>
+
+    <Info>**Xloud-Developed** — Per-flavor CPU feature masking is developed by Xloud and ships with XAVS / XPCI.</Info>
+
+    CPU feature masking normalizes the CPU instruction set exposed to instances,
+    enabling live migration across compute nodes with different CPU generations. This
+    is the Xloud equivalent of VMware's Enhanced vMotion Compatibility (EVC), with a
+    key difference: Xloud applies masking **per-flavor or per-image** rather than at
+    the cluster level, allowing different workloads to use different CPU baselines on
+    the same cluster.
+
+    Set a common CPU model baseline on the flavor:
+
+    ```bash title="Set CPU model for cross-generation migration"
+    openstack flavor set <flavor-name> \
+      --property hw:cpu_mode=custom \
+      --property hw:cpu_model=Cascadelake-Server-noTSX
+    ```
+
+    | Extra Spec | Values | Description |
+    |------------|--------|-------------|
+    | `hw:cpu_mode` | `host-model`, `host-passthrough`, `custom` | `custom` enables explicit CPU model selection |
+    | `hw:cpu_model` | CPU model name | Target CPU generation baseline (e.g., `Cascadelake-Server-noTSX`, `IvyBridge`) |
+
+    <Note>
+      When using `host-model` or `host-passthrough`, the instance exposes the host's
+      native CPU features. Live migration to a host with a different CPU generation
+      will fail if the destination lacks required features. Use `custom` mode with an
+      explicit model to guarantee migration compatibility.
+    </Note>
+  </Accordion>
+
+  <Accordion title="Huge Pages" icon="layers">
+    <Badge color="purple" size="sm" shape="pill" icon="building">Enterprise</Badge>
+
+    <Info>**Xloud-Developed** — Huge page management with per-flavor page size selection is developed by Xloud and ships with XAVS / XPCI.</Info>
+
+    Huge pages reduce TLB (Translation Lookaside Buffer) pressure for memory-intensive
+    workloads. The hypervisor pre-allocates huge page pools on the host at boot time.
+    Xloud supports two page sizes:
+
+    - **2 MB huge pages** — suitable for most workloads including databases, application servers, and general-purpose memory optimization. Lower host memory fragmentation risk.
+    - **1 GB huge pages** — optimal for HPC, in-memory analytics, and latency-sensitive network functions (DPDK, VNFs) where TLB coverage per entry is critical.
+
+    **Host requirements**: Huge page pools must be pre-allocated on the compute node.
+    Configure pool sizes through XDeploy under **Compute → Advanced → Memory
+    Configuration**.
+
+    <CodeGroup>
+      ```bash title="Request 2 MB huge pages (general workloads)"
+      openstack flavor set <flavor-name> \
+        --property hw:mem_page_size=2MB
+      ```
+      ```bash title="Request 1 GB huge pages (HPC / DPDK)"
+      openstack flavor set <flavor-name> \
+        --property hw:mem_page_size=1GB
+      ```
+      ```bash title="Let the scheduler choose available page size"
+      openstack flavor set <flavor-name> \
+        --property hw:mem_page_size=any
+      ```
+    </CodeGroup>
+
+    Instances using huge pages are scheduled only onto hosts where the required huge
+    page pool is allocated. The scheduler rejects hosts without sufficient huge pages
+    of the requested size.
+
+    <Tip>
+      Use `hw:mem_page_size=any` to allow the scheduler to place the instance on a
+      host with either 2 MB or 1 GB pages, maximizing scheduling flexibility.
+    </Tip>
+  </Accordion>
+
+  <Accordion title="GPU Passthrough" icon="monitor">
+    <Badge color="purple" size="sm" shape="pill" icon="building">Enterprise</Badge>
+
+    GPU passthrough exposes a physical GPU device directly to an instance with
+    near-native performance. The GPU is bound to the VFIO driver on the host and
+    assigned exclusively to one instance at a time. Use this for AI/ML training,
+    3D rendering, and GPU-accelerated simulation workloads.
+
+    **Host requirements**: IOMMU must be enabled in host BIOS and OS. The GPU must
+    be bound to the VFIO driver. Configure this through XDeploy under **Compute →
+    Hardware → GPU Configuration**.
+
+    List available PCI resource providers to find the GPU alias:
+
+    ```bash title="List resource providers"
+    openstack resource provider list
+    ```
+
+    ```bash title="Show inventory for a resource provider"
+    openstack resource provider inventory list <resource-provider-uuid>
+    ```
+
+    Request the GPU in a flavor using the configured device alias:
+
+    ```bash title="Add GPU alias to flavor"
+    openstack flavor set <flavor-name> \
+      --property pci_passthrough:alias=nvidia-a100:1
+    ```
+
+    <Note>
+      All compute nodes exposing the same GPU type must use the same alias name. The
+      `PciPassthroughFilter` must be active in the scheduler filter chain to route
+      GPU-requesting instances to hosts with available devices.
+    </Note>
+  </Accordion>
+
+  <Accordion title="vTPM (Virtual Trusted Platform Module)" icon="shield-check">
+    <Badge color="purple" size="sm" shape="pill" icon="building">Enterprise</Badge>
+
+    <Info>**Xloud-Developed** — vTPM with live migration support and Dashboard integration is developed by Xloud and ships with XAVS / XPCI.</Info>
+
+    vTPM provides a software-emulated TPM chip inside the instance, enabling disk
+    encryption (BitLocker, LUKS), measured boot attestation, and secure credential
+    storage. Xloud supports **live migration of vTPM instances** with automatic secret
+    transfer via [Xloud Key Management](/services/key-manager/admin-guide) — the
+    encrypted TPM state is seamlessly transferred to the destination host without
+    manual intervention.
+
+    **Supported models:**
+
+    | Model | Use Case |
+    |-------|----------|
+    | `tpm-crb` (Command Response Buffer) | Recommended for TPM 2.0. Modern interface used by Windows 11, RHEL 9+, Ubuntu 22.04+ |
+    | `tpm-tis` (TPM Interface Specification) | Legacy interface for TPM 1.2 compatibility and older operating systems |
+
+    **Host requirements**: [Xloud Key Management](/services/key-manager/admin-guide)
+    must be enabled for secret storage. The `swtpm` software TPM emulator must be
+    installed on all compute nodes.
+
+    **Provisioning methods:**
+
+    <CodeGroup>
+      ```bash title="Via flavor extra specs"
+      openstack flavor set <flavor-name> \
+        --property hw:tpm_version=2.0 \
+        --property hw:tpm_model=tpm-crb
+      ```
+      ```bash title="Via image properties"
+      openstack image set <image-id> \
+        --property hw_tpm_version=2.0 \
+        --property hw_tpm_model=tpm-crb
+      ```
+    </CodeGroup>
+
+    In the Dashboard, vTPM can be enabled through the **flavor extra specs panel** or
+    the **image admin form**. The instance detail page displays the vTPM status when
+    attached.
+
+    | Extra Spec / Image Property | Values | Description |
+    |------------|--------|-------------|
+    | `hw:tpm_version` / `hw_tpm_version` | `1.2`, `2.0` | vTPM specification version |
+    | `hw:tpm_model` / `hw_tpm_model` | `tpm-tis`, `tpm-crb` | Virtual TPM hardware model |
+
+    <Warning>
+      vTPM state is encrypted at rest using a secret stored in Xloud Key Management.
+      Ensure Xloud Key Management is enabled and healthy before provisioning vTPM
+      instances. If the Key Management service is unavailable, vTPM instances cannot
+      start or be live-migrated.
+    </Warning>
+  </Accordion>
+
+  <Accordion title="UEFI Boot and Secure Boot" icon="hard-drive">
+    UEFI boot is required for Secure Boot, vTPM, and GPT-partitioned disk layouts.
+    Enable UEFI at the image level or as a flavor property. Secure Boot adds an
+    additional layer by verifying the bootloader signature at startup.
+
+    Set UEFI firmware type on an image:
+
+    ```bash title="Enable UEFI boot on an image"
+    openstack image set \
+      --property hw_firmware_type=uefi \
+      <image-id>
+    ```
+
+    Enable Secure Boot through a flavor property:
+
+    ```bash title="Require Secure Boot via flavor"
+    openstack flavor set <flavor-name> \
+      --property os:secure_boot=required
+    ```
+
+    <Note>
+      Secure Boot requires a signed bootloader in the guest OS. Unsigned kernels and
+      bootloaders will fail to start with Secure Boot enabled. Verify guest OS
+      compatibility before deploying Secure Boot in production.
+    </Note>
+  </Accordion>
+
+  <Accordion title="PCI Passthrough" icon="cpu">
+    <Badge color="purple" size="sm" shape="pill" icon="building">Enterprise</Badge>
+
+    PCI passthrough grants exclusive access to any host PCI device — network adapters,
+    accelerators, storage controllers, or FPGAs — to a single instance. The device is
+    isolated from the host OS using IOMMU groups, providing hardware-level isolation
+    and near-native performance.
+
+    **Host requirements**: IOMMU must be enabled. Device aliases must be configured
+    and consistent across all nodes exposing the same device type. Configure through
+    XDeploy under **Compute → Hardware → PCI Passthrough**.
+
+    ```bash title="Request a PCI device via flavor"
+    openstack flavor set <flavor-name> \
+      --property pci_passthrough:alias=<device-alias>:1
+    ```
+
+    Replace `<device-alias>` with the alias name configured in XDeploy. The number
+    after the colon specifies how many devices to attach (typically `1`).
+
+    <Warning>
+      PCI-attached devices cannot be live-migrated. Instances with PCI passthrough are
+      limited to cold migration only. Factor this constraint into your maintenance
+      and availability planning.
+    </Warning>
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Next Steps
+
+<CardGroup cols={3}>
+  <Card title="Flavor Management" href="/services/compute/flavors" color="#197560">
+    Apply extra specs to flavors to activate advanced hardware features for tenants.
+  </Card>
+  <Card title="Security Hardening" href="/services/compute/security-hardening" color="#197560">
+    Combine vTPM and UEFI Secure Boot with compute control plane hardening.
+  </Card>
+  <Card title="Admin Guide" href="/services/compute/admin-guide" color="#197560">
+    Return to the Compute Administration Guide index.
+  </Card>
+</CardGroup>

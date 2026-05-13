@@ -1,0 +1,175 @@
+---
+title: "XDR Admin Troubleshooting"
+description: "Diagnose and resolve XDR administrator-level issues — initial sync failures, unexpected automatic failovers, runbook script errors, and site connectivity problems."
+sidebarTitle: "Troubleshooting"
+---
+
+## Overview
+
+This page covers administrator-level XDR diagnostics — issues requiring access to
+site configuration, replication link settings, or runbook script management. For
+user-facing issues such as replication lag and DR test access problems, see
+[XDR User Guide — Troubleshooting](/services/disaster-recovery/user-guide/troubleshooting).
+
+<Note>
+  **Prerequisites**
+  - Administrator credentials with the `dr-admin` role
+  - Access to both primary and DR site XDeploy instances
+  - For replication network issues, coordinate with the network administrator
+</Note>
+
+---
+
+## Common Issues
+
+<AccordionGroup>
+  <Accordion title="Initial replication sync not completing" icon="clock">
+    **Cause**: Insufficient network bandwidth for the data volume being synchronized,
+    a firewall rule blocking replication traffic, or insufficient storage quota on the DR site.
+
+    **Diagnosis**: Navigate to **Disaster Recovery → Protection Plans → [Plan]** and review
+    the sync progress percentage. Check link throughput in **Disaster Recovery → Sites → Replication Links → [Link]**.
+
+    **Resolution**:
+    - If throughput is near-zero, verify TCP 7000-7002 is open bidirectionally between sites
+    - If throughput is low but non-zero, increase the bandwidth limit or wait
+    - If sync stalls at a specific percentage, check DR site storage quota in **Disaster Recovery → Sites → [DR Site] → Storage**
+    - Verify the replication port is accessible by clicking **Test Connectivity** on the site entry
+  </Accordion>
+
+  <Accordion title="Automatic failover triggered unexpectedly" icon="zap">
+    **Cause**: A transient network issue caused the health check failure threshold
+    to be exceeded, triggering an unintended automatic failover.
+
+    **Diagnosis**: Navigate to **Disaster Recovery → Recovery Plans → [Plan] → Health Check Log**
+    and review the timestamps and duration of health check failures over the last 2 hours.
+
+    **Resolution**:
+    1. Verify the primary site is actually available before initiating failback
+    2. Review the health check log for the timestamps and duration of failures
+    3. If the primary site is healthy, initiate failback from **Disaster Recovery → Protection Plans → [Plan] → Failback**
+    4. After failback, increase the failure threshold in **Recovery Plans → [Plan] → Automatic Triggers** to reduce false positive risk. Consider adding a secondary health check endpoint.
+  </Accordion>
+
+  <Accordion title="Recovery runbook script failure" icon="terminal">
+    **Cause**: A pre/post recovery script returned a non-zero exit code, halting
+    recovery progression for the affected resource group.
+
+    **Diagnosis**: Navigate to **Disaster Recovery → Failover Status → [Plan] → Runbook Log**
+    and review the script output for the failed hook. The log shows the exit code, stdout,
+    and stderr for each executed script.
+
+    **Common causes**:
+    | Cause | Resolution |
+    |-------|-----------|
+    | DNS update credentials expired | Rotate the DNS key and update the script |
+    | Service registry endpoint unreachable from DR site | Verify network routing from DR to service registry |
+    | Script assumes local file paths not on DR site | Make paths configurable via environment variables |
+    | Script timeout exceeded | Increase timeout or optimize the script |
+
+    After fixing the script, resume the stalled recovery from **Disaster Recovery → Failover Status → [Plan] → [Group] → Resume**.
+  </Accordion>
+
+  <Accordion title="Site connectivity test fails" icon="network">
+    **Cause**: A firewall rule change, routing update, or agent restart caused
+    connectivity between sites to be interrupted.
+
+    **Diagnosis**: Navigate to **Disaster Recovery → Sites** and click **Test Connectivity**
+    on the affected site entry. Review the site status indicators for all registered sites.
+
+    **Resolution**:
+    - Verify firewall rules allow TCP 7000-7002 bidirectionally between site CIDRs
+    - Check that XDR agent processes are running on both sites by reviewing the agent
+      status indicator in **Disaster Recovery → Sites → [Site]**
+    - If the agent is stopped, restart it via XDeploy on the affected site
+    - Check agent logs for TLS certificate errors — certificates may have expired
+  </Accordion>
+
+  <Accordion title="Plan status shows DEGRADED" icon="circle-x">
+    **Cause**: One or more resources in the plan have fallen behind their RPO target,
+    or a resource has been removed from the project while still referenced by the plan.
+
+    **Diagnosis**: Navigate to **Disaster Recovery → Protection Plans → [Plan]** and
+    review the per-resource status breakdown. Resources with issues are highlighted
+    with a warning indicator.
+
+    **Resolution**:
+    - For lag issues: see [XDR User Guide — Troubleshooting](/services/disaster-recovery/user-guide/troubleshooting)
+    - For deleted resources: remove the stale resource reference from the plan by
+      selecting the resource in the plan editor and clicking **Remove Resource**
+  </Accordion>
+
+  <Accordion title="TLS certificate error on replication link" icon="lock">
+    **Cause**: The site authentication certificate has expired, or the certificate
+    was not renewed before the previous certificate expired.
+
+    **Diagnosis**: Navigate to **Disaster Recovery → Sites → [Site] → Certificates** and
+    review the certificate expiry date and renewal status for all registered sites.
+
+    **Resolution**:
+    1. Click **Renew Certificate** on the affected site to trigger manual renewal
+    2. If automatic renewal has been failing, click **Reissue Certificate** to force a
+       new certificate to be generated from scratch
+    3. After renewal, click **Test Connectivity** on the site entry to confirm the new
+       certificate is accepted by the peer site
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Diagnostics Reference
+
+All diagnostic operations are performed through the XDR Dashboard:
+
+| Issue | Dashboard Location |
+|-------|-------------------|
+| Sync not completing | **Disaster Recovery → Protection Plans → [Plan]** — sync progress panel |
+| Link throughput low | **Disaster Recovery → Sites → Replication Links → [Link]** — throughput metrics |
+| Connectivity failure | **Disaster Recovery → Sites → [Site]** — Test Connectivity button |
+| Runbook script failure | **Disaster Recovery → Failover Status → [Plan] → Runbook Log** |
+| Plan status DEGRADED | **Disaster Recovery → Protection Plans → [Plan]** — per-resource status |
+| Cert errors | **Disaster Recovery → Sites → [Site] → Certificates** |
+| Unexpected failover | **Disaster Recovery → Recovery Plans → [Plan] → Health Check Log** |
+
+---
+
+## Log Locations
+
+| Log Source | Access Method |
+|-----------|--------------|
+| XDR controller logs | **Monitoring → Log Explorer** → `service: xdr-controller` |
+| XDR agent logs (primary) | **Monitoring → Log Explorer** → `service: xdr-agent AND site: primary-dc1` |
+| XDR agent logs (DR) | **Monitoring → Log Explorer** → `service: xdr-agent AND site: dr-site-a` |
+| Failover event timeline | **Disaster Recovery → Failover Status → [Plan] → Event Timeline** |
+| Runbook output | **Disaster Recovery → Failover Status → [Plan] → Runbook Log** |
+
+---
+
+## When to Contact Support
+
+Contact [support@xloud.tech](mailto:support@xloud.tech) if:
+
+- Initial sync has made no progress for more than 4 hours despite connectivity being confirmed
+- Sites show `CONNECTED` but replication lag continues to increase
+- Certificate renewal fails repeatedly and replication has stopped
+- A failover event log shows an internal XDR controller error (not a script or connectivity error)
+- Failback cannot be initiated after an unexpected automatic failover
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="XDR User Guide — Troubleshooting" href="/services/disaster-recovery/user-guide/troubleshooting" color="#197560">
+    User-facing replication lag, stuck failover, and test access issues
+  </Card>
+  <Card title="Replication Configuration" href="/services/disaster-recovery/admin-guide/replication-config" color="#197560">
+    Review and update replication link configuration
+  </Card>
+  <Card title="DR Automation" href="/services/disaster-recovery/admin-guide/dr-automation" color="#197560">
+    Review and test runbook scripts before incidents occur
+  </Card>
+  <Card title="Monitoring" href="/services/disaster-recovery/admin-guide/monitoring" color="#197560">
+    Set up proactive alerts to catch issues before they escalate
+  </Card>
+</CardGroup>

@@ -1,0 +1,108 @@
+---
+title: "Load Balancer"
+description: "Distribute application traffic across multiple instances with Xloud Load Balancer — layer 4/7 balancing, health monitoring, and TLS termination for."
+icon: "combine"
+sidebarTitle: "Load Balancer"
+mode: "wide"
+---
+
+Distribute application traffic intelligently across compute instances with built-in health monitoring and TLS termination.
+
+<Card title="Xloud Load Balancer — Enterprise LBaaS" icon="combine" href="https://xloud.tech/xavs" color="#197560" horizontal>
+  Product details and datasheet on xloud.tech
+</Card>
+
+---
+
+<p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Xloud Load Balancer</p>
+
+<CardGroup cols={2}>
+  <Card title="User Guide" icon="book-open" href="/services/load-balancer/user-guide" color="#197560">
+    Create load balancers, configure listeners and pools, set up health monitors, and assign floating IPs to distribute traffic across your instances.
+  </Card>
+  <Card title="Admin Guide" icon="shield-check" href="/services/load-balancer/admin-guide" color="#197560">
+    Configure provider drivers, manage flavor profiles, set project quotas, and monitor the load balancing infrastructure as a platform administrator.
+  </Card>
+  <Card title="CLI Reference" icon="terminal" href="/services/load-balancer/cli-reference" color="#197560">
+    `openstack loadbalancer` commands for managing load balancers, listeners, pools, and members from the command line.
+  </Card>
+  <Card title="Health Monitors" icon="heart-pulse" color="#197560">
+    Configure TCP, HTTP, HTTPS, and PING health checks to automatically remove unhealthy members from rotation.
+  </Card>
+</CardGroup>
+
+---
+
+<p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Key Features</p>
+
+<CardGroup cols={2}>
+  <Card title="Layer 4 & Layer 7 Balancing" icon="layers" href="/services/load-balancer/listeners" color="#197560">
+    Support for TCP/UDP load balancing at layer 4 and HTTP/HTTPS routing at layer 7. Route traffic based on URL path, hostname, or header values.
+  </Card>
+  <Card title="Active Health Monitoring" icon="activity" href="/services/load-balancer/health-monitors" color="#197560">
+    Continuous health checks detect member failures in seconds and automatically redirect traffic — no manual intervention required.
+  </Card>
+  <Card title="TLS Termination" icon="shield" href="/services/load-balancer/listeners" color="#197560">
+    Offload TLS processing to the load balancer. Manage certificates through Xloud Key Manager for centralized certificate lifecycle control.
+  </Card>
+  <Card title="Session Persistence" icon="clock" href="/services/load-balancer/pools" color="#197560">
+    SOURCE_IP, HTTP_COOKIE, and APP_COOKIE persistence modes ensure session-aware applications route returning clients to the same member.
+  </Card>
+  <Card title="Floating IP Integration" icon="globe" href="/services/load-balancer/floating-ip" color="#197560">
+    Associate a public floating IP directly with a load balancer VIP for external access without exposing individual backend instances.
+  </Card>
+  <Card title="Multiple Algorithms" icon="git-branch" href="/services/load-balancer/pools" color="#197560">
+    Choose from ROUND_ROBIN, LEAST_CONNECTIONS, and SOURCE_IP distribution algorithms. Match the balancing strategy to your workload profile.
+  </Card>
+</CardGroup>
+
+---
+
+<p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Load Balancer Components</p>
+
+| Component | Description |
+|-----------|-------------|
+| Load Balancer | Top-level resource bound to a subnet. Provides the virtual IP (VIP) address for client connections |
+| Listener | Defines the protocol and port on which the load balancer accepts traffic (TCP, HTTP, HTTPS, UDP) |
+| Pool | A group of backend members that receive traffic from a listener |
+| Member | An individual backend instance registered to a pool, identified by its IP and port |
+| Health Monitor | Periodic probes that determine member availability and control traffic routing |
+| L7 Policy | Layer 7 rules that redirect, reject, or forward HTTP traffic based on request properties |
+
+---
+
+<p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Related Services</p>
+
+<CardGroup cols={3}>
+  <Card title="Xloud Compute" icon="server" href="/services/compute" color="#197560">
+    Backend instances that serve as pool members behind the load balancer
+  </Card>
+  <Card title="Xloud Networking" icon="network" href="/services/compute" color="#197560">
+    Subnets, security groups, and floating IPs used by load balancer resources
+  </Card>
+  <Card title="Xloud Key Manager" icon="lock" href="/services/key-manager" color="#197560">
+    TLS certificates and secrets for HTTPS listeners and end-to-end encryption
+  </Card>
+  <Card title="Xloud DNS" icon="globe" href="/services/dns" color="#197560">
+    Map domain names to load balancer VIPs for application endpoint management
+  </Card>
+  <Card title="Xloud Identity" icon="fingerprint" href="/cli-setup" color="#197560">
+    Authentication and RBAC policies governing load balancer resource access
+  </Card>
+  <Card title="Xloud Object Storage" icon="box" href="/services/object-storage" color="#197560">
+    Store access logs and TLS certificate backups for compliance and auditing
+  </Card>
+</CardGroup>
+
+---
+
+<p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Getting Started</p>
+
+<CardGroup cols={2}>
+  <Card title="Authentication" icon="key" href="/cli-setup" color="#197560">
+    Configure Dashboard access and CLI credentials before working with Load Balancer
+  </Card>
+  <Card title="User Guide" icon="book-open" href="/services/load-balancer/user-guide" color="#197560">
+    Step-by-step instructions for creating your first load balancer
+  </Card>
+</CardGroup>

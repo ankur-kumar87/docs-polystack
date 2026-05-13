@@ -1,0 +1,205 @@
+---
+title: "VM Moves"
+description: "Track VM evacuations across recovery events. View source/destination hosts, status, timing, and error details."
+sidebarTitle: "VM Moves"
+---
+
+## Overview
+
+The VM Moves page provides a consolidated view of every VM evacuation performed by
+the Instance HA engine across all recent recovery notifications. Unlike the
+per-notification Recovery Progress tab, VM Moves aggregates evacuations from up to
+50 recent notifications into a single sortable, searchable list — making it the
+primary tool for recovery auditing and troubleshooting.
+
+<Note>
+  **Prerequisites**
+  - An active Xloud account with project access
+  - Instance HA service enabled with at least one completed or in-progress recovery event
+</Note>
+
+---
+
+## View VM Moves
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Navigate to VM Moves">
+        Navigate to **Instance HA > VM Moves** in the sidebar.
+
+        The page loads all VM evacuations from recent notifications automatically.
+      </Step>
+      <Step title="Review the evacuation list">
+        The table shows every individual VM evacuation, sorted by start time
+        (most recent first).
+
+        | Column | Description |
+        |--------|-------------|
+        | **VM Name** | Instance name. Falls back to instance UUID if no name is set |
+        | **Instance ID** | VM UUID (copyable, truncated display showing first 8 characters) |
+        | **Notification** | Parent notification UUID (copyable, truncated display) |
+        | **Source Host** | The failed compute host the VM was evacuated from |
+        | **Destination Host** | The healthy host the VM was moved to. Shows `-` if not yet assigned |
+        | **Type** | Evacuation type — typically `evacuation` |
+        | **Status** | Colored tag with icon indicating the evacuation result |
+        | **Start Time** | When the evacuation started (default sort column, descending) |
+        | **End Time** | When the evacuation completed, or `-` if still in progress |
+        | **Message** | Error details if the evacuation failed (displayed in red), otherwise `-` |
+      </Step>
+      <Step title="Understand evacuation statuses">
+        Each VM evacuation has one of four statuses:
+
+        | Status | Color | Icon | Meaning |
+        |--------|-------|------|---------|
+        | **Pending** | Grey | Clock | Evacuation is queued but has not started |
+        | **Running** | Blue | Loading spinner | Evacuation is actively in progress |
+        | **Succeeded** | Green | Check circle | VM was successfully recovered on the destination host |
+        | **Failed** | Red | Close circle | Evacuation failed — check the Message column for details |
+
+        <Warning>
+          VMs with **Failed** status require manual intervention. Check the error
+          message, verify the destination host has sufficient capacity, and attempt
+          a manual evacuation if needed. See
+          [Troubleshooting](/services/instance-ha/user-guide/troubleshooting) for
+          resolution steps.
+        </Warning>
+      </Step>
+      <Step title="Refresh the data">
+        Click the **Refresh** button in the page header to reload the latest
+        VM move data. This fetches evacuations from the most recent 50 notifications.
+
+        <Tip>
+          During an active recovery, refresh periodically to see new VM evacuations
+          appear as the engine processes each instance. For real-time auto-refreshing,
+          use the **Recovery Progress** tab on the individual notification detail page
+          instead.
+        </Tip>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    The CLI does not have a dedicated command for listing VM moves across all
+    notifications. Use the Masakari API directly:
+
+    ```bash title="Source credentials"
+    source openrc.sh
+    ```
+
+    ```bash title="List VM moves for a specific notification"
+    curl -s -H "X-Auth-Token: $TOKEN" \
+      "$MASAKARI_ENDPOINT/v1/notifications/<notification-uuid>/vmoves" \
+      | python3 -m json.tool
+    ```
+
+    ```bash title="List VM moves across recent notifications"
+    for notif in $(curl -s -H "X-Auth-Token: $TOKEN" \
+      "$MASAKARI_ENDPOINT/v1/notifications?sort_key=updated_at&sort_dir=desc&limit=10" \
+      | python3 -c "import sys,json; [print(n['notification_uuid']) for n in json.load(sys.stdin)['notifications']]"); do
+      echo "=== Notification: $notif ==="
+      curl -s -H "X-Auth-Token: $TOKEN" \
+        "$MASAKARI_ENDPOINT/v1/notifications/$notif/vmoves" | python3 -m json.tool
+    done
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## VM Moves vs Recovery Progress
+
+The Dashboard provides two ways to view VM evacuations. Choose based on your use case:
+
+| Feature | VM Moves Page | Recovery Progress Tab |
+|---------|--------------|----------------------|
+| **Location** | Instance HA > VM Moves | Notification detail > Recovery Progress |
+| **Scope** | All evacuations across up to 50 notifications | Single notification only |
+| **Auto-refresh** | Manual refresh button | Auto-refreshes every 5 seconds when running |
+| **Summary stats** | Not shown | Total, succeeded, failed counts with progress indicator |
+| **Best for** | Auditing, historical review, cross-notification search | Real-time monitoring of an active recovery |
+
+<Tip>
+  Use **Recovery Progress** when you want to watch a single recovery event complete
+  in real time. Use **VM Moves** when you need to review evacuation history across
+  multiple events, or search for a specific VM's recovery outcome.
+</Tip>
+
+---
+
+## Common Scenarios
+
+<AccordionGroup>
+  <Accordion title="Find all failed evacuations" defaultOpen>
+    Open **Instance HA > VM Moves** and look for rows with a red **Failed** status
+    tag. The **Message** column shows the error reason. Common causes:
+
+    - **Insufficient capacity**: No destination host has enough vCPU/memory
+    - **Shared storage not available**: Instance uses local ephemeral disk
+    - **Compute service down**: Target host's nova-compute is not running
+
+    For each failed VM, attempt a manual evacuation:
+
+    ```bash title="Manually evacuate a failed instance"
+    openstack server evacuate <instance-id> --host <target-host>
+    ```
+  </Accordion>
+  <Accordion title="Verify a specific VM was recovered">
+    Open **Instance HA > VM Moves** and locate the VM by name or instance ID.
+    Check that:
+
+    - **Status** is `Succeeded` (green)
+    - **Destination Host** shows a valid compute host
+    - **End Time** is populated
+
+    Then verify the instance is running:
+
+    ```bash title="Confirm instance is active"
+    openstack server show <instance-id> -c status -c "OS-EXT-SRV-ATTR:host"
+    ```
+
+    <Check>Status is `ACTIVE` and the host matches the Destination Host from VM Moves.</Check>
+  </Accordion>
+  <Accordion title="Review recovery history for a time period">
+    Open **Instance HA > VM Moves** and sort by **Start Time**. The default
+    sort is descending (most recent first). Scroll through to find evacuations
+    in your time window.
+
+    For CLI-based historical analysis:
+
+    ```bash title="Export VM moves to JSON for analysis"
+    curl -s -H "X-Auth-Token: $TOKEN" \
+      "$MASAKARI_ENDPOINT/v1/notifications?sort_key=updated_at&sort_dir=desc&limit=50" \
+      | python3 -c "
+    import sys, json, requests, os
+    token = os.environ['TOKEN']
+    endpoint = os.environ['MASAKARI_ENDPOINT']
+    notifs = json.load(sys.stdin)['notifications']
+    all_moves = []
+    for n in notifs:
+        r = requests.get(f'{endpoint}/v1/notifications/{n[\"notification_uuid\"]}/vmoves',
+                        headers={'X-Auth-Token': token})
+        all_moves.extend(r.json().get('vmoves', []))
+    json.dump(all_moves, sys.stdout, indent=2)
+    " > vm-moves-history.json
+    ```
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Recovery Workflows" href="/services/instance-ha/user-guide/recovery-workflows" color="#197560">
+    Understand recovery methods and the Recovery Progress real-time view
+  </Card>
+  <Card title="Monitoring Status" href="/services/instance-ha/user-guide/monitoring-status" color="#197560">
+    View notifications, hosts, and notification details
+  </Card>
+  <Card title="Troubleshooting" href="/services/instance-ha/user-guide/troubleshooting" color="#197560">
+    Resolve failed evacuations and stuck recovery workflows
+  </Card>
+  <Card title="Protection Segments" href="/services/instance-ha/user-guide/protection-segments" color="#197560">
+    Manage segments and host registrations
+  </Card>
+</CardGroup>

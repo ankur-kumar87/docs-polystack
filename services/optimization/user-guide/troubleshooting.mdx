@@ -1,0 +1,159 @@
+---
+title: "Optimization Troubleshooting — User Guide"
+description: "Resolve common Xloud Optimization issues — empty action plans, stuck audits, failed migrations, and cancelled action plans."
+sidebarTitle: "Troubleshooting"
+---
+
+## Overview
+
+This page covers common Optimization issues encountered by operators — audits that
+produce empty plans, audits stuck in `ONGOING`, migrations that fail during execution, and
+plans that revert after completion. For platform-level issues such as Decision Engine
+failures or data source connectivity, see the
+[Admin Troubleshooting](/services/optimization/admin-guide/troubleshooting) guide.
+
+---
+
+## Common Issues
+
+<AccordionGroup>
+  <Accordion title="Audit completes but produces an empty action plan" icon="clipboard">
+    **Cause**: The cluster is already optimally placed for the selected goal — the strategy
+    found no hosts below the utilization threshold and no migrations are recommended.
+
+    **Resolution**:
+
+    Check current host utilization to confirm whether consolidation is genuinely needed:
+
+    ```bash title="Check per-host utilization"
+    openstack hypervisor list --long
+    ```
+
+    If all hosts show healthy, even utilization — this is expected behaviour. No action
+    is needed.
+
+    If hosts appear imbalanced but no plan was generated, the strategy threshold may
+    be too conservative:
+
+    ```bash title="Create audit with lower threshold"
+    watcher audit create \
+      --goal server_consolidation \
+      --parameter threshold=0.1 \
+      --name lower-threshold-audit
+    ```
+
+    <Tip>
+      The default consolidation threshold is 0.2 (20%). Lowering it to 0.1 (10%)
+      means more hosts qualify as underutilized and are included in the migration plan.
+    </Tip>
+  </Accordion>
+
+  <Accordion title="Audit stuck in ONGOING state" icon="clock">
+    **Cause**: The Decision Engine is waiting for metric data from a slow or unavailable
+    data source (Prometheus or Telemetry).
+
+    **Resolution**:
+
+    ```bash title="Check audit status and duration"
+    watcher audit show <audit-uuid> \
+      -f value -c state -c created_at
+    ```
+
+    If the audit has been `ONGOING` for more than 5 minutes, contact your administrator
+    to check Decision Engine and data source connectivity. Your administrator can configure this through [XDeploy](/deployment).
+
+    For non-telemetry goals (e.g., `server_consolidation`, `zone_migration`), audits
+    should complete within 30–90 seconds. Longer durations indicate a data collection
+    issue.
+  </Accordion>
+
+  <Accordion title="Action fails with migration error" icon="circle-x">
+    **Cause**: A live migration failed — commonly due to insufficient memory on the
+    target host, a CPU model incompatibility between source and destination hosts, or
+    a storage connectivity issue.
+
+    **Resolution**:
+
+    ```bash title="Show failed action details"
+    watcher action show <action-uuid> -f json
+    ```
+
+    Review the `fault` field for the specific migration error. Common errors:
+
+    | Error | Cause | Fix |
+    |-------|-------|-----|
+    | `No valid host found` | Target host has insufficient capacity | Add compute capacity or adjust plan |
+    | `CPU compatibility` | CPU model mismatch between hosts | Configure `cpu_mode=custom` on all hosts |
+    | `Disk not found` | Instance uses local disk (not shared storage) | Verify instance uses shared storage backend |
+
+    After resolving the root cause, create a new audit to generate a fresh plan.
+  </Accordion>
+
+  <Accordion title="Action plan shows CANCELLED state" icon="x-circle">
+    **Cause**: A previous action in the plan failed, causing the Applier to halt and
+    cancel all remaining actions automatically.
+
+    **Resolution**: Review the failed action to identify the root cause:
+
+    ```bash title="List actions and find the failed one"
+    watcher action list \
+      --action-plan <action-plan-uuid> \
+      -f table -c uuid -c action_type -c state
+    ```
+
+    Fix the root cause (capacity, CPU compatibility, storage), then run a new audit
+    to generate an updated plan reflecting the current cluster state.
+  </Accordion>
+
+  <Accordion title="Optimizations revert after execution" icon="rotate">
+    **Cause**: Another process — the compute scheduler placing new instances, auto-scaling,
+    or manual migrations — is placing instances back on hosts that were just emptied by
+    the optimization.
+
+    **Resolution**: Coordinate with team members performing manual migrations during
+    optimization windows. Consider applying compute host aggregates or availability zone
+    constraints to prevent the scheduler from re-populating hosts that were intentionally
+    consolidated.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Diagnostic Commands
+
+```bash title="List all audits with states"
+watcher audit list \
+  -f table -c uuid -c name -c state -c created_at
+```
+
+```bash title="Show full audit detail"
+watcher audit show <audit-uuid> -f json
+```
+
+```bash title="List action plans with states"
+watcher actionplan list \
+  -f table -c uuid -c state -c audit_uuid
+```
+
+```bash title="Show individual action failures"
+watcher action show <action-uuid> -f json
+```
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Run an Audit" href="/services/optimization/user-guide/run-audit" color="#197560">
+    Create a new audit after resolving the issue.
+  </Card>
+  <Card title="Audit History" href="/services/optimization/user-guide/audit-history" color="#197560">
+    Review past audits to identify recurring patterns.
+  </Card>
+  <Card title="Admin Troubleshooting" href="/services/optimization/admin-guide/troubleshooting" color="#197560">
+    Platform-level diagnostics for Decision Engine and data source failures.
+  </Card>
+  <Card title="Compute Admin Guide" href="/services/compute/admin-guide" color="#197560">
+    Verify shared storage and live migration capability for optimization actions.
+  </Card>
+</CardGroup>

@@ -1,0 +1,235 @@
+---
+title: "Troubleshooting"
+description: "Diagnose and resolve XSDS cluster-level issues — HEALTH_WARN states, OSD failures, slow requests, PG inconsistencies, and capacity emergencies."
+sidebarTitle: "Troubleshooting"
+---
+
+import AdminWarning from '/snippets/admin-warning.mdx';
+
+## Overview
+
+This page covers cluster-level troubleshooting procedures for XSDS administrators.
+For tenant-facing storage issues (stuck volumes, snapshot failures), see the
+[XSDS User Guide Troubleshooting](/services/sds/user-guide/troubleshooting) page.
+
+<AdminWarning />
+
+<Note>
+  **Prerequisites**
+  - Administrator credentials with the `admin` role
+  - SSH access to a cluster management node
+</Note>
+
+---
+
+## Diagnostic Reference
+
+Before investigating specific issues, collect the full health report:
+
+```bash title="Full health report"
+ceph health detail
+```
+
+```bash title="Cluster status overview"
+ceph status
+```
+
+```bash title="Recent cluster log events"
+ceph log last 100
+```
+
+---
+
+## Common Issues
+
+<AccordionGroup>
+  <Accordion title="HEALTH_WARN: too few PGs" icon="layers">
+    **Cause**: A pool has fewer placement groups than recommended for its current
+    data volume. Under-provisioned PGs cause I/O imbalance across OSDs.
+
+    **Diagnosis**:
+    ```bash title="Check PG autoscale status"
+    ceph osd pool autoscale-status
+    ```
+
+    **Resolution**:
+    Enable PG auto-scaling to let the cluster manage PG counts automatically:
+    ```bash title="Enable autoscaler on a pool"
+    ceph osd pool set <POOL_NAME> pg_autoscale_mode on
+    ```
+
+    <Tip>
+      Enable `pg_autoscale_mode on` on all pools as a default configuration. The
+      autoscaler prevents both under- and over-provisioned PG counts as pool data
+      volumes change.
+    </Tip>
+  </Accordion>
+
+  <Accordion title="OSD down after hardware failure" icon="hard-drive">
+    **Cause**: A physical disk or node has failed, causing one or more OSDs to go down.
+
+    **Diagnosis**:
+    ```bash title="Identify failed OSDs"
+    ceph osd tree | grep down
+    ```
+
+    **Resolution**:
+    1. Identify the failed OSD and its host from `ceph osd tree`
+    2. Mark the OSD `out` to begin data recovery on remaining OSDs:
+       ```bash title="Mark OSD out"
+       ceph osd out <OSD_ID>
+       ```
+    3. Monitor recovery: `watch ceph status`
+    4. After recovery completes (status shows `HEALTH_OK`), replace the failed hardware
+    5. Redeploy the OSD through XDeploy on the replacement device
+
+    <Warning>
+      Do not remove an OSD before the cluster has finished recovering data. Removing
+      an OSD during recovery on an already-degraded cluster risks data loss.
+    </Warning>
+  </Accordion>
+
+  <Accordion title="Slow requests / high latency" icon="clock">
+    **Cause**: Blocked OSD operations, high CPU load on OSD nodes, or network congestion
+    on the storage network.
+
+    **Diagnosis**:
+    ```bash title="Check for blocked operations"
+    ceph health detail | grep -i slow
+    ```
+
+    ```bash title="View OSD performance"
+    ceph osd perf
+    ```
+
+    **Resolution**:
+
+    | Root Cause | Resolution |
+    |-----------|-----------|
+    | HDD fragmentation | Schedule `ceph osd scrub <OSD_ID>` during low-traffic period |
+    | CPU throttling on OSD nodes | Review CPU allocation in XDeploy |
+    | Rebalancing competing with client I/O | Throttle recovery I/O (see below) |
+    | Full disks on some OSDs | Add capacity or rebalance via CRUSH weight |
+
+    ```bash title="Throttle recovery I/O"
+    ceph osd set-recovery-delay 5
+    ceph osd set-backfillfull-ratio 0.85
+    ```
+  </Accordion>
+
+  <Accordion title="PG inconsistent" icon="circle-x">
+    **Cause**: Data inconsistency detected between OSD replicas during scrubbing.
+    This may indicate a hardware error (bad disk sector, bit flip).
+
+    **Diagnosis**:
+    ```bash title="Find inconsistent PGs"
+    ceph health detail | grep inconsistent
+    ```
+
+    ```bash title="Get PG details"
+    ceph pg <PG_ID> query
+    ```
+
+    **Resolution**:
+    ```bash title="Repair inconsistent PG"
+    ceph pg repair <PG_ID>
+    ```
+
+    <Warning>
+      PG repair selects the primary OSD's copy as authoritative and overwrites
+      inconsistent replicas. If the primary copy is also corrupt, this may propagate
+      corruption. Verify the application-level data integrity after repair.
+    </Warning>
+  </Accordion>
+
+  <Accordion title="Pool near full / cluster full" icon="gauge">
+    **Cause**: Pool or cluster capacity has reached a critical threshold, causing
+    the cluster to throttle or reject writes.
+
+    **Diagnosis**:
+    ```bash title="Check cluster capacity"
+    ceph df
+    ```
+
+    ```bash title="Identify full OSDs"
+    ceph osd df | sort -k9 -rn | head -10
+    ```
+
+    **Resolution**:
+    - **Immediate**: Raise the `full_ratio` temporarily to allow the cluster to accept
+      writes while expansion is underway:
+      ```bash title="Temporarily raise full ratio (emergency only)"
+      ceph osd set-full-ratio 0.97
+      ```
+    - **Short-term**: Delete unnecessary data, snapshots, or expired objects
+    - **Long-term**: Add new OSD nodes through XDeploy (see [Capacity Planning](/services/sds/admin-guide/capacity-planning))
+
+    <Danger>
+      Operating above 90% utilization with the `full_ratio` raised is an emergency
+      measure only. Data loss can occur if any additional OSD failures happen while
+      the cluster is in this state.
+    </Danger>
+  </Accordion>
+
+  <Accordion title="Object gateway (S3) returning errors" icon="globe">
+    **Cause**: The RGW service is down, misconfigured, or the backing data pool is unavailable.
+
+    **Diagnosis**:
+    ```bash title="Check RGW service status"
+    ceph orch ps | grep rgw
+    ```
+
+    ```bash title="Check RGW logs"
+    ceph log last 50 | grep rgw
+    ```
+
+    **Resolution**:
+    ```bash title="Restart RGW service"
+    ceph orch restart rgw.<SERVICE_ID>
+    ```
+
+    If RGW remains down after restart, check the data pool health:
+    ```bash title="Check RGW data pool"
+    ceph osd pool ls detail | grep rgw
+    ceph health detail | grep <RGW_POOL>
+    ```
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## When to Contact Support
+
+Contact [support@xloud.tech](mailto:support@xloud.tech) if:
+
+- `HEALTH_ERR` persists after initial investigation
+- Data appears inaccessible or corrupt after OSD recovery
+- PG repair does not resolve the inconsistency
+- Cluster is full and expansion cannot be provisioned immediately
+
+When opening a support ticket, include:
+```bash title="Information to include with support ticket"
+ceph health detail
+ceph status
+ceph osd tree
+ceph log last 200
+```
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Cluster Management" href="/services/sds/admin-guide/cluster-management" color="#197560">
+    Routine operational procedures — adding OSDs, maintenance mode
+  </Card>
+  <Card title="Monitoring" href="/services/sds/admin-guide/monitoring" color="#197560">
+    Set up proactive alerts to catch issues before they become critical
+  </Card>
+  <Card title="Capacity Planning" href="/services/sds/admin-guide/capacity-planning" color="#197560">
+    Prevent capacity emergencies with proactive expansion planning
+  </Card>
+  <Card title="User Guide Troubleshooting" href="/services/sds/user-guide/troubleshooting" color="#197560">
+    Tenant-facing storage issues — stuck volumes, snapshot failures
+  </Card>
+</CardGroup>

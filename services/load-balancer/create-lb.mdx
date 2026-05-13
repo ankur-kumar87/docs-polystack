@@ -1,0 +1,193 @@
+---
+title: "Create a Load Balancer"
+description: "Provision a new Xloud Load Balancer with a listener, pool, members, and health monitor in a single guided workflow."
+sidebarTitle: "Create Load Balancer"
+---
+
+import PrerequisitesAuth from '/snippets/prerequisites-auth.mdx';
+
+## Overview
+
+Creating a load balancer in Xloud involves provisioning the top-level resource with a
+virtual IP, then adding a listener (protocol and port), a pool (backend collection),
+pool members (backend instances), and a health monitor. The Dashboard creation wizard
+guides you through all five steps in sequence. The CLI allows each component to be
+created independently.
+
+<PrerequisitesAuth />
+
+<Note>
+  Load balancers must be placed on a subnet that has routing access to your backend
+  instances. Verify that security group rules allow ingress on the member port from
+  the load balancer's VIP subnet before adding members.
+</Note>
+
+---
+
+## Create via Dashboard (Wizard)
+
+<Steps titleSize="h3">
+  <Step title="Open the creation wizard" icon="plus">
+    Navigate to
+    **Network > Load Balancers**. Click **Create Load Balancer**.
+  </Step>
+  <Step title="Configure load balancer details" icon="settings">
+    Complete the **Load Balancer Details** panel:
+
+    | Field | Description |
+    |-------|-------------|
+    | **Name** | Display name (e.g., `prod-web-lb`) |
+    | **Description** | Optional description |
+    | **IP Address** | Leave blank to auto-assign a VIP, or specify a fixed IP |
+    | **Subnet** | The subnet hosting the VIP — must be reachable from backend instances |
+    | **Availability Zone** | Fault domain for appliance placement |
+
+    <Tip>
+      Use a dedicated management subnet for the VIP to isolate load balancer traffic
+      from application data paths.
+    </Tip>
+  </Step>
+  <Step title="Add a listener" icon="ear">
+    Complete the **Listener Details** panel:
+
+    | Field | Value | Description |
+    |-------|-------|-------------|
+    | **Name** | `listener-http` | Display name |
+    | **Protocol** | `HTTP` | Layer 7 protocol |
+    | **Protocol Port** | `80` | Port accepting connections |
+    | **Connection Limit** | `-1` | Unlimited; set positive integer to cap |
+  </Step>
+  <Step title="Configure the pool" icon="users">
+    Complete the **Pool Details** panel:
+
+    | Field | Value | Description |
+    |-------|-------|-------------|
+    | **Name** | `pool-http` | Pool display name |
+    | **Algorithm** | `ROUND_ROBIN` | Traffic distribution method |
+    | **Session Persistence** | `None` | Enable for stateful application sessions |
+
+    **Algorithm options:**
+    - `ROUND_ROBIN` — distributes requests evenly across all UP members
+    - `LEAST_CONNECTIONS` — sends to the member with fewest active connections
+    - `SOURCE_IP` — routes the same client IP to the same member
+  </Step>
+  <Step title="Add pool members" icon="user-plus">
+    In the **Pool Members** panel, click **Add** next to each instance to register it.
+
+    | Field | Description |
+    |-------|-------------|
+    | **IP Address** | Auto-populated from the selected instance |
+    | **Protocol Port** | Port your application listens on (e.g., `8080`) |
+    | **Weight** | Relative weight — higher weight receives proportionally more requests |
+
+    <Warning>
+      Members must be reachable from the load balancer's VIP subnet. Verify security
+      groups allow ingress on the member port from the VIP address.
+    </Warning>
+  </Step>
+  <Step title="Configure health monitor" icon="heart-pulse">
+    Complete the **Monitor Details** panel:
+
+    | Field | Value | Description |
+    |-------|-------|-------------|
+    | **Type** | `HTTP` | Sends a GET request and validates the response code |
+    | **Delay** | `5` | Seconds between probes |
+    | **Timeout** | `3` | Seconds to wait for a probe response |
+    | **Max Retries** | `3` | Failures before marking a member DOWN |
+    | **URL Path** | `/health` | Endpoint returning HTTP 200 when healthy |
+    | **Expected Codes** | `200` | Comma-separated acceptable HTTP status codes |
+  </Step>
+  <Step title="Review and create" icon="circle-check">
+    Review the summary and click **Create Load Balancer**.
+
+    The load balancer enters **PENDING_CREATE** status. Provisioning typically completes
+    within 30–60 seconds.
+
+    <Check>The load balancer displays status **ACTIVE** in the Load Balancers list.</Check>
+  </Step>
+</Steps>
+
+---
+
+## Create via CLI
+
+<Steps titleSize="h3">
+  <Step title="Authenticate and create the load balancer" icon="key">
+    ```bash title="Source credentials"
+    source openrc.sh
+    ```
+
+    ```bash title="Create load balancer"
+    openstack loadbalancer create \
+      --name prod-web-lb \
+      --vip-subnet-id <subnet-id>
+    ```
+
+    Wait for `ACTIVE` status:
+    ```bash title="Wait for ACTIVE status"
+    openstack loadbalancer show prod-web-lb \
+      -c provisioning_status -c operating_status
+    ```
+  </Step>
+  <Step title="Create a listener" icon="ear">
+    ```bash title="Create HTTP listener"
+    openstack loadbalancer listener create \
+      --name listener-http \
+      --protocol HTTP \
+      --protocol-port 80 \
+      prod-web-lb
+    ```
+  </Step>
+  <Step title="Create a pool" icon="users">
+    ```bash title="Create pool with round-robin algorithm"
+    openstack loadbalancer pool create \
+      --name pool-http \
+      --lb-algorithm ROUND_ROBIN \
+      --listener listener-http \
+      --protocol HTTP
+    ```
+  </Step>
+  <Step title="Add members" icon="user-plus">
+    ```bash title="Add backend member"
+    openstack loadbalancer member create \
+      --subnet-id <instance-subnet-id> \
+      --address <instance-ip> \
+      --protocol-port 8080 \
+      pool-http
+    ```
+    Repeat for each backend instance.
+  </Step>
+  <Step title="Create a health monitor" icon="heart-pulse">
+    ```bash title="Create HTTP health monitor"
+    openstack loadbalancer healthmonitor create \
+      --name hm-http \
+      --delay 5 \
+      --timeout 3 \
+      --max-retries 3 \
+      --type HTTP \
+      --url-path /health \
+      --expected-codes 200 \
+      pool-http
+    ```
+    <Check>Load balancer is ACTIVE. Health monitor is probing members.</Check>
+  </Step>
+</Steps>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Floating IP Assignment" href="/services/load-balancer/floating-ip" color="#197560">
+    Expose the load balancer VIP on a public network for external access.
+  </Card>
+  <Card title="Listeners" href="/services/load-balancer/listeners" color="#197560">
+    Add HTTPS, TCP, or additional HTTP listeners to the load balancer.
+  </Card>
+  <Card title="Health Monitors" href="/services/load-balancer/health-monitors" color="#197560">
+    Tune health check parameters for your application's response characteristics.
+  </Card>
+  <Card title="Troubleshooting" href="/services/load-balancer/troubleshooting" color="#197560">
+    Resolve PENDING_CREATE status and member health issues.
+  </Card>
+</CardGroup>

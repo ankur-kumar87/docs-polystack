@@ -1,0 +1,139 @@
+---
+title: "Image Service Quotas"
+description: "Configure per-project image count and storage size limits to prevent catalog storage exhaustion in Xloud."
+sidebarTitle: "Quotas"
+---
+
+import AdminWarning from '/snippets/admin-warning.mdx';
+
+## Overview
+
+The Xloud Image Service enforces per-project quotas on image count and total storage size.
+Quotas prevent a single project from consuming the entire image catalog storage and ensure
+equitable resource distribution across teams.
+
+<AdminWarning />
+
+---
+
+## Quota Reference
+
+| Quota Field | Default | Description |
+|-------------|---------|-------------|
+| `images` | Unlimited | Maximum number of images (including snapshots) per project |
+| `image_size_total` | Unlimited | Maximum total image storage in bytes per project |
+| `image_staging_total` | Unlimited | Maximum staging area usage per project |
+| `image_count_total` | Unlimited | Combined count of uploaded and staging images |
+| `image_count_uploading` | Unlimited | Maximum simultaneous uploads per project |
+
+<Note>
+  Default quotas are unlimited unless explicitly configured. Set quotas proactively
+  for multi-project deployments to prevent runaway storage consumption.
+</Note>
+
+---
+
+## View Image Quotas
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    Navigate to the admin quota settings and review the Image section quota fields.
+    Per-project overrides are visible in **Identity > Projects** (admin view) > Modify Quotas.
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Show current image quota for a project"
+    openstack quota show --project backend-prod
+    ```
+
+    ```bash title="Show quota usage for a project"
+    openstack quota show --usage --project backend-prod
+    ```
+
+    ```bash title="Count images in a project"
+    openstack image list \
+      --project backend-prod \
+      --format json | python3 -c \
+      "import json,sys; imgs=json.load(sys.stdin); print(f'{len(imgs)} images')"
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Set Project Quotas
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Navigate to project quota settings" icon="settings">
+        Navigate to **Identity > Projects** (admin view). Find the project and click
+        **Modify Quotas**.
+      </Step>
+      <Step title="Set image quota values" icon="gauge">
+        Update the **Images** field to the maximum allowed image count and optionally
+        set **Image Storage** in bytes.
+
+        | Field | Example | Description |
+        |-------|---------|-------------|
+        | **Images** | `100` | Maximum image count per project |
+        | **Image Storage** | `107374182400` | Maximum total bytes (100 GB) |
+      </Step>
+      <Step title="Save quotas" icon="circle-check">
+        Click **Save**. The quota takes effect immediately.
+        <Check>Project quota is updated. New image uploads that exceed the limit will be rejected.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Set image count quota for a project"
+    openstack quota set --images 100 backend-prod
+    ```
+
+    ```bash title="View updated quotas"
+    openstack quota show backend-prod | grep image
+    ```
+
+    <Tip>
+      Storage-based quotas (byte limits) are set at the Image Service configuration level,
+      not via the standard quota API. Contact your platform administrator to set
+      `user_storage_quota` in the Image Service configuration.
+    </Tip>
+  </Tab>
+</Tabs>
+
+---
+
+## Monitor Quota Usage
+
+Set up regular quota monitoring to catch projects approaching their limits:
+
+```bash title="List all projects with image counts"
+openstack image list --all-projects \
+  -c project_id \
+  -f json | python3 -c "
+import json, sys, collections
+imgs = json.load(sys.stdin)
+counts = collections.Counter(i['project_id'] for i in imgs)
+for proj_id, count in sorted(counts.items(), key=lambda x: -x[1])[:10]:
+    print(f'{count:4d}  {proj_id}')
+"
+```
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Security" href="/services/images/image-security" color="#197560">
+    Control access to public image creation alongside quota enforcement.
+  </Card>
+  <Card title="Admin Troubleshooting" href="/services/images/admin-troubleshooting" color="#197560">
+    Resolve quota exceeded errors and investigate storage consumption.
+  </Card>
+  <Card title="Image Cache" href="/services/images/image-cache" color="#197560">
+    Cache configuration also consumes storage — factor cache size into capacity planning.
+  </Card>
+  <Card title="Storage Backends" href="/services/images/storage-backends" color="#197560">
+    Review backend capacity alongside quota limits.
+  </Card>
+</CardGroup>

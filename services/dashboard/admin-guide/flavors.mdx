@@ -1,0 +1,60 @@
+---
+title: "Manage Flavors"
+description: "Create and manage compute flavors through the Xloud Dashboard admin view. Configure vCPU, RAM, GPU, NUMA, hot-add, and access control."
+sidebarTitle: "Flavors"
+---
+
+## Overview
+
+Navigate to **Compute > Flavors** in the admin sidebar to manage the flavor catalog.
+
+---
+
+## Create a Flavor
+
+Click **Create Flavor** to open the 2-step wizard:
+
+| Step | Name | Fields |
+|------|------|--------|
+| 1 | **Params Setting** | Architecture (X86/Heterogeneous/Bare Metal/ARM), Category, Name, vCPUs, Memory, Hot-Add config, Bandwidth, Ephemeral Disk, IOPS, NUMA, GPU, Compute Optimized (CPU Policy/Thread Policy/Page Size) |
+| 2 | **Access Type Setting** | Public (all projects) or Access Control (select specific projects) |
+
+<Note>
+  For the complete field-by-field reference with all architecture/category combinations,
+  see [Flavor Management](/services/compute/flavors).
+</Note>
+
+---
+
+## Flavor Actions
+
+| Action | Location | Description |
+|--------|----------|-------------|
+| **Delete** | First row action | Delete the flavor |
+| **Manage Access** | More dropdown | Change which projects can use this flavor |
+
+---
+
+## Flavor Detail
+
+Click a flavor name. Tabs: **Detail** (Base Info, GPU, NUMA, Compute Optimized cards,
+Extra Specs JSON) and **Instances** (all instances using this flavor).
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Flavor Management" href="/services/compute/flavors" color="#197560">
+    Complete flavor creation reference
+  </Card>
+  <Card title="Live Scaling" href="/services/compute/live-resize-admin" color="#197560">
+    Configure hot-add flavors for zero-downtime scaling
+  </Card>
+  <Card title="Launch an Instance" href="/services/compute/launch-instance" color="#197560">
+    Select flavors during instance creation
+  </Card>
+  <Card title="Quotas" href="/services/dashboard/admin-guide/quotas" color="#197560">
+    Set per-project vCPU and RAM limits
+  </Card>
+</CardGroup>

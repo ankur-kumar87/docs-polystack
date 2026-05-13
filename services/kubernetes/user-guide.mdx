@@ -1,0 +1,78 @@
+---
+title: "K8SaaS User Guide"
+description: "Deploy Kubernetes clusters on Xloud infrastructure — create cluster templates, provision clusters, scale node groups, access kubectl, and manage upgrades."
+sidebarTitle: "User Guide"
+mode: "wide"
+---
+
+<p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Overview</p>
+
+Xloud Kubernetes as a Service (K8SaaS) enables project teams to deploy and manage
+production-grade Kubernetes clusters on dedicated virtual infrastructure. Clusters are
+provisioned from reusable templates that define the Kubernetes version, node flavor,
+network driver, and container runtime.
+
+This guide covers the full cluster lifecycle — from creating a template through
+deployment, scaling, access, and upgrades.
+
+<Note>
+  **Prerequisites**
+  - `kubectl` installed on your local machine ([install guide](https://kubernetes.io/docs/tasks/tools/))
+  - Sufficient compute quota to provision cluster nodes — check with your administrator
+  - A project network with external access configured
+</Note>
+
+---
+
+<p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>In This Guide</p>
+
+<CardGroup cols={4}>
+  <Card title="Cluster Templates" icon="file-code" href="/services/kubernetes/user-guide/cluster-templates" color="#197560">
+    Create and manage reusable templates that define Kubernetes version, node flavor,
+    network driver, and container runtime.
+  </Card>
+  <Card title="Deploy a Cluster" icon="rocket" href="/services/kubernetes/user-guide/deploy-cluster" color="#197560">
+    Provision a Kubernetes cluster from a template — step-by-step walkthrough with
+    status monitoring and health verification.
+  </Card>
+  <Card title="Scale a Cluster" icon="arrows-up-down" href="/services/kubernetes/user-guide/scale-cluster" color="#197560">
+    Add and remove worker nodes to adjust cluster capacity for changing workload demands.
+  </Card>
+  <Card title="Access a Cluster" icon="key" href="/services/kubernetes/user-guide/access-cluster" color="#197560">
+    Download the kubeconfig, configure kubectl, and connect to your cluster securely.
+  </Card>
+  <Card title="Node Groups" icon="layers" href="/services/kubernetes/user-guide/node-groups" color="#197560">
+    Create specialized node groups with different flavors, labels, and taints for
+    workload-specific node pools.
+  </Card>
+  <Card title="Cluster Upgrades" icon="arrow-up-circle" href="/services/kubernetes/user-guide/cluster-upgrades" color="#197560">
+    Upgrade a cluster to a newer Kubernetes version with rolling node replacement.
+  </Card>
+  <Card title="Troubleshooting" icon="wrench" href="/services/kubernetes/user-guide/troubleshooting" color="#197560">
+    Diagnose cluster provisioning failures, node health issues, and kubectl connectivity problems.
+  </Card>
+</CardGroup>
+
+---
+
+<p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Key Concepts</p>
+
+| Concept | Description |
+|---------|-------------|
+| **Cluster Template** | A reusable blueprint defining Kubernetes version, node flavor, network driver, and runtime |
+| **Cluster** | A provisioned Kubernetes environment — control plane + initial worker node pool |
+| **Node Group** | A pool of homogeneous worker nodes within a cluster, independently scalable |
+| **Kubeconfig** | The authentication credential file used by `kubectl` to connect to the cluster |
+
+---
+
+<p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Next Steps</p>
+
+<CardGroup cols={4}>
+  <Card title="K8SaaS Admin Guide" icon="shield-check" href="/services/kubernetes/admin-guide" color="#197560">
+    Configure cluster drivers, quotas, certificates, network drivers, and monitoring.
+  </Card>
+  <Card title="K8SaaS Overview" icon="layers" href="/services/kubernetes/index" color="#197560">
+    Service overview and getting started with Kubernetes as a Service.
+  </Card>
+</CardGroup>

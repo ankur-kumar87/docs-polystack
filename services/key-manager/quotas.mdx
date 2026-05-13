@@ -1,0 +1,97 @@
+---
+title: "Key Manager Quotas"
+description: "Manage per-project Key Manager resource limits in Xloud — view and set quotas for secrets, containers, certificate orders, consumers, and CA configurations."
+sidebarTitle: "Quotas"
+---
+
+import AdminWarning from '/snippets/admin-warning.mdx';
+
+## Overview
+
+Key Manager quotas prevent individual projects from creating excessive secrets,
+containers, or orders. Default values are set platform-wide; administrators override
+them per project.
+
+<AdminWarning />
+
+---
+
+## Default Quota Reference
+
+| Resource | Default Limit | Description |
+|----------|--------------|-------------|
+| `secrets` | 20 | Secrets per project |
+| `orders` | 20 | Certificate orders per project |
+| `containers` | 20 | Containers per project |
+| `consumers` | 20 | Service consumers per container |
+| `cas` | 10 | Certificate Authority configurations per project |
+
+---
+
+## View Quotas
+
+<Tabs>
+  <Tab title="Platform defaults" icon="eye">
+    ```bash title="Show platform-wide quota defaults"
+    openstack secret quota show
+    ```
+  </Tab>
+  <Tab title="Project quotas (admin)" icon="shield">
+    ```bash title="Show quotas for a specific project"
+    openstack secret quota show <project-id>
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Set Quotas
+
+```bash title="Set project-specific Key Manager quotas"
+openstack secret quota set \
+  --secrets 100 \
+  --orders 50 \
+  --containers 50 \
+  <project-id>
+```
+
+```bash title="Reset to platform defaults"
+openstack secret quota delete <project-id>
+```
+
+<Tip>
+  Production projects running automated certificate rotation or large service meshes
+  may require `secrets` quotas in the hundreds. Monitor usage quarterly to right-size
+  quota allocations.
+</Tip>
+
+---
+
+## Monitor Quota Usage
+
+```bash title="Count secrets in a project"
+openstack secret list --project <project-id> | wc -l
+```
+
+```bash title="Count containers in a project"
+openstack secret container list --project <project-id> | wc -l
+```
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Security" href="/services/key-manager/security" color="#197560">
+    Apply Key Manager security hardening policies
+  </Card>
+  <Card title="Backend Configuration" href="/services/key-manager/backend-config" color="#197560">
+    Configure the underlying secret store backend
+  </Card>
+  <Card title="Admin Troubleshooting" href="/services/key-manager/admin-troubleshooting" color="#197560">
+    Diagnose quota-related errors and service issues
+  </Card>
+  <Card title="Key Manager User Guide" href="/services/key-manager/user-guide" color="#197560">
+    User-facing secret and container management
+  </Card>
+</CardGroup>

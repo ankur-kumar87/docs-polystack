@@ -1,0 +1,136 @@
+---
+title: "Clone an Instance"
+description: "Create an exact copy of a running instance including disks, network, and security configuration using the Dashboard or CLI."
+sidebarTitle: "Clone Instance"
+---
+
+## Overview
+
+Cloning creates an exact copy of an existing instance — including its root disk, attached
+volumes, network configuration, security groups, and key pair. The clone can optionally
+be placed on a different network or availability zone. This is useful for scaling
+horizontally, creating test environments from production instances, or duplicating
+pre-configured application stacks.
+
+<Info>**Xloud-Developed** — Instance cloning is developed by Xloud and ships with XAVS / XPCI.</Info>
+
+<Note>
+  **Prerequisites**
+  - An instance in `Active`, `Stopped`, or `Shutoff` status
+  - Sufficient quota for the new instance (vCPU, RAM, disk)
+</Note>
+
+---
+
+## Clone an Instance
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    <Steps titleSize="h3">
+      <Step title="Open the Clone dialog">
+        Navigate to **Compute > Instances**. Click the **More** dropdown on the
+        instance row, then select **Clone Instance** under the **Clone & Template**
+        group.
+
+        <Note>
+          Clone Instance is only available for instances in `Active`, `Stopped`,
+          or `Shutoff` status.
+        </Note>
+      </Step>
+      <Step title="Configure the clone">
+        | Field | Type | Required | Default | Description |
+        |-------|------|----------|---------|-------------|
+        | **Instance** | Read-only | — | Source name | The instance being cloned |
+        | **Name** | Text | Yes | `{source}-clone` | Display name for the cloned instance |
+        | **Network** | Dropdown | No | Same as source | Optionally place on a different network |
+        | **Available Zone** | Dropdown | No | Same as source | Optionally place in a different zone |
+        | **Auto Start** | Checkbox | No | Checked | Start the clone automatically after creation |
+        | **Description** | Text area | No | — | Optional notes |
+
+        <Tip>
+          Leave **Network** and **Available Zone** empty to use the same settings
+          as the source instance. Override them only when you need the clone on a
+          different network segment or fault domain.
+        </Tip>
+      </Step>
+      <Step title="Create the clone">
+        Click **Confirm**. The clone appears in the instance list with status
+        `Build`, transitioning to `Active` when ready (if Auto Start is checked).
+
+        <Check>Cloned instance is `Active` with the same configuration as the source.</Check>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Source credentials"
+    source openrc.sh
+    ```
+
+    Clone uses the Xloud-developed Nova API extension:
+
+    ```bash title="Clone an instance"
+    curl -X POST -H "X-Auth-Token: $TOKEN" \
+      -H "Content-Type: application/json" \
+      -d '{
+        "xloud-clone": {
+          "name": "my-instance-clone",
+          "auto_start": true
+        }
+      }' \
+      "$NOVA_ENDPOINT/v2.1/servers/<INSTANCE_ID>/action"
+    ```
+
+    ```bash title="Clone to a different network"
+    curl -X POST -H "X-Auth-Token: $TOKEN" \
+      -H "Content-Type: application/json" \
+      -d '{
+        "xloud-clone": {
+          "name": "my-instance-clone",
+          "auto_start": true,
+          "network_id": "<TARGET_NETWORK_ID>",
+          "availability_zone": "az2"
+        }
+      }' \
+      "$NOVA_ENDPOINT/v2.1/servers/<INSTANCE_ID>/action"
+    ```
+
+    <Note>
+      Clone uses the Xloud-developed `xloud-clone` Nova server action. The standard
+      `openstack` CLI does not have a native clone command.
+    </Note>
+  </Tab>
+</Tabs>
+
+---
+
+## What Gets Cloned
+
+| Component | Cloned | Notes |
+|-----------|--------|-------|
+| Root disk | Yes | Full copy of the boot volume |
+| Attached volumes | Yes | Copies of all data volumes |
+| Network configuration | Yes | Same network unless overridden |
+| Security groups | Yes | Same security group assignments |
+| Key pair | Yes | Same SSH key pair |
+| Flavor | Yes | Same vCPU, RAM, disk profile |
+| Metadata | Yes | Instance metadata preserved |
+| User data | No | Cloud-init scripts are not re-executed |
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="VM Templates" href="/services/compute/vm-templates" color="#197560">
+    Convert instances to reusable templates for standardized deployments
+  </Card>
+  <Card title="Instance Snapshots" href="/services/compute/snapshots" color="#197560">
+    Create point-in-time snapshots without full cloning
+  </Card>
+  <Card title="Create an Instance" href="/services/compute/launch-instance" color="#197560">
+    Launch new instances from scratch using the 4-step wizard
+  </Card>
+  <Card title="Server Groups" href="/services/compute/server-groups" color="#197560">
+    Use anti-affinity to distribute clones across hosts
+  </Card>
+</CardGroup>

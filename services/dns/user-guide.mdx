@@ -1,0 +1,76 @@
+---
+title: "DNS User Guide"
+description: "Manage DNS zones, record sets, reverse DNS, and record types in Xloud DNS. Learn to create zones, populate records, configure PTR entries, and."
+sidebarTitle: "User Guide"
+mode: "wide"
+---
+
+import PrerequisitesAuth from '/snippets/prerequisites-auth.mdx';
+
+<p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Overview</p>
+
+Xloud DNS provides authoritative DNS management for your private cloud domains. Create
+zones, populate them with record sets, and manage reverse DNS for IP-to-hostname
+resolution. DNS records integrate with your compute and networking resources to support
+service discovery, email routing, and compliance requirements.
+
+<PrerequisitesAuth />
+
+---
+
+<p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Topics in This Guide</p>
+
+<CardGroup cols={4}>
+  <Card title="Create a Zone" icon="circle-plus" href="/services/dns/create-zone" color="#197560">
+    Provision authoritative DNS zones for your domains with TTL and SOA configuration
+  </Card>
+  <Card title="Manage Records" icon="list" href="/services/dns/manage-records" color="#197560">
+    Add, edit, and delete record sets within a zone using the Dashboard or CLI
+  </Card>
+  <Card title="Record Types Reference" icon="book" href="/services/dns/record-types" color="#197560">
+    Full reference for A, AAAA, CNAME, MX, TXT, SRV, NS, CAA, and other record types
+  </Card>
+  <Card title="Reverse DNS" icon="arrow-left-right" href="/services/dns/reverse-dns" color="#197560">
+    Configure PTR records for IPv4 and IPv6 addresses to support mail and audit requirements
+  </Card>
+  <Card title="Troubleshooting" icon="wrench" href="/services/dns/troubleshooting" color="#197560">
+    Resolve zone errors, propagation issues, and CNAME conflicts
+  </Card>
+</CardGroup>
+
+---
+
+<p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Key Concepts</p>
+
+| Concept | Description |
+|---------|-------------|
+| **Zone** | An authoritative DNS domain boundary (e.g., `app.example.com.`). Contains all record sets for that domain |
+| **Record Set** | One or more DNS records sharing the same name and type — e.g., two A records for `www` |
+| **Nameserver** | The resolver authoritative for the zone. Clients send queries here to resolve names |
+| **PTR Record** | Reverse mapping — resolves an IP address back to a hostname. Required for mail servers and audit logging |
+| **SOA Record** | Start of Authority — defines zone parameters including serial number, refresh interval, and primary nameserver |
+| **TTL** | Time-to-Live — how long resolvers cache a record before re-querying. Lower values propagate changes faster |
+
+<Note>
+  DNS zones must be properly delegated before public resolvers can use them. For internal
+  zones, ensure your clients are configured to query the Xloud DNS service nameservers.
+</Note>
+
+---
+
+<p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Next Steps</p>
+
+<CardGroup cols={4}>
+  <Card title="DNS Admin Guide" icon="shield-check" href="/services/dns/admin-guide" color="#197560">
+    Configure backend drivers, zone transfers, and quotas as a platform administrator
+  </Card>
+  <Card title="Load Balancer" icon="combine" href="/services/load-balancer/user-guide" color="#197560">
+    Create load balancers and map DNS records to their floating IPs
+  </Card>
+  <Card title="Key Manager" icon="lock" href="/services/key-manager/user-guide" color="#197560">
+    Store DNSSEC signing keys and TLS certificates for your domains
+  </Card>
+  <Card title="Networking" icon="network" href="/services/networking/user-guide" color="#197560">
+    Configure floating IPs and fixed IPs referenced in DNS records
+  </Card>
+</CardGroup>

@@ -1,0 +1,160 @@
+---
+title: "Network Monitoring"
+description: "Analyze traffic flows, detect anomalous patterns, and monitor protocol distribution across virtual and physical networks."
+sidebarTitle: "Network Monitoring"
+---
+
+## Overview
+
+The XIMP Network Traffic Monitoring module provides deep visibility into traffic flows,
+bandwidth consumption, and protocol distribution across your virtual and physical networks.
+Operations teams use it to identify top bandwidth consumers, investigate anomalous patterns,
+and baseline normal network behavior.
+
+<Note>
+  **Prerequisites**
+  - An active Xloud account with project access
+  - Network flow collection configured by your administrator
+    (see [XIMP Admin — Agent Configuration](/services/monitoring/admin-guide/agent-config))
+</Note>
+
+---
+
+## Network Traffic Views
+
+<Tabs>
+  <Tab title="Dashboard" icon="gauge">
+    Navigate to **Monitor Center > Monitoring** (Network section, admin view) to access network monitoring views.
+
+    | View | Shows |
+    |------|-------|
+    | **Traffic Overview** | Total inbound/outbound traffic per interface over time |
+    | **Top Talkers** | Highest-bandwidth source/destination pairs |
+    | **Protocol Analysis** | Traffic breakdown by protocol (TCP, UDP, ICMP, application layer) |
+    | **Flow Table** | Individual network flows with source, destination, port, and bytes |
+    | **Anomaly Detection** | Unusual traffic patterns flagged by behavioral analysis |
+
+    <Tip>
+      Set the **Scope** filter to a specific project, network, or subnet to isolate
+      traffic for a particular project or application tier.
+    </Tip>
+  </Tab>
+  <Tab title="CLI" icon="terminal">
+    ```bash title="Get top bandwidth consumers (last 1h)"
+    ximp network top-talkers --period 1h --limit 10
+    ```
+
+    ```bash title="Show traffic for a specific host"
+    ximp network flows --host 10.0.1.50 --from now-24h
+    ```
+
+    ```bash title="Export flow data"
+    ximp network export \
+      --network prod-tenant-net \
+      --from 2026-03-17T00:00 \
+      --to 2026-03-17T23:59 \
+      --output flows-2026-03-17.csv
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Analyzing Traffic Anomalies
+
+<Steps titleSize="h3">
+  <Step title="Review the Anomaly Detection panel" icon="circle-x">
+    Navigate to **Monitor Center > Monitoring** (Network Anomaly, admin view). XIMP uses behavioral
+    baselines to flag traffic patterns that deviate significantly from historical norms.
+
+    Each anomaly entry shows:
+    - Detection time and duration
+    - Affected host or network segment
+    - Anomaly type (volumetric, port scan, protocol violation, etc.)
+    - Confidence score
+  </Step>
+  <Step title="Drill into suspicious flows" icon="search">
+    Click on an anomaly event to view the associated flow records. Use the Flow Table
+    to examine individual connections:
+
+    | Column | Description |
+    |--------|-------------|
+    | **Source IP** | Originating IP address |
+    | **Destination IP** | Target IP address |
+    | **Port** | Destination port |
+    | **Protocol** | TCP, UDP, ICMP |
+    | **Bytes** | Total data transferred in this flow |
+    | **Duration** | Flow lifetime in seconds |
+  </Step>
+  <Step title="Correlate with logs" icon="file-text">
+    Cross-reference suspicious traffic with log events in the Log Explorer:
+
+    ```
+    host:<SUSPICIOUS_IP> level:ERROR
+    ```
+
+    Combined network flow data and log events often confirm whether an anomaly
+    is malicious or benign (e.g., a legitimate backup job generating unusual
+    burst traffic).
+
+    <Tip>
+      Use XIMP's **Linked Panels** feature to open the Log Explorer pre-filtered
+      to the host and time range of a network anomaly with a single click.
+    </Tip>
+  </Step>
+</Steps>
+
+---
+
+## Setting Network Traffic Alerts
+
+Alert on network conditions that indicate problems or security events:
+
+<Tabs>
+  <Tab title="Bandwidth Threshold Alert" icon="gauge">
+    Navigate to **Monitor Center > Monitoring** (Create Alert Rule, admin view):
+
+    | Field | Value |
+    |-------|-------|
+    | **Metric** | `xloud_network_interface_rx_bytes` |
+    | **Condition** | `>` |
+    | **Threshold** | 900000000 (900 MB/s — 90% of 1 GbE) |
+    | **Evaluation Period** | 5 minutes |
+    | **Severity** | Warning |
+  </Tab>
+  <Tab title="Packet Loss Alert" icon="circle-x">
+    ```yaml title="alert-packet-loss.yaml"
+    name: high-packet-loss
+    metric: xloud_network_packet_loss_pct
+    condition: ">"
+    threshold: 1
+    evaluation_period: 5m
+    severity: critical
+    notification_channels:
+      - ops-email
+    ```
+
+    ```bash title="Create alert"
+    ximp alert rule create --file alert-packet-loss.yaml
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Metrics & Alerts" href="/services/monitoring/user-guide/metrics-alerts" color="#197560">
+    Create bandwidth and packet loss alert rules
+  </Card>
+  <Card title="Log Analytics" href="/services/monitoring/user-guide/log-analytics" color="#197560">
+    Correlate network anomalies with log events from the same time window
+  </Card>
+  <Card title="Alert Rules (Advanced)" href="/services/monitoring/user-guide/alert-rules" color="#197560">
+    Configure compound alert conditions and escalation for network events
+  </Card>
+  <Card title="XIMP Admin — DDoS Protection" href="/services/monitoring/admin-guide/ddos-protection" color="#197560">
+    Configure automatic DDoS mitigation policies (administrator)
+  </Card>
+</CardGroup>

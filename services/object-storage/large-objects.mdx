@@ -1,0 +1,144 @@
+---
+title: "Large Object Uploads"
+description: "Upload files larger than 5 GB in Xloud Object Storage using Static Large Objects (SLO) or Dynamic Large Objects (DLO) for multi-part segment management."
+sidebarTitle: "Large Objects"
+---
+
+import PrerequisitesAuth from '/snippets/prerequisites-auth.mdx';
+
+## Overview
+
+Individual objects in Xloud Object Storage are limited to 5 GB per upload request.
+Files larger than 5 GB must be split into segments and uploaded as a Large Object —
+either a Static Large Object (SLO) or Dynamic Large Object (DLO). Both produce a
+manifest object that transparently concatenates segments when downloaded.
+
+<PrerequisitesAuth />
+
+---
+
+## SLO vs DLO Comparison
+
+| Method | Manifest | Best For | Segment Discovery |
+|--------|----------|---------|-------------------|
+| **SLO** (Static Large Object) | Explicit JSON manifest listing each segment | Large files with known segments | Explicit — you define each segment path |
+| **DLO** (Dynamic Large Object) | Object with `X-Object-Manifest` header | Streaming uploads of unknown total size | Automatic — by name prefix convention |
+
+---
+
+## Static Large Object (SLO)
+
+Use SLO when the complete file is available before upload begins.
+
+<Steps titleSize="h3">
+  <Step title="Split the file into segments">
+    ```bash title="Split file into 1 GB segments"
+    split -b 1G large-backup.tar.gz large-backup.tar.gz.part-
+    ```
+  </Step>
+  <Step title="Create a segments container">
+    ```bash title="Create dedicated segments container"
+    openstack container create app-backups-segments
+    ```
+  </Step>
+  <Step title="Upload each segment">
+    ```bash title="Upload all segments"
+    for f in large-backup.tar.gz.part-*; do
+      openstack object create app-backups-segments "$f"
+    done
+    ```
+  </Step>
+  <Step title="Build and upload the SLO manifest">
+    Collect the ETag of each segment (shown in the upload output) and create a manifest:
+
+    ```json title="manifest.json"
+    [
+      {
+        "path": "app-backups-segments/large-backup.tar.gz.part-aa",
+        "etag": "<etag-from-upload>",
+        "size_bytes": 1073741824
+      },
+      {
+        "path": "app-backups-segments/large-backup.tar.gz.part-ab",
+        "etag": "<etag-from-upload>",
+        "size_bytes": 524288000
+      }
+    ]
+    ```
+
+    Upload the manifest with the multipart-manifest query parameter:
+    ```bash title="Create SLO manifest"
+    curl -X PUT \
+      -H "X-Auth-Token: $OS_TOKEN" \
+      -H "Content-Type: application/json" \
+      --data-binary @manifest.json \
+      "https://object.<your-domain>/v1/<account>/app-backups/large-backup.tar.gz?multipart-manifest=put"
+    ```
+
+    <Check>The large object is now accessible at `app-backups/large-backup.tar.gz` and
+    downloads transparently concatenate all segments.</Check>
+  </Step>
+</Steps>
+
+---
+
+## Dynamic Large Object (DLO)
+
+Use DLO for streaming uploads where the total object size is not known in advance.
+
+<Steps titleSize="h3">
+  <Step title="Upload segments with a common prefix">
+    Upload each segment with a naming convention that groups them by prefix:
+
+    ```bash title="Upload DLO segments"
+    openstack object create app-backups large-backup/segment-0001
+    openstack object create app-backups large-backup/segment-0002
+    openstack object create app-backups large-backup/segment-0003
+    ```
+  </Step>
+  <Step title="Create the DLO manifest object">
+    Create a zero-byte manifest object pointing to the segment prefix:
+
+    ```bash title="Create DLO manifest"
+    curl -X PUT \
+      -H "X-Auth-Token: $OS_TOKEN" \
+      -H "X-Object-Manifest: app-backups/large-backup/" \
+      -H "Content-Length: 0" \
+      "https://object.<your-domain>/v1/<account>/app-backups/large-backup"
+    ```
+
+    <Check>Accessing `app-backups/large-backup` transparently returns all segments concatenated in alphabetical order.</Check>
+  </Step>
+</Steps>
+
+---
+
+## Download a Large Object
+
+Downloading a large object (SLO or DLO) is transparent — use the same commands as a
+normal object:
+
+```bash title="Download large object"
+openstack object save app-backups large-backup.tar.gz
+```
+
+The proxy server automatically retrieves and concatenates all segments.
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Upload Objects" href="/services/object-storage/upload-objects" color="#197560">
+    Standard object upload for files under 5 GB
+  </Card>
+  <Card title="Versioning" href="/services/object-storage/versioning" color="#197560">
+    Enable versioning on containers that hold large objects
+  </Card>
+  <Card title="Troubleshooting" href="/services/object-storage/troubleshooting" color="#197560">
+    Resolve large object upload timeouts and manifest errors
+  </Card>
+  <Card title="Storage Policies" href="/services/object-storage/storage-policies" color="#197560">
+    Choose the right storage policy for large object containers
+  </Card>
+</CardGroup>
