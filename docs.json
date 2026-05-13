@@ -11,7 +11,7 @@
     "default": "dark",
     "strict": true
   },
-  "favicon": "/images/favicon.ico",
+  "favicon": "/images/polystack-favicon.png",
   "icons": {
     "library": "lucide"
   },
@@ -776,22 +776,22 @@
   "footer": {
     "links": [
       {
-        "title": "Company",
+        "title": "Contact",
         "items": [
           {
-            "label": "About Us",
-            "href": "https://polystack.tech/about-us/"
-          },
-          {
-            "label": "Contact Us",
+            "label": "1612, Logix City Center Office Tower,",
             "href": "https://polystack.tech/contact-us/"
           },
           {
-            "label": "Knowledge Base",
-            "href": "https://polystack.tech/knowledgeBase/getting-started"
+            "label": "Sector- 32 Noida , UP-201301",
+            "href": "https://polystack.tech/contact-us/"
+          },
+          {
+            "label": "India.",
+            "href": "https://polystack.tech/contact-us/"
           }
         ],
-        "header": "Company"
+        "header": "Contact"
       },
       {
         "title": "Solutions",
@@ -805,12 +805,12 @@
             "href": "https://polystack.tech/products/datacenter-solutions/"
           },
           {
-            "label": "IronPeak Servers",
-            "href": "https://polystack.tech/ironpeak-servers/"
+            "label": "Cyber Range",
+            "href": "https://polystack.tech/cyber-range"
           },
           {
-            "label": "Polystack Support Services",
-            "href": "https://polystack.tech/polystack-support-services/"
+            "label": "Anti Ransomware",
+            "href": "https://polystack.tech/anti-ransomware"
           }
         ],
         "header": "Solutions"
@@ -819,44 +819,49 @@
         "title": "Products",
         "items": [
           {
-            "label": "STAQ Edge Systems",
-            "href": "https://polystack.tech/products/edge-computing/"
+            "label": "VIDS",
+            "href": "https://polystack.tech/vids"
           },
           {
-            "label": "IronFlex HCI",
-            "href": "https://polystack.tech/products/datacenter-solutions/"
+            "label": "ATCC",
+            "href": "https://polystack.tech/atcc"
+          },
+          {
+            "label": "AVCC",
+            "href": "https://polystack.tech/avcc"
           }
         ],
         "header": "Products"
       },
       {
-        "title": "Legal",
+        "title": "Company",
         "items": [
           {
-            "label": "Privacy Policy",
-            "href": "https://polystack.tech/privacy-policy"
+            "label": "Technical assistance",
+            "href": "https://polystack.tech/contact-us/"
           },
           {
-            "label": "Terms & Conditions",
-            "href": "https://polystack.tech/terms-and-conditions"
+            "label": "Partners",
+            "href": "https://polystack.tech/partners"
           },
           {
-            "label": "Legal",
-            "href": "https://polystack.tech/legal"
+            "label": "Career",
+            "href": "https://polystack.tech/career"
           },
           {
-            "label": "Refund and Cancellation Policy",
-            "href": "https://polystack.tech/refund-and-cancellation-policy"
+            "label": "About Us",
+            "href": "https://polystack.tech/about-us/"
+          },
+          {
+            "label": "Contact Us",
+            "href": "https://polystack.tech/contact-us/"
           }
         ],
-        "header": "Company Policies"
+        "header": "Company"
       }
     ],
     "socials": {
       "linkedin": "https://linkedin.com/company/polystack",
-      "instagram": "https://instagram.com/polystacktech",
-      "x": "https://x.com/polystacktech",
-      "youtube": "https://youtube.com/@polystacktech",
       "website": "https://polystack.tech/"
     }
   },
