@@ -66,12 +66,12 @@ Scripts receive the following environment variables from the Disaster Recovery r
 
 | Variable | Value |
 |----------|-------|
-| `XDR_PLAN_NAME` | Name of the recovery plan |
-| `XDR_SITE` | Name of the recovery site (DR site) |
-| `XDR_GROUP_NAME` | Name of the current resource group |
-| `XDR_RESOURCE_IDS` | Space-separated list of recovered resource IDs |
-| `XDR_EVENT_ID` | Unique identifier for this failover event |
-| `XDR_RECOVERY_POINT` | Timestamp of the recovery point used |
+| `DR_PLAN_NAME` | Name of the recovery plan |
+| `DR_SITE` | Name of the recovery site (DR site) |
+| `DR_GROUP_NAME` | Name of the current resource group |
+| `DR_RESOURCE_IDS` | Space-separated list of recovered resource IDs |
+| `DR_EVENT_ID` | Unique identifier for this failover event |
+| `DR_RECOVERY_POINT` | Timestamp of the recovery point used |
 
 ### Script Requirements
 
@@ -92,12 +92,12 @@ Scripts receive the following environment variables from the Disaster Recovery r
 
     set -euo pipefail
 
-    # XDR_RESOURCE_IDS and XDR_SITE are provided by the Disaster Recovery runtime
+    # DR_RESOURCE_IDS and DR_SITE are provided by the Disaster Recovery runtime
     # Resource IPs are resolved from the recovery metadata
-    for id in $XDR_RESOURCE_IDS; do
+    for id in $DR_RESOURCE_IDS; do
       # Parse recovery metadata for IP and hostname
-      ip=$(echo "$XDR_RECOVERY_METADATA" | jq -r ".resources[\"$id\"].ip")
-      hostname=$(echo "$XDR_RECOVERY_METADATA" | jq -r ".resources[\"$id\"].hostname")
+      ip=$(echo "$DR_RECOVERY_METADATA" | jq -r ".resources[\"$id\"].ip")
+      hostname=$(echo "$DR_RECOVERY_METADATA" | jq -r ".resources[\"$id\"].hostname")
 
       nsupdate -k /etc/ironcore/dns.key <<EOF
     server 10.0.1.71
@@ -109,7 +109,7 @@ Scripts receive the following environment variables from the Disaster Recovery r
       echo "Updated DNS: ${hostname}.internal -> ${ip}"
     done
 
-    echo "DNS update complete for group: $XDR_GROUP_NAME"
+    echo "DNS update complete for group: $DR_GROUP_NAME"
     ```
   </Accordion>
   <Accordion title="Service registry update" icon="list">
@@ -123,10 +123,10 @@ Scripts receive the following environment variables from the Disaster Recovery r
 
     REGISTRY_URL="http://service-registry.internal:8500"
 
-    # XDR_RESOURCE_IDS and XDR_RECOVERY_METADATA are provided by the Disaster Recovery runtime
-    for id in $XDR_RESOURCE_IDS; do
-      ip=$(echo "$XDR_RECOVERY_METADATA" | jq -r ".resources[\"$id\"].ip")
-      service=$(echo "$XDR_RECOVERY_METADATA" | jq -r ".resources[\"$id\"].tags[\"service-name\"]")
+    # DR_RESOURCE_IDS and DR_RECOVERY_METADATA are provided by the Disaster Recovery runtime
+    for id in $DR_RESOURCE_IDS; do
+      ip=$(echo "$DR_RECOVERY_METADATA" | jq -r ".resources[\"$id\"].ip")
+      service=$(echo "$DR_RECOVERY_METADATA" | jq -r ".resources[\"$id\"].tags[\"service-name\"]")
 
       curl -sf -X PUT "${REGISTRY_URL}/v1/agent/service/register" \
         -H "Content-Type: application/json" \
@@ -148,13 +148,13 @@ Scripts receive the following environment variables from the Disaster Recovery r
       -H "Content-Type: application/json" \
       -d "{
         \"event\": \"DR_FAILOVER_STARTING\",
-        \"plan\": \"$XDR_PLAN_NAME\",
-        \"site\": \"$XDR_SITE\",
-        \"event_id\": \"$XDR_EVENT_ID\",
-        \"recovery_point\": \"$XDR_RECOVERY_POINT\"
+        \"plan\": \"$DR_PLAN_NAME\",
+        \"site\": \"$DR_SITE\",
+        \"event_id\": \"$DR_EVENT_ID\",
+        \"recovery_point\": \"$DR_RECOVERY_POINT\"
       }"
 
-    echo "On-call notified for failover event $XDR_EVENT_ID"
+    echo "On-call notified for failover event $DR_EVENT_ID"
     ```
   </Accordion>
 </AccordionGroup>

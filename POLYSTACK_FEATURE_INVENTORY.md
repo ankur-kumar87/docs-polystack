@@ -152,7 +152,6 @@ Documentation MUST use customer-facing names (from `polystack-public-content-gua
 
 | # | Feature | Repo | Doc Status | Current Page | Gap |
 |---|---------|------|-----------|--------------|-----|
-| I1 | **xInsight-AI** | xinsight-ai, 26 commits | MISSING | Unified Storage product page only | 42 MCP tools, 3 chat modes, on-premises LLM |
 | I2 | **XLicense Portal** | xlicense, 110 commits | N/A-DOCS | — | Backend portal |
 | I3 | **Ironcore Guest Agent** | ironcore-guest-agent, 3 commits | MISSING | — | VSS provider for Windows app-consistent snapshots |
 | I4 | **Polystack OS** (custom Ubuntu 24.04) | subiquity+cubic | PARTIAL | Polystack OS product page | No install guide |
@@ -205,7 +204,6 @@ Documentation MUST use customer-facing names (from `polystack-public-content-gua
 3. **3 Memory Methods** (A3) — balloon+DIMM+virtio-mem unique combination
 4. **Combined Manual+Auto Storage Tiering** (F1+B2) — VMware deprecated SDRS
 5. **Built-in SIEM** (C1+D1) — no competitor includes SIEM in base
-6. **xInsight-AI** (I1) — on-premises NLP cloud management
 7. **Per-Volume Selective Encryption** (F3) — competitors are all-or-nothing
 8. **Triple Compliance Scanning** (D13) — SCA+Lynis+OpenSCAP
 

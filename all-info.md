@@ -113,14 +113,12 @@
 | NAS Storage | NAS Storage | SMB, NFS, AFP, FTP, snapshots, HA |
 | Unified Storage | Unified Storage | Dell HW, coming soon |
 | Polystack OS | Operating System | Custom Ubuntu 24.04 |
-| xInsight-AI | AI-Powered Ops | 42 MCP tools, on-premises LLM (separate product from Unified Storage) |
 
 ### Product Page Rules
 - Software-Defined-Storage is the example — keep all product pages minimal like Software-Defined-Storage
 - Max 4 services per product page
 - Link to website for full details: `https://polystack.tech/contact`
 - Each product page links to docs pages, not website pages
-- xInsight-AI is SEPARATE from Unified Storage
 
 ---
 
@@ -202,7 +200,6 @@ For config file edits:
 3. **3 Memory Methods** — balloon + DIMM + virtio-mem unique combination
 4. **Combined Manual+Auto Storage Tiering** — user picks tier + optimizer auto-moves
 5. **Built-in SIEM** (Security Posture Panel) — 8-tab Wazuh dashboard
-6. **xInsight-AI** — on-premises NLP cloud management, 42 MCP tools
 7. **Per-Volume Selective Encryption** — encrypt individual volumes
 8. **Triple Compliance Scanning** — SCA + Lynis + OpenSCAP
 

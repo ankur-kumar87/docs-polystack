@@ -227,7 +227,7 @@ services/monitoring/admin-guide/retention.mdx           ← Data retention
 **Endpoint**: magnum
 
 ### P3-B: Disaster Recovery (9 pages) — DO NOT REWRITE GUI
-**XDR is Dashboard-only (Hystax UI), NOT Skyline.** Keep existing Dashboard descriptions as-is.
+**Disaster Recovery is Dashboard-only (Hystax UI), NOT Skyline.** Keep existing Dashboard descriptions as-is.
 Only fix: branding (no "Hystax"), nav path corrections if needed.
 
 ### P3-C: SDS (4 pages) — DO NOT REWRITE GUI
@@ -278,7 +278,7 @@ Only fix: ensure the deployment console tab first in admin pages.
 | Phase 1 (core user services) | 69 |
 | Phase 2 (admin-only services) | 25 |
 | Phase 3 (special services) | 25 (11 rewrite + 14 light-touch) |
-| DO NOT TOUCH (XDR + SDS) | 13 |
+| DO NOT TOUCH (Disaster Recovery + SDS) | 13 |
 
 ---
 
