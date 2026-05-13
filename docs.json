@@ -16,7 +16,7 @@
     "library": "fontawesome"
   },
   "interaction": {
-    "drilldown": false
+    "drilldown": true
   },
   "homepage": "introduction",
   "css": "/custom.css",
