@@ -1,10 +1,10 @@
-# 🗂️ Xloud XAVS – IPAM Integration for Automated VM IP Addressing
+# 🗂️ Polystack IronCore – IPAM Integration for Automated VM IP Addressing
 
 ---
 
 ## 1. 🔎 Introduction
 
-**Xloud XAVS OpenStack** supports integration with leading external **IP Address Management (IPAM)** solutions to automate the allocation and reservation of IP addresses during virtual machine provisioning. This feature enables customers to maintain consistent, policy-driven IP assignments and simplifies network operations across private and hybrid environments.
+**Polystack IronCore OpenStack** supports integration with leading external **IP Address Management (IPAM)** solutions to automate the allocation and reservation of IP addresses during virtual machine provisioning. This feature enables customers to maintain consistent, policy-driven IP assignments and simplifies network operations across private and hybrid environments.
 
 Supported IPAM platforms include:
 
@@ -23,7 +23,7 @@ With this integration, IP address reservation and metadata synchronization are h
 ### 🔹 High-Level Workflow
 
 1. **Tenant requests VM** → Instance creation is triggered via Horizon, CLI, or API.
-2. **Xloud IPAM Hook** activates → Calls the designated IPAM API to reserve an IP address based on subnet and project policies.
+2. **Polystack IPAM Hook** activates → Calls the designated IPAM API to reserve an IP address based on subnet and project policies.
 3. **IP Assignment returned** → The reserved IP is injected into the OpenStack Neutron port.
 4. **VM boots with assigned IP** → Neutron assigns the pre-reserved IP and the instance is created.
 5. **IPAM updated** → Reverse DNS, metadata, and host entries can be optionally synchronized.
@@ -100,7 +100,7 @@ This integration can be configured **per project, per subnet, or globally**, and
 
 * **Pluggable Middleware Architecture**:
 
-  * Xloud XAVS uses IPAM hooks (pre-port and post-port) to interface with external systems.
+  * Polystack IronCore uses IPAM hooks (pre-port and post-port) to interface with external systems.
 
 * **Support for Cloud-Init**:
 
@@ -114,13 +114,13 @@ This integration can be configured **per project, per subnet, or globally**, and
 
 ## 7. ✅ Summary & Positioning
 
-**Xloud XAVS enables enterprise-grade, automated IP address management** by integrating with the IPAM solution of your choice. This allows for:
+**Polystack IronCore enables enterprise-grade, automated IP address management** by integrating with the IPAM solution of your choice. This allows for:
 
 * Consistent IP address reservation across hybrid environments
 * Seamless integration into the VM provisioning lifecycle
 * Policy-driven IPAM governance per tenant, subnet, or project
 
-Whether using **Infoblox**, **phpIPAM**, **BlueCat**, **SolarWinds**, or another platform, Xloud XAVS ensures IPs are assigned accurately, reserved securely, and tracked for audit and DNS use.
+Whether using **Infoblox**, **phpIPAM**, **BlueCat**, **SolarWinds**, or another platform, Polystack IronCore ensures IPs are assigned accurately, reserved securely, and tracked for audit and DNS use.
 
 > 🟢 **Customer Experience:** Your customers simply launch VMs—the platform handles IP reservations automatically, securely, and in real time.
 
@@ -136,7 +136,7 @@ Whether using **Infoblox**, **phpIPAM**, **BlueCat**, **SolarWinds**, or another
 | +------------------------+  |
 |             |               |
 |             v               |
-|   Xloud XAVS Provisioning   |
+|   Polystack IronCore Provisioning   |
 |   (Nova + Neutron Hooks)    |
 |             |               |
 |     IPAM Integration Hook   |

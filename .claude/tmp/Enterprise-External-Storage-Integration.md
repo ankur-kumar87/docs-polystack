@@ -1,13 +1,13 @@
 
-# 🗂️ Xloud XAVS – Enterprise External Storage Integration
+# 🗂️ Polystack IronCore – Enterprise External Storage Integration
 
 ---
 
 ## 1. 🔎 Introduction
 
-**Xloud XAVS OpenStack** offers seamless integration with a wide range of **enterprise storage platforms**, empowering customers to connect their workloads to external block, file, and object storage systems—natively, flexibly, and securely.
+**Polystack IronCore OpenStack** offers seamless integration with a wide range of **enterprise storage platforms**, empowering customers to connect their workloads to external block, file, and object storage systems—natively, flexibly, and securely.
 
-Whether supporting mission-critical applications, scalable storage pools, or multi-tenant environments, Xloud XAVS enables direct use of storage technologies such as **NetApp, Dell EMC, Pure Storage, Ceph, HPE**, and **S3-compatible object stores**, without limiting customers to any one interface or integration model.
+Whether supporting mission-critical applications, scalable storage pools, or multi-tenant environments, Polystack IronCore enables direct use of storage technologies such as **NetApp, Dell EMC, Pure Storage, Ceph, HPE**, and **S3-compatible object stores**, without limiting customers to any one interface or integration model.
 
 This includes—but is not limited to—support for the **CSI (Container Storage Interface)** where applicable, alongside a broad set of native OpenStack integrations.
 
@@ -99,7 +99,7 @@ This includes—but is not limited to—support for the **CSI (Container Storage
 
 ## 7. ✅ Summary & Positioning
 
-**Xloud XAVS OpenStack** delivers a **flexible, enterprise-ready storage architecture** that allows customers to connect to any storage backend that fits their operational and business needs—**block, file, or object**, on-prem or cloud.
+**Polystack IronCore OpenStack** delivers a **flexible, enterprise-ready storage architecture** that allows customers to connect to any storage backend that fits their operational and business needs—**block, file, or object**, on-prem or cloud.
 
 * CSI-based storage is supported where needed but is **not a dependency**.
 * Native OpenStack drivers and interfaces are fully maintained and supported.
@@ -109,7 +109,7 @@ This includes—but is not limited to—support for the **CSI (Container Storage
 
 ---
 
-### 📊 **Xloud XAVS – External Storage Integration Architecture (Visual Guide)**
+### 📊 **Polystack IronCore – External Storage Integration Architecture (Visual Guide)**
 
 #### 📌 Diagram Components:
 
@@ -125,7 +125,7 @@ This includes—but is not limited to—support for the **CSI (Container Storage
               |                                         |
               v                                         v
 +-------------------------------------------------------------+
-|                    Xloud XAVS OpenStack Core                |
+|                    Polystack IronCore OpenStack Core                |
 |                                                             |
 |  +--------+   +--------+    +--------+    +--------------+  |
 |  | Cinder |   | Manila |    | Glance |    | Swift (Obj)  |  |

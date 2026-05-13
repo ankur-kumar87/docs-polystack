@@ -9,7 +9,7 @@ import AdminWarning from '/snippets/admin-warning.mdx';
 ## Overview
 
 Provider drivers determine the underlying implementation used to create and manage load
-balancing appliances. The default provider is configured during XDeploy deployment.
+balancing appliances. The default provider is configured during the deployment console deployment.
 You can view available providers, inspect their capabilities, and allow users
 to select a specific provider at provisioning time.
 
@@ -58,9 +58,9 @@ and feature flags (ACTIVE_STANDBY topology, L7 policies, TLS termination, etc.).
 
 ## Configure Default Provider
 
-The default provider is set during XDeploy deployment via globals:
+The default provider is set during the deployment console deployment via globals:
 
-```yaml title="XDeploy globals: set default load balancer provider"
+```yaml title="the deployment console globals: set default load balancer provider"
 octavia_provider: "amphora"  # or "ovn"
 ```
 

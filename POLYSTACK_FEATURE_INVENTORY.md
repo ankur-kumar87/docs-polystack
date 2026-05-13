@@ -21,7 +21,7 @@ Documentation MUST use customer-facing names (from `polystack-public-content-gua
 | Ceph | Distributed Storage |
 | OVN/Neutron | Software-Defined Networking |
 | KVM/QEMU/libvirt | Native Hypervisor |
-| OpenStack | XPCI Platform (or just avoid mentioning) |
+| OpenStack | Polystack Platform (or just avoid mentioning) |
 
 **NEVER reveal**: repo count, commit count, LOC, tech stack specifics, team size, cluster topology, compliance matrix structure, internal service connections.
 
@@ -152,10 +152,10 @@ Documentation MUST use customer-facing names (from `polystack-public-content-gua
 
 | # | Feature | Repo | Doc Status | Current Page | Gap |
 |---|---------|------|-----------|--------------|-----|
-| I1 | **xInsight-AI** | xinsight-ai, 26 commits | MISSING | XNexus product page only | 42 MCP tools, 3 chat modes, on-premises LLM |
+| I1 | **xInsight-AI** | xinsight-ai, 26 commits | MISSING | Unified Storage product page only | 42 MCP tools, 3 chat modes, on-premises LLM |
 | I2 | **XLicense Portal** | xlicense, 110 commits | N/A-DOCS | — | Backend portal |
 | I3 | **Ironcore Guest Agent** | ironcore-guest-agent, 3 commits | MISSING | — | VSS provider for Windows app-consistent snapshots |
-| I4 | **XOS** (custom Ubuntu 24.04) | subiquity+cubic | PARTIAL | XOS product page | No install guide |
+| I4 | **Polystack OS** (custom Ubuntu 24.04) | subiquity+cubic | PARTIAL | Polystack OS product page | No install guide |
 | I5 | **Magnum** (Managed K8s) | magnum, 5,624 upstream | PARTIAL | `services/kubernetes/` | Check if it covers Magnum specifics |
 | I7 | **Cyborg** (GPU/Accelerator) | cyborg, 1,058 upstream | MISSING | — | 10 drivers, GPU management |
 | I8 | **Magnum Cluster API** (CAPI) | magnum-cluster-api, 855 | MISSING | — | Alternative Helm driver |

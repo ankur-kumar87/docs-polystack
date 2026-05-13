@@ -14,12 +14,12 @@ Volume encryption provides transparent at-rest protection for block storage data
 <AdminWarning />
 
 <Tabs>
-  <Tab title="XDeploy" icon="server">
-    Disk encryption is enabled through the XDeploy Configuration panel:
+  <Tab title="Web Console" icon="server">
+    Disk encryption is enabled through the the deployment console Configuration panel:
 
     <Steps titleSize="h3">
       <Step title="Enable KMS first" icon="key">
-        Navigate to **XDeploy → Configuration → Advance Features** and ensure
+        Navigate to **the deployment console → Configuration → Advance Features** and ensure
         **Enable KMS** is set to **Yes**. Disk encryption requires the Polystack Key
         Management service to store and manage encryption keys.
       </Step>
@@ -27,7 +27,7 @@ Volume encryption provides transparent at-rest protection for block storage data
         On the same **Advance Features** tab, set **Enable Disk Encryption** to **Yes**.
       </Step>
       <Step title="Save and deploy" icon="rocket">
-        Click **Save Configuration**, then navigate to **XDeploy → Operations** and
+        Click **Save Configuration**, then navigate to **the deployment console → Operations** and
         run a **Deploy** or **Reconfigure** for the Block Storage and Key Management
         services.
 
@@ -226,7 +226,6 @@ with an authentication or connectivity error.
 
 ## Per-Volume Selective Encryption
 
-<Info>**Polystack-Developed** -- This capability is developed by Polystack and ships with Ironcore / XPCI.</Info>
 
 Polystack supports **selective encryption** -- encrypted and unencrypted volume types coexist within the same deployment. This allows administrators to apply encryption only where compliance or data sensitivity requires it, avoiding the performance overhead of blanket encryption on non-sensitive workloads.
 

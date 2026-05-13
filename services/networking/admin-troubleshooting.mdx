@@ -19,7 +19,7 @@ failover, and MTU configuration across the physical underlay.
   **Prerequisites**
   - Admin credentials sourced from `openrc.sh`
   - SSH access to compute and network nodes
-  - XDeploy access for agent restarts
+  - the deployment console access for agent restarts
 </Note>
 
 ---
@@ -60,7 +60,7 @@ openstack router list --all-projects -f json | grep -E '"id"|"ha"|"status"'
        ```bash title="Check agent container logs"
        sudo docker logs neutron_openvswitch_agent --tail 100
        ```
-    3. Restart the agent via XDeploy:
+    3. Restart the agent via the deployment console:
        ```bash title="Redeploy networking agents"
        ironcore-ansible deploy --tags neutron
        ```
@@ -143,7 +143,7 @@ openstack router list --all-projects -f json | grep -E '"id"|"ha"|"status"'
     <Tip>
       A long VRRP keepalive timeout (default ~3 seconds, dead interval ~10 seconds)
       can cause a 10–30 second outage before the standby takes over. Tune the VRRP
-      timers in XDeploy if faster failover is required.
+      timers in the deployment console if faster failover is required.
     </Tip>
   </Accordion>
 

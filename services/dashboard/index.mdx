@@ -12,8 +12,8 @@ platform, it provides a modern, high-performance UI with integrated monitoring, 
 access control, and real-time resource management.
 
 <Note>
-  The Dashboard is included in all Polystack products: [Ironcore](/products/ironcore), [XPCI](/products/xpci),
-  and [XHCI](/products/xhci). Access it at `https://connect.<your-domain>` after deployment.
+  The Dashboard is included in all Polystack products: [Ironcore](/products/ironcore)
+  and [Polystack](/products/xhci). Access it at `https://connect.<your-domain>` after deployment.
 </Note>
 
 ---
@@ -96,7 +96,7 @@ The Dashboard is organized into two views — **Console** (project-scoped) and *
 <p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Polystack-Developed Features</p>
 
 <Info>
-  **Polystack-Developed** — These capabilities are developed by Polystack and ship with Ironcore / XPCI.
+  **Polystack-Developed** — These capabilities are developed by Polystack and ship with Ironcore.
 </Info>
 
 <CardGroup cols={2}>
@@ -130,7 +130,7 @@ graph LR
     SkyAPI --> Swift["Object Storage"]
     SkyAPI --> Heat["Orchestration"]
     style Skyline fill:#bf9667,color:#fff
-    style SkyAPI fill:#d7b98e,color:#fff
+    style SkyAPI fill:#bf9667,color:#fff
 ```
 
 The Dashboard communicates through the Skyline API server, which proxies requests to
@@ -153,8 +153,5 @@ service APIs. All actions enforce the same RBAC rules as CLI and direct API call
   </Card>
   <Card title="Compute" icon="server" href="/services/compute" color="#bf9667">
     Instance lifecycle management
-  </Card>
-  <Card title="Deployment" icon="play" href="/deployment/index" color="#bf9667">
-    Deploy and configure the Dashboard via XDeploy
   </Card>
 </CardGroup>

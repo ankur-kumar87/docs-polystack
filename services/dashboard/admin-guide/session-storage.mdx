@@ -14,7 +14,7 @@ Redis, database) is required.
 <Note>
   **Prerequisites**
   - Administrator access for session configuration changes
-  - XDeploy access for applying configuration changes
+  - the deployment console access for applying configuration changes
 </Note>
 
 ---
@@ -63,12 +63,12 @@ sequenceDiagram
 ## Configuration
 
 <Tabs>
-  <Tab title="XDeploy" icon="settings">
+  <Tab title="Web Console" icon="settings">
     Session behavior is configured through the Skyline API server configuration:
 
     <Steps titleSize="h3">
       <Step title="Open Advanced Configuration">
-        Navigate to **XDeploy > Advanced Configuration** and select **skyline-apiserver**
+        Navigate to **the deployment console > Advanced Configuration** and select **skyline-apiserver**
         in the service tree.
       </Step>
       <Step title="Edit session settings">
@@ -120,7 +120,7 @@ sequenceDiagram
   <Accordion title="Token expiration">
     Session duration is tied to the Keystone token expiration. When the token expires,
     the session cookie becomes invalid and the user is redirected to the login page.
-    Configure Keystone token expiration through XDeploy to adjust session duration.
+    Configure Keystone token expiration through the deployment console to adjust session duration.
   </Accordion>
   <Accordion title="Multi-node deployments">
     Since sessions are stateless (JWT in cookie), no shared session backend is needed.
@@ -139,9 +139,6 @@ sequenceDiagram
   </Card>
   <Card title="Identity Admin Guide" href="/services/identity/admin-guide" color="#bf9667">
     Configure token expiration and authentication backends
-  </Card>
-  <Card title="Deployment" href="/deployment/configuration" color="#bf9667">
-    Configure Dashboard settings through XDeploy
   </Card>
   <Card title="Security" href="/security/index" color="#bf9667">
     Platform security hardening and compliance

@@ -156,17 +156,17 @@ Adjust monitoring sensitivity through the parameters below:
 | `[host_failure]` | `ignore_lease_seconds` | `0` | Seconds after host boot to suppress fault notifications -- set to 60-120 to avoid startup noise |
 
 <Tabs>
-  <Tab title="XDeploy" icon="gauge">
+  <Tab title="Web Console" icon="gauge">
     <Steps titleSize="h3">
       <Step title="Open Advanced Configuration" icon="settings">
-        In XDeploy, navigate to **Advanced Configuration**. In the **Service Tree**,
+        In the deployment console, navigate to **Advanced Configuration**. In the **Service Tree**,
         select **masakari**.
       </Step>
       <Step title="Edit timing parameters" icon="file-code">
         Select or create `instance-ha.conf` in the Code Editor. Add or modify the
         timing parameters:
 
-        ```ini title="Host monitor timing in XDeploy Advanced Configuration"
+        ```ini title="Host monitor timing in the deployment console Advanced Configuration"
         [DEFAULT]
         wait_period_after_service_update = 180
         long_rpc_timeout = 300

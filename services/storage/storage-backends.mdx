@@ -9,14 +9,14 @@ import CliAuth from '/snippets/cli-auth.mdx';
 
 ## Overview
 
-A storage backend is the combination of a driver and a physical storage system that serves Polystack Block Storage volumes. Backends are configured at deploy time through XDeploy and registered with the scheduler. Each backend must have a unique `volume_backend_name` that maps to at least one volume type, making it accessible to users.
+A storage backend is the combination of a driver and a physical storage system that serves Polystack Block Storage volumes. Backends are configured at deploy time through the deployment console and registered with the scheduler. Each backend must have a unique `volume_backend_name` that maps to at least one volume type, making it accessible to users.
 
 <AdminWarning />
 
 <Note>
   **Prerequisites**
   - Administrator credentials with the `admin` role
-  - Access to XDeploy for infrastructure-level configuration
+  - Access to the deployment console for infrastructure-level configuration
   - The storage system (distributed storage cluster, LVM volume group, or NFS server) must
     be provisioned before configuring the backend
 </Note>
@@ -46,10 +46,10 @@ A storage backend is the combination of a driver and a physical storage system t
 The distributed storage driver is the recommended backend for all production deployments. It uses RADOS Block Devices backed by a Polystack Distributed Storage cluster.
 
 <Tabs>
-  <Tab title="XDeploy" icon="package">
+  <Tab title="Web Console" icon="package">
     <Steps titleSize="h3">
       <Step title="Open Block Storage configuration" icon="settings">
-        Log in to XDeploy and navigate to **Configuration → Block Storage**.
+        Log in to the deployment console and navigate to **Configuration → Block Storage**.
       </Step>
       <Step title="Select the distributed storage driver" icon="database">
         Select **Distributed Storage (RBD)** from the **Backend Driver** dropdown.
@@ -69,7 +69,7 @@ The distributed storage driver is the recommended backend for all production dep
         | Backend Name | Unique name for this backend | `rbd-ssd` |
       </Step>
       <Step title="Apply and deploy" icon="play">
-        Click **Save Configuration**, then click **Deploy Block Storage**. XDeploy
+        Click **Save Configuration**, then click **Deploy Block Storage**. the deployment console
         restarts the volume service and validates backend connectivity.
 
         <Check>Backend configured — volume service restarted and backend registered with scheduler.</Check>
@@ -104,10 +104,10 @@ The distributed storage driver is the recommended backend for all production dep
 
 ## Configure Enterprise Storage Backends
 
-For NetApp, Pure Storage, Dell, HPE, Hitachi, and IBM backends, configuration is applied through XDeploy globals and Ansible. The `cinder.conf` sections are generated from templates. See [External Storage Integration](/services/storage/external-storage) for full configuration examples, driver parameters, and volume type mapping for each enterprise backend.
+For NetApp, Pure Storage, Dell, HPE, Hitachi, and IBM backends, configuration is applied through the deployment console globals and Ansible. The `cinder.conf` sections are generated from templates. See [External Storage Integration](/services/storage/external-storage) for full configuration examples, driver parameters, and volume type mapping for each enterprise backend.
 
 <Note>
-  Enterprise backend drivers require vendor-specific Python packages installed on the volume service nodes. XDeploy manages driver installation for supported backends during deployment.
+  Enterprise backend drivers require vendor-specific Python packages installed on the volume service nodes. the deployment console manages driver installation for supported backends during deployment.
 </Note>
 
 ---
@@ -117,10 +117,10 @@ For NetApp, Pure Storage, Dell, HPE, Hitachi, and IBM backends, configuration is
 LVM backends are suitable for development and single-node testing environments only.
 
 <Tabs>
-  <Tab title="XDeploy" icon="package">
+  <Tab title="Web Console" icon="package">
     <Steps titleSize="h3">
       <Step title="Select LVM driver" icon="database">
-        In XDeploy, navigate to **Configuration → Block Storage** and select
+        In the deployment console, navigate to **Configuration → Block Storage** and select
         **LVM** from the Backend Driver dropdown.
       </Step>
       <Step title="Configure LVM parameters" icon="sliders">
@@ -201,7 +201,7 @@ openstack volume service set \
     ```
 
     Look for the volume service on the affected storage node. If state is `down`,
-    check service logs via XDeploy for driver initialization errors.
+    check service logs via the deployment console for driver initialization errors.
   </Accordion>
 
   <Accordion title="Backend reporting zero free capacity" icon="triangle-alert">

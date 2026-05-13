@@ -212,7 +212,6 @@ intervention. You can move a vTPM-enabled Windows 11 or hardened Linux VM betwee
 compute hosts without shutting it down and without re-registering the TPM inside the
 guest.
 
-<Info>**Polystack-Developed** — Live migration of vTPM-enabled instances with automatic key transfer is developed by Polystack and ships with Ironcore / XPCI.</Info>
 
 ---
 
@@ -236,7 +235,7 @@ launching.
 <AccordionGroup>
   <Accordion title="The vTPM or Secure Boot checkbox is grayed out" icon="circle-x">
     Polystack KMS is not enabled on the cluster. Ask your administrator to enable the Key
-    Manager service in XDeploy, then refresh the wizard.
+    Manager service in the deployment console, then refresh the wizard.
   </Accordion>
   <Accordion title="Instance fails to start with Secure Boot = Required" icon="triangle-alert">
     The image is not UEFI-capable or does not ship signed bootloaders. Either switch the

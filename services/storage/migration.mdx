@@ -168,7 +168,7 @@ To retire a backend, migrate all volumes off it before decommissioning:
     openstack volume show <volume-id> -c migration_status -c status
     ```
 
-    Check volume service logs on the source and destination nodes via XDeploy for
+    Check volume service logs on the source and destination nodes via the deployment console for
     migration-related errors.
 
     If the migration is permanently stuck, reset the volume state:

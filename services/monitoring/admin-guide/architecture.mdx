@@ -16,12 +16,12 @@ resource allocation for the monitoring platform itself.
 <AdminWarning />
 
 <Tabs>
-  <Tab title="XDeploy" icon="server">
-    Monitoring services are enabled and configured through the XDeploy Configuration panel:
+  <Tab title="Web Console" icon="server">
+    Monitoring services are enabled and configured through the the deployment console Configuration panel:
 
     <Steps titleSize="h3">
       <Step title="Open Configuration" icon="settings">
-        Navigate to **XDeploy → Configuration** and select the **Monitoring** tab.
+        Navigate to **the deployment console → Configuration** and select the **Monitoring** tab.
       </Step>
       <Step title="Enable monitoring components" icon="toggle-left">
         Toggle the monitoring services your deployment requires:
@@ -35,7 +35,7 @@ resource allocation for the monitoring platform itself.
         | **Scan Schedule** | Automated compliance scan frequency |
       </Step>
       <Step title="Save and deploy" icon="rocket">
-        Click **Save Configuration**, then navigate to **XDeploy → Operations** and
+        Click **Save Configuration**, then navigate to **the deployment console → Operations** and
         run a **Deploy** or **Reconfigure** for the monitoring services.
 
         <Check>Monitoring monitoring stack is deployed and collecting data.</Check>
@@ -135,7 +135,7 @@ graph TD
     - Syslog reception for services that write to syslog instead of files
 
     Log collector configuration is defined in `/etc/monitoring/log-sources.yaml` on each
-    managed node and managed by XDeploy.
+    managed node and managed by the deployment console.
   </Accordion>
 
   <Accordion title="Alert Engine" icon="bell">
@@ -174,8 +174,8 @@ graph TD
     - Multiple collector nodes for horizontal scraping scale
     - Shared Query API and Dashboard behind load balancer
 
-    XDeploy manages the multi-node Monitoring deployment. Navigate to
-    **XDeploy → Configuration → Monitoring** to configure the topology.
+    the deployment console manages the multi-node Monitoring deployment. Navigate to
+    **the deployment console → Configuration → Monitoring** to configure the topology.
   </Tab>
 </Tabs>
 

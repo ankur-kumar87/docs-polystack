@@ -8,13 +8,12 @@ sidebarTitle: "OpenSCAP"
 
 OpenSCAP is the open standard for automated security compliance scanning. It evaluates your system against machine-readable SCAP (Security Content Automation Protocol) content — including CIS Benchmarks, DISA STIGs, PCI-DSS, HIPAA, and ANSSI profiles. Each scan produces detailed HTML and XML reports that map every test to a specific compliance requirement.
 
-Polystack Platform ships OpenSCAP tooling on XOS and supports fleet-wide compliance scanning via the XDeploy automation pipeline. You can forward scan reports to SIEM systems or store them as audit artifacts for regulatory reviews.
+Polystack Platform ships OpenSCAP tooling on Polystack OS and supports fleet-wide compliance scanning via the the deployment console automation pipeline. You can forward scan reports to SIEM systems or store them as audit artifacts for regulatory reviews.
 
-<Info>**Polystack-Developed** — OpenSCAP is one of three independent scanners in [Polystack SIEM](/security/polystack-siem) — Wazuh, Lynis, and OpenSCAP run in parallel across all nodes for layered compliance coverage. Results are aggregated on the **Security Posture** page in Monitor Center.</Info>
 
 <Note>
   **Prerequisites**
-  - `openscap-scanner` and `scap-security-guide` packages installed (pre-installed on XOS nodes)
+  - `openscap-scanner` and `scap-security-guide` packages installed (pre-installed on Polystack OS nodes)
   - Guest VMs: `apt install openscap-scanner ssg-debderived` on Ubuntu/Debian
   - Root access on the target system
   - Target profile selected from the SCAP Security Guide (SSG)

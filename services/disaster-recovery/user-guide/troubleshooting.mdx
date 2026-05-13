@@ -13,7 +13,7 @@ to DR test instances that cannot be reached for validation.
 <Note>
   **Prerequisites**
   - An active Polystack account with project access and Disaster Recovery plan access
-  - For site connectivity and replication configuration issues, contact your administrator. Your administrator can configure this through [XDeploy](/deployment).
+  - For site connectivity and replication configuration issues, contact your administrator. Your administrator can configure this through the deployment console.
 </Note>
 
 ---
@@ -29,7 +29,7 @@ to DR test instances that cannot be reached for validation.
     review the replication lag and throughput metrics displayed in the plan status panel.
 
     **Resolution**:
-    - Increase network bandwidth allocation for replication traffic (contact your administrator). Your administrator can configure this through [XDeploy](/deployment).
+    - Increase network bandwidth allocation for replication traffic (contact your administrator). Your administrator can configure this through the deployment console.
     - Switch to a larger replication window that permits more transfer time
     - Review the change rate of protected workloads — peak write periods may cause
       temporary lag spikes that resolve during quieter periods
@@ -108,7 +108,7 @@ All diagnostic operations are performed through the Disaster Recovery Dashboard:
 
 ## When to Contact Your Administrator
 
-Contact your DR administrator or [support@polystack.tech](mailto:support@polystack.tech) if any of the following persist. Your administrator can configure this through [XDeploy](/deployment).
+Contact your DR administrator or [support@polystack.tech](mailto:support@polystack.tech) if any of the following persist. Your administrator can configure this through the deployment console.
 
 - Replication lag has exceeded the RPO target for more than 30 minutes
 - Failover is stuck and the event log shows an unresolvable error

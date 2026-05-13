@@ -11,7 +11,7 @@ Polystack protects data at every stage: in transit between services, at rest on 
 <Note>
   **Prerequisites**
   - Administrator role in Polystack Identity
-  - Polystack Key Management enabled (`enable_barbican: "yes"` in XDeploy configuration)
+  - Polystack Key Management enabled (`enable_barbican: "yes"` in the deployment console configuration)
   - For encrypted volumes: an encrypted volume type configured in Block Storage
   - For object storage encryption: access to the object storage admin API
 </Note>
@@ -217,9 +217,9 @@ openstack volume backup show db-vol-backup-20251201 \
 
 ## Data-at-Rest Encryption for Databases
 
-Platform databases (MariaDB) use encrypted tablespaces for sensitive configuration and credential storage. XDeploy configures this during deployment, so you do not need manual intervention.
+Platform databases (MariaDB) use encrypted tablespaces for sensitive configuration and credential storage. the deployment console configures this during deployment, so you do not need manual intervention.
 
-```yaml title="Enable database encryption (XDeploy configuration)"
+```yaml title="Enable database encryption (the deployment console configuration)"
 mariadb_enable_encryption: "yes"
 mariadb_encryption_key_management: "file"
 ```

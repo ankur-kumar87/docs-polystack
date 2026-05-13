@@ -19,7 +19,7 @@ monitoring, thresholds, and expansion procedures.
   **Prerequisites**
   - Administrator credentials with the `admin` role
   - SSH access to a cluster management node
-  - Access to **XDeploy** (`https://connect.<your-domain>`) for node provisioning
+  - Access to **the deployment console** (`https://connect.<your-domain>`) for node provisioning
 </Note>
 
 ---
@@ -45,7 +45,7 @@ monitoring, thresholds, and expansion procedures.
 
 <Tabs>
   <Tab title="Dashboard" icon="gauge">
-    Navigate to **XDeploy → Storage → Capacity** for a graphical capacity overview
+    Navigate to **the deployment console → Storage → Capacity** for a graphical capacity overview
     showing per-pool and cluster-wide utilization with trend projections.
   </Tab>
   <Tab title="CLI" icon="terminal">
@@ -115,9 +115,9 @@ monitoring, thresholds, and expansion procedures.
 ## Expanding the Cluster
 
 <Steps titleSize="h3">
-  <Step title="Deploy new OSD node via XDeploy" icon="server">
-    Navigate to **XDeploy → Infrastructure → Nodes → Add Node** and register the
-    new storage node. XDeploy configures the OS, installs storage packages, and
+  <Step title="Deploy new OSD node via the deployment console" icon="server">
+    Navigate to **the deployment console → Infrastructure → Nodes → Add Node** and register the
+    new storage node. the deployment console configures the OS, installs storage packages, and
     joins the node to the cluster.
 
     <Tip>

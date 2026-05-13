@@ -88,7 +88,7 @@ If quarantine counts are high on a specific node:
 
 ## Replication Configuration
 
-Key replication parameters configurable through XDeploy:
+Key replication parameters configurable through the deployment console:
 
 | Parameter | Description | Default |
 |-----------|-------------|---------|
@@ -99,7 +99,7 @@ Key replication parameters configurable through XDeploy:
 Adjust `concurrency` during off-peak hours to accelerate replication after large ring
 changes:
 
-```bash title="Temporarily increase replication concurrency (XDeploy config)"
+```bash title="Temporarily increase replication concurrency (the deployment console config)"
 # Edit object storage configuration → replicator section
 # Set concurrency = 4, then deploy
 ironcore-ansible deploy -t swift

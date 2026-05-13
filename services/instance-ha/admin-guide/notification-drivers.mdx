@@ -38,7 +38,7 @@ and `compute.instance.error` notification events.
     notification record to trigger the recovery workflow.
 
     This driver requires no additional configuration beyond what is provided by the
-    standard XDeploy deployment.
+    standard the deployment console deployment.
   </Accordion>
   <Accordion title="Verify the driver is active" icon="circle-check">
     ```bash title="Check driver configuration"
@@ -128,17 +128,17 @@ the TaskFlow task pipeline, implement the `BaseTask` interface and register the
 plugin in the configuration.
 
 <Tabs>
-  <Tab title="XDeploy" icon="gauge">
+  <Tab title="Web Console" icon="gauge">
     <Steps titleSize="h3">
       <Step title="Open Advanced Configuration" icon="settings">
-        In XDeploy, navigate to **Advanced Configuration**. In the **Service Tree**,
+        In the deployment console, navigate to **Advanced Configuration**. In the **Service Tree**,
         select **masakari**.
       </Step>
       <Step title="Edit workflow targets" icon="file-code">
         Select or create `instance-ha.conf` in the Code Editor. Add the custom
         workflow targets:
 
-        ```ini title="TaskFlow workflow in XDeploy Advanced Configuration"
+        ```ini title="TaskFlow workflow in the deployment console Advanced Configuration"
         [recovery_workflow_on_stop]
         targets = disableComputeNodeTask, PrepareHAEnabled, EvacuateHost
         ```

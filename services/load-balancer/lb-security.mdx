@@ -26,7 +26,7 @@ prevent unauthorized appliance access.
 <Steps titleSize="h3">
   <Step title="Assign a dedicated management network" icon="network">
     The management network should use a non-routable CIDR not reachable from tenant
-    networks or the internet. Configure in XDeploy globals:
+    networks or the internet. Configure in the deployment console globals:
     ```yaml title="Load balancer management network"
     octavia_management_network: lb-management-net
     octavia_management_subnet: lb-management-subnet
@@ -108,7 +108,7 @@ Configure load balancer access logs to forward to your centralized logging platf
 Access logs capture source IPs, request URIs, response codes, and latency — essential
 data for compliance auditing and security incident investigation.
 
-```yaml title="Enable access logging in XDeploy globals"
+```yaml title="Enable access logging in the deployment console globals"
 octavia_enable_access_log: "yes"
 octavia_access_log_facility: LOG_LOCAL0
 ```

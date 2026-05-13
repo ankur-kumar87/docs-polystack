@@ -63,7 +63,7 @@ docker logs barbican-api --tail 100
 
     Review the `error_status_code` and `error_reason` fields. Common causes:
 
-    - CA plugin service is not running — check container status via XDeploy
+    - CA plugin service is not running — check container status via the deployment console
     - Certificate subject DN contains invalid characters or fields rejected by the CA
     - CA connectivity timeout — verify network access from Key Manager to the CA endpoint
 
@@ -117,7 +117,7 @@ docker logs barbican-api --tail 100
 
     **Resolution**:
     - Check HSM health and current load from the HSM management interface
-    - Consider scaling Key Manager worker replicas via XDeploy to parallelize requests
+    - Consider scaling Key Manager worker replicas via the deployment console to parallelize requests
     - For KMIP backends, verify network latency to the KMIP server
     - Review Key Manager worker logs for timeout or retry events
   </Accordion>

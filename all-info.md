@@ -24,7 +24,7 @@
 3. **Never create pages with invented content** — only write from provided sources, links, screenshots, or explicit instructions
 4. **Always invoke `/mintlify` skill** before creating or editing any page
 5. **Always read `.claude/doc-authoring-guidelines.mdx`** before writing
-6. **XDeploy-first for admin guides** — show XDeploy UI steps as primary method, CLI as secondary in Accordion/Tab
+6. **the deployment console-first for admin guides** — show the deployment console UI steps as primary method, CLI as secondary in Accordion/Tab
 
 ---
 
@@ -98,33 +98,33 @@
 - **Email**: info@polystack.tech, support@polystack.tech
 - **Phone**: +91-9289062555
 - **Tagline**: "Helping India build their Next-Gen Cloud Infra"
-- **Colors**: Primary `#bf9667`, Light `#d7b98e`, Dark `#8f6a43`
+- **Colors**: Primary `#bf9667`, Light `#bf9667`, Dark `#bf9667`
 - **Fonts**: Linden theme defaults
 
 ### Products
 | Product | Full Name | Description |
 |---|---|---|
 | Ironcore | Advanced Virtualization Suite | VM and container management |
-| XPCI | Private Cloud Infrastructure | Full cloud platform |
-| XHCI | Hyper Converged Infrastructure | Compute+storage+networking consolidated |
+| Polystack | Private Cloud Infrastructure | Full cloud platform |
+| Polystack | Hyper Converged Infrastructure | Compute+storage+networking consolidated |
 | Software-Defined-Storage | Software Defined Storage | Ceph-based block, object, file |
 | Monitoring | Infrastructure Monitoring Platform | Prometheus+Grafana+OpenSearch+Wazuh |
 | Disaster Recovery | Disaster Recovery | Hystax-based, Dashboard-only (no CLI) |
-| XNAS | NAS Storage | SMB, NFS, AFP, FTP, snapshots, HA |
-| XNexus | Unified Storage | Dell HW, coming soon |
-| XOS | Operating System | Custom Ubuntu 24.04 |
-| xInsight-AI | AI-Powered Ops | 42 MCP tools, on-premises LLM (separate product from XNexus) |
+| NAS Storage | NAS Storage | SMB, NFS, AFP, FTP, snapshots, HA |
+| Unified Storage | Unified Storage | Dell HW, coming soon |
+| Polystack OS | Operating System | Custom Ubuntu 24.04 |
+| xInsight-AI | AI-Powered Ops | 42 MCP tools, on-premises LLM (separate product from Unified Storage) |
 
 ### Product Page Rules
 - Software-Defined-Storage is the example — keep all product pages minimal like Software-Defined-Storage
 - Max 4 services per product page
 - Link to website for full details: `https://polystack.tech/contact`
 - Each product page links to docs pages, not website pages
-- xInsight-AI is SEPARATE from XNexus
+- xInsight-AI is SEPARATE from Unified Storage
 
 ---
 
-## 5. XDEPLOY (DEPLOYMENT MODULE)
+## 5. the deployment console (DEPLOYMENT MODULE)
 
 ### What it is
 - Cockpit-based web UI on deployment node
@@ -145,7 +145,7 @@
 | Cloud Fleet | Topology map, host list, connections | Cluster visualization |
 | Software-Defined-Storage | Bootstrap Config, Storage Tiers, Config File, Logs | Ceph management |
 | Cluster License | License dashboard, activation | `.xlic` files |
-| XDeploy Key | Activation status, key management | Hardware-bound key |
+| the deployment console Key | Activation status, key management | Hardware-bound key |
 
 ### Configuration Tab Field Names (from code)
 
@@ -173,9 +173,9 @@ When alerts enabled: SMTP server, from/to emails, SMTP password, webhook URL, Te
 All services at `/etc/ironcore/config/{service}/`:
 nova, glance, keystone, neutron, cinder, placement, horizon, heat, ironic, octavia, magnum, mistral, masakari, barbican, manila, designate, watcher, ceilometer, gnocchi, prometheus, grafana, opensearch, fluentd, haproxy, redis + 10 more
 
-### XDeploy Steps Pattern (for admin guide pages)
+### the deployment console Steps Pattern (for admin guide pages)
 ```
-1. Open XDeploy → Configuration
+1. Open the deployment console → Configuration
 2. Go to relevant tab (e.g., Advance Features)
 3. Toggle setting to Yes / configure fields
 4. Click Save Configuration
@@ -184,7 +184,7 @@ nova, glance, keystone, neutron, cinder, placement, horizon, heat, ironic, octav
 
 For config file edits:
 ```
-1. Open XDeploy → Advanced Configuration
+1. Open the deployment console → Advanced Configuration
 2. Select service in Service Tree (left panel)
 3. Create/select config file in File Browser (right panel)
 4. Edit in Code Editor (center panel)
@@ -215,7 +215,6 @@ For config file edits:
 
 ### Mark Polystack-developed features with:
 ```mdx
-<Info>**Polystack-Developed** — This capability is developed by Polystack and ships with Ironcore / XPCI.</Info>
 ```
 
 ---
@@ -246,7 +245,7 @@ Frontmatter (title, description, icon, sidebarTitle)
 ### Component Minimums
 - 5+ MDX components per page
 - Steps for ALL sequential procedures (never plain numbered lists)
-- Tabs for Dashboard/CLI (or XDeploy/CLI for admin pages)
+- Tabs for Dashboard/CLI (or the deployment console/CLI for admin pages)
 - CodeGroup for multi-tool commands
 - Callouts (Note/Warning/Tip/Danger) for important info
 - Cards for navigation
@@ -295,7 +294,7 @@ bar-chart-2 → chart-bar
 3. Core Services (Compute, Block Storage, Networking, Images, Orchestration, Identity, Dashboard)
 4. Other Services (Load Balancer, DNS, Key Manager, Object Storage, SDS, Monitoring, DR, Instance HA, K8s, Resource Optimizer)
 5. Security (infrastructure, VM, API, data, network, compliance, hardening, wazuh, lynis, openscap)
-6. Deployment (12 XDeploy pages)
+6. Deployment (12 the deployment console pages)
 7. Integrations (terraform, ansible, prometheus, grafana, wazuh)
 
 ### Per-Service Pattern
@@ -316,7 +315,7 @@ services/<service>/
 - Use `source openrc.sh` (NOT `admin-openrc.sh`) — users don't have admin credentials
 - No `systemctl`, `docker exec`, kernel commands, or admin-level operations
 - Replace jargon: Glance→platform image, Cinder→block storage volume, tenant→project, OSD→storage device
-- Where admin action needed: "Your administrator can configure this through [XDeploy](/deployment)"
+- Where admin action needed: "Your administrator can configure this through the deployment console"
 - Resource Optimizer and Monitoring dashboards require admin role — add `<Warning>` callout
 
 ### Custom CLI tools
@@ -329,14 +328,14 @@ services/<service>/
 ## 12. ADMIN GUIDE RULES
 
 - Written for **technical administrators**
-- XDeploy tab FIRST, CLI tab second
-- Show exact XDeploy UI flow with Steps
+- the deployment console tab FIRST, CLI tab second
+- Show exact the deployment console UI flow with Steps
 - Manual config editing goes in CLI tab as secondary method
-- Service credentials and database connections are AUTO-MANAGED by XDeploy — note this clearly
+- Service credentials and database connections are AUTO-MANAGED by the deployment console — note this clearly
 - Always end config changes with: "Go to Operations → run reconfigure"
 - Reference correct paths: `/etc/ironcore/config/{service}/` for Advanced Configuration
 
-### XDeploy Tips already added to these admin pages:
+### the deployment console Tips already added to these admin pages:
 storage/admin-guide, networking/admin-guide, load-balancer/admin-guide, monitoring/architecture, key-manager/admin-guide, instance-ha/admin-guide, optimization/admin-guide, storage/encryption, sds/architecture, sds/storage-tiers, monitoring/alert-channels, security/wazuh
 
 ---
@@ -344,14 +343,14 @@ storage/admin-guide, networking/admin-guide, load-balancer/admin-guide, monitori
 ## 13. DEPLOYMENT DOCS
 
 ### Pre-deployment checklist order:
-1. XOS running on all nodes
+1. Polystack OS running on all nodes
 2. Plan network (API/MGMT, VM traffic, LB, Storage, Replication VLANs)
 3. Prepare DNS and domain names + SSL
 4. Gather credentials (SSH from deployment node, license from license.polystack.tech)
 5. Architecture decision (AIO / HCI / Distributed)
 
 ### Deployment workflow order:
-XDeploy Key → Bootstrap → Hosts → Software-Defined-Storage (if using) → Configuration → Images → Operations → Management → Cloud Fleet → Cluster License
+the deployment console Key → Bootstrap → Hosts → Software-Defined-Storage (if using) → Configuration → Images → Operations → Management → Cloud Fleet → Cluster License
 
 ---
 
@@ -359,7 +358,7 @@ XDeploy Key → Bootstrap → Hosts → Software-Defined-Storage (if using) → 
 
 | Context | Path Pattern |
 |---|---|
-| Service config (XDeploy Advanced Config) | `/etc/ironcore/config/{service}/{filename}` |
+| Service config (the deployment console Advanced Config) | `/etc/ironcore/config/{service}/{filename}` |
 | Global config | `/etc/ironcore/globals.d/_99_ironcore.yml` |
 | Passwords | `/etc/ironcore/passwords.yml` |
 | Inventory | `/etc/ironcore/nodes` |
@@ -382,12 +381,12 @@ XDeploy Key → Bootstrap → Hosts → Software-Defined-Storage (if using) → 
 - Duplicate chmod in hardening guide removed
 - Kolla → Ironcore in prose (12 files, /var/log/kolla and /var/lib/kolla kept)
 - admin-openrc.sh → openrc.sh in 20 user guide files
-- XDeploy-first Tabs in 23 admin guide pages
+- the deployment console-first Tabs in 23 admin guide pages
 - 86+ icon replacements for valid Lucide names
 - 12 broken links fixed
 - OpenStack jargon replaced in user guides
 
-**Remaining gaps**: 42 of 82 features undocumented (51%), "Coming soon" on homepage for XNexus, XCONNECT roadmap exposed on dashboard page
+**Remaining gaps**: 42 of 82 features undocumented (51%), "Coming soon" on homepage for Unified Storage, XCONNECT roadmap exposed on dashboard page
 
 ---
 

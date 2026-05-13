@@ -1,6 +1,6 @@
 ---
 
-# 🗂️ Xloud XAVS – REST APIs for Automation, Backup & Monitoring Integration
+# 🗂️ Polystack IronCore – REST APIs for Automation, Backup & Monitoring Integration
 
 ---
 
@@ -8,13 +8,13 @@
 
 In today’s hybrid cloud environments, **integration is the key to agility**. Enterprises need their virtualization platform to plug into backup systems, monitoring engines, CI/CD pipelines, ticketing tools, and more.
 
-**XAVS** provides a robust, token-secured **REST API layer** that exposes full infrastructure control across compute, storage, network, and telemetry — empowering you to automate and integrate with zero friction.
+**IronCore** provides a robust, token-secured **REST API layer** that exposes full infrastructure control across compute, storage, network, and telemetry — empowering you to automate and integrate with zero friction.
 
 ---
 
 ## 2. 🧱 Architecture Overview
 
-### 🔹 API Services Exposed by XAVS
+### 🔹 API Services Exposed by IronCore
 
 | API Group                | Functionality                                     |
 | ------------------------ | ------------------------------------------------- |
@@ -26,7 +26,7 @@ In today’s hybrid cloud environments, **integration is the key to agility**. E
 | **Monitoring/Telemetry** | Fetch metrics, resource usage, and events         |
 | **Resource Placement**   | View resource availability for optimal scheduling |
 
-> 🧩 XAVS APIs follow RESTful principles and are compatible with most automation platforms, making integration seamless and scalable.
+> 🧩 IronCore APIs follow RESTful principles and are compatible with most automation platforms, making integration seamless and scalable.
 
 ---
 
@@ -72,7 +72,7 @@ In today’s hybrid cloud environments, **integration is the key to agility**. E
 ### 🔹 A. Authenticate and Get Token
 
 ```bash
-curl -i -X POST http://<xavs-api>/identity/v3/auth/tokens \
+curl -i -X POST http://<ironcore-api>/identity/v3/auth/tokens \
   -H "Content-Type: application/json" \
   -d '{ "auth": { "identity": { "methods": ["password"], "password": { "user": { "name": "admin", "domain": { "name": "Default" }, "password": "your_password" } } }, "scope": { "project": { "name": "admin", "domain": { "name": "Default" } } } } }'
 ```
@@ -125,7 +125,7 @@ Use JSON payloads to provision VMs dynamically during testing or deployment.
 
 * **Custom Self-Service Portals**
 
-  * Build user-facing dashboards that manage infrastructure via XAVS APIs
+  * Build user-facing dashboards that manage infrastructure via IronCore APIs
 
 * **Scripting & Cron Jobs**
 
@@ -135,10 +135,10 @@ Use JSON payloads to provision VMs dynamically during testing or deployment.
 
 ## 7. ✅ Summary & Positioning
 
-With its comprehensive REST API ecosystem, **XAVS transforms your virtualization layer into an automation-friendly platform** that integrates with any modern IT toolchain.
+With its comprehensive REST API ecosystem, **IronCore transforms your virtualization layer into an automation-friendly platform** that integrates with any modern IT toolchain.
 
-From provisioning and monitoring to security, backups, and self-service portals, **XAVS APIs empower teams to move faster, operate smarter, and deliver resilient cloud services.**
+From provisioning and monitoring to security, backups, and self-service portals, **IronCore APIs empower teams to move faster, operate smarter, and deliver resilient cloud services.**
 
-> 🟢 **Customer Experience:** Build, scale, and automate with confidence. With XAVS APIs, the infrastructure becomes programmable and composable—on your terms.
+> 🟢 **Customer Experience:** Build, scale, and automate with confidence. With IronCore APIs, the infrastructure becomes programmable and composable—on your terms.
 
 ---

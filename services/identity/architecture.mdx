@@ -33,9 +33,9 @@ graph TD
     CINDER[Storage API] --> HAP
     IMG[Image API] --> HAP
     style HAP fill:#bf9667,color:#fff
-    style I1 fill:#d7b98e,color:#fff
-    style I2 fill:#d7b98e,color:#fff
-    style DB fill:#8f6a43,color:#fff
+    style I1 fill:#bf9667,color:#fff
+    style I2 fill:#bf9667,color:#fff
+    style DB fill:#bf9667,color:#fff
 ```
 
 ---
@@ -90,7 +90,7 @@ sequenceDiagram
     API node can validate any token as long as all nodes share the same Fernet key set.
   </Accordion>
   <Accordion title="Fernet key synchronization" icon="rotate-cw">
-    All Identity API nodes must have identical Fernet key sets. XDeploy manages
+    All Identity API nodes must have identical Fernet key sets. the deployment console manages
     key distribution automatically during rotation. If nodes become out of sync,
     tokens signed by one node cannot be validated by another.
 

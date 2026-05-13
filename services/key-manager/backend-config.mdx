@@ -8,7 +8,7 @@ import AdminWarning from '/snippets/admin-warning.mdx';
 
 ## Overview
 
-The Key Manager (Barbican) secret store backend determines how secret payloads are encrypted and where ciphertext is stored. Polystack Key Manager supports five backend types — from a software-only AES plugin for development, to hardware HSMs, external KMIP servers, HashiCorp Vault, and Dogtag KRA for enterprise deployments. Configuration is managed through XDeploy; changing the backend after secrets exist requires a migration operation.
+The Key Manager (Barbican) secret store backend determines how secret payloads are encrypted and where ciphertext is stored. Polystack Key Manager supports five backend types — from a software-only AES plugin for development, to hardware HSMs, external KMIP servers, HashiCorp Vault, and Dogtag KRA for enterprise deployments. Configuration is managed through the deployment console; changing the backend after secrets exist requires a migration operation.
 
 <AdminWarning />
 
@@ -28,7 +28,7 @@ The Key Manager (Barbican) secret store backend determines how secret payloads a
 
 ## View Current Backend
 
-The active backend is visible in the XDeploy configuration panel under **Key Manager → Secret Store**. Verify the API is operational:
+The active backend is visible in the the deployment console configuration panel under **Key Manager → Secret Store**. Verify the API is operational:
 
 ```bash title="Verify Key Manager API"
 openstack secret list --limit 1
@@ -238,7 +238,7 @@ secret_store_plugin = vault_plugin
 
 ## Apply Backend Configuration
 
-```bash title="Deploy Key Manager configuration via XDeploy"
+```bash title="Deploy Key Manager configuration via the deployment console"
 ironcore-ansible deploy -t barbican
 ```
 

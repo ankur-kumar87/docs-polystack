@@ -141,17 +141,17 @@ rather than in the K8SaaS database.
 </Note>
 
 <Tabs>
-  <Tab title="XDeploy" icon="server">
+  <Tab title="Web Console" icon="server">
     <Steps titleSize="h3">
-      <Step title="Open XDeploy Configuration" icon="settings">
-        Navigate to **XDeploy → Configuration** and select the **Advance Features** tab.
+      <Step title="Open the deployment console Configuration" icon="settings">
+        Navigate to **the deployment console → Configuration** and select the **Advance Features** tab.
       </Step>
       <Step title="Enable KMS" icon="toggle-left">
         Set **Enable KMS** to **Yes**. This deploys the Polystack Key Management service
         and configures service account integration.
       </Step>
       <Step title="Set certificate manager type" icon="key">
-        Open **XDeploy → Advanced Configuration**, select **magnum** in the Service Tree,
+        Open **the deployment console → Advanced Configuration**, select **magnum** in the Service Tree,
         then open or create `kubernetes.conf`. Add the following in the Code Editor:
 
         ```ini title="kubernetes.conf"
@@ -162,7 +162,7 @@ rather than in the K8SaaS database.
         Click **Save Current File**.
       </Step>
       <Step title="Deploy the changes" icon="rocket">
-        Navigate to **XDeploy → Operations** and run a **Reconfigure** for the
+        Navigate to **the deployment console → Operations** and run a **Reconfigure** for the
         Kubernetes and Key Management services.
 
         <Check>K8SaaS is configured to store CA private keys in Polystack Key Management.</Check>

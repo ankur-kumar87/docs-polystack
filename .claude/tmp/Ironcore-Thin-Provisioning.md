@@ -1,14 +1,14 @@
-# 🧱 Thin Provisioning in XAVS
+# 🧱 Thin Provisioning in IronCore
 
-**Thin provisioning** is a powerful feature in storage management that allows you to allocate storage capacity on-demand rather than reserving the full amount up front. In XAVS, thin provisioning helps optimize backend storage usage and enables flexible resource planning, especially in cloud environments with unpredictable workloads.
+**Thin provisioning** is a powerful feature in storage management that allows you to allocate storage capacity on-demand rather than reserving the full amount up front. In IronCore, thin provisioning helps optimize backend storage usage and enables flexible resource planning, especially in cloud environments with unpredictable workloads.
 
 ---
 
-## 🔍 What is Thin Provisioning in XAVS?
+## 🔍 What is Thin Provisioning in IronCore?
 
-Thin provisioning allows XAVS to **over-allocate** storage volumes by only consuming space that is actually used, not what is allocated. This is especially useful in multi-tenant environments where storage utilization is unpredictable and fluctuates over time.
+Thin provisioning allows IronCore to **over-allocate** storage volumes by only consuming space that is actually used, not what is allocated. This is especially useful in multi-tenant environments where storage utilization is unpredictable and fluctuates over time.
 
-In XAVS, thin provisioning is managed at the **Block Storage (Cinder)** layer and depends on the capabilities of the underlying storage backend.
+In IronCore, thin provisioning is managed at the **Block Storage (Cinder)** layer and depends on the capabilities of the underlying storage backend.
 
 ---
 
@@ -29,9 +29,9 @@ Check your SAN vendor's driver documentation for specifics on enabling thin prov
 
 ---
 
-## 🛠️ Enabling Thin Provisioning for LVM Backend in XAVS
+## 🛠️ Enabling Thin Provisioning for LVM Backend in IronCore
 
-LVM is a common backend for small- to medium-scale XAVS deployments. By default, standard LVM uses thick provisioning, but you can configure it to use **thin pools** to enable thin provisioning.
+LVM is a common backend for small- to medium-scale IronCore deployments. By default, standard LVM uses thick provisioning, but you can configure it to use **thin pools** to enable thin provisioning.
 
 Here’s how to do it:
 
@@ -77,7 +77,7 @@ volumes_dir = /var/lib/cinder/volumes
 #### 🔹 Step 5: Restart the Cinder Volume Service
 
 ```bash
-sudo systemctl restart XAVS-cinder-volume
+sudo systemctl restart IronCore-cinder-volume
 ```
 
 ---
@@ -87,7 +87,7 @@ sudo systemctl restart XAVS-cinder-volume
 After creating a new volume:
 
 ```bash
-XAVS volume create --size 5 thin-volume-test
+IronCore volume create --size 5 thin-volume-test
 ```
 
 Check that it’s thin-provisioned:
@@ -118,8 +118,8 @@ This allows 10x over-subscription with 5% reserved space.
 
 ## 🧩 Conclusion
 
-Thin provisioning in XAVS helps reduce wasted storage and makes your cloud infrastructure more agile. Ceph makes this easy out of the box, while SAN and LVM require appropriate configuration. For smaller or test environments, LVM with thin pools provides an efficient way to explore thin provisioning capabilities.
+Thin provisioning in IronCore helps reduce wasted storage and makes your cloud infrastructure more agile. Ceph makes this easy out of the box, while SAN and LVM require appropriate configuration. For smaller or test environments, LVM with thin pools provides an efficient way to explore thin provisioning capabilities.
 
-By following the steps above, you can implement a thin-provisioned LVM backend in your XAVS deployment and start optimizing your storage usage effectively.
+By following the steps above, you can implement a thin-provisioned LVM backend in your IronCore deployment and start optimizing your storage usage effectively.
 
 ---

@@ -1,6 +1,6 @@
 ---
 title: "Agent Configuration"
-description: "Deploy Monitoring monitoring agents via XDeploy or manually, configure custom scrape targets, and manage per-node agent authentication tokens."
+description: "Deploy Monitoring monitoring agents via the deployment console or manually, configure custom scrape targets, and manage per-node agent authentication tokens."
 sidebarTitle: "Agent Configuration"
 ---
 
@@ -10,26 +10,26 @@ import AdminWarning from '/snippets/admin-warning.mdx';
 
 Monitoring agents run on every managed node and are responsible for collecting host-level
 metrics, forwarding logs, and reporting health status to the Monitoring platform. Agents are
-deployed automatically when a node is registered in XDeploy, or manually for nodes
-outside XDeploy management.
+deployed automatically when a node is registered in the deployment console, or manually for nodes
+outside the deployment console management.
 
 <AdminWarning />
 
 <Note>
   **Prerequisites**
   - Administrator credentials with the `admin` role
-  - Access to **XDeploy** (the **Polystack Dashboard**) for node management
+  - Access to **the deployment console** (the **Polystack Dashboard**) for node management
   - SSH access to target nodes for manual agent installation
 </Note>
 
 ---
 
-## Deploy via XDeploy
+## Deploy via the deployment console
 
 <Steps titleSize="h3">
   <Step title="Register the node" icon="plus">
-    Navigate to **XDeploy → Infrastructure → Nodes → Add Node**. Provide the node
-    IP, hostname, and role. XDeploy installs and configures the Monitoring agent as part
+    Navigate to **the deployment console → Infrastructure → Nodes → Add Node**. Provide the node
+    IP, hostname, and role. the deployment console installs and configures the Monitoring agent as part
     of the node onboarding process.
   </Step>
   <Step title="Verify agent registration" icon="circle-check">
@@ -61,7 +61,7 @@ outside XDeploy management.
 
 ## Manual Agent Installation
 
-For nodes not managed by XDeploy, install and configure the agent manually.
+For nodes not managed by the deployment console, install and configure the agent manually.
 
 <Steps titleSize="h3">
   <Step title="Install the agent package" icon="download">

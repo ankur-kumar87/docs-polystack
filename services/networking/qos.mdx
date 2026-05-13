@@ -18,7 +18,7 @@ Administrators create and optionally share policies; project users apply them to
 <Note>
   **Prerequisites**
   - Admin credentials sourced from `openrc.sh`
-  - QoS service plugin enabled in your cluster (configured via XDeploy under **Networking → Plugins**)
+  - QoS service plugin enabled in your cluster (configured via the deployment console under **Networking → Plugins**)
   - Open vSwitch or Linux Bridge L2 agent running on all compute nodes
 </Note>
 
@@ -352,7 +352,7 @@ Confirm QoS enforcement is active after applying a policy:
   <Accordion title="QoS policy not visible in Dashboard" icon="eye">
     **Cause**: The QoS service plugin is not enabled in the Networking configuration.
 
-    **Resolution**: In XDeploy, navigate to **Networking → Plugins** and enable the QoS plugin. Redeploy the networking service:
+    **Resolution**: In the deployment console, navigate to **Networking → Plugins** and enable the QoS plugin. Redeploy the networking service:
     ```bash title="Redeploy networking service"
     ironcore-ansible deploy -t neutron
     ```

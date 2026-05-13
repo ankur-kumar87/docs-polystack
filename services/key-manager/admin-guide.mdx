@@ -18,12 +18,12 @@ configuration affect secret accessibility across all services that reference it.
 <AdminWarning />
 
 <Tabs>
-  <Tab title="XDeploy" icon="server">
-    The Key Management service is enabled through the XDeploy Configuration panel:
+  <Tab title="Web Console" icon="server">
+    The Key Management service is enabled through the the deployment console Configuration panel:
 
     <Steps titleSize="h3">
       <Step title="Open Configuration" icon="settings">
-        Navigate to **XDeploy → Configuration** and select the **Advance Features** tab.
+        Navigate to **the deployment console → Configuration** and select the **Advance Features** tab.
       </Step>
       <Step title="Enable KMS" icon="toggle-left">
         Set **Enable KMS** to **Yes**. This deploys the Key Management service and
@@ -31,7 +31,7 @@ configuration affect secret accessibility across all services that reference it.
         K8SaaS certificate storage, Load Balancer TLS).
       </Step>
       <Step title="Save and deploy" icon="rocket">
-        Click **Save Configuration**, then navigate to **XDeploy → Operations** and
+        Click **Save Configuration**, then navigate to **the deployment console → Operations** and
         run a **Deploy** for the Key Management service.
 
         <Check>Key Management service is deployed and accessible to all platform services.</Check>
@@ -80,7 +80,7 @@ configuration affect secret accessibility across all services that reference it.
 <Note>
   **Required before proceeding**
   - Administrator credentials sourced via `openrc.sh`
-  - Access to XDeploy for service configuration changes
+  - Access to the deployment console for service configuration changes
   - Understanding of key management concepts (HSM, PKCS#11, KMIP, symmetric encryption)
 </Note>
 

@@ -1,10 +1,10 @@
-# 🗂️ Xloud XAVS – Auto-Scaling Virtual Machines with Heat Orchestration
+# 🗂️ Polystack IronCore – Auto-Scaling Virtual Machines with Heat Orchestration
 
 ---
 
 ## 1. 🔎 Introduction
 
-**Xloud XAVS OpenStack** includes a native orchestration engine—**Heat**—which enables customers to automate the provisioning, scaling, and lifecycle management of virtual machines and cloud infrastructure.
+**Polystack IronCore OpenStack** includes a native orchestration engine—**Heat**—which enables customers to automate the provisioning, scaling, and lifecycle management of virtual machines and cloud infrastructure.
 
 Using declarative templates (HOT), Heat allows users to define **dynamic VM clusters** that **scale in or out automatically** based on system load or policy-driven rules. Combined with **Ceilometer** and **Aodh**, Heat powers elastic environments where compute capacity adjusts to real-time demand.
 
@@ -115,7 +115,7 @@ Dynamically adjusts capacity between 1–5 VMs:
 ```yaml
 heat_template_version: 2016-10-14
 
-description: Auto-scalable VM cluster (XAVS)
+description: Auto-scalable VM cluster (IronCore)
 
 parameters:
   image:
@@ -183,7 +183,7 @@ resources:
 
 ## 7. ✅ Summary & Positioning
 
-**Xloud XAVS Auto-Scaling** enables customers to dynamically expand or reduce VM clusters based on demand. This capability, powered by **OpenStack Heat**, works in conjunction with **Ceilometer** and **Aodh** to provide:
+**Polystack IronCore Auto-Scaling** enables customers to dynamically expand or reduce VM clusters based on demand. This capability, powered by **OpenStack Heat**, works in conjunction with **Ceilometer** and **Aodh** to provide:
 
 * Elastic compute capacity
 * Infrastructure-as-code management

@@ -17,7 +17,7 @@ from client-facing traffic, and regular key rotation procedures.
 <Note>
   **Prerequisites**
   - Administrator credentials with the `admin` role
-  - Access to **XDeploy** (`https://connect.<your-domain>`) for OSD deployment settings
+  - Access to **the deployment console** (`https://connect.<your-domain>`) for OSD deployment settings
   - SSH access to cluster management node for cephx key operations
 </Note>
 
@@ -30,11 +30,11 @@ encrypted OSD is encrypted before it reaches the physical disk.
 
 <Tabs>
   <Tab title="Enable Encryption" icon="lock">
-    Encryption is configured at OSD deployment time through XDeploy.
+    Encryption is configured at OSD deployment time through the deployment console.
 
     <Steps titleSize="h3">
       <Step title="Configure encryption before deployment" icon="settings">
-        Navigate to **XDeploy → Storage → OSD Deployment** and enable
+        Navigate to **the deployment console → Storage → OSD Deployment** and enable
         **Encrypt OSDs at deployment** before provisioning new OSDs.
 
         Encryption keys are managed by the Polystack Key Management service and rotated
@@ -62,7 +62,7 @@ encrypted OSD is encrypted before it reaches the physical disk.
 
     - Keys are generated per-OSD at deployment time
     - Keys are stored in the XKM service, not on the OSD nodes themselves
-    - Key rotation schedules are configurable in **XDeploy → Security → Key Rotation**
+    - Key rotation schedules are configurable in **the deployment console → Security → Key Rotation**
     - Each OSD retrieves its key at startup via the XKM API
 
     <Note>
@@ -159,7 +159,7 @@ storage replication I/O from client-facing traffic.
     - **Public network**: 10 GbE or 25 GbE, shared with compute nodes
     - **Cluster network**: 25 GbE or faster, storage-only VLAN
 
-    Network configuration is set in the cluster configuration and applied by XDeploy
+    Network configuration is set in the cluster configuration and applied by the deployment console
     during initial deployment.
 
     <Tip>

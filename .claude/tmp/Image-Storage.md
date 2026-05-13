@@ -1,11 +1,11 @@
 
-# 🗂️ Xloud XAVS – Glance Image Service & Custom Image Storage Configuration
+# 🗂️ Polystack IronCore – Glance Image Service & Custom Image Storage Configuration
 
 ---
 
 ## 1. 🔎 Introduction
 
-**Xloud XAVS OpenStack** includes a fully integrated **Glance Image Service**, which enables users to discover, upload, and manage virtual machine images used across the platform. Glance serves as the centralized repository for VM images and plays a vital role in compute provisioning by supplying images to **Nova** during instance creation.
+**Polystack IronCore OpenStack** includes a fully integrated **Glance Image Service**, which enables users to discover, upload, and manage virtual machine images used across the platform. Glance serves as the centralized repository for VM images and plays a vital role in compute provisioning by supplying images to **Nova** during instance creation.
 
 The Glance service is designed to support a variety of backend storage options, ensuring flexibility and scalability for diverse customer environments.
 
@@ -33,13 +33,13 @@ The Glance service is designed to support a variety of backend storage options, 
 | **Amazon S3**              | S3-compatible support exists but is deprecated in most production cases.             |
 | **VMware Datastore**       | Allows storing images directly in vSphere environments (for VMware integration).     |
 
-> 📌 Xloud XAVS can operate multiple backends concurrently and assign them dynamically per image upload.
+> 📌 Polystack IronCore can operate multiple backends concurrently and assign them dynamically per image upload.
 
 ---
 
 ## 4. 🧰 Use Case: Custom Local Directory for Image Storage
 
-In some deployments, administrators may want to store image files in a **custom local directory** (e.g., on dedicated volumes or bind-mounted storage). Xloud XAVS supports this through configuration overrides.
+In some deployments, administrators may want to store image files in a **custom local directory** (e.g., on dedicated volumes or bind-mounted storage). Polystack IronCore supports this through configuration overrides.
 
 ### ✅ Example: Configure a Custom Directory
 
@@ -47,7 +47,7 @@ In some deployments, administrators may want to store image files in a **custom 
    On the control node:
 
    ```bash
-   mkdir -p /etc/xavs/config/glance
+   mkdir -p /etc/ironcore/config/glance
    ```
 
 2. **Define the Custom Image Path**
@@ -66,13 +66,13 @@ In some deployments, administrators may want to store image files in a **custom 
    sudo chown 42424:42424 /mnt/glance_images/
    ```
 
-   * `42424` is the default UID/GID for Glance in Xloud XAVS (adjust if needed).
+   * `42424` is the default UID/GID for Glance in Polystack IronCore (adjust if needed).
 
 4. **Apply the Configuration**
    Deploy configuration changes with:
 
    ```bash
-   xavs reconfigure -t glance
+   ironcore reconfigure -t glance
    ```
 
 ---
@@ -88,7 +88,7 @@ In some deployments, administrators may want to store image files in a **custom 
 
 ## 6. ✅ Summary & Positioning
 
-The **Xloud XAVS Glance Image Service** provides robust and flexible image management for virtual machine provisioning. With multi-backend support and customizable local directory storage, Glance ensures:
+The **Polystack IronCore Glance Image Service** provides robust and flexible image management for virtual machine provisioning. With multi-backend support and customizable local directory storage, Glance ensures:
 
 * Consistent image availability across compute nodes
 * Scalable image distribution and replication

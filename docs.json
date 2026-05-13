@@ -4,8 +4,8 @@
   "name": "Polystack Documentation",
   "colors": {
     "primary": "#bf9667",
-    "light": "#d7b98e",
-    "dark": "#8f6a43"
+    "light": "#bf9667",
+    "dark": "#bf9667"
   },
   "appearance": {
     "default": "dark",
@@ -45,7 +45,13 @@
         "group": "Products",
         "icon": "package",
         "root": "products/index",
-        "pages": []
+        "pages": [
+          "products/edge-computing",
+          "products/ironcore",
+          "products/software-defined-storage",
+          "products/monitoring",
+          "products/disaster-recovery"
+        ]
       },
       {
         "group": "Core Services",

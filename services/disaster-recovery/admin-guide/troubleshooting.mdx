@@ -14,7 +14,7 @@ user-facing issues such as replication lag and DR test access problems, see
 <Note>
   **Prerequisites**
   - Administrator credentials with the `dr-admin` role
-  - Access to both primary and DR site XDeploy instances
+  - Access to both primary and DR site the deployment console instances
   - For replication network issues, coordinate with the network administrator
 </Note>
 
@@ -81,7 +81,7 @@ user-facing issues such as replication lag and DR test access problems, see
     - Verify firewall rules allow TCP 7000-7002 bidirectionally between site CIDRs
     - Check that Disaster Recovery agent processes are running on both sites by reviewing the agent
       status indicator in **Disaster Recovery → Sites → [Site]**
-    - If the agent is stopped, restart it via XDeploy on the affected site
+    - If the agent is stopped, restart it via the deployment console on the affected site
     - Check agent logs for TLS certificate errors — certificates may have expired
   </Accordion>
 

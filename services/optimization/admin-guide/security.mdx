@@ -76,11 +76,11 @@ The `watcher.conf` file contains the Applier's service account credentials. Rest
 access to this file on controller nodes and verify the authentication configuration.
 
 <Tabs>
-  <Tab title="XDeploy" icon="browser">
+  <Tab title="Web Console" icon="browser">
     <Steps titleSize="h3">
       <Step title="Automatic Credential Management" icon="shield-check">
         Service account credentials and authentication settings are **automatically managed**
-        by XDeploy during deployment. XDeploy generates the `[keystone_authtoken]` section
+        by the deployment console during deployment. the deployment console generates the `[keystone_authtoken]` section
         with the correct service account, endpoint URLs, and permissions.
 
         No manual configuration is required for standard deployments.
@@ -110,7 +110,7 @@ access to this file on controller nodes and verify the authentication configurat
         Click **Save Current File**. Return to **Operations** and run **reconfigure** to
         apply the authentication changes.
 
-        <Check>Service credentials configured and applied via XDeploy.</Check>
+        <Check>Service credentials configured and applied via the deployment console.</Check>
       </Step>
     </Steps>
   </Tab>

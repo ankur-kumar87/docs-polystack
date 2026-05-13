@@ -18,7 +18,7 @@ covers the most common operational tasks for Software-Defined-Storage administra
   **Prerequisites**
   - Administrator credentials with the `admin` role
   - SSH access to a cluster node running the management CLI
-  - Access to **XDeploy** (`https://connect.<your-domain>`)
+  - Access to **the deployment console** (`https://connect.<your-domain>`)
 </Note>
 
 ---
@@ -27,7 +27,7 @@ covers the most common operational tasks for Software-Defined-Storage administra
 
 <Tabs>
   <Tab title="Dashboard" icon="gauge">
-    Navigate to **XDeploy → Storage → Cluster Health** for a graphical overview of
+    Navigate to **the deployment console → Storage → Cluster Health** for a graphical overview of
     cluster status, OSD counts, capacity utilization, and active alerts.
 
     | Health State | Meaning | Action Required |
@@ -70,7 +70,7 @@ covers the most common operational tasks for Software-Defined-Storage administra
 
 ## Service Operations
 
-Common cluster management operations performed through XDeploy or the CLI.
+Common cluster management operations performed through the deployment console or the CLI.
 
 <Tabs>
   <Tab title="Service Management" icon="settings">
@@ -116,10 +116,10 @@ Common cluster management operations performed through XDeploy or the CLI.
 
 <Steps titleSize="h3">
   <Step title="Adding a new OSD" icon="plus">
-    Deploy new OSDs through XDeploy:
-    1. Navigate to **XDeploy → Storage → OSDs → Add OSD**
+    Deploy new OSDs through the deployment console:
+    1. Navigate to **the deployment console → Storage → OSDs → Add OSD**
     2. Select the target host and available device
-    3. XDeploy provisions and integrates the OSD into the cluster
+    3. the deployment console provisions and integrates the OSD into the cluster
 
     Alternatively via CLI:
     ```bash title="Add OSD on specific host and device"
@@ -154,10 +154,10 @@ Common cluster management operations performed through XDeploy or the CLI.
     </Warning>
   </Step>
   <Step title="Replacing a failed disk" icon="refresh-cw">
-    After physically replacing the failed disk, redeploy the OSD through XDeploy:
-    1. Navigate to **XDeploy → Storage → OSDs → Replace OSD**
+    After physically replacing the failed disk, redeploy the OSD through the deployment console:
+    1. Navigate to **the deployment console → Storage → OSDs → Replace OSD**
     2. Select the host and the new device
-    3. XDeploy provisions the replacement OSD and the cluster begins rebalancing
+    3. the deployment console provisions the replacement OSD and the cluster begins rebalancing
 
     <Check>New OSD shows `up in` in `ceph osd tree` and cluster returns to `HEALTH_OK`.</Check>
   </Step>

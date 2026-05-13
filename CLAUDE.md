@@ -16,9 +16,9 @@
 
 ## Branding
 - **Company**: Polystack Technologies
-- **Colors**: Primary `#bf9667`, Light `#d7b98e`, Dark `#8f6a43`
+- **Colors**: Primary `#bf9667`, Light `#bf9667`, Dark `#bf9667`
 - **Fonts**: Linden theme defaults
-- **Products**: Ironcore, Monitoring, XHCI, Disaster Recovery, Software-Defined-Storage, XNAS, XNexus, XOS
+- **Products**: Ironcore, Monitoring, Disaster Recovery, Software-Defined-Storage
 - **Support**: support@polystack.tech
 
 ## Documentation Authoring Standard
@@ -43,7 +43,7 @@ Every page in this repo MUST follow the enterprise documentation standard define
 ```
 docs.json                    # Site configuration
 introduction.mdx             # Landing page (homepage)
-quickstart.mdx               # Quickstart — XDeploy deployment flow
+quickstart.mdx               # Quickstart — the deployment console deployment flow
 authentication.mdx           # Dashboard login + CLI openrc auth
 images/                      # Static assets (logo, favicon)
 resources/                   # Static support assets

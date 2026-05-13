@@ -1,6 +1,6 @@
 ---
 
-# 🗂️ Xloud XAVS – Securing Virtual Machines at the Hypervisor Level
+# 🗂️ Polystack IronCore – Securing Virtual Machines at the Hypervisor Level
 
 ---
 
@@ -8,12 +8,12 @@
 
 Traditional VM security often depends on in-guest agents like antivirus or endpoint monitoring. But in modern cloud environments—especially multi-tenant, regulated, or zero-trust deployments—installing agents inside every VM is not always feasible or desirable.
 
-**XAVS** implements a **hypervisor-level security model**, delivering **agentless protection** that enforces policy at the virtualization and control layer—without modifying guest VMs.
+**IronCore** implements a **hypervisor-level security model**, delivering **agentless protection** that enforces policy at the virtualization and control layer—without modifying guest VMs.
 
 This document explores:
 
 * The need for agentless protection
-* Hypervisor-level controls built into XAVS
+* Hypervisor-level controls built into IronCore
 * Tools like FWaaS, port security, and TLS encryption
 * Hardening recommendations for compliance-driven clouds
 
@@ -21,7 +21,7 @@ This document explores:
 
 ## 2. 🧱 Architecture Overview
 
-### 🔹 Security Layers in XAVS
+### 🔹 Security Layers in IronCore
 
 | Layer                | Controls Enforced                                                |
 | -------------------- | ---------------------------------------------------------------- |
@@ -30,7 +30,7 @@ This document explores:
 | **Control Plane**    | TLS on APIs, metadata token enforcement, logging & rate limiting |
 | **Storage Layer**    | Encrypted volumes (Ceph), immutable templates                    |
 
-> 🧩 XAVS enforces defense-in-depth through **layered isolation** and **central policy enforcement**, even without any in-guest agents.
+> 🧩 IronCore enforces defense-in-depth through **layered isolation** and **central policy enforcement**, even without any in-guest agents.
 
 ---
 
@@ -125,7 +125,7 @@ Enable token-based metadata access to prevent SSRF and cross-tenant data exposur
 
 * **Compliance-Ready Defaults**
 
-  * Hardened Nova users, TLS, AppArmor and seccomp profiles pre-configured via XAVS playbooks
+  * Hardened Nova users, TLS, AppArmor and seccomp profiles pre-configured via IronCore playbooks
 
 * **Observability**
 
@@ -139,14 +139,14 @@ Enable token-based metadata access to prevent SSRF and cross-tenant data exposur
 
 ## 7. ✅ Summary & Positioning
 
-XAVS enables enterprises to **secure workloads from below**—at the virtualization and control layer—without relying on agents or guest OS support. This approach is ideal for:
+IronCore enables enterprises to **secure workloads from below**—at the virtualization and control layer—without relying on agents or guest OS support. This approach is ideal for:
 
 * Regulated and multi-tenant environments
 * Zero-trust network designs
 * Workloads that resist in-guest tooling
 
-By combining TLS, FWaaS, port controls, and hardened hypervisors, **XAVS offers a comprehensive, agentless security model** for modern cloud infrastructure.
+By combining TLS, FWaaS, port controls, and hardened hypervisors, **IronCore offers a comprehensive, agentless security model** for modern cloud infrastructure.
 
-> 🟢 **Customer Experience:** Harden your cloud without touching the guest OS—XAVS delivers built-in defense from day one.
+> 🟢 **Customer Experience:** Harden your cloud without touching the guest OS—IronCore delivers built-in defense from day one.
 
 ---

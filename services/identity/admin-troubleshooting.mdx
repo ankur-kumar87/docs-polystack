@@ -59,7 +59,7 @@ service catalog misconfigurations, and system-scope permission errors.
     curl -s https://api.<your-domain>:5000/v3 | python3 -m json.tool
     ```
 
-    **Resolution**: Restart the Identity service via XDeploy if containers are stopped:
+    **Resolution**: Restart the Identity service via the deployment console if containers are stopped:
     ```bash title="Restart Identity containers"
     ironcore-ansible deploy --tags keystone
     ```
@@ -99,7 +99,7 @@ service catalog misconfigurations, and system-scope permission errors.
     ```bash title="Check keystone LDAP configuration"
     docker exec keystone grep -A 30 "\[ldap\]" /etc/keystone/keystone.conf
     ```
-    Update the configuration via XDeploy globals and redeploy if attributes are incorrect.
+    Update the configuration via the deployment console globals and redeploy if attributes are incorrect.
   </Accordion>
 </AccordionGroup>
 

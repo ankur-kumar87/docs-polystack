@@ -21,7 +21,7 @@ enterprise LDAP directories or federated identity providers alongside local SQL 
 | Backend | Use Case | Configuration |
 |---------|----------|---------------|
 | **SQL** | Default. Local users stored in MariaDB. Zero external dependencies. | Built-in; no additional config required. |
-| **LDAP** | Enterprise directory integration. Users and groups sourced from Active Directory or OpenLDAP. | Configured per-domain via XDeploy globals. |
+| **LDAP** | Enterprise directory integration. Users and groups sourced from Active Directory or OpenLDAP. | Configured per-domain via the deployment console globals. |
 | **SAML 2.0** | SSO with corporate IdPs (Okta, Azure AD, ADFS). | Requires `mod_shib` and federation mapping rules. |
 | **OIDC** | Modern SSO via OAuth 2.0 / OpenID Connect providers. | Requires `mod_auth_openidc` and attribute mapping. |
 
@@ -50,8 +50,8 @@ connects in read-only mode — user creation and password changes must happen in
 directory, not in Polystack.
 
 <Steps titleSize="h3">
-  <Step title="Configure LDAP in XDeploy globals" icon="settings">
-    Set the following in your deployment globals via XDeploy:
+  <Step title="Configure LDAP in the deployment console globals" icon="settings">
+    Set the following in your deployment globals via the deployment console:
 
     ```yaml title="LDAP configuration in deployment globals"
     keystone_ldap:

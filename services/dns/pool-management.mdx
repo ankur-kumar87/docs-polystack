@@ -29,7 +29,7 @@ attributes.
 | `region` | `east`, `west` | Assign zones to geographically local pools |
 | `tenant_type` | `internal`, `external` | Separate internal and external zones |
 
-Configure pool attributes through XDeploy service configuration files.
+Configure pool attributes through the deployment console service configuration files.
 
 ---
 
@@ -81,13 +81,13 @@ openstack zone show <zone-name> -c attributes
 
 ## Adding Nameservers to a Pool
 
-Adding nameservers requires updating the pool configuration through XDeploy. After
+Adding nameservers requires updating the pool configuration through the deployment console. After
 adding a nameserver:
 
 <Steps titleSize="h3">
-  <Step title="Update pool configuration in XDeploy">
+  <Step title="Update pool configuration in the deployment console">
     Add the new nameserver to the pool's `nameservers` and `targets` lists in the
-    XDeploy DNS service configuration.
+    the deployment console DNS service configuration.
   </Step>
   <Step title="Deploy the configuration">
     Apply the updated configuration:

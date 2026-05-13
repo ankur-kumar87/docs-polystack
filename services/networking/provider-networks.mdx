@@ -19,8 +19,8 @@ they select from the options an administrator has made available.
 <Note>
   **Prerequisites**
   - Admin credentials sourced from `openrc.sh`
-  - XDeploy access for cluster-level interface configuration
-  - Physical network interfaces identified and mapped in XDeploy
+  - the deployment console access for cluster-level interface configuration
+  - Physical network interfaces identified and mapped in the deployment console
 </Note>
 
 ---
@@ -38,13 +38,13 @@ they select from the options an administrator has made available.
 ## Configure Physical Interface Mappings
 
 Provider network parameters are set during initial cluster deployment or reconfiguration
-via XDeploy. These settings apply to all cluster nodes.
+via the deployment console. These settings apply to all cluster nodes.
 
 <Tabs>
-  <Tab title="XDeploy" icon="rocket">
+  <Tab title="Web Console" icon="rocket">
     <Steps titleSize="h3">
       <Step title="Open Networking configuration" icon="compass">
-        In XDeploy, navigate to **Configuration → Networking**.
+        In the deployment console, navigate to **Configuration → Networking**.
       </Step>
       <Step title="Configure physical interface mapping" icon="settings">
         Set the interface-to-bridge mapping for each network type:
@@ -57,7 +57,7 @@ via XDeploy. These settings apply to all cluster nodes.
         | `neutron_tunnel_types` | `vxlan` | Overlay type for tenant networks |
       </Step>
       <Step title="Apply the configuration" icon="play">
-        Click **Save and Deploy**. XDeploy applies the settings to all cluster nodes
+        Click **Save and Deploy**. the deployment console applies the settings to all cluster nodes
         via ironcore-ansible.
 
         <Warning>

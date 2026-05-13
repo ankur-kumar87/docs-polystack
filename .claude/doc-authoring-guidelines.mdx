@@ -1,4 +1,4 @@
-# Xloud Documentation Authoring Guidelines
+# Polystack Documentation Authoring Guidelines
 
 > Canonical reference for writing enterprise-grade documentation.
 > Read this file BEFORE creating or editing any documentation page.
@@ -8,7 +8,7 @@
 ## 1. Role & Objective
 
 You are a technical documentation engineer. Your task is to produce polished, enterprise-grade
-documentation for Xloud — a cloud infrastructure platform. Every page must match the quality
+documentation for Polystack — a cloud infrastructure platform. Every page must match the quality
 standard of AWS, Azure, DigitalOcean, and Stripe documentation.
 
 When rewriting from OpenStack sources:
@@ -22,38 +22,38 @@ When rewriting from OpenStack sources:
 
 ### 2.1 Terminology Replacements
 
-| Source Term | Xloud Term | Notes |
+| Source Term | Polystack Term | Notes |
 |-------------|-----------|-------|
-| OpenStack | Xloud | All references — headings, body, commands explanation |
+| OpenStack | Polystack | All references — headings, body, commands explanation |
 | KVM | hypervisor | Never expose KVM directly to customers |
-| Horizon | Xloud Dashboard | The web management interface |
-| DevStack | Xloud Development Environment | Local dev setup |
-| Heat | Xloud Orchestration | IaC / stack management |
-| Cinder | Xloud Block Storage | Volume service |
-| Nova | Xloud Compute | Compute service |
-| Neutron | Xloud Networking | Network service |
-| Glance | Xloud Image Service | Image management |
-| Keystone | Xloud Identity | Authentication / authorization |
-| Swift | Xloud Object Storage | Object store |
-| Octavia | Xloud Load Balancer | LBaaS |
-| Barbican | Xloud Key Management | KMS / secrets |
-| Designate | Xloud DNS | DNSaaS |
-| Manila | Xloud Shared Filesystem | Shared storage |
-| Watcher | Xloud Resource Optimizer | Resource optimization |
-| Masakari | Xloud High Availability | Instance HA |
-| Ceph | Xloud Distributed Storage | Storage backend |
-| XDeploy | XDeploy | Keep as-is — the deployment management UI |
-| xavs-ansible | xavs-ansible | Keep as-is — the deployment automation tool |
+| Horizon | Polystack Dashboard | The web management interface |
+| DevStack | Polystack Development Environment | Local dev setup |
+| Heat | Polystack Orchestration | IaC / stack management |
+| Cinder | Polystack Block Storage | Volume service |
+| Nova | Polystack Compute | Compute service |
+| Neutron | Polystack Networking | Network service |
+| Glance | Polystack Image Service | Image management |
+| Keystone | Polystack Identity | Authentication / authorization |
+| Swift | Polystack Object Storage | Object store |
+| Octavia | Polystack Load Balancer | LBaaS |
+| Barbican | Polystack Key Management | KMS / secrets |
+| Designate | Polystack DNS | DNSaaS |
+| Manila | Polystack Shared Filesystem | Shared storage |
+| Watcher | Polystack Resource Optimizer | Resource optimization |
+| Masakari | Polystack High Availability | Instance HA |
+| Ceph | Polystack Distributed Storage | Storage backend |
+| the deployment console | the deployment console | Keep as-is — the deployment management UI |
+| ironcore-ansible | ironcore-ansible | Keep as-is — the deployment automation tool |
 
 ### 2.2 Branding Constants
 
-- **Company**: Xloud Technologies
-- **Platform**: Xloud Cloud Platform
+- **Company**: Polystack Technologies
+- **Platform**: Polystack Cloud Platform
 - **Primary color**: `#197560`
-- **Support email**: support@xloud.tech
+- **Support email**: support@polystack.tech
 - **Dashboard URL**: `https://connect.<your-domain>`
 - **API base URL**: `https://api.<your-domain>`
-- **Documentation URL**: `https://docs.xloud.tech`
+- **Documentation URL**: `https://docs.polystack.tech`
 
 ---
 
@@ -71,7 +71,7 @@ When rewriting from OpenStack sources:
 
 | Do NOT write | Write instead |
 |-------------|--------------|
-| "We recommend..." | "Xloud recommends..." or just state the recommendation |
+| "We recommend..." | "Polystack recommends..." or just state the recommendation |
 | "You guys" / "Folks" | Remove — address the reader directly or use "administrators" / "users" |
 | "Let's configure..." | "Configure..." |
 | "Basically..." / "Simply..." | Remove — just describe the action |
@@ -175,14 +175,14 @@ Common issues and resolutions. Use AccordionGroup.
 
 | Scenario | Action |
 |----------|--------|
-| GUI steps exist in source | Rewrite them for Xloud Dashboard |
-| GUI steps NOT in source | Create realistic GUI steps based on standard Xloud Dashboard workflows |
-| GUI not applicable | State: "This operation is performed via XDeploy" and provide XDeploy steps |
+| GUI steps exist in source | Rewrite them for Polystack Dashboard |
+| GUI steps NOT in source | Create realistic GUI steps based on standard Polystack Dashboard workflows |
+| GUI not applicable | State: "This operation is performed via the deployment console" and provide the deployment console steps |
 | Admin-only operation | Add `<Warning>This operation requires administrator privileges.</Warning>` |
 
 ### 4.3 CLI Section Rules
 
-- Rewrite commands for Xloud context
+- Rewrite commands for Polystack context
 - Keep commands clean and minimal
 - Add a one-line explanation below each command (not verbose)
 - Use `<CodeGroup>` when showing equivalent commands across tools
@@ -261,7 +261,7 @@ Every procedural page MUST include a configuration/procedure section with this p
   <Tab title="Dashboard" icon="gauge">
     <Steps titleSize="h3">
       <Step title="Navigate to the Service" icon="compass">
-        Log in to the **Xloud Dashboard** (`https://connect.<your-domain>`) and navigate
+        Log in to the **Polystack Dashboard** (`https://connect.<your-domain>`) and navigate
         to **Project → Compute → Instances**.
       </Step>
       <Step title="Configure the Resource" icon="gear">
@@ -291,13 +291,13 @@ Every procedural page MUST include a configuration/procedure section with this p
       </Step>
       <Step title="Create the Resource" icon="plus">
         ```bash title="Create resource"
-        xloud resource create --name my-resource --type standard
+        polystack resource create --name my-resource --type standard
         ```
         This creates a new resource with the specified name and type.
       </Step>
       <Step title="Verify" icon="circle-check">
         ```bash title="List resources"
-        xloud resource list
+        polystack resource list
         ```
         Confirm the resource appears with status `ACTIVE`.
 
@@ -330,7 +330,7 @@ Confirm the operation completed successfully:
   </Tab>
   <Tab title="CLI" icon="terminal">
     ```bash title="Verify resource status"
-    xloud resource show my-resource -f json
+    polystack resource show my-resource -f json
     ```
 
     Expected output:
@@ -362,14 +362,14 @@ Use AccordionGroup for common issues:
 
     **Resolution**:
     ```bash title="Check resource events"
-    xloud resource event-list my-resource
+    polystack resource event-list my-resource
     ```
     Review the event log for scheduling failures. Common causes:
     - Insufficient compute capacity
     - Availability zone constraint mismatch
     - Quota exceeded
 
-    <Tip>Use `xloud quota show` to verify available capacity.</Tip>
+    <Tip>Use `polystack quota show` to verify available capacity.</Tip>
   </Accordion>
 
   <Accordion title="Permission denied error" icon="lock">
@@ -377,7 +377,7 @@ Use AccordionGroup for common issues:
 
     **Resolution**: Verify your role assignment:
     ```bash title="Check role assignments"
-    xloud role assignment list --user $USER --project $PROJECT
+    polystack role assignment list --user $USER --project $PROJECT
     ```
     Contact your administrator to request the `member` or `admin` role.
   </Accordion>
@@ -393,7 +393,7 @@ Every page MUST include:
 | Field | Requirement | Example |
 |-------|------------|---------|
 | `title` | 50-60 chars, primary keyword included | `"Compute Instances"` |
-| `description` | 150-160 chars, compelling action-oriented summary | `"Create, manage, and scale virtual machine instances in your Xloud environment"` |
+| `description` | 150-160 chars, compelling action-oriented summary | `"Create, manage, and scale virtual machine instances in your Polystack environment"` |
 | `icon` | Always set — use Font Awesome name | `"server"` |
 | `sidebarTitle` | Set when title is long | `"Instances"` |
 | `keywords` | 3-5 discovery terms (optional but recommended) | `["compute", "vm", "instance"]` |
@@ -466,5 +466,5 @@ Before finalizing any page, verify:
 | **Reference** | "Give me the facts" | Scannable tables/fields | ParamField, ResponseField, Tables, Expandable |
 | **Explanation** | "Help me understand" | Conceptual deep-dive | Mermaid, Accordion, Tabs, Frame |
 
-Choose the appropriate type before writing. Most Xloud docs are **How-To Guides** (procedural)
+Choose the appropriate type before writing. Most Polystack docs are **How-To Guides** (procedural)
 or **Reference** (API/CLI). Apply the matching structure and components.

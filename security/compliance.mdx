@@ -82,7 +82,7 @@ glance_audit_events: "all"
   <Tab title="Centralized Logging (Monitoring)" icon="gauge">
     <Steps titleSize="h3">
       <Step title="Enable central logging" icon="settings">
-        In XDeploy, navigate to **Configuration → Global Settings** and enable **Central Logging**. This activates Fluentd on all nodes and deploys OpenSearch as the log aggregation backend.
+        In the deployment console, navigate to **Configuration → Global Settings** and enable **Central Logging**. This activates Fluentd on all nodes and deploys OpenSearch as the log aggregation backend.
       </Step>
       <Step title="Configure retention policy" icon="clock">
         Navigate to **Monitoring → Log Management → Index Policies**. Set the retention period:
@@ -180,7 +180,7 @@ The following table maps Polystack platform controls to requirements in major co
     | Low | 0.1–3.9 | 90 days |
   </Step>
   <Step title="Patch and re-scan" icon="rotate-cw">
-    Apply patches via the standard XOS update process and re-scan to confirm remediation.
+    Apply patches via the standard Polystack OS update process and re-scan to confirm remediation.
 
     ```bash title="Apply security updates on all nodes"
     ironcore-ansible deploy --tags common --limit control,compute
@@ -194,7 +194,7 @@ The following table maps Polystack platform controls to requirements in major co
 
 ## Change Tracking
 
-All infrastructure changes made through XDeploy, ironcore-ansible, and the Polystack API are recorded with timestamps, user identity, and the before/after state.
+All infrastructure changes made through the deployment console, ironcore-ansible, and the Polystack API are recorded with timestamps, user identity, and the before/after state.
 
 ```bash title="View recent deployment history"
 ironcore-ansible facts --list-hosts all

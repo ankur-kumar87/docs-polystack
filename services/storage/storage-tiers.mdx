@@ -36,11 +36,11 @@ Storage tiering exposes different hardware performance classes as distinct volum
 ## Configure Tier Mappings
 
 <Tabs>
-  <Tab title="XDeploy" icon="package">
+  <Tab title="Web Console" icon="package">
     <Steps titleSize="h3">
-      <Step title="Open Storage Tiers in XDeploy" icon="layers">
-        Log in to XDeploy and navigate to **Configuration → Storage → Storage Tiers**.
-        XDeploy displays the detected hardware device classes from the storage cluster.
+      <Step title="Open Storage Tiers in the deployment console" icon="layers">
+        Log in to the deployment console and navigate to **Configuration → Storage → Storage Tiers**.
+        the deployment console displays the detected hardware device classes from the storage cluster.
       </Step>
       <Step title="Configure tier mappings" icon="settings">
         For each detected hardware tier, specify:
@@ -145,8 +145,8 @@ When adding new hardware (e.g., NVMe drives to an existing SSD cluster):
     class. Create a dedicated pool using a CRUSH rule that targets only the new
     device class.
   </Step>
-  <Step title="Configure a new backend in XDeploy" icon="settings">
-    Add a new backend entry in XDeploy pointing to the new pool. Deploy the configuration
+  <Step title="Configure a new backend in the deployment console" icon="settings">
+    Add a new backend entry in the deployment console pointing to the new pool. Deploy the configuration
     to register the new backend with the volume service.
   </Step>
   <Step title="Create a new volume type" icon="plus">
@@ -172,7 +172,6 @@ When adding new hardware (e.g., NVMe drives to an existing SSD cluster):
 
 ## Automated Storage Tiering
 
-<Info>**Polystack-Developed** -- This capability is developed by Polystack and ships with Ironcore / XPCI.</Info>
 
 The Polystack Resource Optimizer can automatically move volumes between NVMe, SSD, and HDD pools based on observed IOPS activity -- eliminating manual tier management for dynamic workloads.
 

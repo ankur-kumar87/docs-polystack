@@ -11,12 +11,6 @@ no reboot required. This is distinct from the standard resize operation, which r
 a reboot. Live scaling uses a combination of CPU hotplug, memory balloon, DIMM hotplug,
 and virtio-mem to adjust resources within the bounds defined by the instance's flavor.
 
-<Info>
-  **Polystack-Developed** — Bidirectional CPU hotplug (add AND remove vCPUs) and
-  combined memory scaling (balloon + DIMM + virtio-mem) are developed by Polystack and
-  ship with Ironcore / XPCI.
-</Info>
-
 <Note>
   **Prerequisites**
   - An instance in `Active` status with a hot-add-enabled flavor

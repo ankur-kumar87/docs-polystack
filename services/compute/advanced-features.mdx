@@ -18,7 +18,7 @@ host-level configuration on participating compute nodes.
 <Note>
   **Prerequisites**
   - Administrator credentials sourced (`source openrc.sh`)
-  - Host-level hardware features configured through XDeploy (IOMMU, huge pages, VFIO)
+  - Host-level hardware features configured through the deployment console (IOMMU, huge pages, VFIO)
   - Relevant scheduler filters active in the scheduler configuration
 </Note>
 
@@ -30,7 +30,6 @@ host-level configuration on participating compute nodes.
   <Accordion title="NUMA-Aware Scheduling" icon="cpu">
     <Badge color="purple" size="sm" shape="pill" icon="building">Enterprise</Badge>
 
-    <Info>**Polystack-Developed** — NUMA-aware scheduling with per-flavor granularity is developed by Polystack and ships with Ironcore / XPCI.</Info>
 
     NUMA-aware scheduling ensures that an instance's vCPUs and memory are allocated
     from the same physical NUMA cell on the host, avoiding cross-node memory access
@@ -68,7 +67,6 @@ host-level configuration on participating compute nodes.
   <Accordion title="CPU Pinning" icon="microchip">
     <Badge color="purple" size="sm" shape="pill" icon="building">Enterprise</Badge>
 
-    <Info>**Polystack-Developed** — CPU pinning with mixed-policy support is developed by Polystack and ships with Ironcore / XPCI.</Info>
 
     CPU pinning dedicates physical CPU threads exclusively to a single instance,
     eliminating scheduling jitter and improving performance predictability for
@@ -116,7 +114,7 @@ host-level configuration on participating compute nodes.
     | `hw:numa_nodes` | Integer | Number of NUMA nodes to expose inside the instance |
 
     <Tip>
-      Configure CPU pinning host requirements on participating nodes through XDeploy
+      Configure CPU pinning host requirements on participating nodes through the deployment console
       under **Compute → Advanced → NUMA Configuration**. Only hosts with NUMA support
       enabled accept CPU-pinned instances.
     </Tip>
@@ -125,7 +123,6 @@ host-level configuration on participating compute nodes.
   <Accordion title="CPU Feature Masking (EVC Equivalent)" icon="shield">
     <Badge color="purple" size="sm" shape="pill" icon="building">Enterprise</Badge>
 
-    <Info>**Polystack-Developed** — Per-flavor CPU feature masking is developed by Polystack and ships with Ironcore / XPCI.</Info>
 
     CPU feature masking normalizes the CPU instruction set exposed to instances,
     enabling live migration across compute nodes with different CPU generations. This
@@ -158,7 +155,6 @@ host-level configuration on participating compute nodes.
   <Accordion title="Huge Pages" icon="layers">
     <Badge color="purple" size="sm" shape="pill" icon="building">Enterprise</Badge>
 
-    <Info>**Polystack-Developed** — Huge page management with per-flavor page size selection is developed by Polystack and ships with Ironcore / XPCI.</Info>
 
     Huge pages reduce TLB (Translation Lookaside Buffer) pressure for memory-intensive
     workloads. The hypervisor pre-allocates huge page pools on the host at boot time.
@@ -168,7 +164,7 @@ host-level configuration on participating compute nodes.
     - **1 GB huge pages** — optimal for HPC, in-memory analytics, and latency-sensitive network functions (DPDK, VNFs) where TLB coverage per entry is critical.
 
     **Host requirements**: Huge page pools must be pre-allocated on the compute node.
-    Configure pool sizes through XDeploy under **Compute → Advanced → Memory
+    Configure pool sizes through the deployment console under **Compute → Advanced → Memory
     Configuration**.
 
     <CodeGroup>
@@ -205,7 +201,7 @@ host-level configuration on participating compute nodes.
     3D rendering, and GPU-accelerated simulation workloads.
 
     **Host requirements**: IOMMU must be enabled in host BIOS and OS. The GPU must
-    be bound to the VFIO driver. Configure this through XDeploy under **Compute →
+    be bound to the VFIO driver. Configure this through the deployment console under **Compute →
     Hardware → GPU Configuration**.
 
     List available PCI resource providers to find the GPU alias:
@@ -235,7 +231,6 @@ host-level configuration on participating compute nodes.
   <Accordion title="vTPM (Virtual Trusted Platform Module)" icon="shield-check">
     <Badge color="purple" size="sm" shape="pill" icon="building">Enterprise</Badge>
 
-    <Info>**Polystack-Developed** — vTPM with live migration support and Dashboard integration is developed by Polystack and ships with Ironcore / XPCI.</Info>
 
     vTPM provides a software-emulated TPM chip inside the instance, enabling disk
     encryption (BitLocker, LUKS), measured boot attestation, and secure credential
@@ -324,14 +319,14 @@ host-level configuration on participating compute nodes.
 
     **Host requirements**: IOMMU must be enabled. Device aliases must be configured
     and consistent across all nodes exposing the same device type. Configure through
-    XDeploy under **Compute → Hardware → PCI Passthrough**.
+    the deployment console under **Compute → Hardware → PCI Passthrough**.
 
     ```bash title="Request a PCI device via flavor"
     openstack flavor set <flavor-name> \
       --property pci_passthrough:alias=<device-alias>:1
     ```
 
-    Replace `<device-alias>` with the alias name configured in XDeploy. The number
+    Replace `<device-alias>` with the alias name configured in the deployment console. The number
     after the colon specifies how many devices to attach (typically `1`).
 
     <Warning>

@@ -16,7 +16,7 @@ The `cinder-backup` service writes volume data to a configurable backup target t
 <Note>
   **Prerequisites**
   - Administrator credentials with the `admin` role
-  - Access to XDeploy for infrastructure-level configuration changes
+  - Access to the deployment console for infrastructure-level configuration changes
   - A configured backup target reachable from all backup service nodes
   - Credentials and endpoint URL for the chosen backup target
 </Note>
@@ -36,7 +36,7 @@ The `cinder-backup` service writes volume data to a configurable backup target t
 | **POSIX (local path)** | `posix.PosixBackupDriver` | Dev/test — single node only | Yes | No |
 
 <Warning>
-  Only one backup backend is active at a time. All settings go in the `[DEFAULT]` section of `cinder.conf`. Apply changes through XDeploy — do not edit `cinder.conf` directly on production nodes.
+  Only one backup backend is active at a time. All settings go in the `[DEFAULT]` section of `cinder.conf`. Apply changes through the deployment console — do not edit `cinder.conf` directly on production nodes.
 </Warning>
 
 ---
@@ -344,7 +344,7 @@ The `cinder-backup` service writes volume data to a configurable backup target t
 
 ## Apply Backup Backend Configuration
 
-In Ironcore deployments, backup backend settings are configured through XDeploy and applied via Ansible. Do not edit `cinder.conf` directly on production nodes.
+In Ironcore deployments, backup backend settings are configured through the deployment console and applied via Ansible. Do not edit `cinder.conf` directly on production nodes.
 
 ```bash title="Apply backup configuration changes"
 ironcore-ansible deploy --tags cinder

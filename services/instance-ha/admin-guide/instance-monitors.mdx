@@ -105,17 +105,17 @@ Key instance monitor parameters:
 | `[DEFAULT]` | `instance_check_interval` | `30` | Seconds between instance heartbeat polls |
 
 <Tabs>
-  <Tab title="XDeploy" icon="gauge">
+  <Tab title="Web Console" icon="gauge">
     <Steps titleSize="h3">
       <Step title="Open Advanced Configuration" icon="settings">
-        In XDeploy, navigate to **Advanced Configuration**. In the **Service Tree**,
+        In the deployment console, navigate to **Advanced Configuration**. In the **Service Tree**,
         select **masakari**.
       </Step>
       <Step title="Edit instance monitor parameters" icon="file-code">
         Select or create `instance-ha.conf` in the Code Editor. Add or modify the
         instance monitor parameters:
 
-        ```ini title="Instance monitor settings in XDeploy Advanced Configuration"
+        ```ini title="Instance monitor settings in the deployment console Advanced Configuration"
         [instance_failure]
         recover_ignoring_error_instances = False
         recover_instance_failure_method = auto

@@ -36,8 +36,8 @@ graph TD
     L2A3 --> VS3[Virtual Switch<br/>Host N]
     style API fill:#bf9667,color:#fff
     style L3A fill:#bf9667,color:#fff
-    style DHCP fill:#d7b98e,color:#fff
-    style META fill:#d7b98e,color:#fff
+    style DHCP fill:#bf9667,color:#fff
+    style META fill:#bf9667,color:#fff
 ```
 
 ---
@@ -97,7 +97,7 @@ Each compute node runs an L2 agent that programs the local virtual switch to enf
 
 <Info>
   The specific virtual switch backend (Linux bridge, Open vSwitch, or OVN) is configured
-  during cluster deployment via XDeploy. The choice of backend affects performance
+  during cluster deployment via the deployment console. The choice of backend affects performance
   characteristics and advanced features like DVR and hardware offload.
 </Info>
 

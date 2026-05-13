@@ -1,10 +1,10 @@
-# 🗂️ Xloud XAVS – Multi-Cloud Object Storage Access
+# 🗂️ Polystack IronCore – Multi-Cloud Object Storage Access
 
 ---
 
 ## 1. 🔎 Introduction
 
-**Xloud XAVS Multi-Cloud Object Storage Access** enables users to interact with all major object storage providers directly from within their OpenStack tenant environment. By simply launching a VM, customers can **browse, upload, download, and delete files** from buckets hosted on:
+**Polystack IronCore Multi-Cloud Object Storage Access** enables users to interact with all major object storage providers directly from within their OpenStack tenant environment. By simply launching a VM, customers can **browse, upload, download, and delete files** from buckets hosted on:
 
 * **Amazon S3**
 * **Azure Blob Storage**
@@ -79,14 +79,14 @@ This solution eliminates the need for external plugins or complex setups, empowe
 
 ## 7. ✅ Summary & Recommendation
 
-**Xloud XAVS Multi-Cloud Object Storage Access** provides a **simple, powerful, and flexible** solution for managing files across public and private cloud storage platforms. With minimal setup—just a tenant VM—customers gain full control of object storage buckets to streamline:
+**Polystack IronCore Multi-Cloud Object Storage Access** provides a **simple, powerful, and flexible** solution for managing files across public and private cloud storage platforms. With minimal setup—just a tenant VM—customers gain full control of object storage buckets to streamline:
 
 * Backup & archival workflows
 * Deployment file management
 * Cross-cloud data access
 * Secure storage operations
 
-This feature is now **standard and available in all Xloud XAVS environments**. No additional configuration or support tickets are required.
+This feature is now **standard and available in all Polystack IronCore environments**. No additional configuration or support tickets are required.
 
 > 🔐 **Customer Action:** Launch a VM in any tenant and configure storage access using your cloud provider credentials.
 

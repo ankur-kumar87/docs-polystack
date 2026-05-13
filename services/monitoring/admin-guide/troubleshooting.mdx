@@ -71,7 +71,7 @@ such as alert delivery failures and missing metrics on dashboards, see the
       ```
     - Increase log collector worker count in the Monitoring configuration:
       Navigate to **Monitor Center > Logging** (Collector Settings, admin view)
-    - Add a second log collector node through XDeploy for horizontal scaling
+    - Add a second log collector node through the deployment console for horizontal scaling
 
     <Tip>
       A single high-verbosity service at DEBUG level can generate more log volume than
@@ -115,7 +115,7 @@ such as alert delivery failures and missing metrics on dashboards, see the
        monitoring retention set --type metrics-raw --duration 15d
        ```
     2. Identify and drop high-cardinality series (see above)
-    3. Expand storage on the metric store node through XDeploy
+    3. Expand storage on the metric store node through the deployment console
     4. Add a second metric store node for horizontal capacity
   </Accordion>
 

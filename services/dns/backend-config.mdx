@@ -1,6 +1,6 @@
 ---
 title: "DNS Backend Configuration"
-description: "Configure the Polystack DNS backend driver and nameserver pool targets through XDeploy. View current pool configuration, manage zone assignments, and update."
+description: "Configure the Polystack DNS backend driver and nameserver pool targets through the deployment console. View current pool configuration, manage zone assignments, and update."
 sidebarTitle: "Backend Configuration"
 ---
 
@@ -9,7 +9,7 @@ import AdminWarning from '/snippets/admin-warning.mdx';
 ## Overview
 
 The DNS service backend driver determines which DNS server software is used to serve
-zone data. The backend is configured through XDeploy and the `ironcore-ansible` deployment
+zone data. The backend is configured through the deployment console and the `ironcore-ansible` deployment
 tool. This page covers viewing and managing current pool configuration and assigning
 zones to specific pools.
 
@@ -18,7 +18,7 @@ zones to specific pools.
 <Note>
   **Prerequisites**
   - Administrator credentials sourced via `openrc.sh`
-  - Access to XDeploy for DNS service configuration changes
+  - Access to the deployment console for DNS service configuration changes
 </Note>
 
 ---
@@ -83,7 +83,7 @@ openstack zone set <zone-name> --attributes pool_id:<pool-id>
 
 ## Pool Configuration Reference
 
-Pool configuration is managed through XDeploy service configuration files and applied
+Pool configuration is managed through the deployment console service configuration files and applied
 via `ironcore-ansible deploy`. The following fields control backend behavior:
 
 | Parameter | Description | Example |

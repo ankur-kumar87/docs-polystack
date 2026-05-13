@@ -144,7 +144,7 @@ configuration instructions.
 ## Audit Logging
 
 The Block Storage service logs all API requests including volume creation, deletion,
-attachment, and snapshot operations. Review service logs via XDeploy for security audits.
+attachment, and snapshot operations. Review service logs via the deployment console for security audits.
 
 <AccordionGroup>
   <Accordion title="Key events to audit" icon="eye">
@@ -160,7 +160,7 @@ attachment, and snapshot operations. Review service logs via XDeploy for securit
   <Accordion title="Enable debug logging (temporary)" icon="terminal">
     Enable verbose API logging on the Block Storage service for detailed audit trails:
 
-    Access the volume service configuration via XDeploy and add `debug = True` to the
+    Access the volume service configuration via the deployment console and add `debug = True` to the
     `[DEFAULT]` section. Apply configuration changes and restart the service.
 
     <Warning>

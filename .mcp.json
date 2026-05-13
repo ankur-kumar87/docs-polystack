@@ -2,7 +2,7 @@
   "mcpServers": {
     "mintlify": {
       "type": "http",
-      "url": "https://docs.xloud.tech/mcp"
+      "url": "https://docs.polystack.tech/mcp"
     }
   }
 }

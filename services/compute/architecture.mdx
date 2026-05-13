@@ -42,8 +42,8 @@ graph TD
     CON --> DB[(Database)]
     style API fill:#bf9667,color:#fff
     style SCH fill:#bf9667,color:#fff
-    style PL fill:#d7b98e,color:#fff
-    style CON fill:#d7b98e,color:#fff
+    style PL fill:#bf9667,color:#fff
+    style CON fill:#bf9667,color:#fff
 ```
 
 ---
@@ -74,16 +74,16 @@ cluster.
 
 | Service | Expected State | Managed By |
 |---------|---------------|-----------|
-| `nova-api` | Running, listening on `:8774` | XDeploy / Ironcore |
-| `placement-api` | Running, listening on `:8778` | XDeploy / Ironcore |
-| `nova-scheduler` | Running | XDeploy / Ironcore |
-| `nova-conductor` | Running | XDeploy / Ironcore |
-| `nova-compute` | Running on every hypervisor node | XDeploy / Ironcore |
-| `nova-novncproxy` | Running, listening on `:6080` | XDeploy / Ironcore |
+| `nova-api` | Running, listening on `:8774` | the deployment console / Ironcore |
+| `placement-api` | Running, listening on `:8778` | the deployment console / Ironcore |
+| `nova-scheduler` | Running | the deployment console / Ironcore |
+| `nova-conductor` | Running | the deployment console / Ironcore |
+| `nova-compute` | Running on every hypervisor node | the deployment console / Ironcore |
+| `nova-novncproxy` | Running, listening on `:6080` | the deployment console / Ironcore |
 
 <Tabs>
-  <Tab title="XDeploy" icon="server">
-    In XDeploy, navigate to **Operations** and run **Prechecks** to validate all
+  <Tab title="Web Console" icon="server">
+    In the deployment console, navigate to **Operations** and run **Prechecks** to validate all
     Compute service components across the cluster. The output shows:
 
     - Per-service status on every node

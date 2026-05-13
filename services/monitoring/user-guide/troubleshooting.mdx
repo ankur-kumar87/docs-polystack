@@ -12,7 +12,7 @@ rules that fail to fire, to dashboards showing no data, to missing or delayed lo
 <Note>
   **Prerequisites**
   - An active Polystack account with project access
-  - For agent and infrastructure-level issues, contact your monitoring administrator. Your administrator can configure this through [XDeploy](/deployment).
+  - For agent and infrastructure-level issues, contact your monitoring administrator. Your administrator can configure this through the deployment console.
 </Note>
 
 ---
@@ -56,7 +56,7 @@ rules that fail to fire, to dashboards showing no data, to missing or delayed lo
     monitoring agent list --status all
     ```
 
-    Look for hosts with status `offline` or `unknown`. If metrics are missing, contact your administrator. They can verify the monitoring agent status through [XDeploy](/deployment/operations).
+    Look for hosts with status `offline` or `unknown`. If metrics are missing, contact your administrator. They can verify the monitoring agent status through the deployment console.
   </Accordion>
 
   <Accordion title="Log ingestion delayed or missing" icon="file-text">
@@ -75,7 +75,7 @@ rules that fail to fire, to dashboards showing no data, to missing or delayed lo
     <Note>
       Log ingestion uses file-based collection. If a service rotates logs to a new
       path after an update, the collector configuration must be updated to match.
-      Contact your monitoring administrator to update log source configurations. Your administrator can configure this through [XDeploy](/deployment).
+      Contact your monitoring administrator to update log source configurations. Your administrator can configure this through the deployment console.
     </Note>
   </Accordion>
 
@@ -125,7 +125,7 @@ rules that fail to fire, to dashboards showing no data, to missing or delayed lo
 | Issue | First Step |
 |-------|-----------|
 | Alert not firing | `monitoring alert rule show <RULE_NAME>` |
-| Agent offline | Contact your administrator to verify agent status via [XDeploy](/deployment/operations) |
+| Agent offline | Contact your administrator to verify agent status via the deployment console |
 | Missing metric | `monitoring metric search --prefix <METRIC_PREFIX>` |
 | Log ingestion backlog | `monitoring log ingest-status` |
 | Channel test | Use **Test** button in Dashboard or `monitoring alert channel test <NAME>` |
@@ -134,7 +134,7 @@ rules that fail to fire, to dashboards showing no data, to missing or delayed lo
 
 ## When to Contact Your Administrator
 
-Contact your monitoring administrator if any of the following persist. Your administrator can configure this through [XDeploy](/deployment).
+Contact your monitoring administrator if any of the following persist. Your administrator can configure this through the deployment console.
 
 - A host does not appear in `monitoring agent list` after restarting the agent service
 - All metrics are missing for multiple hosts simultaneously

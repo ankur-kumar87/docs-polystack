@@ -5,7 +5,6 @@ sidebarTitle: "Polystack SIEM"
 mode: "wide"
 ---
 
-<Info>**Polystack-Developed** — Polystack SIEM is the integrated Security Information and Event Management layer built into the Polystack Platform. It stitches together Wazuh, Lynis, and OpenSCAP into a single dashboard surface and correlates findings against your actual cluster inventory.</Info>
 
 ## What is Polystack SIEM?
 
@@ -36,7 +35,7 @@ the combined results in two Dashboard views:
 
 <Note>
   **Prerequisites** — Polystack SIEM requires Wazuh to be enabled on the cluster
-  (XDeploy → Security → HIDS). When Wazuh is disabled, **Monitor Center → Security Posture**
+  (the deployment console → Security → HIDS). When Wazuh is disabled, **Monitor Center → Security Posture**
   shows an empty state asking you to enable it.
 </Note>
 
@@ -180,7 +179,7 @@ Typical admin workflows:
 
 <Steps titleSize="h3">
   <Step title="Enable Polystack SIEM at deploy time" icon="toggle-right">
-    In XDeploy → Configuration → Monitoring & Logging, toggle **Enable Security Suite**.
+    In the deployment console → Configuration → Monitoring & Logging, toggle **Enable Security Suite**.
     The suite activates Wazuh (HIDS), Lynis (auditing), and OpenSCAP (compliance) on every
     cluster node.
   </Step>

@@ -36,7 +36,7 @@ graph TD
     API -->|Validate using| DU
     DU -->|Scoped to project| PROJECT[User's Project]
     style TRUST fill:#bf9667,color:#fff
-    style DU fill:#d7b98e,color:#fff
+    style DU fill:#bf9667,color:#fff
 ```
 
 ### Domain User Lifecycle
@@ -113,7 +113,7 @@ stacks:create_with_nested:
     - admin_required
 ```
 
-Policies are applied via XDeploy configuration overrides in
+Policies are applied via the deployment console configuration overrides in
 `/etc/ironcore/orchestration/policy.yaml`.
 
 ---
@@ -148,7 +148,7 @@ The output lists every resource type the template will attempt to create. Verify
 all resource types are expected before deploying.
 
 <Tip>
-  For multi-tenant environments, configure `allowed_resources` in XDeploy to restrict
+  For multi-tenant environments, configure `allowed_resources` in the deployment console to restrict
   the resource types available to non-admin users. This prevents project members from
   creating identity resources (users, roles) through templates.
 </Tip>

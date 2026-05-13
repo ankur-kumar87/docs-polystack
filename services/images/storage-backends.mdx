@@ -8,7 +8,7 @@ import AdminWarning from '/snippets/admin-warning.mdx';
 
 ## Overview
 
-The Polystack Image Service stores image data in a pluggable storage backend. The selection of backend affects availability, performance, and instance launch times. Multiple backends can be registered simultaneously — administrators select which backend stores each image at upload time. This guide covers configuration of all supported backends via XDeploy globals.
+The Polystack Image Service stores image data in a pluggable storage backend. The selection of backend affects availability, performance, and instance launch times. Multiple backends can be registered simultaneously — administrators select which backend stores each image at upload time. This guide covers configuration of all supported backends via the deployment console globals.
 
 <AdminWarning />
 
@@ -33,7 +33,7 @@ The Polystack Image Service stores image data in a pluggable storage backend. Th
 RBD (RADOS Block Device) is the recommended backend for high-availability multi-node deployments. Images are stored as RBD objects in the Polystack Distributed Storage cluster, providing built-in redundancy and copy-on-write clones for fast instance launches.
 
 <Steps titleSize="h3">
-  <Step title="Configure RBD backend in XDeploy globals" icon="settings">
+  <Step title="Configure RBD backend in the deployment console globals" icon="settings">
     ```yaml title="RBD storage backend configuration"
     glance_backend_ceph: "yes"
     glance_backend_file: "no"
@@ -144,9 +144,9 @@ s3_store_large_object_size = 100
 s3_store_large_object_chunk_size = 10
 ```
 
-Apply via XDeploy globals:
+Apply via the deployment console globals:
 
-```yaml title="XDeploy globals — S3 backend"
+```yaml title="the deployment console globals — S3 backend"
 glance_backend_s3: "yes"
 glance_backend_file: "no"
 glance_s3_store_host: "https://s3.example.com"

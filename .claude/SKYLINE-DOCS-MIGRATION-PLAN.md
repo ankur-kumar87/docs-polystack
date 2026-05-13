@@ -231,8 +231,8 @@ services/monitoring/admin-guide/retention.mdx           ← Data retention
 Only fix: branding (no "Hystax"), nav path corrections if needed.
 
 ### P3-C: SDS (4 pages) — DO NOT REWRITE GUI
-**SDS management is via XDeploy XSDS module, NOT Skyline.** Keep existing descriptions.
-Only fix: ensure XDeploy tab first in admin pages.
+**SDS management is via the deployment console Software Defined Storage module, NOT Skyline.** Keep existing descriptions.
+Only fix: ensure the deployment console tab first in admin pages.
 
 ---
 
@@ -290,5 +290,5 @@ Only fix: ensure XDeploy tab first in admin pages.
 4. **Match menu labels exactly** — including hyphens, casing
 5. **No "Horizon", "Masakari", "Designate" etc. in prose** — full branding compliance
 6. **No icon in frontmatter** on user/admin guide sub-pages
-7. **Dashboard tab first** in user guides, XDeploy tab first in admin guides
+7. **Dashboard tab first** in user guides, the deployment console tab first in admin guides
 8. **Never commit without asking** — make edits, wait for explicit push instruction

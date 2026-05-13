@@ -37,7 +37,7 @@ size limit issues.
     docker logs glance_api --tail 50
     ```
 
-    **Resolution**: Restart via XDeploy:
+    **Resolution**: Restart via the deployment console:
     ```bash title="Restart Image API"
     ironcore-ansible deploy --tags glance
     ```
@@ -46,7 +46,7 @@ size limit issues.
   <Accordion title="Upload fails with 413 Request Entity Too Large" icon="upload">
     **Cause**: HAProxy is enforcing an upload size limit smaller than the image file.
 
-    **Resolution**: Adjust the timeout and body size settings in XDeploy globals:
+    **Resolution**: Adjust the timeout and body size settings in the deployment console globals:
     ```yaml title="Increase HAProxy upload limits"
     haproxy_client_body_timeout: 300s
     haproxy_http_request_timeout: 600s
@@ -131,7 +131,7 @@ size limit issues.
     docker exec glance_api glance-cache-manage delete-all-cached-images
     ```
 
-    Then increase the cache size limit in XDeploy globals and redeploy:
+    Then increase the cache size limit in the deployment console globals and redeploy:
     ```yaml title="Increase cache size limit"
     glance_cache_max_size: 21474836480  # 20 GB
     ```

@@ -42,7 +42,7 @@ and resolution steps needed to restore normal operation.
       -f value -c OS-EXT-SRV-ATTR:host
     ```
 
-    ```bash title="Check Compute Agent logs on the target host (via XDeploy terminal)"
+    ```bash title="Check Compute Agent logs on the target host (via the deployment console terminal)"
     journalctl -u nova-compute --since "1 hour ago" | grep <instance-id>
     ```
 
@@ -114,7 +114,7 @@ and resolution steps needed to restore normal operation.
 
     | Error Message | Root Cause | Resolution |
     |--------------|-----------|-----------|
-    | `guest CPU doesn't match specification: missing features` | CPU microarchitecture difference between hosts | Configure a common CPU baseline model on all hosts via XDeploy under **Compute → Advanced Settings → CPU Compatibility** |
+    | `guest CPU doesn't match specification: missing features` | CPU microarchitecture difference between hosts | Configure a common CPU baseline model on all hosts via the deployment console under **Compute → Advanced Settings → CPU Compatibility** |
     | `No valid host found` | Destination host lacks capacity or is disabled | Check destination host capacity with `openstack hypervisor show <host>`; verify host is `enabled` and `up` |
     | `Connection timeout` | Network disruption on migration network | Verify network connectivity between compute nodes; check firewall rules on the management interface |
     | `Block migration disk copy failed` | Insufficient free disk on destination | Check available disk with `openstack hypervisor show <host>` |
@@ -141,7 +141,7 @@ and resolution steps needed to restore normal operation.
 
     | Cause | Resolution |
     |-------|-----------|
-    | All hosts at vCPU or RAM capacity | Scale out the cluster or increase over-commit ratios via XDeploy |
+    | All hosts at vCPU or RAM capacity | Scale out the cluster or increase over-commit ratios via the deployment console |
     | Availability zone constraint too restrictive | Verify target AZ has active hosts with `openstack availability zone list --long` |
     | Host aggregate metadata mismatch | Verify flavor extra specs match aggregate metadata keys on target hosts |
     | Server group anti-affinity exhausted | Group has used all distinct hosts; scale out or remove anti-affinity constraint |
@@ -150,7 +150,7 @@ and resolution steps needed to restore normal operation.
     <Warning>
       If `openstack hypervisor stats show` reports available capacity but scheduling
       still fails, the Placement service inventory may be out of sync with actual host
-      state. Trigger a resource reconciliation through XDeploy under **Compute →
+      state. Trigger a resource reconciliation through the deployment console under **Compute →
       Diagnostics → Reconcile Inventory**.
     </Warning>
   </Accordion>
@@ -174,7 +174,7 @@ and resolution steps needed to restore normal operation.
     1. Verify ports 6080 (VNC), 6082 (SPICE), and 6083 (serial) are open in your
        firewall rules from the administrator's workstation to the controller node.
 
-    2. If the console proxy service is `down`, restart it through XDeploy under
+    2. If the console proxy service is `down`, restart it through the deployment console under
        **Compute → Services → Console Proxy**.
 
     3. If the connection is refused immediately after generating a URL, the token

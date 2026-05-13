@@ -20,7 +20,7 @@ eliminate centralized bottlenecks. This guide covers enabling and validating bot
   **Prerequisites**
   - Admin credentials sourced from `openrc.sh`
   - At least two L3 agents running for HA routers
-  - XDeploy access to enable DVR cluster-wide
+  - the deployment console access to enable DVR cluster-wide
 </Note>
 
 ---
@@ -39,7 +39,7 @@ graph LR
     L3_1 --> EXT([External Network])
     L3_2 -.->|Failover path| EXT
     style HA_R fill:#bf9667,color:#fff
-    style L3_1 fill:#d7b98e,color:#fff
+    style L3_1 fill:#bf9667,color:#fff
 ```
 
 ### Create an HA Router
@@ -95,15 +95,15 @@ network node as a bottleneck for east-west and north-south traffic.
 ### Enable DVR
 
 <Tabs>
-  <Tab title="XDeploy" icon="rocket">
-    Enable DVR cluster-wide in XDeploy under **Configuration → Networking**:
+  <Tab title="Web Console" icon="rocket">
+    Enable DVR cluster-wide in the deployment console under **Configuration → Networking**:
 
     | Parameter | Value | Description |
     |-----------|-------|-------------|
     | `neutron_l3_ha` | `True` | Enable VRRP HA for centralized L3 agents |
     | `enable_neutron_dvr` | `True` | Distribute L3 forwarding to compute nodes |
 
-    Click **Save and Deploy**. XDeploy applies the configuration via ironcore-ansible.
+    Click **Save and Deploy**. the deployment console applies the configuration via ironcore-ansible.
 
     <Warning>
       Enabling DVR on an existing cluster requires a rolling restart of all L3 and

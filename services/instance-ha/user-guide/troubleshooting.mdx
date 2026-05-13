@@ -39,7 +39,7 @@ or engine misconfiguration, refer to the
     ```
 
     If the failed host is missing from the segment, contact your administrator to
-    register it. Your administrator can configure this through [XDeploy](/deployment). If the segment is disabled (`enabled: False`), your administrator
+    register it. Your administrator can configure this through the deployment console. If the segment is disabled (`enabled: False`), your administrator
     must re-enable it.
 
     <Tip>
@@ -77,7 +77,7 @@ or engine misconfiguration, refer to the
     openstack server evacuate <instance-id> --host <healthy-host>
     ```
 
-    Contact your administrator if the instance cannot be recovered through the above steps. Your administrator can configure this through [XDeploy](/deployment).
+    Contact your administrator if the instance cannot be recovered through the above steps. Your administrator can configure this through the deployment console.
   </Accordion>
 
   <Accordion title="Notification stuck in running state" icon="clock">
@@ -95,7 +95,7 @@ or engine misconfiguration, refer to the
 
     If the notification has been `running` for more than 10 minutes, contact your
     administrator. They can inspect the Instance HA engine logs and reset the workflow
-    if it has genuinely stalled. Your administrator can configure this through [XDeploy](/deployment).
+    if it has genuinely stalled. Your administrator can configure this through the deployment console.
   </Accordion>
 
   <Accordion title="Protection segment not visible in Dashboard" icon="eye-off">
@@ -103,7 +103,7 @@ or engine misconfiguration, refer to the
     that exist have not been made accessible to your project.
 
     **Resolution**: Contact your Polystack administrator and request that a failover segment
-    be created and that the compute hosts used by your project be registered. Your administrator can configure this through [XDeploy](/deployment). See the
+    be created and that the compute hosts used by your project be registered. Your administrator can configure this through the deployment console. See the
     [Instance HA Admin Guide — Failover Segments](/services/instance-ha/admin-guide/failover-segments)
     for the configuration steps.
   </Accordion>

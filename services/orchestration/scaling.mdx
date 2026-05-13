@@ -31,7 +31,7 @@ graph TD
     W2 -->|Provision resource| CLOUD
     W3 -->|Provision resource| CLOUD
     style API fill:#bf9667,color:#fff
-    style MQ fill:#d7b98e,color:#fff
+    style MQ fill:#bf9667,color:#fff
 ```
 
 ---
@@ -45,8 +45,8 @@ each controller node. Each worker is an independent process that picks up tasks 
 the message queue.
 
 <Tabs>
-  <Tab title="XDeploy" icon="gauge">
-    In XDeploy, navigate to **Configuration → Services → Orchestration** and adjust
+  <Tab title="Web Console" icon="gauge">
+    In the deployment console, navigate to **Configuration → Services → Orchestration** and adjust
     the **Engine Workers** slider. A common starting point is 2–4 workers per CPU core
     available on the controller node.
   </Tab>

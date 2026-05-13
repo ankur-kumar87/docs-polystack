@@ -13,18 +13,12 @@ operators can construct custom roles that grant or deny **specific Dashboard act
 Each grant can optionally be scoped to a tag condition — for example, *"this role can
 act on instances tagged `env=staging` only"*.
 
-<Info>
-  **Polystack-Developed** — Extended RBAC is developed by Polystack and ships as part of the
-  Polystack Platform identity layer. It is an addition to (not a replacement for) the
-  standard role and policy stack.
-</Info>
-
 <Note>
   **Prerequisites**
   - An administrator account on the Polystack Dashboard with the `rbac_admin` privilege
     (or the built-in `admin` role)
   - The Polystack Platform identity layer enabled (default on every cluster)
-  - The RBAC gateway enabled in **XDEPLOY → Configuration** for cluster-wide
+  - The RBAC gateway enabled in **the deployment console → Configuration** for cluster-wide
     enforcement on every direct platform service API call
 </Note>
 
@@ -84,19 +78,19 @@ conditions, and the audit log are available from the Dashboard out of the box. T
 enforces every direct platform service API call cluster-wide, or only the calls
 that go through the Polystack Dashboard's extension APIs.
 
-The gateway is enabled through **XDEPLOY** — there is no other supported
+The gateway is enabled through **the deployment console** — there is no other supported
 configuration path.
 
 <Steps titleSize="h3">
-  <Step title="Open XDEPLOY → Configuration" icon="settings">
-    From XDEPLOY, navigate to **Configuration**.
+  <Step title="Open the deployment console → Configuration" icon="settings">
+    From the deployment console, navigate to **Configuration**.
   </Step>
   <Step title="Enable the RBAC gateway" icon="toggle-right">
     Locate the **Enable RBAC Authorization Gateway** toggle and switch it on. Save
     the configuration.
   </Step>
   <Step title="Run reconfigure" icon="play">
-    From XDEPLOY → Operations, run a **reconfigure** for the Dashboard service.
+    From the deployment console → Operations, run a **reconfigure** for the Dashboard service.
     The reverse proxy is regenerated with the gateway active and reloaded
     without downtime.
   </Step>

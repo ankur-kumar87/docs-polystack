@@ -94,7 +94,7 @@ sequenceDiagram
 ## High Availability
 
 The DNS management plane components (API, Central, Worker) are deployed as containerized
-services managed by XDeploy. For production deployments:
+services managed by the deployment console. For production deployments:
 
 - Deploy at least two API containers behind a load balancer
 - Run two Worker instances for redundancy — only one processes each event (queue-based)

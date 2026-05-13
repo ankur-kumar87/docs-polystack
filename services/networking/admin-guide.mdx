@@ -17,12 +17,12 @@ misconfiguration and spoofing attacks. Use this guide to maintain the networking
 <AdminWarning />
 
 <Tabs>
-  <Tab title="XDeploy" icon="server">
-    Network configuration is managed through the XDeploy Configuration panel:
+  <Tab title="Web Console" icon="server">
+    Network configuration is managed through the the deployment console Configuration panel:
 
     <Steps titleSize="h3">
       <Step title="Open Configuration" icon="settings">
-        Navigate to **XDeploy → Configuration** and select the **Network** tab.
+        Navigate to **the deployment console → Configuration** and select the **Network** tab.
       </Step>
       <Step title="Configure network settings" icon="network">
         Set the following options as needed:
@@ -37,7 +37,7 @@ misconfiguration and spoofing attacks. Use this guide to maintain the networking
         | **SR-IOV** | Toggle to enable Single Root I/O Virtualization |
       </Step>
       <Step title="Save and deploy" icon="rocket">
-        Click **Save Configuration**, then navigate to **XDeploy → Operations** and
+        Click **Save Configuration**, then navigate to **the deployment console → Operations** and
         run a **Deploy** or **Reconfigure** for the Networking service.
 
         <Check>Network configuration is applied across all nodes.</Check>
@@ -55,7 +55,7 @@ misconfiguration and spoofing attacks. Use this guide to maintain the networking
   **Prerequisites**
   - Admin credentials sourced from `openrc.sh`
   - `openstack` CLI installed and configured
-  - XDeploy access for cluster-level configuration changes
+  - the deployment console access for cluster-level configuration changes
   - All networking agents running and healthy on all nodes
 </Note>
 
@@ -111,7 +111,7 @@ graph TD
     L2A2 --> VS2[Virtual Switch<br/>Host 2]
     style API fill:#bf9667,color:#fff
     style L3A fill:#bf9667,color:#fff
-    style DHCP fill:#d7b98e,color:#fff
+    style DHCP fill:#bf9667,color:#fff
 ```
 
 ---

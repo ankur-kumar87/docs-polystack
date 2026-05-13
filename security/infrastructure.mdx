@@ -10,9 +10,9 @@ Polystack platform services communicate over encrypted channels by default. TLS 
 
 <Note>
   **Prerequisites**
-  - XDeploy access with administrator privileges
+  - the deployment console access with administrator privileges
   - SSL/TLS certificates (CA-signed, self-signed, or Let's Encrypt)
-  - Access to the XDeploy configuration interface or `/etc/ironcore/globals.d/` on the bootstrap node
+  - Access to the the deployment console configuration interface or `/etc/ironcore/globals.d/` on the bootstrap node
 </Note>
 
 ---
@@ -47,10 +47,10 @@ graph LR
 ## TLS Configuration
 
 <Tabs>
-  <Tab title="XDeploy" icon="gauge">
+  <Tab title="Web Console" icon="gauge">
     <Steps titleSize="h3">
       <Step title="Open Global Configuration" icon="settings">
-        Log in to XDeploy and navigate to **Configuration → Global Settings**.
+        Log in to the deployment console and navigate to **Configuration → Global Settings**.
       </Step>
       <Step title="Enable TLS Scopes" icon="lock">
         Locate the **Security** section and enable each TLS scope appropriate for your deployment:
@@ -73,7 +73,7 @@ graph LR
         Upload the certificate bundle if using CA-signed certificates.
       </Step>
       <Step title="Apply Configuration" icon="play">
-        Click **Save and Deploy**. XDeploy runs the TLS configuration playbook across all nodes.
+        Click **Save and Deploy**. the deployment console runs the TLS configuration playbook across all nodes.
 
         <Check>All services restart with TLS enabled. HAProxy health checks confirm green status.</Check>
       </Step>
@@ -239,7 +239,7 @@ Verify TLS is active across all platform endpoints:
 
 <Tabs>
   <Tab title="Dashboard" icon="gauge">
-    Navigate to the XDeploy **Services** view. All service health indicators should show green. Click on any service to view its TLS status.
+    Navigate to the the deployment console **Services** view. All service health indicators should show green. Click on any service to view its TLS status.
 
     <Check>All services show a valid certificate with a matching hostname and a future expiry date.</Check>
   </Tab>

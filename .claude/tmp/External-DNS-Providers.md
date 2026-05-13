@@ -1,6 +1,6 @@
 ## 1. 🔎 Introduction
 
-**Xloud XAVS OpenStack** includes a fully integrated **DNS as a Service (DNSaaS)** solution, powered by **OpenStack Designate**, enabling seamless, automated DNS management across tenant environments.
+**Polystack IronCore OpenStack** includes a fully integrated **DNS as a Service (DNSaaS)** solution, powered by **OpenStack Designate**, enabling seamless, automated DNS management across tenant environments.
 
 Designate operates as a **native core service** of the platform—**no additional VMs or customer deployments are needed**. DNS records for virtual machines and network interfaces are automatically created, updated, and deleted based on lifecycle events, while maintaining synchronization with **external enterprise DNS providers** such as:
 
@@ -48,7 +48,7 @@ Designate operates as a **native core service** of the platform—**no additiona
   Designate handles A, AAAA, CNAME, and PTR records.
 
 * ⚙️ **Integrated, No VM Setup Required**
-  DNSaaS is a fully managed service inside Xloud XAVS—no tenant-side setup needed.
+  DNSaaS is a fully managed service inside Polystack IronCore—no tenant-side setup needed.
 
 ---
 
@@ -68,7 +68,7 @@ Designate operates as a **native core service** of the platform—**no additiona
 
 ### 🔹 Designate as Platform-Native DNSaaS
 
-* Fully managed by Xloud XAVS—runs on control plane nodes
+* Fully managed by Polystack IronCore—runs on control plane nodes
 * CLI, API, and Horizon UI support
 * Works with all OpenStack services (Nova, Neutron, Heat)
 
@@ -102,7 +102,7 @@ Designate operates as a **native core service** of the platform—**no additiona
   DNS zone access managed by RBAC, scoped per domain/project.
 
 * **No Customer Infrastructure Required**
-  Xloud manages all Designate components on the backend.
+  Polystack manages all Designate components on the backend.
 
 * **Extensible for CI/CD & DevOps**
   Recordsets can be created or modified via API, CLI, or orchestration tools.
@@ -111,7 +111,7 @@ Designate operates as a **native core service** of the platform—**no additiona
 
 ## 7. ✅ Summary & Positioning
 
-**Xloud XAVS delivers native DNSaaS through Designate**, providing automatic DNS management for OpenStack environments with direct integration into external enterprise DNS platforms. It is:
+**Polystack IronCore delivers native DNSaaS through Designate**, providing automatic DNS management for OpenStack environments with direct integration into external enterprise DNS platforms. It is:
 
 * **Fully managed and pre-integrated**—no tenant-side setup required
 * **Policy-driven and lifecycle-aware**—records follow VM state
@@ -130,7 +130,7 @@ Designate operates as a **native core service** of the platform—**no additiona
           |
           v
 +------------------------------+
-|     Xloud XAVS Designate     |
+|     Polystack IronCore Designate     |
 |  - DNS Record Automation     |
 |  - Zone/Project Mapping      |
 |  - Horizon & API Interface   |

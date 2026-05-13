@@ -8,17 +8,16 @@ sidebarTitle: "Wazuh"
 
 Wazuh is the host-based intrusion detection and security monitoring platform bundled with Polystack Platform. It provides host-level visibility into what is happening inside each of your virtual machines through a lightweight agent. The Wazuh manager runs as a centralized service. Agents deploy to each instance and stream security events, file changes, and vulnerability data back for real-time correlation.
 
-Polystack ships this platform pre-integrated with XDeploy, so you can mass-deploy agents across projects using the standard automation pipeline.
+Polystack ships this platform pre-integrated with the deployment console, so you can mass-deploy agents across projects using the standard automation pipeline.
 
-<Info>**Polystack-Developed** — This capability is developed by Polystack and ships with Ironcore. The integrated security platform is surfaced in the Polystack Dashboard as the **Security Posture** page in Monitor Center, providing a unified view of agent status, threat alerts, and compliance results across the cluster. See [Polystack SIEM](/security/polystack-siem) for the full overview.</Info>
 
 <Tip>
-  **XDeploy GUI** — Enable Wazuh (with Lynis auditing, OpenSCAP compliance, and OS hardening) through the [XDeploy Configuration](/deployment/configuration) interface under **XDeploy → Security → HIDS**. No manual file editing required.
+  **the deployment console GUI** — Enable Wazuh (with Lynis auditing, OpenSCAP compliance, and OS hardening) through the the deployment console interface under **the deployment console → Security → HIDS**. No manual file editing required.
 </Tip>
 
 <Note>
   **Prerequisites**
-  - Wazuh Manager deployed (enabled via XDeploy → Security → HIDS)
+  - Wazuh Manager deployed (enabled via the deployment console → Security → HIDS)
   - Network reachability from guest VMs to the Wazuh Manager on ports 1514/1515
   - Agent registration token available from the Wazuh Manager dashboard
 </Note>
@@ -34,7 +33,7 @@ graph LR
     M -->|Index| E[OpenSearch / Wazuh Dashboard]
     M -->|Alerts| AL[Alertmanager / SIEM]
     style M fill:#bf9667,color:#fff
-    style W fill:#8f6a43,color:#fff
+    style W fill:#bf9667,color:#fff
 ```
 
 | Component | Role |

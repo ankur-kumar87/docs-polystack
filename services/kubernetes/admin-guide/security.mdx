@@ -41,14 +41,14 @@ CA generated at provisioning time.
     read access.
 
     <Tabs>
-      <Tab title="XDeploy" icon="server">
+      <Tab title="Web Console" icon="server">
         <Steps titleSize="h3">
           <Step title="Enable KMS" icon="toggle-left">
-            Navigate to **XDeploy → Configuration → Advance Features** and set
+            Navigate to **the deployment console → Configuration → Advance Features** and set
             **Enable KMS** to **Yes**.
           </Step>
           <Step title="Configure certificate manager" icon="key">
-            Navigate to **XDeploy → Advanced Configuration**, select **magnum** in the
+            Navigate to **the deployment console → Advanced Configuration**, select **magnum** in the
             Service Tree, then open or create `kubernetes.conf`. Add the following:
 
             ```ini title="kubernetes.conf"
@@ -59,7 +59,7 @@ CA generated at provisioning time.
             Click **Save Current File**.
           </Step>
           <Step title="Deploy" icon="rocket">
-            Run **XDeploy → Operations → Reconfigure** for both the Key Management
+            Run **the deployment console → Operations → Reconfigure** for both the Key Management
             and Kubernetes services.
           </Step>
         </Steps>

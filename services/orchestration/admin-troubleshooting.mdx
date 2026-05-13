@@ -30,7 +30,7 @@ service log files and `openstack orchestration service list` as primary diagnost
     openstack orchestration service list
     ```
 
-    ```bash title="Check engine container logs (XDeploy/Ironcore deployment)"
+    ```bash title="Check engine container logs (the deployment console/Ironcore deployment)"
     docker logs heat_engine --tail=100
     ```
 
@@ -113,7 +113,7 @@ service log files and `openstack orchestration service list` as primary diagnost
     |-------|-----------|
     | `heat` domain does not exist | Re-run `ironcore-ansible deploy -t heat` to recreate the domain |
     | Stack domain admin password incorrect | Update `heat_domain_admin_password` in `passwords.yml` and redeploy |
-    | `stack_domain_admin` setting missing from `heat.conf` | Verify XDeploy configuration and redeploy |
+    | `stack_domain_admin` setting missing from `heat.conf` | Verify the deployment console configuration and redeploy |
     | Polystack Identity service unreachable from engine | Check network connectivity between the engine container and port 5000 |
   </Accordion>
 
@@ -188,7 +188,7 @@ service log files and `openstack orchestration service list` as primary diagnost
 
 <CardGroup cols={2}>
   <Card title="Configuration" href="/services/orchestration/configuration" color="#bf9667">
-    Review and update service configuration through XDeploy
+    Review and update service configuration through the deployment console
   </Card>
   <Card title="Scaling the Service" href="/services/orchestration/scaling" color="#bf9667">
     Add engine workers to resolve throughput and timeout issues

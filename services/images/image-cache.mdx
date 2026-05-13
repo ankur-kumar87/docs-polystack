@@ -19,7 +19,7 @@ on the same compute node — typical in auto-scaling and cluster workloads.
 
 ## Cache Configuration
 
-Configure cache settings via XDeploy globals before deploying:
+Configure cache settings via the deployment console globals before deploying:
 
 | Setting | Default | Description |
 |---------|---------|-------------|
@@ -28,7 +28,7 @@ Configure cache settings via XDeploy globals before deploying:
 | `glance_cache_staleness_seconds` | 86400 | How long a cached entry remains fresh (seconds) |
 | `glance_cache_prefetcher_delay` | 300 | Seconds between pre-fetch sweep runs |
 
-```yaml title="Image cache configuration in XDeploy globals"
+```yaml title="Image cache configuration in the deployment console globals"
 glance_enable_image_cache: "yes"
 glance_cache_max_size: 10737418240      # 10 GB in bytes
 glance_cache_staleness_seconds: 86400   # 24 hours

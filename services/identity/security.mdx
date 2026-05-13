@@ -26,7 +26,7 @@ complete security hardening checklist for production Identity deployments.
     without a valid TOTP factor.
   </Card>
   <Card title="Rotate Fernet Keys" icon="rotate-cw" color="#bf9667">
-    Schedule automated key rotation every 24 hours. XDeploy includes a cron-based rotation
+    Schedule automated key rotation every 24 hours. the deployment console includes a cron-based rotation
     playbook that synchronizes keys across all Identity API nodes simultaneously.
   </Card>
   <Card title="Minimize Token Lifetime" icon="clock" color="#bf9667">
@@ -73,7 +73,7 @@ ironcore-ansible deploy --tags keystone
     Expected: `600 keystone:keystone` for all key files.
   </Step>
   <Step title="Configure automated rotation" icon="rotate-cw">
-    ```yaml title="XDeploy globals: automated Fernet rotation"
+    ```yaml title="the deployment console globals: automated Fernet rotation"
     keystone_fernet_key_rotation: "0 */24 * * *"
     keystone_fernet_max_active_keys: 3
     ```
@@ -134,7 +134,7 @@ openstack role assignment list \
   </Accordion>
   <Accordion title="TLS configuration" icon="shield">
     Ensure all Identity API endpoints use TLS with certificates from a trusted CA:
-    ```yaml title="XDeploy globals: TLS configuration"
+    ```yaml title="the deployment console globals: TLS configuration"
     kolla_enable_tls_external: "yes"
     kolla_external_tls_cert: /etc/ironcore/certs/external.crt
     kolla_external_tls_key: /etc/ironcore/certs/external.key

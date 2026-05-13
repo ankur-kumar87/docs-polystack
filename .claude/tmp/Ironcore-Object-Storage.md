@@ -1,10 +1,10 @@
-# 🗂️ Xloud XAVS – Multi-Cloud Object Storage Integration
+# 🗂️ Polystack IronCore – Multi-Cloud Object Storage Integration
 
 ---
 
 ## 1. 🔎 Introduction
 
-**Xloud XAVS OpenStack** provides built-in, multi-cloud **object storage integration**, enabling customers to securely store and access files across public and private object storage systems. This includes support for:
+**Polystack IronCore OpenStack** provides built-in, multi-cloud **object storage integration**, enabling customers to securely store and access files across public and private object storage systems. This includes support for:
 
 * **Backup targets** for VM snapshots and workload protection
 * **Archival storage** for logs, images, and compliance data
@@ -110,7 +110,7 @@ Device {
 [glance_store]
 stores = s3
 default_store = s3
-s3_store_host = s3.Xloud.local:8080
+s3_store_host = s3.Polystack.local:8080
 s3_store_access_key = <access-key>
 s3_store_secret_key = <secret-key>
 s3_store_bucket = glance-images
@@ -175,12 +175,12 @@ s3_store_create_bucket_on_put = True
 
 ## ✅ Final Positioning
 
-**Xloud XAVS offers a unified, secure, and extensible object storage framework** for multi-cloud environments. Customers can leverage object buckets for:
+**Polystack IronCore offers a unified, secure, and extensible object storage framework** for multi-cloud environments. Customers can leverage object buckets for:
 
 * VM backup and long-term archival
 * Rapid deployment of cloud-native workloads
 * Flexible Glance image storage and sharing
 * Multi-tenant governance and automation
 
-> 🟢 **Customer Experience:** No extra setup is needed—just point your tools to the integrated object storage, and Xloud handles the rest.
+> 🟢 **Customer Experience:** No extra setup is needed—just point your tools to the integrated object storage, and Polystack handles the rest.
 

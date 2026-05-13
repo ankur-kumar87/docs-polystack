@@ -14,7 +14,7 @@ overhead, and the latency sensitivity of your workload.
   **Prerequisites**
   - An active Polystack account with project member access
   - Contact your storage administrator to provision erasure-coded pools — they are
-    configured at the cluster level by an administrator. Your administrator can configure this through [XDeploy](/deployment).
+    configured at the cluster level by an administrator. Your administrator can configure this through the deployment console.
 </Note>
 
 ---
@@ -64,7 +64,7 @@ The default replication factor is **3** — three full copies are maintained at 
         ```
 
         Contact your storage administrator to determine which volume types are backed
-        by replicated pools versus erasure-coded pools. Your administrator can configure this through [XDeploy](/deployment).
+        by replicated pools versus erasure-coded pools. Your administrator can configure this through the deployment console.
       </Step>
       <Step title="Create a volume on a replicated pool" icon="plus">
         ```bash title="Create volume on SSD-replicated pool"
@@ -119,7 +119,7 @@ providing durability at significantly lower storage overhead than replication.
     <Note>
       Erasure coding is enabled at the pool level during pool creation by an
       administrator. Contact your storage administrator to provision an erasure-coded
-      pool for your project. Your administrator can configure this through [XDeploy](/deployment). See the [Software-Defined-Storage Admin Guide](/services/sds/admin-guide/pool-management)
+      pool for your project. Your administrator can configure this through the deployment console. See the [Software-Defined-Storage Admin Guide](/services/sds/admin-guide/pool-management)
       for pool creation procedures.
     </Note>
 
@@ -142,7 +142,7 @@ Confirm your volume is using the expected protection policy:
   <Tab title="Dashboard" icon="gauge">
     Navigate to **Project → Volumes → Volumes** and click on the volume name.
     The **Volume Type** field shows which pool backs this volume. Contact your
-    storage administrator to confirm the protection scheme for that pool type. Your administrator can configure this through [XDeploy](/deployment).
+    storage administrator to confirm the protection scheme for that pool type. Your administrator can configure this through the deployment console.
   </Tab>
   <Tab title="CLI" icon="terminal">
     ```bash title="Show volume type"

@@ -8,14 +8,13 @@ sidebarTitle: "Lynis"
 
 Lynis is an open-source security auditing tool that performs in-depth system scans directly on Linux hosts — no agent required. It checks over 300 security controls covering kernel hardening, authentication configuration, filesystem permissions, network services, software patches, and logging posture. Each scan produces a hardening index score and a prioritized list of remediation suggestions.
 
-Polystack bundles Lynis in XOS and makes it available via the XDeploy automation pipeline for both individual node audits and fleet-wide compliance sweeps.
+Polystack bundles Lynis in Polystack OS and makes it available via the the deployment console automation pipeline for both individual node audits and fleet-wide compliance sweeps.
 
-<Info>**Polystack-Developed** — Lynis is one of three independent scanners in [Polystack SIEM](/security/polystack-siem) — Wazuh, Lynis, and OpenSCAP run in parallel across all nodes for layered compliance coverage. Results are aggregated on the **Security Posture** page in Monitor Center.</Info>
 
 <Note>
   **Prerequisites**
   - SSH access to the target host (or run directly on the node)
-  - Lynis installed (pre-installed on XOS nodes; install via `apt install lynis` on guest VMs)
+  - Lynis installed (pre-installed on Polystack OS nodes; install via `apt install lynis` on guest VMs)
   - Root or sudo access on the target system
 </Note>
 
@@ -33,7 +32,7 @@ graph LR
     D --> E[Remediation Steps]
     C --> F[Compliance Report]
     style A fill:#bf9667,color:#fff
-    style C fill:#8f6a43,color:#fff
+    style C fill:#bf9667,color:#fff
 ```
 
 | Phase | What Lynis Checks |

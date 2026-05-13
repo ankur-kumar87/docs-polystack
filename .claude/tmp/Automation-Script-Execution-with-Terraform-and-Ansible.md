@@ -1,10 +1,10 @@
-# 🗂️ Xloud XAVS – Automation & Script Execution with Terraform and Ansible
+# 🗂️ Polystack IronCore – Automation & Script Execution with Terraform and Ansible
 
 ---
 
 ## 1. 🔎 Introduction
 
-**Xloud XAVS OpenStack** enables powerful, secure, and repeatable automation using **industry-standard tools**—**Terraform** and **Ansible**—to manage virtual machines and cloud resources across the entire lifecycle.
+**Polystack IronCore OpenStack** enables powerful, secure, and repeatable automation using **industry-standard tools**—**Terraform** and **Ansible**—to manage virtual machines and cloud resources across the entire lifecycle.
 
 The platform supports:
 
@@ -19,7 +19,7 @@ The platform supports:
   * CI/CD integration
   * Backup and disaster recovery workflows
 
-With Xloud XAVS, automation is not a feature—it is a foundational capability, designed to scale, simplify, and secure your cloud operations.
+With Polystack IronCore, automation is not a feature—it is a foundational capability, designed to scale, simplify, and secure your cloud operations.
 
 ---
 
@@ -131,7 +131,7 @@ With Xloud XAVS, automation is not a feature—it is a foundational capability, 
 * Agentless, over SSH (Linux) or WinRM (Windows)
 * Secure credential storage via Barbican or Vault
 * Supports inventory from OpenStack API or static groups
-* RBAC control via Xloud identity engine
+* RBAC control via Polystack identity engine
 
 ---
 
@@ -146,7 +146,7 @@ With Xloud XAVS, automation is not a feature—it is a foundational capability, 
 
 ## 7. ✅ Summary & Positioning
 
-**Xloud XAVS offers full-stack automation for both infrastructure and operations**, using Terraform and Ansible to deliver:
+**Polystack IronCore offers full-stack automation for both infrastructure and operations**, using Terraform and Ansible to deliver:
 
 * Seamless script execution (Bash, PowerShell) at provisioning and runtime
 * Complete OS and application automation lifecycle

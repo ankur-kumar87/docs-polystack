@@ -74,7 +74,7 @@ it records each resource transition with timestamps and error messages.
     | Cause | Resolution |
     |-------|-----------|
     | `WaitCondition` waiting for a signal that never arrives | Check the instance console log: `openstack console log show <instance-id>`. Verify the signal URL in user_data is correct. |
-    | Instance in BUILD state for too long | Check compute host capacity and scheduler logs via XDeploy |
+    | Instance in BUILD state for too long | Check compute host capacity and scheduler logs via the deployment console |
     | Dependency cycle between resources | Review `depends_on` declarations and `get_resource` references for circular chains |
     | External API timeout | The Orchestration engine retries — wait for the configured timeout before intervening |
 

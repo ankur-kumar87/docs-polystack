@@ -15,7 +15,7 @@ overhead.
   **Prerequisites**
   - An active Polystack account with project member access
   - Storage tiering, deduplication, and caching are configured at the pool level by
-    an administrator — contact your storage administrator to enable these features. Your administrator can configure this through [XDeploy](/deployment).
+    an administrator — contact your storage administrator to enable these features. Your administrator can configure this through the deployment console.
 </Note>
 
 ---
@@ -140,7 +140,7 @@ slower, higher-capacity devices.
   </Tab>
   <Tab title="Enabling Caching" icon="settings">
     Read caching is configured at the pool level by an administrator. Contact your
-    storage administrator to enable a cache tier for your storage pool. Your administrator can configure this through [XDeploy](/deployment).
+    storage administrator to enable a cache tier for your storage pool. Your administrator can configure this through the deployment console.
 
     Once enabled, caching is transparent — your existing volumes automatically benefit
     from the cache without re-creating or migrating data.
@@ -148,7 +148,7 @@ slower, higher-capacity devices.
     <Note>
       Cache pools are shared by all volumes in the backing pool. Heavy write workloads
       from one project can evict cache entries for others. Contact your administrator to
-      discuss cache tier isolation options for production workloads. Your administrator can configure this through [XDeploy](/deployment).
+      discuss cache tier isolation options for production workloads. Your administrator can configure this through the deployment console.
     </Note>
   </Tab>
 </Tabs>

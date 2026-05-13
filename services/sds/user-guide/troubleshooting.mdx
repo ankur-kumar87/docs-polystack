@@ -12,7 +12,7 @@ file storage — including diagnosis steps and resolutions for each scenario.
 <Note>
   **Prerequisites**
   - Access to the Polystack Dashboard and CLI (`openstack` CLI authenticated)
-  - For advanced diagnostics, contact your storage administrator. Your administrator can configure this through [XDeploy](/deployment).
+  - For advanced diagnostics, contact your storage administrator. Your administrator can configure this through the deployment console.
 </Note>
 
 ---
@@ -33,13 +33,13 @@ file storage — including diagnosis steps and resolutions for each scenario.
 
     | Cause | Resolution |
     |-------|-----------|
-    | Insufficient capacity in the target pool | Choose a different volume type or contact your administrator to expand capacity. Your administrator can configure this through [XDeploy](/deployment). |
-    | Volume type references an unavailable backend | Try a different volume type; contact your administrator if the issue persists. Your administrator can configure this through [XDeploy](/deployment). |
-    | Storage service temporarily unhealthy | Wait 2–3 minutes and check status again; contact your administrator if it persists beyond 5 minutes. Your administrator can configure this through [XDeploy](/deployment). |
+    | Insufficient capacity in the target pool | Choose a different volume type or contact your administrator to expand capacity. Your administrator can configure this through the deployment console. |
+    | Volume type references an unavailable backend | Try a different volume type; contact your administrator if the issue persists. Your administrator can configure this through the deployment console. |
+    | Storage service temporarily unhealthy | Wait 2–3 minutes and check status again; contact your administrator if it persists beyond 5 minutes. Your administrator can configure this through the deployment console. |
     | Quota exceeded | Check quota with `openstack quota show --volume` and request an increase from your administrator |
 
     Contact your storage administrator if the volume remains in `creating` state for
-    more than 5 minutes. Your administrator can configure this through [XDeploy](/deployment).
+    more than 5 minutes. Your administrator can configure this through the deployment console.
   </Accordion>
 
   <Accordion title="Volume stuck in 'deleting' status" icon="trash">
@@ -74,7 +74,7 @@ file storage — including diagnosis steps and resolutions for each scenario.
     Look for `snapshots` in the output. If `used >= limit`, request a quota increase.
 
     **Resolution**:
-    - For quota exceeded: contact your administrator to increase the snapshot quota. Your administrator can configure this through [XDeploy](/deployment).
+    - For quota exceeded: contact your administrator to increase the snapshot quota. Your administrator can configure this through the deployment console.
     - For consistency issues: flush application writes before taking a snapshot of
       a database volume (see [Snapshots — Consistency](/services/sds/user-guide/snapshots))
 

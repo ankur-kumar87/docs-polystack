@@ -1,6 +1,6 @@
 ---
 
-# 🗂️ Xloud XAVS – Bare Metal Automation with Bifrost + Ironic
+# 🗂️ Polystack IronCore – Bare Metal Automation with Bifrost + Ironic
 
 ---
 
@@ -8,7 +8,7 @@
 
 Before launching virtual machines, you need a scalable and repeatable way to bring up the **physical hosts** that run them. In modern cloud infrastructure, **bare metal automation** ensures that new hardware can be provisioned, configured, and assigned roles — with **zero manual touch**.
 
-**XAVS** includes a **Bare Metal-as-a-Service (BMaaS)** layer built on **Bifrost** and **Ironic**, enabling complete lifecycle control of physical servers:
+**IronCore** includes a **Bare Metal-as-a-Service (BMaaS)** layer built on **Bifrost** and **Ironic**, enabling complete lifecycle control of physical servers:
 
 * Auto-discovery over PXE
 * Hardware introspection
@@ -19,16 +19,16 @@ Before launching virtual machines, you need a scalable and repeatable way to bri
 
 ## 2. 🧱 Architecture Overview
 
-### 🔹 XAVS Bare Metal Workflow
+### 🔹 IronCore Bare Metal Workflow
 
 | Stage               | Description                                                     |
 | ------------------- | --------------------------------------------------------------- |
 | **PXE Boot & IPAM** | New hosts boot via PXE and receive IP addresses automatically   |
 | **Introspection**   | Host hardware profile is analyzed via Ironic Python Agent (IPA) |
 | **OS Deployment**   | Custom OS images with injected configs are deployed to the disk |
-| **Role Assignment** | Nodes are classified and attached to the XAVS inventory         |
+| **Role Assignment** | Nodes are classified and attached to the IronCore inventory         |
 
-> 🧩 From power-on to production-ready, XAVS automates every step of host provisioning.
+> 🧩 From power-on to production-ready, IronCore automates every step of host provisioning.
 
 ---
 
@@ -107,7 +107,7 @@ baremetal node deploy <NODE_UUID>
 ### 🔹 D. Role Assignment & Cluster Integration
 
 * Node is tagged (e.g., `compute`, `controller`)
-* XAVS adds it to the inventory
+* IronCore adds it to the inventory
 * Initiates service deployment via Kolla containers
 * Applies disk/VLAN configs and storage mappings
 
@@ -131,20 +131,20 @@ baremetal node deploy <NODE_UUID>
 
 * **Edge Deployments**
 
-  * No on-site admin needed — power on and let XAVS handle the rest
+  * No on-site admin needed — power on and let IronCore handle the rest
 
 ---
 
 ## 7. ✅ Summary & Positioning
 
-**XAVS Bare Metal Provisioning** automates everything from **PXE boot to production-ready host**, empowering infrastructure teams to scale physical capacity as easily as VMs.
+**IronCore Bare Metal Provisioning** automates everything from **PXE boot to production-ready host**, empowering infrastructure teams to scale physical capacity as easily as VMs.
 
-With features like introspection, dynamic role assignment, and integrated service bootstrapping, XAVS enables:
+With features like introspection, dynamic role assignment, and integrated service bootstrapping, IronCore enables:
 
 * Zero-touch deployment
 * Compliance with hardware classification
 * Reliable and repeatable infrastructure scaling
 
-> 🟢 **Customer Experience:** Plug in, boot up, and automate. With XAVS, bare metal becomes cloud-native.
+> 🟢 **Customer Experience:** Plug in, boot up, and automate. With IronCore, bare metal becomes cloud-native.
 
 ---

@@ -8,14 +8,13 @@ sidebarTitle: "Hardening Guide"
 
 This guide provides a structured hardening walkthrough for Polystack Platform nodes. Apply these controls before the first production deployment. The checklist at the end of this page provides a verification reference for compliance audits.
 
-Hardening operates at four levels: the host operating system (XOS), the Polystack platform services, supporting infrastructure components (database, message queue), and the metadata service.
+Hardening operates at four levels: the host operating system (Polystack OS), the Polystack platform services, supporting infrastructure components (database, message queue), and the metadata service.
 
-<Info>**Polystack-Developed** — Ironcore ships with automated hardening roles that enforce CIS benchmarks out of the box. Automated controls include SSH hardening and allowlisting, audit logging configuration, Docker security benchmarks, and AppArmor profile enforcement. These roles run during initial deployment and can be re-applied at any time via `ironcore-ansible reconfigure --tags hardening`.</Info>
 
 <Note>
   **Prerequisites**
-  - XOS installed on all control and compute nodes
-  - XDeploy access with bootstrap credentials
+  - Polystack OS installed on all control and compute nodes
+  - the deployment console access with bootstrap credentials
   - SSH access to all cluster nodes
   - A change management window — some steps require service restarts
 </Note>
@@ -144,7 +143,7 @@ Hardening operates at four levels: the host operating system (XOS), the Polystac
     ```
   </Step>
   <Step title="Enable AppArmor enforcement" icon="shield-check">
-    AppArmor profiles for hypervisor processes ship in enforce mode on XOS. Verify and enable:
+    AppArmor profiles for hypervisor processes ship in enforce mode on Polystack OS. Verify and enable:
 
     ```bash title="Verify AppArmor status"
     aa-status | grep -E "profiles|enforce|complain"

@@ -34,7 +34,7 @@ The `admin` role implies `member`, which implies `reader` — so each role inher
 
 ## Policy File Locations
 
-Each Polystack service reads its policy file from inside its container. Overrides are placed in `/etc/ironcore/<service>/` on the host and deployed by XDeploy:
+Each Polystack service reads its policy file from inside its container. Overrides are placed in `/etc/ironcore/<service>/` on the host and deployed by the deployment console:
 
 | Service | Policy Override Path | Container Path |
 |---------|---------------------|----------------|
@@ -102,7 +102,7 @@ Custom roles are names you create in Keystone. They have **no permissions by def
     "get_port": "role:network-operator or role:member"
     ```
   </Step>
-  <Step title="Apply the policy changes via XDeploy" icon="upload">
+  <Step title="Apply the policy changes via the deployment console" icon="upload">
     ```bash title="Redeploy the affected service"
     ironcore-ansible deploy --tags nova
     ironcore-ansible deploy --tags neutron

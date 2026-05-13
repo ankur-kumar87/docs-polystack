@@ -1,6 +1,6 @@
 ---
 title: "Orchestration Configuration"
-description: "Configure the Polystack Orchestration service — key settings, stack domain setup, default quotas, and XDeploy integration for production deployments."
+description: "Configure the Polystack Orchestration service — key settings, stack domain setup, default quotas, and the deployment console integration for production deployments."
 sidebarTitle: "Configuration"
 ---
 
@@ -8,7 +8,7 @@ import AdminWarning from '/snippets/admin-warning.mdx';
 
 ## Overview
 
-The Orchestration service is configured through XDeploy global variables and
+The Orchestration service is configured through the deployment console global variables and
 service-specific configuration files. Key configuration areas include the stack domain
 (used for trust delegation), engine worker settings, quota defaults, and integration
 with the CloudWatch-compatible alarm endpoint.
@@ -20,7 +20,7 @@ with the CloudWatch-compatible alarm endpoint.
 ## Key Configuration Options
 
 The following settings control core Orchestration service behavior. All settings are
-managed through XDeploy.
+managed through the deployment console.
 
 | Setting | Default | Description |
 |---------|---------|-------------|
@@ -43,10 +43,10 @@ managed through XDeploy.
 ## Enable the Service
 
 <Tabs>
-  <Tab title="XDeploy" icon="gauge">
+  <Tab title="Web Console" icon="gauge">
     <Steps titleSize="h3">
       <Step title="Navigate to Configuration" icon="settings">
-        In XDeploy, navigate to **Configuration → Services → Orchestration**.
+        In the deployment console, navigate to **Configuration → Services → Orchestration**.
       </Step>
       <Step title="Enable the service" icon="toggle-right">
         Set **Enable Orchestration** to **Yes** and configure the engine worker count
@@ -104,7 +104,7 @@ the stack's project — rather than the submitting user's credentials.
   and network resources do not require the stack domain.
 </Warning>
 
-Stack domain configuration is handled automatically by XDeploy during the
+Stack domain configuration is handled automatically by the deployment console during the
 Orchestration deployment. The following variables control the domain:
 
 | Setting | Description |

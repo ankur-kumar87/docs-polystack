@@ -16,7 +16,7 @@ This guide covers service-level troubleshooting for Polystack Block Storage admi
 <Note>
   **Before troubleshooting**
   - Authenticate with admin credentials: `source openrc.sh`
-  - Access service logs via XDeploy for detailed error messages
+  - Access service logs via the deployment console for detailed error messages
   - For critical production issues, contact [Polystack Support](mailto:support@polystack.tech)
     with the affected volume IDs and log excerpts
 </Note>
@@ -56,20 +56,20 @@ All services should show `state = up` and `status = enabled`. Any service showin
 
     **Resolution**:
 
-    1. Access the affected node through XDeploy and check the volume service container:
+    1. Access the affected node through the deployment console and check the volume service container:
        ```bash title="Check container status (on storage node)"
        docker ps | grep cinder
        ```
 
     2. Review container logs for initialization errors:
-       Access logs via XDeploy → **Logs → cinder-volume** on the affected node.
+       Access logs via the deployment console → **Logs → cinder-volume** on the affected node.
 
     3. Common causes:
        - Message queue (RabbitMQ) connectivity lost — check network and RabbitMQ status
        - Database connection failure — verify MariaDB/Galera cluster health
        - Backend driver error (keyring file missing, pool name wrong) — review driver-specific log entries
 
-    4. After resolving the root cause, restart the volume service via XDeploy.
+    4. After resolving the root cause, restart the volume service via the deployment console.
 
     <Tip>
       Run `openstack volume service list` 60 seconds after restarting to confirm
@@ -123,7 +123,7 @@ All services should show `state = up` and `status = enabled`. Any service showin
        # Run on a node with storage admin access
        # (command varies by storage backend)
        ```
-    4. Restart the volume service via XDeploy after resolving connectivity issues.
+    4. Restart the volume service via the deployment console after resolving connectivity issues.
   </Accordion>
 
   <Accordion title="Volume creation succeeds but attachment fails" icon="link">
@@ -158,7 +158,7 @@ All services should show `state = up` and `status = enabled`. Any service showin
     openstack volume show <volume-id> -c migration_status -c status
     ```
 
-    Check volume service logs on both source and destination nodes via XDeploy for
+    Check volume service logs on both source and destination nodes via the deployment console for
     migration-related errors.
 
     If permanently stuck and data integrity has been verified:
@@ -199,7 +199,7 @@ All services should show `state = up` and `status = enabled`. Any service showin
        ```
     2. Confirm the compute service on the affected node can reach the Key Management
        service API (network path, port 9311).
-    3. Check compute service logs on the affected node via XDeploy for messages
+    3. Check compute service logs on the affected node via the deployment console for messages
        containing `barbican`, `secret`, or `crypt`.
 
     <Warning>

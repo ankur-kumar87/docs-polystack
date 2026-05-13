@@ -12,8 +12,8 @@ The libvirt driver translates Polystack Compute API requests into hypervisor ope
 
 <Note>
   **Prerequisites**
-  - Administrator access to the Polystack platform and XDeploy
-  - Compute nodes running XOS with `libvirt` and `qemu-kvm` installed
+  - Administrator access to the Polystack platform and the deployment console
+  - Compute nodes running Polystack OS with `libvirt` and `qemu-kvm` installed
   - Verify hardware virtualization support: `grep -o 'vmx\|svm' /proc/cpuinfo | head -1`
 </Note>
 
@@ -110,7 +110,7 @@ The hypervisor driver supports multiple backing storage configurations for insta
   Local storage backends (QCOW, Flat, LVM) do not support live migration. Use RBD-backed storage when live migration between compute nodes is required.
 </Warning>
 
-The storage backend is configured per compute node in the Nova configuration, managed by XDeploy via the ironcore-ansible deployment playbooks.
+The storage backend is configured per compute node in the Nova configuration, managed by the deployment console via the ironcore-ansible deployment playbooks.
 
 ---
 
@@ -131,7 +131,7 @@ The CPU mode controls how CPU features and topology are presented to virtual mac
 
 ### Configuring CPU Mode
 
-CPU mode is set in the Nova compute configuration, which XDeploy manages via `globals.d` overrides:
+CPU mode is set in the Nova compute configuration, which the deployment console manages via `globals.d` overrides:
 
 ```yaml title="/etc/ironcore/globals.d/_50_compute.yml"
 nova_cpu_mode: "custom"
@@ -204,7 +204,7 @@ VHostNet offloads virtio-net packet processing from QEMU user-space to the kerne
 lsmod | grep vhost_net
 ```
 
-VHostNet is enabled by default on XOS. No additional configuration is required.
+VHostNet is enabled by default on Polystack OS. No additional configuration is required.
 
 ### CPU Pinning
 
@@ -301,7 +301,6 @@ Configure huge page memory backing for memory-intensive or NUMA-sensitive worklo
 
 ## Heterogeneous Hardware Support
 
-<Info>**Polystack-Developed** — Heterogeneous hardware support is a core capability of Ironcore / XPCI.</Info>
 
 Polystack supports mixing different hardware configurations within a single cluster -- no hardware homogeneity required.
 

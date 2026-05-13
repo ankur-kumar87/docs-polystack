@@ -8,10 +8,10 @@ sidebarTitle: "Architecture"
 
 The Software-Defined-Storage distributed storage cluster is composed of several service types that work
 together to provide unified block, object, and file storage. Services are deployed
-and managed by XDeploy.
+and managed by the deployment console.
 
 <Tip>
-  **XDeploy GUI** — The distributed storage cluster can be bootstrapped and managed through the [Software-Defined-Storage Storage](/deployment/software-defined-storage) interface. Storage tiers, CRUSH rules, and Ceph configuration are all accessible from the GUI. No manual file editing required.
+  **the deployment console GUI** — The distributed storage cluster can be bootstrapped and managed through the Software-Defined-Storage Storage interface. Storage tiers, CRUSH rules, and Ceph configuration are all accessible from the GUI. No manual file editing required.
 </Tip>
 
 <Note>
@@ -90,7 +90,7 @@ graph TD
     into RADOS operations against the underlying storage cluster.
 
     RGW is stateless — all state is stored in the cluster. Deploy at least 2 RGW
-    instances behind a load balancer for high availability. XDeploy configures the
+    instances behind a load balancer for high availability. the deployment console configures the
     HAProxy frontend automatically.
 
     RGW supports:

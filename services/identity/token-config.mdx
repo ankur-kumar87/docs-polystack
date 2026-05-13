@@ -44,7 +44,7 @@ Fernet uses a key repository with three key roles:
 
 <Steps titleSize="h3">
   <Step title="Configure rotation schedule" icon="clock">
-    XDeploy manages Fernet key rotation automatically via a scheduled cron job.
+    the deployment console manages Fernet key rotation automatically via a scheduled cron job.
     Configure the rotation interval in your deployment globals:
 
     ```yaml title="Fernet key rotation schedule"
@@ -61,7 +61,7 @@ Fernet uses a key repository with three key roles:
       --keystone-group keystone
     ```
 
-    After rotation, XDeploy synchronizes the new key set to all Identity API nodes.
+    After rotation, the deployment console synchronizes the new key set to all Identity API nodes.
   </Step>
   <Step title="Verify key synchronization" icon="circle-check">
     All nodes must have identical key files:
@@ -75,7 +75,7 @@ Fernet uses a key repository with three key roles:
 
 <Warning>
   Rotate keys on all Identity API nodes simultaneously. Keys not in sync across
-  nodes cause token validation failures. XDeploy's rotation playbook handles
+  nodes cause token validation failures. the deployment console's rotation playbook handles
   synchronization automatically.
 </Warning>
 
@@ -83,7 +83,7 @@ Fernet uses a key repository with three key roles:
 
 ## Token Lifetime Configuration
 
-Token lifetime is configured in XDeploy globals. Shorter lifetimes improve security
+Token lifetime is configured in the deployment console globals. Shorter lifetimes improve security
 but increase re-authentication overhead for users and automation pipelines.
 
 ```yaml title="Token lifetime settings"

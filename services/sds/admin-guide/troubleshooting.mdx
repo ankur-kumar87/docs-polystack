@@ -81,7 +81,7 @@ ceph log last 100
        ```
     3. Monitor recovery: `watch ceph status`
     4. After recovery completes (status shows `HEALTH_OK`), replace the failed hardware
-    5. Redeploy the OSD through XDeploy on the replacement device
+    5. Redeploy the OSD through the deployment console on the replacement device
 
     <Warning>
       Do not remove an OSD before the cluster has finished recovering data. Removing
@@ -107,7 +107,7 @@ ceph log last 100
     | Root Cause | Resolution |
     |-----------|-----------|
     | HDD fragmentation | Schedule `ceph osd scrub <OSD_ID>` during low-traffic period |
-    | CPU throttling on OSD nodes | Review CPU allocation in XDeploy |
+    | CPU throttling on OSD nodes | Review CPU allocation in the deployment console |
     | Rebalancing competing with client I/O | Throttle recovery I/O (see below) |
     | Full disks on some OSDs | Add capacity or rebalance via CRUSH weight |
 
@@ -162,7 +162,7 @@ ceph log last 100
       ceph osd set-full-ratio 0.97
       ```
     - **Short-term**: Delete unnecessary data, snapshots, or expired objects
-    - **Long-term**: Add new OSD nodes through XDeploy (see [Capacity Planning](/services/sds/admin-guide/capacity-planning))
+    - **Long-term**: Add new OSD nodes through the deployment console (see [Capacity Planning](/services/sds/admin-guide/capacity-planning))
 
     <Danger>
       Operating above 90% utilization with the `full_ratio` raised is an emergency
