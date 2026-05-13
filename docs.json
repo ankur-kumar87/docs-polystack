@@ -7,6 +7,10 @@
     "light": "#d7b98e",
     "dark": "#8f6a43"
   },
+  "appearance": {
+    "default": "dark",
+    "strict": true
+  },
   "favicon": "/images/favicon.ico",
   "icons": {
     "library": "lucide"
@@ -854,23 +858,6 @@
       "x": "https://x.com/polystacktech",
       "youtube": "https://youtube.com/@polystacktech",
       "website": "https://polystack.tech/"
-    }
-  },
-  "background": {
-    "decoration": "gradient"
-  },
-  "fonts": {
-    "heading": {
-      "family": "Gilroy",
-      "source": "/resources/Gilroy-ExtraBold/Gilroy-ExtraBold.woff2",
-      "format": "woff2",
-      "weight": 800
-    },
-    "body": {
-      "family": "Tenorite",
-      "source": "/resources/Tenorite Regular/Tenorite Regular.woff2",
-      "format": "woff2",
-      "weight": 400
     }
   },
   "description": "Build, operate, and support Polystack infrastructure with documentation for cloud, edge computing, data center solutions, storage, networking, monitoring, and disaster recovery."
