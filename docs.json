@@ -48,9 +48,7 @@
         "pages": [
           "products/edge-computing",
           "products/ironcore",
-          "products/software-defined-storage",
-          "products/monitoring",
-          "products/disaster-recovery"
+          "products/monitoring"
         ]
       },
       {
@@ -492,41 +490,6 @@
             ]
           },
           {
-            "group": "Software-Defined Storage",
-            "icon": "database",
-            "root": "services/sds/index",
-            "pages": [
-              {
-                "group": "User Guide",
-                "root": "services/sds/user-guide/storage-types",
-                "pages": [
-                  "services/sds/user-guide/access-methods",
-                  "services/sds/user-guide/data-protection",
-                  "services/sds/user-guide/performance",
-                  "services/sds/user-guide/snapshots",
-                  "services/sds/user-guide/troubleshooting"
-                ],
-                "icon": "book-open"
-              },
-              {
-                "group": "Admin Guide",
-                "root": "services/sds/admin-guide/architecture",
-                "pages": [
-                  "services/sds/admin-guide/cluster-management",
-                  "services/sds/admin-guide/pool-management",
-                  "services/sds/admin-guide/crush-maps",
-                  "services/sds/admin-guide/storage-tiers",
-                  "services/sds/admin-guide/capacity-planning",
-                  "services/sds/admin-guide/monitoring",
-                  "services/sds/admin-guide/security",
-                  "services/sds/admin-guide/troubleshooting"
-                ],
-                "icon": "shield"
-              },
-              "services/sds/cli-reference"
-            ]
-          },
-          {
             "group": "Monitoring",
             "icon": "activity",
             "root": "services/monitoring/index",
@@ -556,38 +519,6 @@
                   "services/monitoring/admin-guide/retention",
                   "services/monitoring/admin-guide/security",
                   "services/monitoring/admin-guide/troubleshooting"
-                ],
-                "icon": "shield"
-              }
-            ]
-          },
-          {
-            "group": "Disaster Recovery",
-            "icon": "rotate-ccw",
-            "root": "services/disaster-recovery/index",
-            "pages": [
-              {
-                "group": "User Guide",
-                "root": "services/disaster-recovery/user-guide/protection-plans",
-                "pages": [
-                  "services/disaster-recovery/user-guide/failover",
-                  "services/disaster-recovery/user-guide/failback",
-                  "services/disaster-recovery/user-guide/test-dr",
-                  "services/disaster-recovery/user-guide/troubleshooting"
-                ],
-                "icon": "book-open"
-              },
-              {
-                "group": "Admin Guide",
-                "root": "services/disaster-recovery/admin-guide/architecture",
-                "pages": [
-                  "services/disaster-recovery/admin-guide/replication-config",
-                  "services/disaster-recovery/admin-guide/recovery-plans",
-                  "services/disaster-recovery/admin-guide/dr-automation",
-                  "services/disaster-recovery/admin-guide/monitoring",
-                  "services/disaster-recovery/admin-guide/compliance",
-                  "services/disaster-recovery/admin-guide/security",
-                  "services/disaster-recovery/admin-guide/troubleshooting"
                 ],
                 "icon": "shield"
               }
