@@ -117,7 +117,7 @@
 ### Product Page Rules
 - Software-Defined-Storage is the example — keep all product pages minimal like Software-Defined-Storage
 - Max 4 services per product page
-- Link to website for full details: `https://polystack.tech/contact`
+- Link to website for full details: `https://polystack.tech/contact-us/`
 - Each product page links to docs pages, not website pages
 
 ---
