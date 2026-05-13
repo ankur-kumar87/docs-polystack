@@ -8,7 +8,7 @@ mode: "wide"
 
 Centralized, secure secret and certificate management for your entire Polystack cloud infrastructure.
 
-<Card title="Polystack Key Manager — Enterprise KMS" icon="lock" href="https://polystack.tech/ironcore" color="#197560" horizontal>
+<Card title="Polystack Key Manager — Enterprise KMS" icon="lock" href="https://polystack.tech/ironcore" color="#bf9667" horizontal>
   Product details and datasheet on polystack.tech
 </Card>
 
@@ -17,16 +17,16 @@ Centralized, secure secret and certificate management for your entire Polystack 
 <p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Polystack Key Manager</p>
 
 <CardGroup cols={2}>
-  <Card title="User Guide" icon="book-open" href="/services/key-manager/user-guide" color="#197560">
+  <Card title="User Guide" icon="book-open" href="/services/key-manager/user-guide" color="#bf9667">
     Store secrets and credentials, manage certificate containers, issue certificate orders, and configure access control lists for your Polystack Key Manager resources.
   </Card>
-  <Card title="Admin Guide" icon="shield-check" href="/services/key-manager/admin-guide" color="#197560">
+  <Card title="Admin Guide" icon="shield-check" href="/services/key-manager/admin-guide" color="#bf9667">
     Configure secret store backends, manage transport keys, enforce quotas, and apply security hardening policies for the Key Manager service.
   </Card>
-  <Card title="CLI Reference" icon="terminal" href="/services/key-manager/cli-reference" color="#197560">
+  <Card title="CLI Reference" icon="terminal" href="/services/key-manager/cli-reference" color="#bf9667">
     `openstack secret` commands for managing secrets, containers, orders, and ACLs from the command line.
   </Card>
-  <Card title="TLS Integration" icon="shield" color="#197560">
+  <Card title="TLS Integration" icon="shield" color="#bf9667">
     Store TLS certificates in Key Manager and reference them directly from Load Balancer HTTPS listeners for centralized certificate lifecycle management.
   </Card>
 </CardGroup>
@@ -36,22 +36,22 @@ Centralized, secure secret and certificate management for your entire Polystack 
 <p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Key Features</p>
 
 <CardGroup cols={2}>
-  <Card title="Secret Storage" icon="vault" href="/services/key-manager/store-secrets" color="#197560">
+  <Card title="Secret Storage" icon="vault" href="/services/key-manager/store-secrets" color="#bf9667">
     Securely store passwords, API keys, encryption keys, and arbitrary binary secrets. All secrets are encrypted at rest using the configured backend store.
   </Card>
-  <Card title="Certificate Management" icon="certificate" href="/services/key-manager/certificates" color="#197560">
+  <Card title="Certificate Management" icon="certificate" href="/services/key-manager/certificates" color="#bf9667">
     Store and manage TLS/SSL certificates with their associated private keys and certificate chains. Reference directly from Load Balancer and other services.
   </Card>
-  <Card title="Access Control Lists" icon="list-checks" href="/services/key-manager/acl" color="#197560">
+  <Card title="Access Control Lists" icon="list-checks" href="/services/key-manager/acl" color="#bf9667">
     Fine-grained ACLs control which users and projects can read or manage each secret. Delegate access without exposing credentials.
   </Card>
-  <Card title="Certificate Orders" icon="clipboard-list" href="/services/key-manager/certificates" color="#197560">
+  <Card title="Certificate Orders" icon="clipboard-list" href="/services/key-manager/certificates" color="#bf9667">
     Automate certificate issuance through configured Certificate Authority plugins. Track order status and retrieve issued certificates programmatically.
   </Card>
-  <Card title="Transport Key Encryption" icon="key" href="/services/key-manager/transport-keys" color="#197560">
+  <Card title="Transport Key Encryption" icon="key" href="/services/key-manager/transport-keys" color="#bf9667">
     Client-side secret encryption using transport keys prevents secrets from ever appearing in plaintext on the network — even during upload.
   </Card>
-  <Card title="Multi-Backend Support" icon="database" href="/services/key-manager/backend-config" color="#197560">
+  <Card title="Multi-Backend Support" icon="database" href="/services/key-manager/backend-config" color="#bf9667">
     Plug in industry-standard backends including local encryption, hardware security modules (HSMs), and KMIP-compliant key management appliances.
   </Card>
 </CardGroup>
@@ -74,22 +74,22 @@ Centralized, secure secret and certificate management for your entire Polystack 
 <p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Related Services</p>
 
 <CardGroup cols={3}>
-  <Card title="Polystack Load Balancer" icon="combine" href="/services/load-balancer" color="#197560">
+  <Card title="Polystack Load Balancer" icon="combine" href="/services/load-balancer" color="#bf9667">
     Reference TLS certificate containers in HTTPS listener configuration
   </Card>
-  <Card title="Polystack Compute" icon="server" href="/services/compute" color="#197560">
+  <Card title="Polystack Compute" icon="server" href="/services/compute" color="#bf9667">
     Encrypt instance storage volumes with keys managed in Key Manager
   </Card>
-  <Card title="Polystack DNS" icon="globe" href="/services/dns" color="#197560">
+  <Card title="Polystack DNS" icon="globe" href="/services/dns" color="#bf9667">
     Store DNSSEC signing keys as secrets for automated zone signing
   </Card>
-  <Card title="Polystack Object Storage" icon="box" href="/services/object-storage" color="#197560">
+  <Card title="Polystack Object Storage" icon="box" href="/services/object-storage" color="#bf9667">
     Server-side encryption of object containers with customer-managed keys
   </Card>
-  <Card title="Polystack Identity" icon="fingerprint" href="/cli-setup" color="#197560">
+  <Card title="Polystack Identity" icon="fingerprint" href="/cli-setup" color="#bf9667">
     RBAC policies and trust delegation for Key Manager resource access
   </Card>
-  <Card title="Polystack Block Storage" icon="hard-drive" href="/services/compute" color="#197560">
+  <Card title="Polystack Block Storage" icon="hard-drive" href="/services/compute" color="#bf9667">
     Volume encryption using keys managed and rotated through Key Manager
   </Card>
 </CardGroup>
@@ -99,10 +99,10 @@ Centralized, secure secret and certificate management for your entire Polystack 
 <p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Getting Started</p>
 
 <CardGroup cols={2}>
-  <Card title="Authentication" icon="key" href="/cli-setup" color="#197560">
+  <Card title="Authentication" icon="key" href="/cli-setup" color="#bf9667">
     Configure Dashboard access and CLI credentials before working with Key Manager
   </Card>
-  <Card title="User Guide" icon="book-open" href="/services/key-manager/user-guide" color="#197560">
+  <Card title="User Guide" icon="book-open" href="/services/key-manager/user-guide" color="#bf9667">
     Step-by-step instructions for storing your first secret
   </Card>
 </CardGroup>

@@ -139,19 +139,19 @@ before reducing node count.
 ## Best Practices
 
 <CardGroup cols={2}>
-  <Card title="Maintain Minimum Replicas" icon="layers" color="#197560">
+  <Card title="Maintain Minimum Replicas" icon="layers" color="#bf9667">
     Configure `PodDisruptionBudget` resources for stateful workloads to ensure a
     minimum number of replicas remain available during node removal.
   </Card>
-  <Card title="Use Node Groups for Fine-Grained Scaling" icon="sliders" color="#197560">
+  <Card title="Use Node Groups for Fine-Grained Scaling" icon="sliders" color="#bf9667">
     Use separate node groups for different workload types to scale them independently
     without affecting other workloads on the cluster.
   </Card>
-  <Card title="Scale During Low-Traffic Windows" icon="clock" color="#197560">
+  <Card title="Scale During Low-Traffic Windows" icon="clock" color="#bf9667">
     Perform scale-down operations during low-traffic periods when evicted pods have
     minimal user impact.
   </Card>
-  <Card title="Check Compute Quota Before Scale-Up" icon="gauge" color="#197560">
+  <Card title="Check Compute Quota Before Scale-Up" icon="gauge" color="#bf9667">
     Verify sufficient compute quota before adding nodes to avoid partial scale-up failures.
   </Card>
 </CardGroup>
@@ -161,16 +161,16 @@ before reducing node count.
 ## Next Steps
 
 <CardGroup cols={2}>
-  <Card title="Node Groups" href="/services/kubernetes/user-guide/node-groups" color="#197560">
+  <Card title="Node Groups" href="/services/kubernetes/user-guide/node-groups" color="#bf9667">
     Create and manage separate node pools for specialized workloads.
   </Card>
-  <Card title="Access Cluster" href="/services/kubernetes/user-guide/access-cluster" color="#197560">
+  <Card title="Access Cluster" href="/services/kubernetes/user-guide/access-cluster" color="#bf9667">
     Verify cluster access after scaling via kubectl.
   </Card>
-  <Card title="Cluster Upgrades" href="/services/kubernetes/user-guide/cluster-upgrades" color="#197560">
+  <Card title="Cluster Upgrades" href="/services/kubernetes/user-guide/cluster-upgrades" color="#bf9667">
     Upgrade your cluster to a newer Kubernetes version.
   </Card>
-  <Card title="Troubleshooting" href="/services/kubernetes/user-guide/troubleshooting" color="#197560">
+  <Card title="Troubleshooting" href="/services/kubernetes/user-guide/troubleshooting" color="#bf9667">
     Resolve scaling failures and node health issues.
   </Card>
 </CardGroup>

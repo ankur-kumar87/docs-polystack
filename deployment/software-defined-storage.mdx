@@ -96,13 +96,13 @@ The Software-Defined-Storage module is organized into four tabs, each covering a
     The right side of the tab displays reference information:
 
     <CardGroup cols={1}>
-      <Card title="Storage Tiering" icon="layers" color="#197560">
+      <Card title="Storage Tiering" icon="layers" color="#bf9667">
         Explains what storage tiering does --- grouping disks by media type and creating separate pools so tenants can select performance tiers when creating volumes.
       </Card>
-      <Card title="What Gets Configured" icon="settings" color="#197560">
+      <Card title="What Gets Configured" icon="settings" color="#bf9667">
         Details the resources created when applying tiers: CRUSH rules pinned to device classes, dedicated storage pools per tier, volume types registered in the block storage service, and Prometheus metrics for tier monitoring.
       </Card>
-      <Card title="Requirements" icon="circle-check" color="#197560">
+      <Card title="Requirements" icon="circle-check" color="#bf9667">
         Lists prerequisites for tier configuration: a running storage cluster with at least one OSD, and mixed media types (NVMe, SSD, HDD) for multiple tiers.
       </Card>
     </CardGroup>
@@ -190,10 +190,10 @@ After configuring Software-Defined-Storage, verify that the storage cluster is o
 ## Next Steps
 
 <CardGroup cols={2}>
-  <Card title="Storage Tiers" icon="layers" href="/services/storage/storage-tiers" color="#197560">
+  <Card title="Storage Tiers" icon="layers" href="/services/storage/storage-tiers" color="#bf9667">
     Manage volume types and storage tier policies for tenants
   </Card>
-  <Card title="Cloud Fleet" icon="globe" href="/deployment/cloud-fleet" color="#197560">
+  <Card title="Cloud Fleet" icon="globe" href="/deployment/cloud-fleet" color="#bf9667">
     Visualize your entire infrastructure topology including storage nodes
   </Card>
 </CardGroup>

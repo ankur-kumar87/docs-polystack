@@ -8,7 +8,7 @@ mode: "wide"
 
 Authoritative DNS management for your private cloud — create zones, manage records, and automate reverse DNS for all your services.
 
-<Card title="Polystack DNS — DNS-as-a-Service" icon="globe" href="https://polystack.tech/ironcore" color="#197560" horizontal>
+<Card title="Polystack DNS — DNS-as-a-Service" icon="globe" href="https://polystack.tech/ironcore" color="#bf9667" horizontal>
   Product details and datasheet on polystack.tech
 </Card>
 
@@ -17,16 +17,16 @@ Authoritative DNS management for your private cloud — create zones, manage rec
 <p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Polystack DNS Service</p>
 
 <CardGroup cols={2}>
-  <Card title="User Guide" icon="book-open" href="/services/dns/user-guide" color="#197560">
+  <Card title="User Guide" icon="book-open" href="/services/dns/user-guide" color="#bf9667">
     Create DNS zones, manage record sets (A, AAAA, CNAME, MX, TXT), configure reverse DNS, and query your DNS infrastructure.
   </Card>
-  <Card title="Admin Guide" icon="shield-check" href="/services/dns/admin-guide" color="#197560">
+  <Card title="Admin Guide" icon="shield-check" href="/services/dns/admin-guide" color="#bf9667">
     Configure DNS backend drivers, manage pools, control zone transfers, enforce quotas, and administer the DNS service infrastructure.
   </Card>
-  <Card title="CLI Reference" icon="terminal" href="/services/dns/cli-reference" color="#197560">
+  <Card title="CLI Reference" icon="terminal" href="/services/dns/cli-reference" color="#bf9667">
     `openstack zone` and `openstack recordset` commands for managing DNS from the command line.
   </Card>
-  <Card title="Reverse DNS" icon="arrow-left-right" color="#197560">
+  <Card title="Reverse DNS" icon="arrow-left-right" color="#bf9667">
     Create PTR records for IP-to-hostname resolution supporting compliance, email delivery, and network diagnostics.
   </Card>
 </CardGroup>
@@ -36,22 +36,22 @@ Authoritative DNS management for your private cloud — create zones, manage rec
 <p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Key Features</p>
 
 <CardGroup cols={2}>
-  <Card title="Authoritative DNS Zones" icon="map-pin" href="/services/dns/create-zone" color="#197560">
+  <Card title="Authoritative DNS Zones" icon="map-pin" href="/services/dns/create-zone" color="#bf9667">
     Create and manage authoritative DNS zones for your domains. Full control over SOA, NS, and all resource record types within each zone.
   </Card>
-  <Card title="Multi-Record Support" icon="list" href="/services/dns/record-types" color="#197560">
+  <Card title="Multi-Record Support" icon="list" href="/services/dns/record-types" color="#bf9667">
     Native support for A, AAAA, CNAME, MX, NS, PTR, SOA, SRV, SPF, TXT, and CAA record types. Cover every DNS use case from web hosting to email delivery.
   </Card>
-  <Card title="Reverse DNS (PTR)" icon="arrow-left-right" href="/services/dns/reverse-dns" color="#197560">
+  <Card title="Reverse DNS (PTR)" icon="arrow-left-right" href="/services/dns/reverse-dns" color="#bf9667">
     Automated PTR record management for IPv4 and IPv6 address spaces. Essential for mail server reputation, syslog, and compliance logging.
   </Card>
-  <Card title="Zone Transfers" icon="share-2" href="/services/dns/zone-transfers" color="#197560">
+  <Card title="Zone Transfers" icon="share-2" href="/services/dns/zone-transfers" color="#bf9667">
     Controlled zone transfer (AXFR/IXFR) support for secondary DNS servers. Delegate authority to external resolvers while maintaining primary control.
   </Card>
-  <Card title="TTL Management" icon="clock" href="/services/dns/manage-records" color="#197560">
+  <Card title="TTL Management" icon="clock" href="/services/dns/manage-records" color="#bf9667">
     Configure Time-to-Live values per record set. Reduce TTLs before planned changes for faster propagation; increase after stabilization to reduce resolver load.
   </Card>
-  <Card title="API-Driven Automation" icon="code" href="/services/dns/cli-reference" color="#197560">
+  <Card title="API-Driven Automation" icon="code" href="/services/dns/cli-reference" color="#bf9667">
     Full REST API for DNS record management. Integrate with deployment pipelines to register service endpoints automatically as infrastructure is provisioned.
   </Card>
 </CardGroup>
@@ -74,22 +74,22 @@ Authoritative DNS management for your private cloud — create zones, manage rec
 <p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Related Services</p>
 
 <CardGroup cols={3}>
-  <Card title="Polystack Load Balancer" icon="combine" href="/services/load-balancer" color="#197560">
+  <Card title="Polystack Load Balancer" icon="combine" href="/services/load-balancer" color="#bf9667">
     Map DNS names to load balancer VIP addresses for service endpoints
   </Card>
-  <Card title="Polystack Compute" icon="server" href="/services/compute" color="#197560">
+  <Card title="Polystack Compute" icon="server" href="/services/compute" color="#bf9667">
     Register compute instance hostnames in DNS zones automatically
   </Card>
-  <Card title="Polystack Networking" icon="network" href="/services/compute" color="#197560">
+  <Card title="Polystack Networking" icon="network" href="/services/compute" color="#bf9667">
     Floating IPs and fixed IPs referenced in DNS A and PTR records
   </Card>
-  <Card title="Polystack Identity" icon="fingerprint" href="/cli-setup" color="#197560">
+  <Card title="Polystack Identity" icon="fingerprint" href="/cli-setup" color="#bf9667">
     RBAC policies governing zone and record management permissions
   </Card>
-  <Card title="Polystack Key Manager" icon="lock" href="/services/key-manager" color="#197560">
+  <Card title="Polystack Key Manager" icon="lock" href="/services/key-manager" color="#bf9667">
     Store DNSSEC signing keys for zone integrity validation
   </Card>
-  <Card title="Polystack Object Storage" icon="box" href="/services/object-storage" color="#197560">
+  <Card title="Polystack Object Storage" icon="box" href="/services/object-storage" color="#bf9667">
     Archive zone export files and DNS audit logs for compliance
   </Card>
 </CardGroup>
@@ -99,10 +99,10 @@ Authoritative DNS management for your private cloud — create zones, manage rec
 <p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Getting Started</p>
 
 <CardGroup cols={2}>
-  <Card title="Authentication" icon="key" href="/cli-setup" color="#197560">
+  <Card title="Authentication" icon="key" href="/cli-setup" color="#bf9667">
     Configure Dashboard access and CLI credentials before working with DNS
   </Card>
-  <Card title="User Guide" icon="book-open" href="/services/dns/user-guide" color="#197560">
+  <Card title="User Guide" icon="book-open" href="/services/dns/user-guide" color="#bf9667">
     Step-by-step instructions for creating your first DNS zone
   </Card>
 </CardGroup>

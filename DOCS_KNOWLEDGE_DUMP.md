@@ -94,7 +94,7 @@
 - **Email**: info@polystack.tech, support@polystack.tech
 - **Phone**: +91-9289062555
 - **Tagline**: "Helping India build their Next-Gen Cloud Infra"
-- **Colors**: Primary `#197560`, Light `#3F8F7E`, Dark `#145C4C`
+- **Colors**: Primary `#bf9667`, Light `#d7b98e`, Dark `#8f6a43`
 - **Fonts**: Linden theme defaults
 
 ### Products

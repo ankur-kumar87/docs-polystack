@@ -113,19 +113,19 @@ by a key managed by Polystack KMS.
 ### What vTPM Enables
 
 <CardGroup cols={2}>
-  <Card title="BitLocker on Windows" icon="lock" color="#197560">
+  <Card title="BitLocker on Windows" icon="lock" color="#bf9667">
     Windows 10 / 11 can use the vTPM to seal BitLocker keys, so the disk only decrypts on
     the same virtual machine.
   </Card>
-  <Card title="LUKS on Linux" icon="key" color="#197560">
+  <Card title="LUKS on Linux" icon="key" color="#bf9667">
     Linux guests can store LUKS unlock keys in the vTPM with tools like
     `clevis tpm2 bind` — no boot-time passphrase prompt.
   </Card>
-  <Card title="Measured Boot" icon="list-checks" color="#197560">
+  <Card title="Measured Boot" icon="list-checks" color="#bf9667">
     The vTPM records a cryptographic measurement of the boot chain, enabling remote
     attestation of the guest's boot integrity.
   </Card>
-  <Card title="Windows 11 Hardware Requirements" icon="monitor" color="#197560">
+  <Card title="Windows 11 Hardware Requirements" icon="monitor" color="#bf9667">
     Windows 11 installation requires TPM 2.0 — vTPM satisfies this without any physical
     hardware.
   </Card>
@@ -192,11 +192,11 @@ for Windows 11, hardened Linux workloads, and any guest that uses TPM-backed dis
 with measured boot.
 
 <CardGroup cols={2}>
-  <Card title="Windows 11 hardened VM" icon="monitor" color="#197560">
+  <Card title="Windows 11 hardened VM" icon="monitor" color="#bf9667">
     vTPM 2.0 (tpm-crb) + Secure Boot (Required). BitLocker auto-seals keys to the vTPM
     and Secure Boot blocks unsigned drivers.
   </Card>
-  <Card title="Hardened Linux VM" icon="terminal" color="#197560">
+  <Card title="Hardened Linux VM" icon="terminal" color="#bf9667">
     vTPM 2.0 (tpm-crb) + Secure Boot (Required) + LUKS with `clevis tpm2 bind`.
     Full-disk encryption unlocks automatically on the correct hypervisor only.
   </Card>
@@ -258,13 +258,13 @@ launching.
 ## Next Steps
 
 <CardGroup cols={3}>
-  <Card title="Create Instance" href="/services/compute/launch-instance" color="#197560">
+  <Card title="Create Instance" href="/services/compute/launch-instance" color="#bf9667">
     Full 4-step wizard walkthrough for launching instances
   </Card>
-  <Card title="Security Hardening" href="/services/compute/security-hardening" color="#197560">
+  <Card title="Security Hardening" href="/services/compute/security-hardening" color="#bf9667">
     Additional hypervisor-level hardening for sensitive workloads
   </Card>
-  <Card title="Key Manager" href="/services/key-manager" color="#197560">
+  <Card title="Key Manager" href="/services/key-manager" color="#bf9667">
     Polystack KMS setup and secret lifecycle
   </Card>
 </CardGroup>

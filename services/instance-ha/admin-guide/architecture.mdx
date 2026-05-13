@@ -156,11 +156,11 @@ sequenceDiagram
 To avoid a single point of failure in the recovery infrastructure:
 
 <CardGroup cols={2}>
-  <Card title="Active/Passive API" icon="server" color="#197560">
+  <Card title="Active/Passive API" icon="server" color="#bf9667">
     Deploy multiple `masakari-api` instances behind the load balancer. The API is
     stateless — all state is in the database.
   </Card>
-  <Card title="Engine Leader Election" icon="crown" color="#197560">
+  <Card title="Engine Leader Election" icon="crown" color="#bf9667">
     Run `masakari-engine` on two controller nodes. The engine uses Tooz-based
     distributed locking to elect a leader — only one engine processes notifications
     at a time.
@@ -172,16 +172,16 @@ To avoid a single point of failure in the recovery infrastructure:
 ## Next Steps
 
 <CardGroup cols={2}>
-  <Card title="Failover Segments" href="/services/instance-ha/admin-guide/failover-segments" color="#197560">
+  <Card title="Failover Segments" href="/services/instance-ha/admin-guide/failover-segments" color="#bf9667">
     Create and manage failover segments and register compute hosts.
   </Card>
-  <Card title="Host Monitors" href="/services/instance-ha/admin-guide/host-monitors" color="#197560">
+  <Card title="Host Monitors" href="/services/instance-ha/admin-guide/host-monitors" color="#bf9667">
     Configure IPMI and SSH host monitors for your compute nodes.
   </Card>
-  <Card title="Engine Configuration" href="/services/instance-ha/admin-guide/engine-config" color="#197560">
+  <Card title="Engine Configuration" href="/services/instance-ha/admin-guide/engine-config" color="#bf9667">
     Tune recovery engine timing, retry intervals, and instance failure behaviour.
   </Card>
-  <Card title="Security" href="/services/instance-ha/admin-guide/security" color="#197560">
+  <Card title="Security" href="/services/instance-ha/admin-guide/security" color="#bf9667">
     Configure RBAC policies and credential management for the Instance HA service.
   </Card>
 </CardGroup>

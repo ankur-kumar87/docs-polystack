@@ -268,19 +268,19 @@ A 3-replica policy distributes one replica per zone. A full zone failure (rack d
 ## Capacity Planning
 
 <CardGroup cols={2}>
-  <Card title="Replication Overhead" icon="layers" color="#197560">
+  <Card title="Replication Overhead" icon="layers" color="#bf9667">
     3-replica policy: usable capacity = raw capacity ÷ 3.
     For 60 TB raw storage across 10 nodes, usable capacity = 20 TB.
   </Card>
-  <Card title="EC Overhead" icon="shield" color="#197560">
+  <Card title="EC Overhead" icon="shield" color="#bf9667">
     8+4 EC policy: usable capacity = raw capacity × (8 ÷ 12) = 66.7%.
     For 60 TB raw storage, usable capacity = 40 TB — 2× more efficient than 3-replica.
   </Card>
-  <Card title="Minimum Nodes per Policy" icon="server" color="#197560">
+  <Card title="Minimum Nodes per Policy" icon="server" color="#bf9667">
     Replication (3×): minimum 3 nodes in 3 distinct zones.
     EC 8+4: minimum 12 nodes. EC 4+2: minimum 6 nodes.
   </Card>
-  <Card title="Ring Rebalancing" icon="refresh-cw" color="#197560">
+  <Card title="Ring Rebalancing" icon="refresh-cw" color="#bf9667">
     Adding nodes triggers a ring rebalance. Set `min_part_hours` (minimum 1 hour) to limit
     partition moves per cycle and prevent rebalance storms during rapid node additions.
   </Card>
@@ -291,16 +291,16 @@ A 3-replica policy distributes one replica per zone. A full zone failure (rack d
 ## Next Steps
 
 <CardGroup cols={2}>
-  <Card title="Storage Policies" href="/services/object-storage/storage-policies" color="#197560">
+  <Card title="Storage Policies" href="/services/object-storage/storage-policies" color="#bf9667">
     Configure replication, EC, and multi-tier storage policies
   </Card>
-  <Card title="Ring Management" href="/services/object-storage/ring-management" color="#197560">
+  <Card title="Ring Management" href="/services/object-storage/ring-management" color="#bf9667">
     Add drives, adjust weights, and distribute updated rings
   </Card>
-  <Card title="Replication" href="/services/object-storage/replication" color="#197560">
+  <Card title="Replication" href="/services/object-storage/replication" color="#bf9667">
     Monitor replication health and manage quarantined objects
   </Card>
-  <Card title="Monitoring" href="/services/object-storage/monitoring" color="#197560">
+  <Card title="Monitoring" href="/services/object-storage/monitoring" color="#bf9667">
     Track cluster capacity and proxy request metrics
   </Card>
 </CardGroup>

@@ -33,11 +33,11 @@ graph TD
     STORE --> RBD[Polystack Distributed Storage<br/>RBD pool]
     STORE --> SWIFT[Polystack Object Storage<br/>Swift container]
     G1 --> CACHE[Image Cache<br/>optional per-node]
-    style HAP fill:#197560,color:#fff
-    style G1 fill:#3F8F7E,color:#fff
-    style G2 fill:#3F8F7E,color:#fff
-    style REG fill:#145C4C,color:#fff
-    style STORE fill:#3F8F7E,color:#fff
+    style HAP fill:#bf9667,color:#fff
+    style G1 fill:#d7b98e,color:#fff
+    style G2 fill:#d7b98e,color:#fff
+    style REG fill:#8f6a43,color:#fff
+    style STORE fill:#d7b98e,color:#fff
 ```
 
 ---
@@ -118,16 +118,16 @@ sequenceDiagram
 ## Next Steps
 
 <CardGroup cols={2}>
-  <Card title="Storage Backends" href="/services/images/storage-backends" color="#197560">
+  <Card title="Storage Backends" href="/services/images/storage-backends" color="#bf9667">
     Configure RBD, file store, or Swift as the image storage backend.
   </Card>
-  <Card title="Image Cache" href="/services/images/image-cache" color="#197560">
+  <Card title="Image Cache" href="/services/images/image-cache" color="#bf9667">
     Enable per-node caching to accelerate instance launch times.
   </Card>
-  <Card title="Admin Troubleshooting" href="/services/images/admin-troubleshooting" color="#197560">
+  <Card title="Admin Troubleshooting" href="/services/images/admin-troubleshooting" color="#bf9667">
     Diagnose backend connectivity and API-level failures.
   </Card>
-  <Card title="Security" href="/services/images/image-security" color="#197560">
+  <Card title="Security" href="/services/images/image-security" color="#bf9667">
     Configure image signing and property protections.
   </Card>
 </CardGroup>

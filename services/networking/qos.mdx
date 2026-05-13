@@ -326,19 +326,19 @@ Confirm QoS enforcement is active after applying a policy:
 ## Best Practices
 
 <CardGroup cols={2}>
-  <Card title="Tiered Policy Names" icon="layers" color="#197560">
+  <Card title="Tiered Policy Names" icon="layers" color="#bf9667">
     Create named tiers — `bronze-10mbps`, `silver-100mbps`, `gold-1gbps` — and share them
     across projects for consistent, predictable service levels.
   </Card>
-  <Card title="Apply at Network Level" icon="network" color="#197560">
+  <Card title="Apply at Network Level" icon="network" color="#bf9667">
     Apply QoS to networks for automatic inheritance. Override at the port level only
     for exceptions that need different treatment from the network default.
   </Card>
-  <Card title="Burst Sizing" icon="gauge" color="#197560">
+  <Card title="Burst Sizing" icon="gauge" color="#bf9667">
     Set burst to 2× the sustained limit. Short traffic spikes are absorbed by the burst
     allowance without impacting the sustained throughput commitment.
   </Card>
-  <Card title="Monitor with Monitoring" icon="activity" color="#197560">
+  <Card title="Monitor with Monitoring" icon="activity" color="#bf9667">
     Use Polystack Monitoring to track port-level throughput in real time and confirm QoS policies
     are enforcing expected limits under production load.
   </Card>
@@ -388,16 +388,16 @@ Confirm QoS enforcement is active after applying a policy:
 ## Next Steps
 
 <CardGroup cols={2}>
-  <Card title="Network Quotas" href="/services/networking/quotas" color="#197560">
+  <Card title="Network Quotas" href="/services/networking/quotas" color="#bf9667">
     Limit the number of networking resources per project alongside QoS controls
   </Card>
-  <Card title="Provider Networks" href="/services/networking/provider-networks" color="#197560">
+  <Card title="Provider Networks" href="/services/networking/provider-networks" color="#bf9667">
     Configure the physical network that QoS policies apply to at the hypervisor level
   </Card>
-  <Card title="Service Architecture" href="/services/networking/architecture" color="#197560">
+  <Card title="Service Architecture" href="/services/networking/architecture" color="#bf9667">
     Understand how L2 agents enforce QoS rules at the virtual switch level
   </Card>
-  <Card title="Admin Troubleshooting" href="/services/networking/admin-troubleshooting" color="#197560">
+  <Card title="Admin Troubleshooting" href="/services/networking/admin-troubleshooting" color="#bf9667">
     Diagnose QoS enforcement issues and L2 agent configuration problems
   </Card>
 </CardGroup>

@@ -38,8 +38,8 @@ graph LR
     HA_R -.->|Standby| L3_2[L3 Agent<br/>Network Node 2]
     L3_1 --> EXT([External Network])
     L3_2 -.->|Failover path| EXT
-    style HA_R fill:#197560,color:#fff
-    style L3_1 fill:#3F8F7E,color:#fff
+    style HA_R fill:#bf9667,color:#fff
+    style L3_1 fill:#d7b98e,color:#fff
 ```
 
 ### Create an HA Router
@@ -152,16 +152,16 @@ network node as a bottleneck for east-west and north-south traffic.
 ## Next Steps
 
 <CardGroup cols={2}>
-  <Card title="Network Agent Management" href="/services/networking/network-agents" color="#197560">
+  <Card title="Network Agent Management" href="/services/networking/network-agents" color="#bf9667">
     Verify L3 agents are healthy across all network nodes
   </Card>
-  <Card title="Provider Networks" href="/services/networking/provider-networks" color="#197560">
+  <Card title="Provider Networks" href="/services/networking/provider-networks" color="#bf9667">
     Configure external networks that routers use as gateways
   </Card>
-  <Card title="Routers and Gateways" href="/services/networking/routers" color="#197560">
+  <Card title="Routers and Gateways" href="/services/networking/routers" color="#bf9667">
     User guide for creating and managing routers
   </Card>
-  <Card title="Admin Troubleshooting" href="/services/networking/admin-troubleshooting" color="#197560">
+  <Card title="Admin Troubleshooting" href="/services/networking/admin-troubleshooting" color="#bf9667">
     Diagnose HA router failover and DVR issues
   </Card>
 </CardGroup>

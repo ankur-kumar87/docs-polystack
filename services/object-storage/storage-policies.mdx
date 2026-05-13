@@ -360,20 +360,20 @@ Mark a policy as deprecated to prevent new containers from using it while mainta
 ## Best Practices
 
 <CardGroup cols={2}>
-  <Card title="Plan Policies Before Deployment" icon="map" color="#197560">
+  <Card title="Plan Policies Before Deployment" icon="map" color="#bf9667">
     Policy indexes and names are permanent once containers are created. Design your tier
     structure (standard, gold, archive) before the first container is provisioned.
   </Card>
-  <Card title="Use EC for Archival Data" icon="shield" color="#197560">
+  <Card title="Use EC for Archival Data" icon="shield" color="#bf9667">
     Erasure coding at 8+4 reduces storage overhead from 3× to 1.5× with equivalent
     or better durability. Apply EC to infrequently accessed data that tolerates
     higher read latency.
   </Card>
-  <Card title="Tag Rings by Device Class" icon="tag" color="#197560">
+  <Card title="Tag Rings by Device Class" icon="tag" color="#bf9667">
     Use ring builder device class labels (SSD, HDD) to enforce hardware affinity.
     Never mix device classes in a single ring — it defeats the purpose of tiering.
   </Card>
-  <Card title="Set Sensible Defaults" icon="settings" color="#197560">
+  <Card title="Set Sensible Defaults" icon="settings" color="#bf9667">
     Configure the most common data tier as the default policy. Operators who need
     high-performance or archival storage explicitly specify the policy at container
     creation time.
@@ -385,16 +385,16 @@ Mark a policy as deprecated to prevent new containers from using it while mainta
 ## Next Steps
 
 <CardGroup cols={2}>
-  <Card title="Ring Management" href="/services/object-storage/ring-management" color="#197560">
+  <Card title="Ring Management" href="/services/object-storage/ring-management" color="#bf9667">
     Build and distribute ring files for each storage policy
   </Card>
-  <Card title="Architecture" href="/services/object-storage/architecture" color="#197560">
+  <Card title="Architecture" href="/services/object-storage/architecture" color="#bf9667">
     Understand how rings, proxy servers, and storage nodes interact
   </Card>
-  <Card title="Replication" href="/services/object-storage/replication" color="#197560">
+  <Card title="Replication" href="/services/object-storage/replication" color="#bf9667">
     Monitor replication health and manage quarantined objects
   </Card>
-  <Card title="Quotas" href="/services/object-storage/quotas" color="#197560">
+  <Card title="Quotas" href="/services/object-storage/quotas" color="#bf9667">
     Set per-account and per-container storage limits
   </Card>
 </CardGroup>

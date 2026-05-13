@@ -49,12 +49,12 @@ requirements that need a dedicated backup product.
 Third-party backup tools integrate with Polystack in one of two architectural patterns.
 
 <CardGroup cols={2}>
-  <Card title="Agentless" icon="server" color="#197560">
+  <Card title="Agentless" icon="server" color="#bf9667">
     The backup tool talks to Polystack APIs (Block Storage, Image, Compute) and reads VM
     disks via snapshots. **No software is installed inside the guest.** Best for
     standardized fleets and snapshot-consistent backups.
   </Card>
-  <Card title="With Agent" icon="cpu" color="#197560">
+  <Card title="With Agent" icon="cpu" color="#bf9667">
     A small agent runs inside each guest VM. The backup tool coordinates with the agent
     to quiesce applications, capture file-level metadata, and stream changed data.
     Best for application-aware and granular file-level recovery.
@@ -93,19 +93,19 @@ and stores it in its own catalog.
 ### Strengths of agentless
 
 <CardGroup cols={2}>
-  <Card title="No guest footprint" icon="check" color="#197560">
+  <Card title="No guest footprint" icon="check" color="#bf9667">
     Nothing runs inside the VM — no extra package to install, patch, or troubleshoot.
     Works for any guest OS, including hardened or appliance images.
   </Card>
-  <Card title="Fleet-wide auto-discovery" icon="layers" color="#197560">
+  <Card title="Fleet-wide auto-discovery" icon="layers" color="#bf9667">
     The backup tool sees every VM through the Polystack API. New VMs are picked up
     automatically by tag-based or project-based policies.
   </Card>
-  <Card title="Lower operational overhead" icon="users" color="#197560">
+  <Card title="Lower operational overhead" icon="users" color="#bf9667">
     No agent rollouts, no agent-version drift across the fleet. Upgrades happen on
     the backup-tool side only.
   </Card>
-  <Card title="Snapshot-fast" icon="zap" color="#197560">
+  <Card title="Snapshot-fast" icon="zap" color="#bf9667">
     Backup windows are short — the snapshot takes seconds, and reading happens
     asynchronously without locking the running VM.
   </Card>
@@ -272,19 +272,19 @@ application-aware consistency and full file-level granularity.
 ### Strengths of with-agent
 
 <CardGroup cols={2}>
-  <Card title="Application-consistent backup" icon="database" color="#197560">
+  <Card title="Application-consistent backup" icon="database" color="#bf9667">
     Microsoft SQL, Oracle, MySQL, PostgreSQL, Exchange, Active Directory, SAP, and
     other transactional apps are backed up cleanly with no replay needed at restore.
   </Card>
-  <Card title="Granular file-level restore" icon="file" color="#197560">
+  <Card title="Granular file-level restore" icon="file" color="#bf9667">
     Recover a single email, table row, registry key, or document from a backup —
     without restoring the whole volume.
   </Card>
-  <Card title="Cross-platform consistency" icon="globe" color="#197560">
+  <Card title="Cross-platform consistency" icon="globe" color="#bf9667">
     The same backup tool protects VMs on Polystack, on-prem hypervisors, public clouds,
     and physical machines — one console, one policy framework.
   </Card>
-  <Card title="In-guest encryption + dedup" icon="shield" color="#197560">
+  <Card title="In-guest encryption + dedup" icon="shield" color="#bf9667">
     Source-side deduplication and encryption reduce network traffic and protect
     backup data in transit and at rest.
   </Card>
@@ -475,13 +475,13 @@ For low-level integration, Polystack also exposes:
 ## Related Topics
 
 <CardGroup cols={3}>
-  <Card title="Polystack Native Backup" href="/services/storage/backups" color="#197560">
+  <Card title="Polystack Native Backup" href="/services/storage/backups" color="#bf9667">
     Volume backup with full + incremental modes — the built-in option
   </Card>
-  <Card title="File-Level Restore" href="/services/storage/file-level-restore" color="#197560">
+  <Card title="File-Level Restore" href="/services/storage/file-level-restore" color="#bf9667">
     Recover individual files from a snapshot without a full restore
   </Card>
-  <Card title="Disaster Recovery" href="/services/disaster-recovery" color="#197560">
+  <Card title="Disaster Recovery" href="/services/disaster-recovery" color="#bf9667">
     Replication, failover, and continuous protection beyond backup
   </Card>
 </CardGroup>

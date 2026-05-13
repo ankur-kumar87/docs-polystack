@@ -39,8 +39,8 @@ graph TD
     DB --> D2[DB Instance 2]
     W1 -.->|Floating IP| EXT
     W2 -.->|Floating IP| EXT
-    style R fill:#197560,color:#fff
-    style EXT fill:#3F8F7E,color:#fff
+    style R fill:#bf9667,color:#fff
+    style EXT fill:#d7b98e,color:#fff
 ```
 
 ### Component Checklist
@@ -76,8 +76,8 @@ graph LR
     DEV --> I2[Instance 2]
     DEV --> I3[Instance 3]
     I1 -.->|Floating IP| EXT
-    style R fill:#197560,color:#fff
-    style EXT fill:#3F8F7E,color:#fff
+    style R fill:#bf9667,color:#fff
+    style EXT fill:#d7b98e,color:#fff
 ```
 
 This topology is appropriate for individual developer sandboxes, CI/CD test environments,
@@ -102,8 +102,8 @@ graph TD
     SHARED --> VAULT[Key Management]
     APP1 --> A1[App A Instances]
     APP2 --> A2[App B Instances]
-    style CORE_R fill:#197560,color:#fff
-    style EXT fill:#3F8F7E,color:#fff
+    style CORE_R fill:#bf9667,color:#fff
+    style EXT fill:#d7b98e,color:#fff
 ```
 
 ---
@@ -125,9 +125,9 @@ graph TD
     W2 --> APP_SUBNET
     APP_SUBNET --> A1[App Instance AZ-1]
     APP_SUBNET --> A2[App Instance AZ-2]
-    style HA_R fill:#197560,color:#fff
-    style EXT fill:#3F8F7E,color:#fff
-    style LB fill:#3F8F7E,color:#fff
+    style HA_R fill:#bf9667,color:#fff
+    style EXT fill:#d7b98e,color:#fff
+    style LB fill:#d7b98e,color:#fff
 ```
 
 <Tip>
@@ -157,16 +157,16 @@ openstack network set app-network --mtu 1450
 ## Next Steps
 
 <CardGroup cols={2}>
-  <Card title="Create a Network" href="/services/networking/create-network" color="#197560">
+  <Card title="Create a Network" href="/services/networking/create-network" color="#bf9667">
     Provision the networks required for your chosen topology
   </Card>
-  <Card title="Routers and Gateways" href="/services/networking/routers" color="#197560">
+  <Card title="Routers and Gateways" href="/services/networking/routers" color="#bf9667">
     Connect your subnets and configure the external gateway
   </Card>
-  <Card title="Network Security Groups" href="/services/networking/security-groups" color="#197560">
+  <Card title="Network Security Groups" href="/services/networking/security-groups" color="#bf9667">
     Define trust boundaries between tiers with stateful firewall rules
   </Card>
-  <Card title="L3 Router Configuration" href="/services/networking/l3-routing" color="#197560">
+  <Card title="L3 Router Configuration" href="/services/networking/l3-routing" color="#bf9667">
     Enable HA routers and distributed virtual routing for production deployments
   </Card>
 </CardGroup>

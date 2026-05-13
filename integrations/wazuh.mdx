@@ -33,8 +33,8 @@ graph TD
     MGR -->|index events| IDX[Wazuh Indexer<br/>OpenSearch]
     IDX -->|query| DASH[Wazuh Dashboard]
     MGR -->|alerts| EMAIL[Email / Slack]
-    style MGR fill:#197560,color:#fff
-    style DASH fill:#145C4C,color:#fff
+    style MGR fill:#bf9667,color:#fff
+    style DASH fill:#8f6a43,color:#fff
 ```
 
 ### Components
@@ -351,16 +351,16 @@ View compliance dashboards in the Wazuh Dashboard under **Security → Regulator
 ## Next Steps
 
 <CardGroup cols={2}>
-  <Card title="Ansible Integration" href="/integrations/ansible" color="#197560">
+  <Card title="Ansible Integration" href="/integrations/ansible" color="#bf9667">
     Automate Wazuh agent deployment and configuration updates using Ansible playbooks
   </Card>
-  <Card title="Prometheus Integration" href="/integrations/prometheus" color="#197560">
+  <Card title="Prometheus Integration" href="/integrations/prometheus" color="#bf9667">
     Complement Wazuh security events with infrastructure metrics from Prometheus
   </Card>
-  <Card title="Grafana Dashboards" href="/integrations/grafana" color="#197560">
+  <Card title="Grafana Dashboards" href="/integrations/grafana" color="#bf9667">
     Build unified security and operations dashboards combining Wazuh and Prometheus data
   </Card>
-  <Card title="Key Manager" href="/services/key-manager/store-secrets" color="#197560">
+  <Card title="Key Manager" href="/services/key-manager/store-secrets" color="#bf9667">
     Store Wazuh registration keys securely in Polystack Key Manager
   </Card>
 </CardGroup>

@@ -327,19 +327,19 @@ openstack volume qos delete bronze-1000iops
 ## Best Practices
 
 <CardGroup cols={2}>
-  <Card title="Align with Volume Types" icon="layers" color="#197560">
+  <Card title="Align with Volume Types" icon="layers" color="#bf9667">
     Define one QoS spec per volume tier (bronze, silver, gold). Attach specs to volume
     types so QoS is automatically applied without per-volume manual steps.
   </Card>
-  <Card title="Set Burst at 2x Sustained" icon="gauge" color="#197560">
+  <Card title="Set Burst at 2x Sustained" icon="gauge" color="#bf9667">
     Configure burst limits at 2× the sustained limit to absorb application startup
     and checkpoint IO spikes without permanently raising the sustained cap.
   </Card>
-  <Card title="Use Size-Scaled for Databases" icon="database" color="#197560">
+  <Card title="Use Size-Scaled for Databases" icon="database" color="#bf9667">
     Apply `size_iops_sec` to database volume types. Larger database volumes
     automatically receive proportionally more IOPS without manual reconfiguration.
   </Card>
-  <Card title="Monitor Before Limiting" icon="activity" color="#197560">
+  <Card title="Monitor Before Limiting" icon="activity" color="#bf9667">
     Baseline actual workload IOPS using Monitoring before applying QoS limits. Setting limits
     below actual peak workload demand causes application performance degradation.
   </Card>
@@ -376,16 +376,16 @@ Key capabilities of tiered QoS profiles:
 ## Next Steps
 
 <CardGroup cols={2}>
-  <Card title="Volume Types Admin" href="/services/storage/volume-types-admin" color="#197560">
+  <Card title="Volume Types Admin" href="/services/storage/volume-types-admin" color="#bf9667">
     Create and manage volume types to associate with QoS specs
   </Card>
-  <Card title="Storage Tiers" href="/services/storage/storage-tiers" color="#197560">
+  <Card title="Storage Tiers" href="/services/storage/storage-tiers" color="#bf9667">
     Configure tiered storage pools aligned with QoS tiers
   </Card>
-  <Card title="Storage Backends" href="/services/storage/storage-backends" color="#197560">
+  <Card title="Storage Backends" href="/services/storage/storage-backends" color="#bf9667">
     Review backend-specific capabilities and QoS driver support
   </Card>
-  <Card title="Block Storage Architecture" href="/services/storage/architecture" color="#197560">
+  <Card title="Block Storage Architecture" href="/services/storage/architecture" color="#bf9667">
     Understand how QoS is enforced across the storage service stack
   </Card>
 </CardGroup>

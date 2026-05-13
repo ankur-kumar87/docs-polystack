@@ -16,7 +16,7 @@
 
 ## Branding
 - **Company**: Polystack Technologies
-- **Colors**: Primary `#197560`, Light `#3F8F7E`, Dark `#145C4C`
+- **Colors**: Primary `#bf9667`, Light `#d7b98e`, Dark `#8f6a43`
 - **Fonts**: Linden theme defaults
 - **Products**: Ironcore, Monitoring, XHCI, Disaster Recovery, Software-Defined-Storage, XNAS, XNexus, XOS
 - **Support**: support@polystack.tech

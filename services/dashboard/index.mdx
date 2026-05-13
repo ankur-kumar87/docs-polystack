@@ -21,10 +21,10 @@ access control, and real-time resource management.
 <p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Guides</p>
 
 <CardGroup cols={2}>
-  <Card title="User Guide" icon="book-open" href="/services/dashboard/user-guide" color="#197560">
+  <Card title="User Guide" icon="book-open" href="/services/dashboard/user-guide" color="#bf9667">
     Navigate the Dashboard, manage resources, and understand the console and admin views.
   </Card>
-  <Card title="Admin Guide" icon="shield" href="/services/dashboard/admin-guide" color="#197560">
+  <Card title="Admin Guide" icon="shield" href="/services/dashboard/admin-guide" color="#bf9667">
     Configure the Dashboard, manage projects and users, and administer platform resources.
   </Card>
 </CardGroup>
@@ -71,22 +71,22 @@ The Dashboard is organized into two views — **Console** (project-scoped) and *
 <p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Key Capabilities</p>
 
 <CardGroup cols={3}>
-  <Card title="Instance Management" icon="server" href="/services/compute/launch-instance" color="#197560">
+  <Card title="Instance Management" icon="server" href="/services/compute/launch-instance" color="#bf9667">
     4-step creation wizard with real-time quota tracking
   </Card>
-  <Card title="Storage Control" icon="hard-drive" href="/services/storage/create-volume" color="#197560">
+  <Card title="Storage Control" icon="hard-drive" href="/services/storage/create-volume" color="#bf9667">
     Volume creation with storage tier selection
   </Card>
-  <Card title="Network Topology" icon="network" href="/services/networking/create-network" color="#197560">
+  <Card title="Network Topology" icon="network" href="/services/networking/create-network" color="#bf9667">
     Visual topology map and full SDN configuration
   </Card>
-  <Card title="Image Library" icon="disc" href="/services/images/upload-image" color="#197560">
+  <Card title="Image Library" icon="disc" href="/services/images/upload-image" color="#bf9667">
     Upload images with OS metadata and format support
   </Card>
-  <Card title="Identity & Access" icon="fingerprint" href="/services/identity/user-guide" color="#197560">
+  <Card title="Identity & Access" icon="fingerprint" href="/services/identity/user-guide" color="#bf9667">
     Project and user management with RBAC
   </Card>
-  <Card title="Monitoring" icon="activity" href="/services/monitoring/user-guide" color="#197560">
+  <Card title="Monitoring" icon="activity" href="/services/monitoring/user-guide" color="#bf9667">
     Integrated monitoring, logging, and health dashboards
   </Card>
 </CardGroup>
@@ -100,16 +100,16 @@ The Dashboard is organized into two views — **Console** (project-scoped) and *
 </Info>
 
 <CardGroup cols={2}>
-  <Card title="Live vCPU/RAM Scaling" icon="sliders" href="/services/compute/live-resize" color="#197560">
+  <Card title="Live vCPU/RAM Scaling" icon="sliders" href="/services/compute/live-resize" color="#bf9667">
     Adjust instance CPU and memory via slider controls — no reboot required
   </Card>
-  <Card title="Instance HA" icon="heart-pulse" href="/services/instance-ha/user-guide/how-it-works" color="#197560">
+  <Card title="Instance HA" icon="heart-pulse" href="/services/instance-ha/user-guide/how-it-works" color="#bf9667">
     Failover segments, host monitoring, real-time VM evacuation tracking
   </Card>
-  <Card title="Resource Optimizer" icon="chart-bar" href="/services/optimization/user-guide" color="#197560">
+  <Card title="Resource Optimizer" icon="chart-bar" href="/services/optimization/user-guide" color="#bf9667">
     Automated workload placement and resource consolidation
   </Card>
-  <Card title="Cluster Health" icon="activity" color="#197560">
+  <Card title="Cluster Health" icon="activity" color="#bf9667">
     Service health with RabbitMQ, MariaDB/Galera, and service monitoring
   </Card>
 </CardGroup>
@@ -129,8 +129,8 @@ graph LR
     SkyAPI --> Glance["Image Service"]
     SkyAPI --> Swift["Object Storage"]
     SkyAPI --> Heat["Orchestration"]
-    style Skyline fill:#197560,color:#fff
-    style SkyAPI fill:#3F8F7E,color:#fff
+    style Skyline fill:#bf9667,color:#fff
+    style SkyAPI fill:#d7b98e,color:#fff
 ```
 
 The Dashboard communicates through the Skyline API server, which proxies requests to
@@ -148,13 +148,13 @@ service APIs. All actions enforce the same RBAC rules as CLI and direct API call
 <p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Related Services</p>
 
 <CardGroup cols={3}>
-  <Card title="Identity & Access" icon="fingerprint" href="/services/identity/index" color="#197560">
+  <Card title="Identity & Access" icon="fingerprint" href="/services/identity/index" color="#bf9667">
     Authentication and RBAC for Dashboard login
   </Card>
-  <Card title="Compute" icon="server" href="/services/compute" color="#197560">
+  <Card title="Compute" icon="server" href="/services/compute" color="#bf9667">
     Instance lifecycle management
   </Card>
-  <Card title="Deployment" icon="play" href="/deployment/index" color="#197560">
+  <Card title="Deployment" icon="play" href="/deployment/index" color="#bf9667">
     Deploy and configure the Dashboard via XDeploy
   </Card>
 </CardGroup>

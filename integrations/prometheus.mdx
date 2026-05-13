@@ -35,8 +35,8 @@ graph TD
     AM -->|webhook POST| SCALE[Orchestration<br/>Signal URL]
     AM -->|email / Slack| OPS[Operations Team]
     PROM -->|query| GF[Grafana]
-    style PROM fill:#197560,color:#fff
-    style AM fill:#145C4C,color:#fff
+    style PROM fill:#bf9667,color:#fff
+    style AM fill:#8f6a43,color:#fff
 ```
 
 ---
@@ -326,16 +326,16 @@ inhibit_rules:
 ## Next Steps
 
 <CardGroup cols={2}>
-  <Card title="Grafana Dashboards" href="/integrations/grafana" color="#197560">
+  <Card title="Grafana Dashboards" href="/integrations/grafana" color="#bf9667">
     Build operational dashboards using Prometheus as a data source
   </Card>
-  <Card title="Auto-Scaling" href="/services/orchestration/autoscaling" color="#197560">
+  <Card title="Auto-Scaling" href="/services/orchestration/autoscaling" color="#bf9667">
     Wire Alertmanager webhooks into Orchestration scaling policy signal URLs
   </Card>
-  <Card title="Wazuh SIEM" href="/integrations/wazuh" color="#197560">
+  <Card title="Wazuh SIEM" href="/integrations/wazuh" color="#bf9667">
     Complement Prometheus metrics with Wazuh security event monitoring
   </Card>
-  <Card title="Monitoring Monitoring" href="/services/monitoring/user-guide/dashboards" color="#197560">
+  <Card title="Monitoring Monitoring" href="/services/monitoring/user-guide/dashboards" color="#bf9667">
     Explore the built-in Monitoring monitoring stack that includes Prometheus
   </Card>
 </CardGroup>

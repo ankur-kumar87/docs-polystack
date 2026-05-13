@@ -20,21 +20,21 @@ complete security hardening checklist for production Identity deployments.
 ## Security Hardening Checklist
 
 <CardGroup cols={2}>
-  <Card title="Enforce MFA for Admins" icon="shield" color="#197560">
+  <Card title="Enforce MFA for Admins" icon="shield" color="#bf9667">
     Require multi-factor authentication for all accounts with the `admin` role. Configure
     an MFA enforcement rule via the Identity service policy to block admin token issuance
     without a valid TOTP factor.
   </Card>
-  <Card title="Rotate Fernet Keys" icon="rotate-cw" color="#197560">
+  <Card title="Rotate Fernet Keys" icon="rotate-cw" color="#bf9667">
     Schedule automated key rotation every 24 hours. XDeploy includes a cron-based rotation
     playbook that synchronizes keys across all Identity API nodes simultaneously.
   </Card>
-  <Card title="Minimize Token Lifetime" icon="clock" color="#197560">
+  <Card title="Minimize Token Lifetime" icon="clock" color="#bf9667">
     Set `keystone_token_expiration` to 3600 seconds (1 hour) or less. Use application
     credentials with explicit expiry dates for automation pipelines instead of long-lived
     user tokens.
   </Card>
-  <Card title="Audit Role Assignments" icon="search" color="#197560">
+  <Card title="Audit Role Assignments" icon="search" color="#bf9667">
     Review role assignments quarterly. Remove the `admin` role from any account that no
     longer requires elevated access. Export full audit reports regularly.
   </Card>
@@ -147,16 +147,16 @@ openstack role assignment list \
 ## Next Steps
 
 <CardGroup cols={2}>
-  <Card title="Token Configuration" href="/services/identity/token-config" color="#197560">
+  <Card title="Token Configuration" href="/services/identity/token-config" color="#bf9667">
     Configure Fernet key rotation schedules and token lifetime policies.
   </Card>
-  <Card title="Policy Management" href="/services/identity/policy-management" color="#197560">
+  <Card title="Policy Management" href="/services/identity/policy-management" color="#bf9667">
     Customize RBAC policies and implement least-privilege access controls.
   </Card>
-  <Card title="Multi-Factor Authentication" href="/services/identity/multi-factor-auth" color="#197560">
+  <Card title="Multi-Factor Authentication" href="/services/identity/multi-factor-auth" color="#bf9667">
     Enable TOTP enrollment for user accounts.
   </Card>
-  <Card title="Admin Troubleshooting" href="/services/identity/admin-troubleshooting" color="#197560">
+  <Card title="Admin Troubleshooting" href="/services/identity/admin-troubleshooting" color="#bf9667">
     Diagnose security-related authentication and authorization failures.
   </Card>
 </CardGroup>

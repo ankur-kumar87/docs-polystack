@@ -153,11 +153,11 @@ column. These credentials grant physical access to compute hardware.
 ## Network Access Controls
 
 <CardGroup cols={2}>
-  <Card title="IPMI Network Isolation" icon="network" color="#197560">
+  <Card title="IPMI Network Isolation" icon="network" color="#bf9667">
     Place IPMI management interfaces on a dedicated management VLAN. Only the Instance
     HA controller should have network access to IPMI interfaces (UDP port 623).
   </Card>
-  <Card title="API Endpoint Protection" icon="shield-check" color="#197560">
+  <Card title="API Endpoint Protection" icon="shield-check" color="#bf9667">
     The Instance HA API (port 15868) should only be accessible from trusted management
     networks. Do not expose it to project tenant networks.
   </Card>
@@ -183,16 +183,16 @@ openstack notification list --limit 100 -f json
 ## Next Steps
 
 <CardGroup cols={2}>
-  <Card title="Engine Configuration" href="/services/instance-ha/admin-guide/engine-config" color="#197560">
+  <Card title="Engine Configuration" href="/services/instance-ha/admin-guide/engine-config" color="#bf9667">
     Tune recovery parameters including debug logging settings.
   </Card>
-  <Card title="Troubleshooting" href="/services/instance-ha/admin-guide/troubleshooting" color="#197560">
+  <Card title="Troubleshooting" href="/services/instance-ha/admin-guide/troubleshooting" color="#bf9667">
     Diagnose authentication failures and policy enforcement issues.
   </Card>
-  <Card title="Architecture" href="/services/instance-ha/admin-guide/architecture" color="#197560">
+  <Card title="Architecture" href="/services/instance-ha/admin-guide/architecture" color="#bf9667">
     Review the full Instance HA deployment topology and trust boundaries.
   </Card>
-  <Card title="Notification Drivers" href="/services/instance-ha/admin-guide/notification-drivers" color="#197560">
+  <Card title="Notification Drivers" href="/services/instance-ha/admin-guide/notification-drivers" color="#bf9667">
     Secure the webhook notification endpoint with appropriate authentication.
   </Card>
 </CardGroup>

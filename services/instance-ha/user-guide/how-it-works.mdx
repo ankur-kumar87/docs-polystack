@@ -23,19 +23,19 @@ manual intervention. This page explains the end-to-end detection and recovery fl
 ## Core Components
 
 <CardGroup cols={2}>
-  <Card title="Host Monitor" color="#197560">
+  <Card title="Host Monitor" color="#bf9667">
     Continuously polls compute hosts using IPMI out-of-band management or SSH.
     Declares a host unreachable when it fails to respond within the configured timeout.
   </Card>
-  <Card title="Notification Engine" color="#197560">
+  <Card title="Notification Engine" color="#bf9667">
     Receives fault signals from monitors, deduplicates events, and routes them to
     the Recovery Engine as structured notifications.
   </Card>
-  <Card title="Recovery Engine" color="#197560">
+  <Card title="Recovery Engine" color="#bf9667">
     The decision-making core. Identifies protected instances on the failed host and
     determines the evacuation target based on the segment's recovery method.
   </Card>
-  <Card title="Compute API" color="#197560">
+  <Card title="Compute API" color="#bf9667">
     Executes the evacuation. Instances are restarted on the selected healthy host
     using the same image, volume, and network configuration.
   </Card>
@@ -185,16 +185,16 @@ The Polystack Dashboard provides dedicated pages for monitoring Instance HA:
 ## Next Steps
 
 <CardGroup cols={2}>
-  <Card title="Protection Segments" href="/services/instance-ha/user-guide/protection-segments" color="#197560">
+  <Card title="Protection Segments" href="/services/instance-ha/user-guide/protection-segments" color="#bf9667">
     Create segments, add hosts, and configure recovery methods
   </Card>
-  <Card title="Recovery Workflows" href="/services/instance-ha/user-guide/recovery-workflows" color="#197560">
+  <Card title="Recovery Workflows" href="/services/instance-ha/user-guide/recovery-workflows" color="#bf9667">
     Understand recovery methods and how the engine selects evacuation targets
   </Card>
-  <Card title="Monitoring Status" href="/services/instance-ha/user-guide/monitoring-status" color="#197560">
+  <Card title="Monitoring Status" href="/services/instance-ha/user-guide/monitoring-status" color="#bf9667">
     Track active and historical recovery events in the Dashboard
   </Card>
-  <Card title="Instance HA Overview" href="/services/instance-ha/index" color="#197560">
+  <Card title="Instance HA Overview" href="/services/instance-ha/index" color="#bf9667">
     Return to the Instance HA service overview page
   </Card>
 </CardGroup>

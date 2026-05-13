@@ -29,19 +29,19 @@ automatic recovery.
 ## Segment Design Principles
 
 <CardGroup cols={2}>
-  <Card title="Match Physical Topology" icon="network" color="#197560">
+  <Card title="Match Physical Topology" icon="network" color="#bf9667">
     Group hosts that share a failure domain — the same power circuit, network switch,
     or rack. Hosts in the same fault domain should not be in the same segment.
   </Card>
-  <Card title="Reserve Enough Headroom" icon="gauge" color="#197560">
+  <Card title="Reserve Enough Headroom" icon="gauge" color="#bf9667">
     For `auto` recovery, maintain 20–30% unused capacity across all hosts in the segment.
     For `reserved_host`, the reserved node must absorb all instances from the largest host.
   </Card>
-  <Card title="Separate Critical Workloads" icon="shield-check" color="#197560">
+  <Card title="Separate Critical Workloads" icon="shield-check" color="#bf9667">
     Place SLA-critical instances in segments with `reserved_host` recovery. Use `auto`
     segments for standard workloads where recovery capacity is shared.
   </Card>
-  <Card title="Single-Segment Host Membership" icon="server" color="#197560">
+  <Card title="Single-Segment Host Membership" icon="server" color="#bf9667">
     A compute host can belong to only one segment. Plan segment boundaries before
     registering hosts to avoid re-registration overhead.
   </Card>
@@ -256,16 +256,16 @@ automatic recovery.
 ## Next Steps
 
 <CardGroup cols={2}>
-  <Card title="Host Monitors" href="/services/instance-ha/admin-guide/host-monitors" color="#197560">
+  <Card title="Host Monitors" href="/services/instance-ha/admin-guide/host-monitors" color="#bf9667">
     Configure IPMI and SSH monitors for hosts registered in your segments.
   </Card>
-  <Card title="Recovery Methods" href="/services/instance-ha/admin-guide/recovery-methods" color="#197560">
+  <Card title="Recovery Methods" href="/services/instance-ha/admin-guide/recovery-methods" color="#bf9667">
     Deep-dive into recovery method selection and reserved host configuration.
   </Card>
-  <Card title="Engine Configuration" href="/services/instance-ha/admin-guide/engine-config" color="#197560">
+  <Card title="Engine Configuration" href="/services/instance-ha/admin-guide/engine-config" color="#bf9667">
     Tune detection timeouts, retry intervals, and engine behaviour.
   </Card>
-  <Card title="Architecture" href="/services/instance-ha/admin-guide/architecture" color="#197560">
+  <Card title="Architecture" href="/services/instance-ha/admin-guide/architecture" color="#bf9667">
     Review the full Instance HA component architecture and deployment topology.
   </Card>
 </CardGroup>

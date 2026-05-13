@@ -33,8 +33,8 @@ graph LR
     W -->|TCP 1514| M[Wazuh Manager]
     M -->|Index| E[OpenSearch / Wazuh Dashboard]
     M -->|Alerts| AL[Alertmanager / SIEM]
-    style M fill:#197560,color:#fff
-    style W fill:#145C4C,color:#fff
+    style M fill:#bf9667,color:#fff
+    style W fill:#8f6a43,color:#fff
 ```
 
 | Component | Role |
@@ -49,16 +49,16 @@ graph LR
 ## Capabilities
 
 <CardGroup cols={2}>
-  <Card title="File Integrity Monitoring" icon="file-scan" color="#197560">
+  <Card title="File Integrity Monitoring" icon="file-scan" color="#bf9667">
     Track every create, modify, and delete on monitored paths. Alert on unauthorized changes to `/etc/passwd`, SSH keys, cron files, and application configs.
   </Card>
-  <Card title="Intrusion Detection" icon="shield-alert" color="#197560">
+  <Card title="Intrusion Detection" icon="shield-alert" color="#bf9667">
     Real-time log analysis against MITRE ATT&CK-mapped rules. Detects brute-force attempts, privilege escalation, rootkits, and lateral movement.
   </Card>
-  <Card title="Vulnerability Assessment" icon="bug" color="#197560">
+  <Card title="Vulnerability Assessment" icon="bug" color="#bf9667">
     Continuous scan of installed packages against CVE databases. Reports vulnerable packages per host with severity scores and remediation guidance.
   </Card>
-  <Card title="Compliance Auditing" icon="clipboard-list" color="#197560">
+  <Card title="Compliance Auditing" icon="clipboard-list" color="#bf9667">
     Built-in checks for PCI-DSS, HIPAA, NIST 800-53, CIS benchmarks, and GDPR. Generates per-host compliance reports with pass/fail details.
   </Card>
 </CardGroup>
@@ -238,16 +238,16 @@ Forward Wazuh alerts to external systems:
 ## Next Steps
 
 <CardGroup cols={2}>
-  <Card title="Polystack SIEM Overview" href="/security/polystack-siem" color="#197560">
+  <Card title="Polystack SIEM Overview" href="/security/polystack-siem" color="#bf9667">
     Back to the unified Polystack SIEM hub — Security Posture and Alerts dashboards
   </Card>
-  <Card title="Lynis Security Auditing" href="/security/lynis" color="#197560">
+  <Card title="Lynis Security Auditing" href="/security/lynis" color="#bf9667">
     Run automated OS security audits and generate hardening recommendations
   </Card>
-  <Card title="OpenSCAP Compliance Scanning" href="/security/openscap" color="#197560">
+  <Card title="OpenSCAP Compliance Scanning" href="/security/openscap" color="#bf9667">
     Scan instances against CIS, STIG, and PCI-DSS profiles using SCAP content
   </Card>
-  <Card title="Compliance and Auditing" href="/security/compliance" color="#197560">
+  <Card title="Compliance and Auditing" href="/security/compliance" color="#bf9667">
     Understand audit logging and compliance frameworks supported by Polystack
   </Card>
 </CardGroup>

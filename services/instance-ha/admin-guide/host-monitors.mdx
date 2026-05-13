@@ -23,11 +23,11 @@ types and the timing parameters that control detection sensitivity.
 ## Monitor Types
 
 <CardGroup cols={2}>
-  <Card title="IPMI (Recommended)" icon="microchip" color="#197560">
+  <Card title="IPMI (Recommended)" icon="microchip" color="#bf9667">
     Uses out-of-band management hardware. Detects failures even when the host OS,
     kernel, or all network interfaces are completely unresponsive.
   </Card>
-  <Card title="SSH" icon="terminal" color="#197560">
+  <Card title="SSH" icon="terminal" color="#bf9667">
     Attempts an SSH TCP connection to the host. Simpler to set up but dependent on
     host network stack — may miss hardware failures that leave the SSH port unreachable.
   </Card>
@@ -237,16 +237,16 @@ configuration issue — not a genuine host failure.
 ## Next Steps
 
 <CardGroup cols={2}>
-  <Card title="Instance Monitors" href="/services/instance-ha/admin-guide/instance-monitors" color="#197560">
+  <Card title="Instance Monitors" href="/services/instance-ha/admin-guide/instance-monitors" color="#bf9667">
     Configure guest-level instance heartbeat monitoring for per-instance fault detection.
   </Card>
-  <Card title="Failover Segments" href="/services/instance-ha/admin-guide/failover-segments" color="#197560">
+  <Card title="Failover Segments" href="/services/instance-ha/admin-guide/failover-segments" color="#bf9667">
     Register and manage compute hosts within protection segments.
   </Card>
-  <Card title="Engine Configuration" href="/services/instance-ha/admin-guide/engine-config" color="#197560">
+  <Card title="Engine Configuration" href="/services/instance-ha/admin-guide/engine-config" color="#bf9667">
     Tune recovery engine timing and retry parameters.
   </Card>
-  <Card title="Security" href="/services/instance-ha/admin-guide/security" color="#197560">
+  <Card title="Security" href="/services/instance-ha/admin-guide/security" color="#bf9667">
     Secure IPMI credentials and restrict access to Instance HA APIs.
   </Card>
 </CardGroup>

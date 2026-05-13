@@ -25,27 +25,27 @@ community-shared with specific projects — giving you full control over your im
 <p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>What the Image Service Provides</p>
 
 <CardGroup cols={3}>
-  <Card title="Image Catalog" icon="layers" href="/services/images/get-images" color="#197560">
+  <Card title="Image Catalog" icon="layers" href="/services/images/get-images" color="#bf9667">
     Centralized storage and discovery of OS images, application images, and snapshots
     available across your Polystack environment.
   </Card>
-  <Card title="Multiple Formats" icon="file-code" href="/services/images/image-formats" color="#197560">
+  <Card title="Multiple Formats" icon="file-code" href="/services/images/image-formats" color="#bf9667">
     Native support for QCOW2, RAW, VHD, and VMDK formats with automatic metadata
     detection and validation on upload.
   </Card>
-  <Card title="Visibility Controls" icon="eye" href="/services/images/share-images" color="#197560">
+  <Card title="Visibility Controls" icon="eye" href="/services/images/share-images" color="#bf9667">
     Per-image visibility settings — public, private, shared, or community — controlling
     who can discover and use each image.
   </Card>
-  <Card title="Instance Snapshots" icon="camera" href="/services/images/create-snapshot" color="#197560">
+  <Card title="Instance Snapshots" icon="camera" href="/services/images/create-snapshot" color="#bf9667">
     Capture a running or stopped instance as an image snapshot. Use snapshots for
     backups, cloning, and golden image workflows.
   </Card>
-  <Card title="Image Sharing" icon="share-2" href="/services/images/share-images" color="#197560">
+  <Card title="Image Sharing" icon="share-2" href="/services/images/share-images" color="#bf9667">
     Share specific images with other projects without making them globally public,
     enabling controlled cross-team image distribution.
   </Card>
-  <Card title="Rich Metadata" icon="tag" href="/services/images/image-properties" color="#197560">
+  <Card title="Rich Metadata" icon="tag" href="/services/images/image-properties" color="#bf9667">
     Attach structured properties to images — OS type, version, minimum disk, hardware
     requirements — enabling the scheduler to make informed placement decisions.
   </Card>
@@ -66,9 +66,9 @@ graph LR
     D --> G[deactivated]
     G --> D
     D --> H([Delete])
-    style D fill:#197560,color:#fff
-    style A fill:#3F8F7E,color:#fff
-    style E fill:#3F8F7E,color:#fff
+    style D fill:#bf9667,color:#fff
+    style A fill:#d7b98e,color:#fff
+    style E fill:#d7b98e,color:#fff
 ```
 
 | State | Description |
@@ -95,18 +95,18 @@ graph LR
 <p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Guides</p>
 
 <CardGroup cols={2}>
-  <Card title="User Guide" icon="book-open" href="/services/images/user-guide" color="#197560">
+  <Card title="User Guide" icon="book-open" href="/services/images/user-guide" color="#bf9667">
     Upload images, manage snapshots, configure visibility, and share images with other
     projects from the Dashboard and CLI.
   </Card>
-  <Card title="Admin Guide" icon="settings" href="/services/images/admin-guide" color="#197560">
+  <Card title="Admin Guide" icon="settings" href="/services/images/admin-guide" color="#bf9667">
     Configure storage backends, metadata schemas, image signing, caching, and quotas
     for production image service deployments.
   </Card>
-  <Card title="Compute User Guide" icon="monitor" href="/services/compute/user-guide" color="#197560">
+  <Card title="Compute User Guide" icon="monitor" href="/services/compute/user-guide" color="#bf9667">
     Learn how images are used when launching compute instances and creating snapshots.
   </Card>
-  <Card title="Authentication & CLI" icon="terminal" href="/services/images/cli-reference" color="#197560">
+  <Card title="Authentication & CLI" icon="terminal" href="/services/images/cli-reference" color="#bf9667">
     Configure CLI credentials to manage images from the command line.
   </Card>
 </CardGroup>

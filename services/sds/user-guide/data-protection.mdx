@@ -163,21 +163,21 @@ Confirm your volume is using the expected protection policy:
 ## Best Practices
 
 <CardGroup cols={2}>
-  <Card title="Production Workloads" icon="server" color="#197560">
+  <Card title="Production Workloads" icon="server" color="#bf9667">
     Use replication factor 3 for all production databases, application volumes, and
     frequently-accessed data. The lower latency outweighs the higher storage cost for
     latency-sensitive workloads.
   </Card>
-  <Card title="Backup & Archive" icon="archive" color="#197560">
+  <Card title="Backup & Archive" icon="archive" color="#bf9667">
     Use erasure-coded pools (4+2 or 6+2) for backup targets and archives. The storage
     efficiency savings are significant at scale, and higher latency is acceptable for
     infrequent access patterns.
   </Card>
-  <Card title="Development Environments" icon="flask-conical" color="#197560">
+  <Card title="Development Environments" icon="flask-conical" color="#bf9667">
     Replication factor 2 is sufficient for non-critical development and test volumes.
     Reduces storage consumption while maintaining single-failure protection.
   </Card>
-  <Card title="Pre-Maintenance Snapshots" icon="copy" color="#197560">
+  <Card title="Pre-Maintenance Snapshots" icon="copy" color="#bf9667">
     Combine data protection pools with regular snapshots for layered protection. Pools
     protect against hardware failures; snapshots protect against logical corruption and
     accidental deletion.
@@ -189,16 +189,16 @@ Confirm your volume is using the expected protection policy:
 ## Next Steps
 
 <CardGroup cols={2}>
-  <Card title="Snapshots" href="/services/sds/user-guide/snapshots" color="#197560">
+  <Card title="Snapshots" href="/services/sds/user-guide/snapshots" color="#bf9667">
     Create point-in-time snapshots to complement pool-level data protection
   </Card>
-  <Card title="Storage Tiers" href="/services/sds/user-guide/performance" color="#197560">
+  <Card title="Storage Tiers" href="/services/sds/user-guide/performance" color="#bf9667">
     Route workloads to NVMe, SSD, or HDD tiers based on access patterns
   </Card>
-  <Card title="Software-Defined-Storage Admin — Pool Management" href="/services/sds/admin-guide/pool-management" color="#197560">
+  <Card title="Software-Defined-Storage Admin — Pool Management" href="/services/sds/admin-guide/pool-management" color="#bf9667">
     Create and configure replicated and erasure-coded pools (administrator)
   </Card>
-  <Card title="Software-Defined-Storage Admin — CRUSH Maps" href="/services/sds/admin-guide/crush-maps" color="#197560">
+  <Card title="Software-Defined-Storage Admin — CRUSH Maps" href="/services/sds/admin-guide/crush-maps" color="#bf9667">
     Configure failure domains and device class rules (administrator)
   </Card>
 </CardGroup>

@@ -64,31 +64,31 @@ misconfiguration and spoofing attacks. Use this guide to maintain the networking
 <p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Administration Topics</p>
 
 <CardGroup cols={4}>
-  <Card title="Service Architecture" icon="network" href="/services/networking/architecture" color="#197560">
+  <Card title="Service Architecture" icon="network" href="/services/networking/architecture" color="#bf9667">
     Distributed SDN agent model — API server, message bus, L2/L3 agents, DHCP, and metadata
   </Card>
-  <Card title="Provider Networks" icon="layers" href="/services/networking/provider-networks" color="#197560">
+  <Card title="Provider Networks" icon="layers" href="/services/networking/provider-networks" color="#bf9667">
     Configure VLAN, flat, and VXLAN provider networks and physical interface mappings
   </Card>
-  <Card title="Network Agent Management" icon="activity" href="/services/networking/network-agents" color="#197560">
+  <Card title="Network Agent Management" icon="activity" href="/services/networking/network-agents" color="#bf9667">
     Monitor agent health, enable or disable agents for maintenance, and recover failed agents
   </Card>
-  <Card title="DHCP Configuration" icon="server" href="/services/networking/dhcp" color="#197560">
+  <Card title="DHCP Configuration" icon="server" href="/services/networking/dhcp" color="#bf9667">
     Manage DHCP agents, network assignments, and high-availability DHCP
   </Card>
-  <Card title="L3 Router Configuration" icon="route" href="/services/networking/l3-routing" color="#197560">
+  <Card title="L3 Router Configuration" icon="route" href="/services/networking/l3-routing" color="#bf9667">
     Enable HA routers with VRRP failover and distributed virtual routing for scale
   </Card>
-  <Card title="Quality of Service" icon="gauge" href="/services/networking/qos" color="#197560">
+  <Card title="Quality of Service" icon="gauge" href="/services/networking/qos" color="#bf9667">
     Apply bandwidth limits and burst controls to ports and networks
   </Card>
-  <Card title="Network Quotas" icon="shield" href="/services/networking/quotas" color="#197560">
+  <Card title="Network Quotas" icon="shield" href="/services/networking/quotas" color="#bf9667">
     Set per-project limits for networks, subnets, routers, floating IPs, and security groups
   </Card>
-  <Card title="Security Hardening" icon="lock" href="/services/networking/security" color="#197560">
+  <Card title="Security Hardening" icon="lock" href="/services/networking/security" color="#bf9667">
     Port security, anti-spoofing enforcement, allowed address pairs, and default group hardening
   </Card>
-  <Card title="Troubleshooting" icon="wrench" href="/services/networking/admin-troubleshooting" color="#197560">
+  <Card title="Troubleshooting" icon="wrench" href="/services/networking/admin-troubleshooting" color="#bf9667">
     Diagnose agent failures, VXLAN tunnel issues, HA router failover, and MTU problems
   </Card>
 </CardGroup>
@@ -109,9 +109,9 @@ graph TD
     L3A --> GW([External Gateway])
     L2A1 --> VS1[Virtual Switch<br/>Host 1]
     L2A2 --> VS2[Virtual Switch<br/>Host 2]
-    style API fill:#197560,color:#fff
-    style L3A fill:#197560,color:#fff
-    style DHCP fill:#3F8F7E,color:#fff
+    style API fill:#bf9667,color:#fff
+    style L3A fill:#bf9667,color:#fff
+    style DHCP fill:#d7b98e,color:#fff
 ```
 
 ---
@@ -131,16 +131,16 @@ for recovery procedures.
 <p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Related Resources</p>
 
 <CardGroup cols={4}>
-  <Card title="Networking User Guide" icon="book-open" href="/services/networking/user-guide" color="#197560">
+  <Card title="Networking User Guide" icon="book-open" href="/services/networking/user-guide" color="#bf9667">
     User-facing workflows for creating networks, routers, floating IPs, and security groups
   </Card>
-  <Card title="Compute Admin Guide" icon="server" href="/services/compute/admin-guide" color="#197560">
+  <Card title="Compute Admin Guide" icon="server" href="/services/compute/admin-guide" color="#bf9667">
     Manage compute hosts, flavors, and quotas alongside networking configuration
   </Card>
-  <Card title="Authentication" icon="key" href="/cli-setup" color="#197560">
+  <Card title="Authentication" icon="key" href="/cli-setup" color="#bf9667">
     Configure admin credentials and project-scoped access for networking operations
   </Card>
-  <Card title="CLI Setup" icon="terminal" href="/cli-setup" color="#197560">
+  <Card title="CLI Setup" icon="terminal" href="/cli-setup" color="#bf9667">
     Install and configure the `openstack` CLI for full administrative control
   </Card>
 </CardGroup>

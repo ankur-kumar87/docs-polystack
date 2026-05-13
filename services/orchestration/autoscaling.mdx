@@ -35,9 +35,9 @@ graph LR
     POLICY -->|Scale out / in| GROUP[Auto-Scaling Group]
     GROUP -->|Launch instance| NOVA[Compute]
     GROUP -->|Terminate instance| NOVA
-    style POLICY fill:#197560,color:#fff
-    style GROUP fill:#197560,color:#fff
-    style PROM fill:#145C4C,color:#fff
+    style POLICY fill:#bf9667,color:#fff
+    style GROUP fill:#bf9667,color:#fff
+    style PROM fill:#8f6a43,color:#fff
 ```
 
 ### Scaling Components
@@ -471,16 +471,16 @@ Cooldown prevents rapid successive scaling events from destabilizing your worklo
 ## Next Steps
 
 <CardGroup cols={2}>
-  <Card title="Template Guide" href="/services/orchestration/template-guide" color="#197560">
+  <Card title="Template Guide" href="/services/orchestration/template-guide" color="#bf9667">
     Learn intrinsic functions and conditions used in scaling templates
   </Card>
-  <Card title="Manage Stacks" href="/services/orchestration/stacks" color="#197560">
+  <Card title="Manage Stacks" href="/services/orchestration/stacks" color="#bf9667">
     Update, suspend, and manage the auto-scaling stack lifecycle
   </Card>
-  <Card title="Prometheus Integration" href="/integrations/prometheus" color="#197560">
+  <Card title="Prometheus Integration" href="/integrations/prometheus" color="#bf9667">
     Configure Prometheus scrape targets and alert rules for scaling triggers
   </Card>
-  <Card title="Polystack Load Balancer" href="/services/load-balancer" color="#197560">
+  <Card title="Polystack Load Balancer" href="/services/load-balancer" color="#bf9667">
     Front auto-scaling groups with a load balancer for traffic distribution
   </Card>
 </CardGroup>
