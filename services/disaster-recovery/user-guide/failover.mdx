@@ -1,6 +1,6 @@
 ---
 title: "Failover"
-description: "Execute XDR failover to switch protected workloads from the primary site to the DR site after a confirmed primary site failure."
+description: "Execute Disaster Recovery failover to switch protected workloads from the primary site to the DR site after a confirmed primary site failure."
 sidebarTitle: "Failover"
 ---
 
@@ -19,7 +19,7 @@ not possible within the RTO window.
 <Note>
   **Prerequisites**
   - An active protection plan in `ACTIVE` replication status
-  - Confirmation that the primary site is unavailable — cross-reference with XIMP monitoring
+  - Confirmation that the primary site is unavailable — cross-reference with Monitoring monitoring
   - DR site confirmed healthy (navigate to **Disaster Recovery → Sites**)
 </Note>
 
@@ -33,7 +33,7 @@ not possible within the RTO window.
       <Step title="Confirm primary site status" icon="activity">
         Navigate to **Project → Disaster Recovery → Sites** and verify the primary site
         health indicator shows **Unreachable** or **Failed**. Cross-reference with the
-        XIMP monitoring portal for independent confirmation.
+        Monitoring monitoring portal for independent confirmation.
 
         <Tip>
           Do not rely on a single monitoring source. A network partition may make the
@@ -79,7 +79,7 @@ not possible within the RTO window.
   </Tab>
   <Tab title="CLI" icon="terminal">
     <Info>
-      XDR disaster recovery operations are managed exclusively through the XDR Dashboard.
+      Disaster Recovery disaster recovery operations are managed exclusively through the Disaster Recovery Dashboard.
       CLI access is not available for DR operations. Use the **Dashboard** tab above for
       the complete failover procedure.
     </Info>
@@ -130,7 +130,7 @@ After failover completes, perform these steps:
   <Card title="Troubleshooting" href="/services/disaster-recovery/user-guide/troubleshooting" color="#197560">
     Diagnose failover stuck states and recovery script failures
   </Card>
-  <Card title="XDR Admin — DR Automation" href="/services/disaster-recovery/admin-guide/dr-automation" color="#197560">
+  <Card title="Disaster Recovery Admin — DR Automation" href="/services/disaster-recovery/admin-guide/dr-automation" color="#197560">
     Configure automatic failover triggers to reduce response time (administrator)
   </Card>
 </CardGroup>

@@ -1,21 +1,21 @@
 ---
 title: "Replication Configuration"
-description: "Register primary and DR sites with the XDR controller, configure replication links, bandwidth policies, and verify cross-site connectivity."
+description: "Register primary and DR sites with the Disaster Recovery controller, configure replication links, bandwidth policies, and verify cross-site connectivity."
 sidebarTitle: "Replication Configuration"
 ---
 
 ## Overview
 
 Before creating protection plans, register both the primary and DR sites with the
-XDR controller and configure the replication link between them. This establishes
+Disaster Recovery controller and configure the replication link between them. This establishes
 the trust relationship and network path that all replication traffic flows through.
 
 <Note>
   **Prerequisites**
-  - XDR controller deployed and accessible from both sites
+  - Disaster Recovery controller deployed and accessible from both sites
   - Network connectivity open between primary and DR sites on TCP 7000–7002
   - Administrator credentials on both sites
-  - XDR agent deployed on both sites via XDeploy
+  - Disaster Recovery agent deployed on both sites via XDeploy
 </Note>
 
 ---
@@ -33,14 +33,14 @@ the trust relationship and network path that all replication traffic flows throu
         |-------|-------------|
         | **Site Name** | Unique identifier (e.g., `primary-dc1`) |
         | **Role** | `Primary` |
-        | **API Endpoint** | XDR agent API URL for this site (e.g., `https://10.10.0.1:7002`) |
-        | **Auth Token** | Site authentication token generated during XDR agent deployment |
+        | **API Endpoint** | Disaster Recovery agent API URL for this site (e.g., `https://10.10.0.1:7002`) |
+        | **Auth Token** | Site authentication token generated during Disaster Recovery agent deployment |
         | **Network CIDR** | IP range for this site's compute and storage network |
         | **Description** | Optional free-text label (e.g., datacenter name, location) |
       </Step>
       <Step title="Register the DR site" icon="shield">
         Repeat the registration process for the DR site, selecting role `DR`.
-        Provide the DR site's XDR agent endpoint and its authentication token.
+        Provide the DR site's Disaster Recovery agent endpoint and its authentication token.
 
         <Check>Both sites appear in the Sites list with status `REGISTERED`.</Check>
       </Step>
@@ -66,7 +66,7 @@ the trust relationship and network path that all replication traffic flows throu
   </Tab>
   <Tab title="CLI" icon="terminal">
     <Info>
-      XDR disaster recovery operations are managed exclusively through the XDR Dashboard.
+      Disaster Recovery disaster recovery operations are managed exclusively through the Disaster Recovery Dashboard.
       CLI access is not available for DR operations. Use the **Dashboard** tab above to
       register sites and configure replication links.
     </Info>
@@ -83,7 +83,7 @@ policies to balance replication performance against production workload impact.
 
 <AccordionGroup>
   <Accordion title="Bandwidth limit policies" icon="gauge">
-    XDR supports per-link and per-plan bandwidth limits. Per-link limits cap total
+    Disaster Recovery supports per-link and per-plan bandwidth limits. Per-link limits cap total
     replication throughput on the network connection; per-plan limits allocate
     bandwidth among multiple plans sharing the same link.
 
@@ -146,7 +146,7 @@ policies to balance replication performance against production workload impact.
 
 ## Site Token Management
 
-XDR agents authenticate between sites using site-specific tokens, not user credentials.
+Disaster Recovery agents authenticate between sites using site-specific tokens, not user credentials.
 
 Manage site tokens from **Disaster Recovery → Sites → [Site] → Token Management**:
 

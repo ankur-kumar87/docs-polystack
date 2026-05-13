@@ -1,6 +1,6 @@
 ---
 title: "Security"
-description: "Secure XIMP with agent token management, dashboard role-based access control via Polystack identity, and TLS certificate lifecycle management."
+description: "Secure Monitoring with agent token management, dashboard role-based access control via Polystack identity, and TLS certificate lifecycle management."
 sidebarTitle: "Security"
 ---
 
@@ -8,7 +8,7 @@ import AdminWarning from '/snippets/admin-warning.mdx';
 
 ## Overview
 
-XIMP security encompasses agent authentication via per-node tokens, dashboard access
+Monitoring security encompasses agent authentication via per-node tokens, dashboard access
 control through Polystack identity roles, and TLS certificate lifecycle management for
 all platform communications.
 
@@ -18,22 +18,22 @@ all platform communications.
 
 ## Agent Authentication
 
-Each XIMP agent authenticates to the collector using a unique per-node token.
+Each Monitoring agent authenticates to the collector using a unique per-node token.
 Rotate tokens periodically and immediately when a node is decommissioned or
 suspected compromised.
 
 <Tabs>
   <Tab title="Token Lifecycle" icon="key">
     ```bash title="Generate a new agent token"
-    ximp agent token create --node compute-node-04 --expires 365d
+    monitoring agent token create --node compute-node-04 --expires 365d
     ```
 
     ```bash title="List all agent tokens with expiry"
-    ximp agent token list
+    monitoring agent token list
     ```
 
     ```bash title="Revoke an agent token"
-    ximp agent token revoke <TOKEN_ID>
+    monitoring agent token revoke <TOKEN_ID>
     ```
 
     <Warning>
@@ -46,30 +46,30 @@ suspected compromised.
     <Steps titleSize="h3">
       <Step title="Generate new token" icon="plus">
         ```bash title="Create replacement token"
-        ximp agent token create --node <HOSTNAME> --expires 365d
+        monitoring agent token create --node <HOSTNAME> --expires 365d
         ```
       </Step>
       <Step title="Update agent configuration" icon="file-text">
-        Update `/etc/ximp/agent.yaml` on the node with the new token value:
-        ```yaml title="/etc/ximp/agent.yaml"
+        Update `/etc/monitoring/agent.yaml` on the node with the new token value:
+        ```yaml title="/etc/monitoring/agent.yaml"
         server:
           auth_token: <NEW_TOKEN>
         ```
       </Step>
       <Step title="Restart agent and verify" icon="circle-check">
         ```bash title="Restart agent"
-        systemctl restart ximp-agent
+        systemctl restart monitoring-agent
         ```
 
         ```bash title="Verify agent reconnected"
-        ximp agent list --node <HOSTNAME>
+        monitoring agent list --node <HOSTNAME>
         ```
 
         <Check>Agent shows `ACTIVE` with a recent last-seen timestamp.</Check>
       </Step>
       <Step title="Revoke old token" icon="trash">
         ```bash title="Revoke old token"
-        ximp agent token revoke <OLD_TOKEN_ID>
+        monitoring agent token revoke <OLD_TOKEN_ID>
         ```
       </Step>
     </Steps>
@@ -80,7 +80,7 @@ suspected compromised.
 
 ## Dashboard Access Control
 
-XIMP dashboard access is controlled through Polystack identity roles. Assign roles
+Monitoring dashboard access is controlled through Polystack identity roles. Assign roles
 based on job function to enforce least-privilege access.
 
 | Role | Access Level | Typical Assignees |
@@ -100,7 +100,7 @@ Assign roles through **XDeploy → Identity → Role Assignments**.
 
 ## TLS Configuration
 
-All XIMP communication uses TLS:
+All Monitoring communication uses TLS:
 - Agent-to-collector: TLS 1.3 minimum
 - Dashboard and API: TLS 1.3 minimum, HSTS enabled
 - Internal service communication: mTLS for collector-to-store traffic
@@ -110,7 +110,7 @@ Certificates are managed by XDeploy and renewed automatically 30 days before exp
 <Tabs>
   <Tab title="Certificate Status" icon="shield">
     ```bash title="Check all certificate expiry dates"
-    ximp tls status
+    monitoring tls status
     ```
 
     Expected output shows certificate subjects, expiry dates, and days remaining.
@@ -120,16 +120,16 @@ Certificates are managed by XDeploy and renewed automatically 30 days before exp
     If automatic renewal fails (e.g., due to DNS misconfiguration):
 
     ```bash title="Manually renew all certificates"
-    ximp tls renew --all
+    monitoring tls renew --all
     ```
 
     ```bash title="Renew a specific certificate"
-    ximp tls renew --component collector
+    monitoring tls renew --component collector
     ```
 
     After renewal, verify the new certificate is in effect:
     ```bash title="Verify renewed certificate"
-    ximp tls status --component collector
+    monitoring tls status --component collector
     ```
 
     <Check>Certificate expiry date is at least 90 days in the future.</Check>
@@ -151,6 +151,6 @@ Certificates are managed by XDeploy and renewed automatically 30 days before exp
     Diagnose TLS and authentication errors
   </Card>
   <Card title="Polystack Identity" href="/services/identity/admin-guide" color="#197560">
-    Manage the Polystack identity roles used for XIMP access control
+    Manage the Polystack identity roles used for Monitoring access control
   </Card>
 </CardGroup>

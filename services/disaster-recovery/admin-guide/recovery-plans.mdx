@@ -1,6 +1,6 @@
 ---
 title: "Recovery Plans"
-description: "Define ordered resource groups, health check criteria, and automation hooks that govern how XDR recovers workloads during a failover event."
+description: "Define ordered resource groups, health check criteria, and automation hooks that govern how Disaster Recovery recovers workloads during a failover event."
 sidebarTitle: "Recovery Plans"
 ---
 
@@ -79,7 +79,7 @@ reliable DR strategy with predictable RTO.
         </Note>
       </Step>
       <Step title="Activate the plan" icon="circle-check">
-        Click **Activate**. XDR begins replicating all protected resources to
+        Click **Activate**. Disaster Recovery begins replicating all protected resources to
         the DR site. Initial sync time depends on data volume.
 
         <Check>Plan status shows `ACTIVE` and initial replication sync progress is visible in the replication dashboard.</Check>
@@ -88,7 +88,7 @@ reliable DR strategy with predictable RTO.
   </Tab>
   <Tab title="CLI" icon="terminal">
     <Info>
-      XDR disaster recovery operations are managed exclusively through the XDR Dashboard.
+      Disaster Recovery disaster recovery operations are managed exclusively through the Disaster Recovery Dashboard.
       CLI access is not available for DR operations. Use the **Dashboard** tab above to
       create and configure recovery plans.
     </Info>
@@ -113,7 +113,7 @@ reliable DR strategy with predictable RTO.
   </Tab>
   <Tab title="CLI" icon="terminal">
     <Info>
-      XDR disaster recovery operations are managed exclusively through the XDR Dashboard.
+      Disaster Recovery disaster recovery operations are managed exclusively through the Disaster Recovery Dashboard.
       CLI access is not available for DR operations. Use the **Dashboard** tab above to
       manage existing recovery plans.
     </Info>
@@ -139,7 +139,7 @@ reliable DR strategy with predictable RTO.
 
 ## Recovery Point Retention
 
-XDR retains a configurable number of recovery points, allowing historical
+Disaster Recovery retains a configurable number of recovery points, allowing historical
 restore targets during failover:
 
 Configure retention settings from **Disaster Recovery → Recovery Plans → [Plan] → Retention**:
@@ -170,7 +170,7 @@ Configure retention settings from **Disaster Recovery → Recovery Plans → [Pl
   <Card title="Compliance" href="/services/disaster-recovery/admin-guide/compliance" color="#197560">
     Generate RPO/RTO compliance reports from plan history
   </Card>
-  <Card title="XDR User Guide — Protection Plans" href="/services/disaster-recovery/user-guide/protection-plans" color="#197560">
+  <Card title="Disaster Recovery User Guide — Protection Plans" href="/services/disaster-recovery/user-guide/protection-plans" color="#197560">
     User-facing protection plan management
   </Card>
 </CardGroup>

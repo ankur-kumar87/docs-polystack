@@ -1,6 +1,6 @@
 ---
 title: "Alert Rules"
-description: "Advanced XIMP alert rule configuration — compound conditions, silences, inhibition rules, on-call escalation, and GitOps-based rule management."
+description: "Advanced Monitoring alert rule configuration — compound conditions, silences, inhibition rules, on-call escalation, and GitOps-based rule management."
 sidebarTitle: "Alert Rules"
 ---
 
@@ -15,7 +15,7 @@ is already firing, and escalation policies.
   **Prerequisites**
   - An active Polystack account with project access
   - At least one notification channel configured
-    (see [XIMP Admin — Alert Channels](/services/monitoring/admin-guide/alert-channels))
+    (see [Monitoring Admin — Alert Channels](/services/monitoring/admin-guide/alert-channels))
 </Note>
 
 ---
@@ -58,7 +58,7 @@ Combine multiple conditions in a single rule using AND/OR logic:
     ```
 
     ```bash title="Create compound alert rule"
-    ximp alert rule create --file alert-resource-pressure.yaml
+    monitoring alert rule create --file alert-resource-pressure.yaml
     ```
   </Tab>
 </Tabs>
@@ -93,18 +93,18 @@ The alert rule continues to evaluate — only notifications are suppressed.
   </Tab>
   <Tab title="CLI" icon="terminal">
     ```bash title="Create a 2-hour silence for a host"
-    ximp alert silence create \
+    monitoring alert silence create \
       --matcher 'host=compute-node-03' \
       --duration 2h \
       --comment "Scheduled maintenance window - firmware update"
     ```
 
     ```bash title="List active silences"
-    ximp alert silence list --status active
+    monitoring alert silence list --status active
     ```
 
     ```bash title="Expire a silence early"
-    ximp alert silence expire <SILENCE_ID>
+    monitoring alert silence expire <SILENCE_ID>
     ```
   </Tab>
 </Tabs>
@@ -166,11 +166,11 @@ Configure multi-tier escalation for critical alerts:
 Manage alert rules as code for version-controlled, auditable configurations:
 
 ```bash title="Export all current alert rules"
-ximp alert rule export --format yaml --output ./alert-rules/
+monitoring alert rule export --format yaml --output ./alert-rules/
 ```
 
 ```bash title="Import rules from directory"
-ximp alert rule import --dir ./alert-rules/ --apply
+monitoring alert rule import --dir ./alert-rules/ --apply
 ```
 
 Store rule files in your infrastructure repository and apply changes through
@@ -185,7 +185,7 @@ automatic rollback if a rule causes issues.
   <Card title="Metrics & Alerts" href="/services/monitoring/user-guide/metrics-alerts" color="#197560">
     Basic alert rule creation for metric thresholds
   </Card>
-  <Card title="XIMP Admin — Alert Channels" href="/services/monitoring/admin-guide/alert-channels" color="#197560">
+  <Card title="Monitoring Admin — Alert Channels" href="/services/monitoring/admin-guide/alert-channels" color="#197560">
     Configure the notification channels referenced by alert rules
   </Card>
   <Card title="Dashboards" href="/services/monitoring/user-guide/dashboards" color="#197560">

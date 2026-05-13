@@ -1,6 +1,6 @@
 ---
 title: "Log Collection"
-description: "Configure XIMP log source paths, syslog forwarding, and log format parsers for centralized log ingestion across all managed infrastructure nodes."
+description: "Configure Monitoring log source paths, syslog forwarding, and log format parsers for centralized log ingestion across all managed infrastructure nodes."
 sidebarTitle: "Log Collection"
 ---
 
@@ -8,7 +8,7 @@ import AdminWarning from '/snippets/admin-warning.mdx';
 
 ## Overview
 
-XIMP collects logs from all registered nodes via file-based collection and syslog
+Monitoring collects logs from all registered nodes via file-based collection and syslog
 forwarding. Centralized log data flows into the log index for full-text search and
 alert-based detection. This page covers configuring log sources and troubleshooting
 ingestion issues.
@@ -18,7 +18,7 @@ ingestion issues.
 <Note>
   **Prerequisites**
   - Administrator credentials with the `admin` role
-  - XIMP agents deployed on target nodes (see [Agent Configuration](/services/monitoring/admin-guide/agent-config))
+  - Monitoring agents deployed on target nodes (see [Agent Configuration](/services/monitoring/admin-guide/agent-config))
 </Note>
 
 ---
@@ -52,9 +52,9 @@ ingestion issues.
     </Steps>
   </Tab>
   <Tab title="Configuration File" icon="file-text">
-    Log sources can also be defined in `/etc/ximp/log-sources.yaml` on the managed node:
+    Log sources can also be defined in `/etc/monitoring/log-sources.yaml` on the managed node:
 
-    ```yaml title="/etc/ximp/log-sources.yaml"
+    ```yaml title="/etc/monitoring/log-sources.yaml"
     sources:
       - path: /var/log/nova/*.log
         format: plain
@@ -80,7 +80,7 @@ ingestion issues.
 
     Reload the agent after updating the configuration:
     ```bash title="Reload agent configuration"
-    systemctl reload ximp-agent
+    systemctl reload monitoring-agent
     ```
   </Tab>
 </Tabs>
@@ -89,16 +89,16 @@ ingestion issues.
 
 ## Syslog Forwarding
 
-Services that write to syslog rather than log files can forward directly to XIMP's
+Services that write to syslog rather than log files can forward directly to Monitoring's
 syslog receiver.
 
 <Steps titleSize="h3">
   <Step title="Configure rsyslog forwarding" icon="send">
-    Add a forwarding rule to `/etc/rsyslog.d/99-ximp.conf` on the source node:
+    Add a forwarding rule to `/etc/rsyslog.d/99-monitoring.conf` on the source node:
 
-    ```bash title="/etc/rsyslog.d/99-ximp.conf"
-    # Forward all facility/severity combinations to XIMP via TCP
-    *.* @@ximp.polystack.internal:5140
+    ```bash title="/etc/rsyslog.d/99-monitoring.conf"
+    # Forward all facility/severity combinations to Monitoring via TCP
+    *.* @@monitoring.polystack.internal:5140
     ```
 
     <Note>

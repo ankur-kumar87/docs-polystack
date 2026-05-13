@@ -1,12 +1,12 @@
 ---
-title: "XDR Architecture"
-description: "Understand the XDR component topology — control plane, agents, replication pipeline, and site deployment models."
+title: "Disaster Recovery Architecture"
+description: "Understand the Disaster Recovery component topology — control plane, agents, replication pipeline, and site deployment models."
 sidebarTitle: "Architecture"
 ---
 
 ## Overview
 
-XDR operates as a control plane layer over the underlying compute and storage
+Disaster Recovery operates as a control plane layer over the underlying compute and storage
 infrastructure, orchestrating continuous replication and coordinated recovery
 across geographically separated sites. Understanding the component architecture
 helps administrators size deployments, plan network requirements, and diagnose
@@ -27,8 +27,8 @@ graph TD
     subgraph Primary["Primary Site"]
         PA["Compute Instances"]
         PS["Software-Defined-Storage Block / Object Storage"]
-        PC["XDR Agent (Primary)"]
-        PM["XIMP Agent"]
+        PC["Disaster Recovery Agent (Primary)"]
+        PM["Monitoring Agent"]
     end
 
     subgraph Network["Replication Network"]
@@ -38,13 +38,13 @@ graph TD
     subgraph DR["DR Site"]
         DA["Compute Replicas\n(Stopped / Standby)"]
         DS["Storage Replicas\n(Continuous Sync)"]
-        DC["XDR Agent (DR)"]
-        DM["XIMP Agent"]
+        DC["Disaster Recovery Agent (DR)"]
+        DM["Monitoring Agent"]
     end
 
     subgraph Control["Control Plane"]
-        XDR["XDR Controller\n(Failover Orchestration)"]
-        XIMP["XIMP\n(Monitoring & Alerts)"]
+        Disaster Recovery["Disaster Recovery Controller\n(Failover Orchestration)"]
+        Monitoring["Monitoring\n(Monitoring & Alerts)"]
     end
 
     PA --> PC
@@ -53,11 +53,11 @@ graph TD
     LINK -->|Replicated data| DC
     DC --> DA
     DC --> DS
-    PM --> XIMP
-    DM --> XIMP
-    XDR --> PC
-    XDR --> DC
-    XIMP --> XDR
+    PM --> Monitoring
+    DM --> Monitoring
+    Disaster Recovery --> PC
+    Disaster Recovery --> DC
+    Monitoring --> Disaster Recovery
 ```
 
 ---
@@ -66,11 +66,11 @@ graph TD
 
 | Component | Role |
 |-----------|------|
-| **XDR Controller** | Central orchestration service — manages protection plans, tracks recovery state, and triggers failover |
-| **XDR Agent (Primary)** | Runs on primary site nodes; captures change streams from storage and forwards to DR agent |
-| **XDR Agent (DR)** | Receives replicated data, applies it to DR-site replicas, and executes the recovery runbook during failover |
+| **Disaster Recovery Controller** | Central orchestration service — manages protection plans, tracks recovery state, and triggers failover |
+| **Disaster Recovery Agent (Primary)** | Runs on primary site nodes; captures change streams from storage and forwards to DR agent |
+| **Disaster Recovery Agent (DR)** | Receives replicated data, applies it to DR-site replicas, and executes the recovery runbook during failover |
 | **Replication Network** | Dedicated link carrying encrypted, optionally compressed replication traffic between sites |
-| **XIMP Integration** | Provides health visibility for replication lag, RPO adherence, and site availability |
+| **Monitoring Integration** | Provides health visibility for replication lag, RPO adherence, and site availability |
 
 ---
 
@@ -80,7 +80,7 @@ Data flows through a multi-stage pipeline from the primary site to the DR site:
 
 <Steps titleSize="h3">
   <Step title="Change capture" icon="activity">
-    The XDR agent on the primary site intercepts write operations at the storage
+    The Disaster Recovery agent on the primary site intercepts write operations at the storage
     layer, capturing changed data blocks as a continuous stream. For
     application-consistent replication, the agent coordinates with in-guest
     agents to quiesce writes at consistent intervals.
@@ -92,7 +92,7 @@ Data flows through a multi-stage pipeline from the primary site to the DR site:
   </Step>
   <Step title="Transfer" icon="arrow-right">
     The compressed, encrypted stream is transmitted over the replication link
-    to the DR-site XDR agent. Bandwidth throttling applies during peak hours
+    to the DR-site Disaster Recovery agent. Bandwidth throttling applies during peak hours
     if configured.
   </Step>
   <Step title="Apply to replicas" icon="hard-drive">
@@ -101,7 +101,7 @@ Data flows through a multi-stage pipeline from the primary site to the DR site:
     not running.
   </Step>
   <Step title="Recovery point snapshot" icon="camera">
-    At configurable intervals, the XDR agent creates a recovery point — a
+    At configurable intervals, the Disaster Recovery agent creates a recovery point — a
     consistent snapshot of the replicated state. Recovery points define the
     available restore targets during failover.
   </Step>
@@ -130,7 +130,7 @@ Data flows through a multi-stage pipeline from the primary site to the DR site:
     </Tip>
   </Tab>
   <Tab title="Active-Active (Bidirectional)" icon="refresh-cw">
-    Both sites run production workloads. XDR replicates in both directions,
+    Both sites run production workloads. Disaster Recovery replicates in both directions,
     protecting each site from failure of the other.
 
     | Characteristic | Value |
@@ -144,7 +144,7 @@ Data flows through a multi-stage pipeline from the primary site to the DR site:
     <Warning>
       Active-active deployments require careful application design to avoid write
       conflicts. Not all workloads are suitable for bidirectional replication.
-      Contact Polystack support before deploying active-active XDR.
+      Contact Polystack support before deploying active-active Disaster Recovery.
     </Warning>
   </Tab>
   <Tab title="Multi-Site Fan-Out" icon="git-branch">
@@ -168,7 +168,7 @@ Data flows through a multi-stage pipeline from the primary site to the DR site:
 
 ## Control Plane Placement
 
-The XDR controller can be co-located with the primary site or deployed on a
+The Disaster Recovery controller can be co-located with the primary site or deployed on a
 separate management network:
 
 | Placement | Consideration |
@@ -179,7 +179,7 @@ separate management network:
 | **XDeploy cluster** | Recommended — integrated with XDeploy's high-availability deployment |
 
 <Tip>
-  Deploy the XDR controller in the XDeploy management cluster. XDeploy runs
+  Deploy the Disaster Recovery controller in the XDeploy management cluster. XDeploy runs
   with redundancy across nodes, so the controller remains available even during
   a primary site failure event.
 </Tip>
@@ -211,7 +211,7 @@ production workloads during initial sync or peak change rate periods.
     Define resource groups and recovery ordering
   </Card>
   <Card title="Monitoring" href="/services/disaster-recovery/admin-guide/monitoring" color="#197560">
-    Configure XIMP alerts for replication health
+    Configure Monitoring alerts for replication health
   </Card>
   <Card title="DR Automation" href="/services/disaster-recovery/admin-guide/dr-automation" color="#197560">
     Set up automatic failover triggers and runbook scripts

@@ -1,6 +1,6 @@
 ---
 title: "Failback"
-description: "Return XDR-protected workloads to the primary site after it has been restored — reverse replication, synchronize changed data, and execute failback."
+description: "Return Disaster Recovery-protected workloads to the primary site after it has been restored — reverse replication, synchronize changed data, and execute failback."
 sidebarTitle: "Failback"
 ---
 
@@ -37,7 +37,7 @@ synchronized back.
         by clicking **Test Connectivity** on the site entry.
       </Step>
       <Step title="Reverse replication" icon="refresh-cw">
-        Select the protection plan and click **Reverse Replication**. XDR syncs
+        Select the protection plan and click **Reverse Replication**. Disaster Recovery syncs
         changed data from the DR site back to the primary site.
 
         Monitor sync progress in the plan status panel. The `replication_lag` field
@@ -77,7 +77,7 @@ synchronized back.
   </Tab>
   <Tab title="CLI" icon="terminal">
     <Info>
-      XDR disaster recovery operations are managed exclusively through the XDR Dashboard.
+      Disaster Recovery disaster recovery operations are managed exclusively through the Disaster Recovery Dashboard.
       CLI access is not available for DR operations. Use the **Dashboard** tab above for
       the complete failback procedure.
     </Info>
@@ -124,7 +124,7 @@ After failback completes, restore normal operations:
   <Card title="Troubleshooting" href="/services/disaster-recovery/user-guide/troubleshooting" color="#197560">
     Diagnose failback synchronization issues
   </Card>
-  <Card title="XDR Admin — Compliance" href="/services/disaster-recovery/admin-guide/compliance" color="#197560">
+  <Card title="Disaster Recovery Admin — Compliance" href="/services/disaster-recovery/admin-guide/compliance" color="#197560">
     Generate post-incident RPO/RTO compliance reports (administrator)
   </Card>
 </CardGroup>

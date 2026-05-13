@@ -1,12 +1,12 @@
 ---
 title: "DR Compliance"
-description: "Generate audit-ready RPO/RTO compliance reports, DR test audit trails, and failover history from XDR for regulatory and internal governance requirements."
+description: "Generate audit-ready RPO/RTO compliance reports, DR test audit trails, and failover history from Disaster Recovery for regulatory and internal governance requirements."
 sidebarTitle: "Compliance"
 ---
 
 ## Overview
 
-XDR generates audit-ready reports documenting replication status, achieved RPO/RTO
+Disaster Recovery generates audit-ready reports documenting replication status, achieved RPO/RTO
 values from DR tests, and complete failover history. These reports satisfy common
 regulatory requirements (ISO 22301, SOC 2 Type II, HIPAA, PCI-DSS) that mandate
 documented DR testing and measurable recovery objectives.
@@ -61,7 +61,7 @@ documented DR testing and measurable recovery objectives.
   </Tab>
   <Tab title="CLI" icon="terminal">
     <Info>
-      XDR disaster recovery operations are managed exclusively through the XDR Dashboard.
+      Disaster Recovery disaster recovery operations are managed exclusively through the Disaster Recovery Dashboard.
       CLI access is not available for DR operations. Use the **Dashboard** tab above to
       generate and download compliance reports.
     </Info>
@@ -72,8 +72,8 @@ documented DR testing and measurable recovery objectives.
 
 ## DR Test Cadence Requirements
 
-Most regulatory frameworks mandate regular DR testing. XDR tracks test history
-automatically. Use XIMP to alert when testing cadence slips:
+Most regulatory frameworks mandate regular DR testing. Disaster Recovery tracks test history
+automatically. Use Monitoring to alert when testing cadence slips:
 
 | Regulation | Typical DR Testing Requirement |
 |------------|-------------------------------|
@@ -83,7 +83,7 @@ automatically. Use XIMP to alert when testing cadence slips:
 | **PCI-DSS** | Annual test of incident response / DR procedures |
 
 <Tip>
-  Configure a XIMP alert for `xdr_last_test_age_days > 90` to ensure quarterly testing.
+  Configure a Monitoring alert for `xdr_last_test_age_days > 90` to ensure quarterly testing.
   This exceeds all common regulatory minimums and provides early warning to schedule
   tests before the annual window closes. See [Monitoring](/services/disaster-recovery/admin-guide/monitoring)
   for alert rule configuration.
@@ -149,18 +149,18 @@ Manage existing schedules from the **Scheduled Reports** list.
 ## Evidence Preservation
 
 Compliance audits may require evidence that DR testing and monitoring occurred
-throughout the audit period. XDR retains:
+throughout the audit period. Disaster Recovery retains:
 
 | Data Type | Retention Period | Location |
 |-----------|-----------------|---------|
-| DR test reports | Indefinite (until manual deletion) | XDR controller database |
-| Replication lag metrics | 90 days raw; 1 year downsampled | XIMP metric store |
-| Failover event logs | Indefinite | XDR controller audit log |
-| Runbook script output | 90 days | XDR controller log archive |
+| DR test reports | Indefinite (until manual deletion) | Disaster Recovery controller database |
+| Replication lag metrics | 90 days raw; 1 year downsampled | Monitoring metric store |
+| Failover event logs | Indefinite | Disaster Recovery controller audit log |
+| Runbook script output | 90 days | Disaster Recovery controller log archive |
 
 <Warning>
   If your regulatory framework requires longer retention, export reports to an
-  external system immediately after generation. XDR does not enforce retention
+  external system immediately after generation. Disaster Recovery does not enforce retention
   beyond the defaults listed above.
 </Warning>
 
@@ -172,11 +172,11 @@ throughout the audit period. XDR retains:
   <Card title="Monitoring" href="/services/disaster-recovery/admin-guide/monitoring" color="#197560">
     Configure alerts to maintain compliance proactively
   </Card>
-  <Card title="XDR User Guide — DR Testing" href="/services/disaster-recovery/user-guide/test-dr" color="#197560">
+  <Card title="Disaster Recovery User Guide — DR Testing" href="/services/disaster-recovery/user-guide/test-dr" color="#197560">
     Run DR tests to generate the evidence captured in compliance reports
   </Card>
   <Card title="Security" href="/services/disaster-recovery/admin-guide/security" color="#197560">
-    Access control and audit trail for XDR administrative operations
+    Access control and audit trail for Disaster Recovery administrative operations
   </Card>
   <Card title="Troubleshooting" href="/services/disaster-recovery/admin-guide/troubleshooting" color="#197560">
     Diagnose replication lag that threatens RPO compliance

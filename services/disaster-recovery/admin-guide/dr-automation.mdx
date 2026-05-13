@@ -1,6 +1,6 @@
 ---
 title: "DR Automation"
-description: "Configure automatic failover triggers, recovery runbook scripts, and replication scheduling to reduce manual intervention during XDR failover events."
+description: "Configure automatic failover triggers, recovery runbook scripts, and replication scheduling to reduce manual intervention during Disaster Recovery failover events."
 sidebarTitle: "DR Automation"
 ---
 
@@ -35,7 +35,7 @@ is unreachable, without requiring manual operator intervention.
     | **Check Interval** | How often to poll (default: 30 seconds) |
     | **Failure Threshold** | Consecutive failures before triggering (default: 3) |
     | **Secondary Check** | Optional second endpoint — both must fail before triggering |
-    | **Notification Channel** | XIMP alert channel to notify when automatic failover begins |
+    | **Notification Channel** | Monitoring alert channel to notify when automatic failover begins |
 
     <Warning>
       Automatic failover bypasses the manual confirmation step. Enable only for
@@ -46,7 +46,7 @@ is unreachable, without requiring manual operator intervention.
   </Tab>
   <Tab title="CLI" icon="terminal">
     <Info>
-      XDR disaster recovery operations are managed exclusively through the XDR Dashboard.
+      Disaster Recovery disaster recovery operations are managed exclusively through the Disaster Recovery Dashboard.
       CLI access is not available for DR operations. Use the **Dashboard** tab above to
       configure automatic failover triggers.
     </Info>
@@ -62,7 +62,7 @@ sequence. Scripts run before or after each resource group recovers.
 
 ### Script Environment
 
-Scripts receive the following environment variables from the XDR runtime:
+Scripts receive the following environment variables from the Disaster Recovery runtime:
 
 | Variable | Value |
 |----------|-------|
@@ -88,11 +88,11 @@ Scripts receive the following environment variables from the XDR runtime:
     #!/bin/bash
     # Updates internal DNS records to point to recovered DR instances
     # Runs as: Post-Recover hook on databases group
-    # XDR injects environment variables at runtime
+    # Disaster Recovery injects environment variables at runtime
 
     set -euo pipefail
 
-    # XDR_RESOURCE_IDS and XDR_SITE are provided by the XDR runtime
+    # XDR_RESOURCE_IDS and XDR_SITE are provided by the Disaster Recovery runtime
     # Resource IPs are resolved from the recovery metadata
     for id in $XDR_RESOURCE_IDS; do
       # Parse recovery metadata for IP and hostname
@@ -117,13 +117,13 @@ Scripts receive the following environment variables from the XDR runtime:
     #!/bin/bash
     # Registers recovered instances in the internal service registry
     # Runs as: Post-Recover hook on app-servers group
-    # XDR injects environment variables at runtime
+    # Disaster Recovery injects environment variables at runtime
 
     set -euo pipefail
 
     REGISTRY_URL="http://service-registry.internal:8500"
 
-    # XDR_RESOURCE_IDS and XDR_RECOVERY_METADATA are provided by the XDR runtime
+    # XDR_RESOURCE_IDS and XDR_RECOVERY_METADATA are provided by the Disaster Recovery runtime
     for id in $XDR_RESOURCE_IDS; do
       ip=$(echo "$XDR_RECOVERY_METADATA" | jq -r ".resources[\"$id\"].ip")
       service=$(echo "$XDR_RECOVERY_METADATA" | jq -r ".resources[\"$id\"].tags[\"service-name\"]")
@@ -168,7 +168,7 @@ Scripts receive the following environment variables from the XDR runtime:
   </Tab>
   <Tab title="CLI" icon="terminal">
     <Info>
-      XDR disaster recovery operations are managed exclusively through the XDR Dashboard.
+      Disaster Recovery disaster recovery operations are managed exclusively through the Disaster Recovery Dashboard.
       CLI access is not available for DR operations. Use the **Dashboard** tab above to
       attach scripts to resource groups.
     </Info>
@@ -224,7 +224,7 @@ the runbook execution log in **Disaster Recovery → Test Sessions → [Session]
   <Card title="Monitoring" href="/services/disaster-recovery/admin-guide/monitoring" color="#197560">
     Alert on automation failures and replication lag
   </Card>
-  <Card title="XDR User Guide — DR Testing" href="/services/disaster-recovery/user-guide/test-dr" color="#197560">
+  <Card title="Disaster Recovery User Guide — DR Testing" href="/services/disaster-recovery/user-guide/test-dr" color="#197560">
     Run DR tests to validate runbook scripts and measure RTO
   </Card>
   <Card title="Troubleshooting" href="/services/disaster-recovery/admin-guide/troubleshooting" color="#197560">

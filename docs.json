@@ -517,7 +517,7 @@
             ]
           },
           {
-            "group": "Monitoring (XIMP)",
+            "group": "Monitoring",
             "icon": "activity",
             "root": "services/monitoring/index",
             "pages": [
@@ -689,43 +689,6 @@
               },
               "services/optimization/cli-reference"
             ]
-          },
-          {
-            "group": "Migration (XMS)",
-            "icon": "truck",
-            "root": "services/migration/index",
-            "pages": [
-              {
-                "group": "User Guide",
-                "root": "services/migration/user-guide",
-                "pages": [
-                  "services/migration/user-guide/register-source",
-                  "services/migration/user-guide/discover-workloads",
-                  "services/migration/user-guide/preflight",
-                  "services/migration/user-guide/cold-migration",
-                  "services/migration/user-guide/warm-migration",
-                  "services/migration/user-guide/cutover",
-                  "services/migration/user-guide/post-migration",
-                  "services/migration/user-guide/troubleshooting"
-                ],
-                "icon": "book-open"
-              },
-              {
-                "group": "Admin Guide",
-                "root": "services/migration/admin-guide",
-                "pages": [
-                  "services/migration/admin-guide/architecture",
-                  "services/migration/admin-guide/prerequisites",
-                  "services/migration/admin-guide/source-credentials",
-                  "services/migration/admin-guide/network-ports",
-                  "services/migration/admin-guide/storage-backends",
-                  "services/migration/admin-guide/capacity-planning",
-                  "services/migration/admin-guide/troubleshooting"
-                ],
-                "icon": "shield"
-              },
-              "services/migration/cli-reference"
-            ]
           }
         ]
       },
@@ -780,7 +743,10 @@
       ]
     }
   },
-  "logo": "/images/Polystack Docs.svg",
+  "logo": {
+    "light": "/images/polystack-logo.png",
+    "dark": "/images/polystack-logo-white.png"
+  },
   "navbar": {
     "links": [
       {
@@ -831,15 +797,15 @@
         "title": "Solutions",
         "items": [
           {
-            "label": "XIMP - Infrastructure Monitoring",
-            "href": "https://polystack.tech/XIMP"
+            "label": "Monitoring - Infrastructure Monitoring",
+            "href": "https://polystack.tech/Monitoring"
           },
           {
             "label": "Ironcore - Advanced Virtualization",
             "href": "https://polystack.tech/ironcore"
           },
           {
-            "label": "XDR - Disaster Recovery",
+            "label": "Disaster Recovery - Disaster Recovery",
             "href": "https://polystack.tech/disaster-recovery"
           },
           {

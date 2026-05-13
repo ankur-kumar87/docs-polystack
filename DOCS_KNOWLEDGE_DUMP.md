@@ -45,7 +45,7 @@
 | KVM/QEMU/libvirt | Native Hypervisor (KVM naming OK in tech context) |
 | OpenStack | Polystack (in prose) / OpenStack (in CLI commands only) |
 | Kolla-Ansible | Ironcore Deployment Automation |
-| Hystax Acura | XDR (never mention Hystax) |
+| Hystax Acura | Disaster Recovery (never mention Hystax) |
 
 ### Service Mapping
 
@@ -104,12 +104,11 @@
 | XPCI | Private Cloud Infrastructure | Full cloud platform |
 | XHCI | Hyper Converged Infrastructure | Compute+storage+networking consolidated |
 | Software-Defined-Storage | Software Defined Storage | Ceph-based block, object, file |
-| XIMP | Infrastructure Monitoring Platform | Prometheus+Grafana+OpenSearch+Wazuh |
-| XDR | Disaster Recovery | Hystax-based, Dashboard-only (no CLI) |
+| Monitoring | Infrastructure Monitoring Platform | Prometheus+Grafana+OpenSearch+Wazuh |
+| Disaster Recovery | Disaster Recovery | Hystax-based, Dashboard-only (no CLI) |
 | XNAS | NAS Storage | SMB, NFS, AFP, FTP, snapshots, HA |
 | XNexus | Unified Storage | Dell HW, coming soon |
 | XOS | Operating System | Custom Ubuntu 24.04 |
-| XMS | Migration Suite | 10+ platforms, AI scoring (separate product from XIMP) |
 | xInsight-AI | AI-Powered Ops | 42 MCP tools, on-premises LLM (separate product from XNexus) |
 
 ### Product Page Rules
@@ -117,7 +116,6 @@
 - Max 4 services per product page
 - Link to website for full details: `https://polystack.tech/contact`
 - Each product page links to docs pages, not website pages
-- XMS is SEPARATE from XIMP
 - xInsight-AI is SEPARATE from XNexus
 
 ---
@@ -200,10 +198,9 @@ For config file edits:
 3. **3 Memory Methods** — balloon + DIMM + virtio-mem unique combination
 4. **Combined Manual+Auto Storage Tiering** — user picks tier + optimizer auto-moves
 5. **Built-in SIEM** (Security Posture Panel) — 8-tab Wazuh dashboard
-6. **XMS Migration Suite** — 10+ source platforms, AI scoring
-7. **xInsight-AI** — on-premises NLP cloud management, 42 MCP tools
-8. **Per-Volume Selective Encryption** — encrypt individual volumes
-9. **Triple Compliance Scanning** — SCA + Lynis + OpenSCAP
+6. **xInsight-AI** — on-premises NLP cloud management, 42 MCP tools
+7. **Per-Volume Selective Encryption** — encrypt individual volumes
+8. **Triple Compliance Scanning** — SCA + Lynis + OpenSCAP
 
 ### Key Feature Areas
 - **Compute**: Live vCPU/RAM, NUMA, CPU pinning, hugepages, EVC, vTPM, live migration, server groups, atomic upgrades, horizontal scaling, app-consistent snapshots, multi-hypervisor, bare metal, heterogeneous hardware
@@ -221,9 +218,9 @@ For config file edits:
 
 ## 7. DISASTER RECOVERY
 
-- Tool: Hystax Acura (NEVER mention "Hystax" — brand as "XDR")
+- Tool: Hystax Acura (NEVER mention "Hystax" — brand as "Disaster Recovery")
 - **Dashboard-only** — there is NO CLI for DR operations
-- CLI Reference page states: "All DR operations are managed through the XDR Dashboard"
+- CLI Reference page states: "All DR operations are managed through the Disaster Recovery Dashboard"
 - Capabilities: protection plans, continuous replication, one-click failover, failback, test failover, RPO/RTO monitoring, runbook automation
 
 ---
@@ -320,8 +317,8 @@ services/<service>/
 
 ### Custom CLI tools
 - `watcher` — Resource Optimizer CLI (prefix with `openstack`: `openstack watcher audit create`)
-- `ximp` — XIMP monitoring CLI (available on management node only)
-- `xdr` — DOES NOT EXIST (DR is Dashboard-only)
+- `monitoring` — Monitoring monitoring CLI (available on management node only)
+- `disaster-recovery` — DOES NOT EXIST (DR is Dashboard-only)
 
 ---
 
@@ -376,7 +373,7 @@ XDeploy Key → Bootstrap → Hosts → Software-Defined-Storage (if using) → 
 **Strengths**: Deployment section production-ready, consistent enterprise template, honest product pages, comprehensive security section, well-organized navigation
 
 **Fixed Issues**:
-- Invented `xdr` CLI removed (DR is Dashboard-only)
+- Invented `disaster-recovery` CLI removed (DR is Dashboard-only)
 - "OpenStack" replaced with "Polystack" in prose (11 files)
 - Duplicate chmod in hardening guide removed
 - Kolla → Ironcore in prose (12 files, /var/log/kolla and /var/lib/kolla kept)

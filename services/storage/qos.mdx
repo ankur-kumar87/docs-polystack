@@ -295,15 +295,15 @@ openstack volume qos delete bronze-1000iops
 ## Monitoring QoS Compliance
 
 <Tabs>
-  <Tab title="Polystack Dashboard (XIMP)" icon="activity">
-    Navigate to **Monitoring → Storage → Volume Metrics** in Polystack XIMP. Per-volume IOPS and throughput graphs show whether volumes are hitting their QoS limits:
+  <Tab title="Polystack Dashboard (Monitoring)" icon="activity">
+    Navigate to **Monitoring → Storage → Volume Metrics** in Polystack Monitoring. Per-volume IOPS and throughput graphs show whether volumes are hitting their QoS limits:
 
     - IOPS at or near the `total_iops_sec` limit — the volume is QoS-constrained
     - Sustained IOPS below limit — the workload does not require the full allocation
     - Burst IOPS exceeding sustained limit but below burst cap — normal burst behavior
 
     <Tip>
-      Set XIMP alerts for volumes that sustain QoS-constrained behavior for more than 5 minutes — this signals that the volume type's QoS limit may be too low for the workload.
+      Set Monitoring alerts for volumes that sustain QoS-constrained behavior for more than 5 minutes — this signals that the volume type's QoS limit may be too low for the workload.
     </Tip>
   </Tab>
   <Tab title="CLI" icon="terminal">
@@ -340,7 +340,7 @@ openstack volume qos delete bronze-1000iops
     automatically receive proportionally more IOPS without manual reconfiguration.
   </Card>
   <Card title="Monitor Before Limiting" icon="activity" color="#197560">
-    Baseline actual workload IOPS using XIMP before applying QoS limits. Setting limits
+    Baseline actual workload IOPS using Monitoring before applying QoS limits. Setting limits
     below actual peak workload demand causes application performance degradation.
   </Card>
 </CardGroup>

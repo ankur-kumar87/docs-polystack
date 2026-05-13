@@ -1,6 +1,6 @@
 ---
 title: "DR Testing"
-description: "Validate XDR protection plans with isolated DR tests — confirm recovery procedures and measure actual RTO without impacting production workloads."
+description: "Validate Disaster Recovery protection plans with isolated DR tests — confirm recovery procedures and measure actual RTO without impacting production workloads."
 sidebarTitle: "DR Testing"
 ---
 
@@ -71,7 +71,7 @@ at least quarterly.
   </Tab>
   <Tab title="CLI" icon="terminal">
     <Info>
-      XDR disaster recovery operations are managed exclusively through the XDR Dashboard.
+      Disaster Recovery disaster recovery operations are managed exclusively through the Disaster Recovery Dashboard.
       CLI access is not available for DR operations. Use the **Dashboard** tab above to
       run DR tests and review test results.
     </Info>
@@ -82,7 +82,7 @@ at least quarterly.
 
 ## Test Report
 
-After each DR test, XDR generates a report including:
+After each DR test, Disaster Recovery generates a report including:
 
 | Report Field | Description |
 |-------------|-------------|
@@ -110,7 +110,7 @@ for scheduled report delivery.
 | After runbook updates | Policy change | When pre/post recovery scripts are modified |
 
 <Warning>
-  XIMP can alert when a DR test has not been run within the configured interval.
+  Monitoring can alert when a DR test has not been run within the configured interval.
   Navigate to **Monitoring → Alerting → Alert Rules** and create a rule sourcing
   `xdr_last_test_age_days > 90` to ensure tests are not missed.
 </Warning>
@@ -126,7 +126,7 @@ for scheduled report delivery.
   <Card title="Failover" href="/services/disaster-recovery/user-guide/failover" color="#197560">
     Full failover procedure when an actual disaster event occurs
   </Card>
-  <Card title="XDR Admin — Compliance" href="/services/disaster-recovery/admin-guide/compliance" color="#197560">
+  <Card title="Disaster Recovery Admin — Compliance" href="/services/disaster-recovery/admin-guide/compliance" color="#197560">
     Generate RPO/RTO compliance reports from DR test history (administrator)
   </Card>
   <Card title="Troubleshooting" href="/services/disaster-recovery/user-guide/troubleshooting" color="#197560">

@@ -158,16 +158,16 @@ monitoring, thresholds, and expansion procedures.
 
 ## Capacity Trend Monitoring
 
-Configure XIMP alerts to proactively notify administrators before capacity reaches
+Configure Monitoring alerts to proactively notify administrators before capacity reaches
 critical thresholds:
 
-| Alert | Threshold | XIMP Metric |
+| Alert | Threshold | Monitoring Metric |
 |-------|----------|------------|
 | Capacity Warning | Pool used > 70% | `polystack_storage_pool_used_pct` |
 | Capacity Critical | Pool used > 80% | `polystack_storage_pool_used_pct` |
 | OSD Near Full | OSD used > 85% | `polystack_storage_osd_used_pct` |
 
-Navigate to **Monitoring → Alerting → Alert Rules** in the XIMP portal and create
+Navigate to **Monitoring → Alerting → Alert Rules** in the Monitoring portal and create
 rules sourcing from the `polystack_storage` metric namespace.
 
 ---
@@ -179,7 +179,7 @@ rules sourcing from the `polystack_storage` metric namespace.
     Add OSDs and manage cluster health during expansion
   </Card>
   <Card title="Monitoring" href="/services/sds/admin-guide/monitoring" color="#197560">
-    Configure XIMP alerts for capacity and health thresholds
+    Configure Monitoring alerts for capacity and health thresholds
   </Card>
   <Card title="Storage Tiers" href="/services/sds/admin-guide/storage-tiers" color="#197560">
     Add new tiers when expanding with different device classes

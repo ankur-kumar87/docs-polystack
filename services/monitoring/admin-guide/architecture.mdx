@@ -1,6 +1,6 @@
 ---
-title: "XIMP Architecture"
-description: "Understand the XIMP service layers — collection, storage, and serving — and how metrics, logs, and flow data move from infrastructure sources to operators."
+title: "Monitoring Architecture"
+description: "Understand the Monitoring service layers — collection, storage, and serving — and how metrics, logs, and flow data move from infrastructure sources to operators."
 sidebarTitle: "Architecture"
 ---
 
@@ -8,7 +8,7 @@ import AdminWarning from '/snippets/admin-warning.mdx';
 
 ## Overview
 
-XIMP is composed of multiple service layers that collect, transport, store, and serve
+Monitoring is composed of multiple service layers that collect, transport, store, and serve
 observability data to operators and automation systems. Understanding the architecture
 helps administrators plan deployments, troubleshoot ingestion issues, and optimize
 resource allocation for the monitoring platform itself.
@@ -17,7 +17,7 @@ resource allocation for the monitoring platform itself.
 
 <Tabs>
   <Tab title="XDeploy" icon="server">
-    XIMP services are enabled and configured through the XDeploy Configuration panel:
+    Monitoring services are enabled and configured through the XDeploy Configuration panel:
 
     <Steps titleSize="h3">
       <Step title="Open Configuration" icon="settings">
@@ -38,7 +38,7 @@ resource allocation for the monitoring platform itself.
         Click **Save Configuration**, then navigate to **XDeploy → Operations** and
         run a **Deploy** or **Reconfigure** for the monitoring services.
 
-        <Check>XIMP monitoring stack is deployed and collecting data.</Check>
+        <Check>Monitoring monitoring stack is deployed and collecting data.</Check>
       </Step>
     </Steps>
   </Tab>
@@ -78,7 +78,7 @@ graph TD
     subgraph Serving
         K["Query API"]
         L["Alert Engine"]
-        M["XIMP Dashboard"]
+        M["Monitoring Dashboard"]
     end
 
     A --> E & F
@@ -115,13 +115,13 @@ graph TD
 
 <AccordionGroup>
   <Accordion title="Metric Agent" icon="activity">
-    The Metric Agent runs as a systemd service (`ximp-agent`) on every managed node.
+    The Metric Agent runs as a systemd service (`monitoring-agent`) on every managed node.
     It scrapes metrics from:
     - Local node exporters (CPU, memory, disk, network)
     - Service-specific exporters registered as scrape targets
     - Application endpoints exposing metrics in the standard format
 
-    Agents authenticate to the XIMP collector using per-node tokens. Tokens are
+    Agents authenticate to the Monitoring collector using per-node tokens. Tokens are
     generated during node registration and rotated on a configurable schedule.
 
     Default scrape interval: **30 seconds**
@@ -134,7 +134,7 @@ graph TD
     - JSON-structured log parsing for service logs
     - Syslog reception for services that write to syslog instead of files
 
-    Log collector configuration is defined in `/etc/ximp/log-sources.yaml` on each
+    Log collector configuration is defined in `/etc/monitoring/log-sources.yaml` on each
     managed node and managed by XDeploy.
   </Accordion>
 
@@ -156,8 +156,8 @@ graph TD
 ## Deployment Topology
 
 <Tabs>
-  <Tab title="Standard (Single-Node XIMP)" icon="server">
-    For environments up to ~50 monitored nodes, all XIMP services can run on a
+  <Tab title="Standard (Single-Node Monitoring)" icon="server">
+    For environments up to ~50 monitored nodes, all Monitoring services can run on a
     single dedicated node:
 
     - Metric Store, Log Index, Flow Store co-located
@@ -165,16 +165,16 @@ graph TD
     - Alert Engine evaluates all rules
     - Estimated resources: 8 vCPU, 32 GB RAM, 2 TB SSD storage
   </Tab>
-  <Tab title="Scaled (Multi-Node XIMP)" icon="layers">
+  <Tab title="Scaled (Multi-Node Monitoring)" icon="layers">
     For larger environments (50+ nodes) or high-cardinality metric workloads,
-    distribute XIMP services:
+    distribute Monitoring services:
 
     - Metric Store: dedicated node with NVMe storage for write throughput
     - Log Index: dedicated node with SSD storage for index performance
     - Multiple collector nodes for horizontal scraping scale
     - Shared Query API and Dashboard behind load balancer
 
-    XDeploy manages the multi-node XIMP deployment. Navigate to
+    XDeploy manages the multi-node Monitoring deployment. Navigate to
     **XDeploy → Configuration → Monitoring** to configure the topology.
   </Tab>
 </Tabs>

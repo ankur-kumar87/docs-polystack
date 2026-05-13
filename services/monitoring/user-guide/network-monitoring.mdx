@@ -6,7 +6,7 @@ sidebarTitle: "Network Monitoring"
 
 ## Overview
 
-The XIMP Network Traffic Monitoring module provides deep visibility into traffic flows,
+The Monitoring Network Traffic Monitoring module provides deep visibility into traffic flows,
 bandwidth consumption, and protocol distribution across your virtual and physical networks.
 Operations teams use it to identify top bandwidth consumers, investigate anomalous patterns,
 and baseline normal network behavior.
@@ -15,7 +15,7 @@ and baseline normal network behavior.
   **Prerequisites**
   - An active Polystack account with project access
   - Network flow collection configured by your administrator
-    (see [XIMP Admin — Agent Configuration](/services/monitoring/admin-guide/agent-config))
+    (see [Monitoring Admin — Agent Configuration](/services/monitoring/admin-guide/agent-config))
 </Note>
 
 ---
@@ -41,15 +41,15 @@ and baseline normal network behavior.
   </Tab>
   <Tab title="CLI" icon="terminal">
     ```bash title="Get top bandwidth consumers (last 1h)"
-    ximp network top-talkers --period 1h --limit 10
+    monitoring network top-talkers --period 1h --limit 10
     ```
 
     ```bash title="Show traffic for a specific host"
-    ximp network flows --host 10.0.1.50 --from now-24h
+    monitoring network flows --host 10.0.1.50 --from now-24h
     ```
 
     ```bash title="Export flow data"
-    ximp network export \
+    monitoring network export \
       --network prod-tenant-net \
       --from 2026-03-17T00:00 \
       --to 2026-03-17T23:59 \
@@ -64,7 +64,7 @@ and baseline normal network behavior.
 
 <Steps titleSize="h3">
   <Step title="Review the Anomaly Detection panel" icon="circle-x">
-    Navigate to **Monitor Center > Monitoring** (Network Anomaly, admin view). XIMP uses behavioral
+    Navigate to **Monitor Center > Monitoring** (Network Anomaly, admin view). Monitoring uses behavioral
     baselines to flag traffic patterns that deviate significantly from historical norms.
 
     Each anomaly entry shows:
@@ -98,7 +98,7 @@ and baseline normal network behavior.
     burst traffic).
 
     <Tip>
-      Use XIMP's **Linked Panels** feature to open the Log Explorer pre-filtered
+      Use Monitoring's **Linked Panels** feature to open the Log Explorer pre-filtered
       to the host and time range of a network anomaly with a single click.
     </Tip>
   </Step>
@@ -135,7 +135,7 @@ Alert on network conditions that indicate problems or security events:
     ```
 
     ```bash title="Create alert"
-    ximp alert rule create --file alert-packet-loss.yaml
+    monitoring alert rule create --file alert-packet-loss.yaml
     ```
   </Tab>
 </Tabs>
@@ -154,7 +154,7 @@ Alert on network conditions that indicate problems or security events:
   <Card title="Alert Rules (Advanced)" href="/services/monitoring/user-guide/alert-rules" color="#197560">
     Configure compound alert conditions and escalation for network events
   </Card>
-  <Card title="XIMP Admin — DDoS Protection" href="/services/monitoring/admin-guide/ddos-protection" color="#197560">
+  <Card title="Monitoring Admin — DDoS Protection" href="/services/monitoring/admin-guide/ddos-protection" color="#197560">
     Configure automatic DDoS mitigation policies (administrator)
   </Card>
 </CardGroup>

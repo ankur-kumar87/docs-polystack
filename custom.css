@@ -2,3 +2,9 @@
 .card {
   border-width: 2px !important;
 }
+
+/* Increase docs sidebar/header logo size */
+.nav-logo {
+  height: 3.75rem !important;
+  max-width: 18rem !important;
+}

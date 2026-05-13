@@ -109,9 +109,9 @@ Replication health alerts:
 
 ---
 
-## Integration with XIMP
+## Integration with Monitoring
 
-For continuous monitoring, connect the object storage recon endpoint to XIMP
+For continuous monitoring, connect the object storage recon endpoint to Monitoring
 (Polystack Infrastructure Monitoring Platform):
 
 ```yaml title="Prometheus scrape config for object storage"
@@ -123,7 +123,7 @@ scrape_configs:
 ```
 
 <Tip>
-  Configure alerting rules in XIMP for the critical thresholds above. Set notification
+  Configure alerting rules in Monitoring for the critical thresholds above. Set notification
   channels for the on-call team to respond to 507 storage errors and quarantine
   count spikes promptly.
 </Tip>

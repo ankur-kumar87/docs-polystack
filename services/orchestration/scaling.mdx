@@ -75,7 +75,7 @@ the message queue.
 <Tip>
   Engine workers are I/O bound (waiting on cloud service API calls), not CPU bound.
   You can safely set `heat_engine_workers` higher than the physical CPU count.
-  Monitor the message queue depth in XIMP to identify bottlenecks.
+  Monitor the message queue depth in Monitoring to identify bottlenecks.
 </Tip>
 
 ---
@@ -135,7 +135,7 @@ Expected output — all services show `status: up`:
 ```
 
 <Tip>
-  Set up an alert in XIMP for `orchestration_engine_up == 0` to detect engine worker
+  Set up an alert in Monitoring for `orchestration_engine_up == 0` to detect engine worker
   failures before they affect user deployments.
 </Tip>
 

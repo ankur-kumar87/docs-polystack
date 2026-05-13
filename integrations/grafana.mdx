@@ -8,12 +8,12 @@ sidebarTitle: "Grafana"
 
 Grafana connects to Prometheus and other Polystack data sources to provide operational dashboards
 for infrastructure metrics, service health, storage utilization, and network performance.
-Grafana is included in the XIMP monitoring stack and is pre-configured with a Prometheus
+Grafana is included in the Monitoring monitoring stack and is pre-configured with a Prometheus
 data source pointing to the cluster's Prometheus instance.
 
 <Note>
   **Prerequisites**
-  - Grafana 9.0 or later (included in XIMP stack)
+  - Grafana 9.0 or later (included in Monitoring stack)
   - Prometheus deployed and scraping targets ([Prometheus integration](/integrations/prometheus))
   - Grafana admin credentials (default: sourced from XDeploy configuration)
   - Network access from the Grafana host to Prometheus on port 9090
@@ -226,8 +226,8 @@ to **Query**, select the Prometheus data source, and enter the label values quer
   <Card title="Prometheus Integration" href="/integrations/prometheus" color="#197560">
     Configure Prometheus scrape targets and alert rules that feed Grafana data sources
   </Card>
-  <Card title="XIMP Monitoring" href="/services/monitoring/user-guide/dashboards" color="#197560">
-    Explore the built-in XIMP monitoring stack that includes pre-configured Grafana
+  <Card title="Monitoring Monitoring" href="/services/monitoring/user-guide/dashboards" color="#197560">
+    Explore the built-in Monitoring monitoring stack that includes pre-configured Grafana
   </Card>
   <Card title="Auto-Scaling" href="/services/orchestration/autoscaling" color="#197560">
     Visualize auto-scaling group size changes on Grafana time series dashboards

@@ -18,7 +18,7 @@
 - **Company**: Polystack Technologies
 - **Colors**: Primary `#197560`, Light `#3F8F7E`, Dark `#145C4C`
 - **Fonts**: Gilroy (headings), Tenorite (body)
-- **Products**: Ironcore, XIMP, XHCI, XDR, Software-Defined-Storage, XNAS, XNexus, XOS
+- **Products**: Ironcore, Monitoring, XHCI, Disaster Recovery, Software-Defined-Storage, XNAS, XNexus, XOS
 - **Support**: support@polystack.tech
 
 ## Documentation Authoring Standard

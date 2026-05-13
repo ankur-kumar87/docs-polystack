@@ -152,12 +152,11 @@ Documentation MUST use customer-facing names (from `polystack-public-content-gua
 
 | # | Feature | Repo | Doc Status | Current Page | Gap |
 |---|---------|------|-----------|--------------|-----|
-| I1 | **XMS Migration Suite** | 6 repos, 1,671 commits | MISSING | XIMP product page only | 10+ platforms, AI scoring, incremental sync |
-| I2 | **xInsight-AI** | xinsight-ai, 26 commits | MISSING | XNexus product page only | 42 MCP tools, 3 chat modes, on-premises LLM |
-| I3 | **XLicense Portal** | xlicense, 110 commits | N/A-DOCS | — | Backend portal |
-| I4 | **Ironcore Guest Agent** | ironcore-guest-agent, 3 commits | MISSING | — | VSS provider for Windows app-consistent snapshots |
-| I5 | **XOS** (custom Ubuntu 24.04) | subiquity+cubic | PARTIAL | XOS product page | No install guide |
-| I6 | **Magnum** (Managed K8s) | magnum, 5,624 upstream | PARTIAL | `services/kubernetes/` | Check if it covers Magnum specifics |
+| I1 | **xInsight-AI** | xinsight-ai, 26 commits | MISSING | XNexus product page only | 42 MCP tools, 3 chat modes, on-premises LLM |
+| I2 | **XLicense Portal** | xlicense, 110 commits | N/A-DOCS | — | Backend portal |
+| I3 | **Ironcore Guest Agent** | ironcore-guest-agent, 3 commits | MISSING | — | VSS provider for Windows app-consistent snapshots |
+| I4 | **XOS** (custom Ubuntu 24.04) | subiquity+cubic | PARTIAL | XOS product page | No install guide |
+| I5 | **Magnum** (Managed K8s) | magnum, 5,624 upstream | PARTIAL | `services/kubernetes/` | Check if it covers Magnum specifics |
 | I7 | **Cyborg** (GPU/Accelerator) | cyborg, 1,058 upstream | MISSING | — | 10 drivers, GPU management |
 | I8 | **Magnum Cluster API** (CAPI) | magnum-cluster-api, 855 | MISSING | — | Alternative Helm driver |
 
@@ -206,10 +205,9 @@ Documentation MUST use customer-facing names (from `polystack-public-content-gua
 3. **3 Memory Methods** (A3) — balloon+DIMM+virtio-mem unique combination
 4. **Combined Manual+Auto Storage Tiering** (F1+B2) — VMware deprecated SDRS
 5. **Built-in SIEM** (C1+D1) — no competitor includes SIEM in base
-6. **XMS Migration Suite** (I1) — 10+ source platforms, most in market
-7. **xInsight-AI** (I2) — on-premises NLP cloud management
-8. **Per-Volume Selective Encryption** (F3) — competitors are all-or-nothing
-9. **Triple Compliance Scanning** (D13) — SCA+Lynis+OpenSCAP
+6. **xInsight-AI** (I1) — on-premises NLP cloud management
+7. **Per-Volume Selective Encryption** (F3) — competitors are all-or-nothing
+8. **Triple Compliance Scanning** (D13) — SCA+Lynis+OpenSCAP
 
 ### P1 — Major Features
 10. Cluster Health Dashboard (C2)

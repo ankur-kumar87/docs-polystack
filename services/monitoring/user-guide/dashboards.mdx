@@ -1,12 +1,12 @@
 ---
 title: "Dashboards"
-description: "Navigate XIMP infrastructure dashboards, create custom views, and drill down into compute, storage, and network metrics."
+description: "Navigate Monitoring infrastructure dashboards, create custom views, and drill down into compute, storage, and network metrics."
 sidebarTitle: "Dashboards"
 ---
 
 ## Overview
 
-XIMP dashboards provide real-time and historical views of your environment across
+Monitoring dashboards provide real-time and historical views of your environment across
 infrastructure, application, and network layers. Built-in dashboards cover the most
 common monitoring needs; custom dashboards let you build focused views for specific
 teams or services.
@@ -14,7 +14,7 @@ teams or services.
 <Note>
   **Prerequisites**
   - An active Polystack account with project access
-  - XIMP accessible from your Dashboard account (**Monitor Center** (admin view))
+  - Monitoring accessible from your Dashboard account (**Monitor Center** (admin view))
 </Note>
 
 <Warning>
@@ -30,7 +30,7 @@ teams or services.
     <Steps titleSize="h3">
       <Step title="Access the monitoring portal" icon="activity">
         Navigate to
-        **Monitor Center** (admin view) to open the XIMP portal.
+        **Monitor Center** (admin view) to open the Monitoring portal.
       </Step>
       <Step title="Select a dashboard" icon="layout-grid">
         The **Home** view displays the default infrastructure overview dashboard. Use
@@ -61,11 +61,11 @@ teams or services.
     List available dashboards programmatically for automation or scripting:
 
     ```bash title="List available dashboards"
-    ximp dashboard list
+    monitoring dashboard list
     ```
 
     ```bash title="Export a dashboard as JSON"
-    ximp dashboard export --name "Infrastructure Overview" \
+    monitoring dashboard export --name "Infrastructure Overview" \
       --output infra-overview.json
     ```
   </Tab>
@@ -94,7 +94,7 @@ teams or services.
     | **Logs** | Embedded log panel for dashboard-level log visibility |
   </Step>
   <Step title="Configure the metric query" icon="search">
-    Define the data source and query for the panel. XIMP supports the native
+    Define the data source and query for the panel. Monitoring supports the native
     metric query language for filtering by host, service, tag, or time range.
 
     Example query for CPU utilization:
@@ -104,7 +104,7 @@ teams or services.
 
     <Note>
       Queries are not executed against external systems — all data flows through
-      XIMP's internal collection pipeline. No external API keys are required.
+      Monitoring's internal collection pipeline. No external API keys are required.
     </Note>
   </Step>
   <Step title="Save and share" icon="share">

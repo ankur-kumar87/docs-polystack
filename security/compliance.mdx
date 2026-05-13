@@ -11,7 +11,7 @@ Polystack Platform generates structured audit logs for all API calls, authentica
 <Note>
   **Prerequisites**
   - Administrator role in Polystack Identity
-  - For log aggregation: XIMP (Infrastructure Monitoring) enabled with the centralized logging add-on
+  - For log aggregation: Monitoring (Infrastructure Monitoring) enabled with the centralized logging add-on
   - For compliance reports: access to the audit log pipeline or SIEM tool receiving Polystack events
 </Note>
 
@@ -79,13 +79,13 @@ glance_audit_events: "all"
 ## Log Aggregation and Retention
 
 <Tabs>
-  <Tab title="Centralized Logging (XIMP)" icon="gauge">
+  <Tab title="Centralized Logging (Monitoring)" icon="gauge">
     <Steps titleSize="h3">
       <Step title="Enable central logging" icon="settings">
         In XDeploy, navigate to **Configuration → Global Settings** and enable **Central Logging**. This activates Fluentd on all nodes and deploys OpenSearch as the log aggregation backend.
       </Step>
       <Step title="Configure retention policy" icon="clock">
-        Navigate to **XIMP → Log Management → Index Policies**. Set the retention period:
+        Navigate to **Monitoring → Log Management → Index Policies**. Set the retention period:
 
         | Log Type | Minimum Retention | Recommended |
         |----------|------------------|-------------|
@@ -99,7 +99,7 @@ glance_audit_events: "all"
       <Step title="Configure SIEM forwarding" icon="arrow-right">
         To forward audit events to an external SIEM:
 
-        Navigate to **XIMP → Integrations → Log Forwarding** and configure the SIEM endpoint, authentication, and event filter.
+        Navigate to **Monitoring → Integrations → Log Forwarding** and configure the SIEM endpoint, authentication, and event filter.
 
         <Check>Events appear in the SIEM within the configured polling interval (typically 30–60 seconds).</Check>
       </Step>
@@ -266,7 +266,7 @@ curl -sk -u admin:<password> \
   <Card title="Data Security" href="/security/data-security" color="#197560">
     Volume and object encryption for data-at-rest compliance requirements
   </Card>
-  <Card title="Monitoring (XIMP)" href="/services/monitoring/index" color="#197560">
+  <Card title="Monitoring" href="/services/monitoring/index" color="#197560">
     Log aggregation, alerting, and security event dashboards
   </Card>
 </CardGroup>

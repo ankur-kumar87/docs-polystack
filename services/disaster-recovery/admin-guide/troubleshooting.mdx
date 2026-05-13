@@ -1,15 +1,15 @@
 ---
-title: "XDR Admin Troubleshooting"
-description: "Diagnose and resolve XDR administrator-level issues — initial sync failures, unexpected automatic failovers, runbook script errors, and site connectivity problems."
+title: "Disaster Recovery Admin Troubleshooting"
+description: "Diagnose and resolve Disaster Recovery administrator-level issues — initial sync failures, unexpected automatic failovers, runbook script errors, and site connectivity problems."
 sidebarTitle: "Troubleshooting"
 ---
 
 ## Overview
 
-This page covers administrator-level XDR diagnostics — issues requiring access to
+This page covers administrator-level Disaster Recovery diagnostics — issues requiring access to
 site configuration, replication link settings, or runbook script management. For
 user-facing issues such as replication lag and DR test access problems, see
-[XDR User Guide — Troubleshooting](/services/disaster-recovery/user-guide/troubleshooting).
+[Disaster Recovery User Guide — Troubleshooting](/services/disaster-recovery/user-guide/troubleshooting).
 
 <Note>
   **Prerequisites**
@@ -79,7 +79,7 @@ user-facing issues such as replication lag and DR test access problems, see
 
     **Resolution**:
     - Verify firewall rules allow TCP 7000-7002 bidirectionally between site CIDRs
-    - Check that XDR agent processes are running on both sites by reviewing the agent
+    - Check that Disaster Recovery agent processes are running on both sites by reviewing the agent
       status indicator in **Disaster Recovery → Sites → [Site]**
     - If the agent is stopped, restart it via XDeploy on the affected site
     - Check agent logs for TLS certificate errors — certificates may have expired
@@ -94,7 +94,7 @@ user-facing issues such as replication lag and DR test access problems, see
     with a warning indicator.
 
     **Resolution**:
-    - For lag issues: see [XDR User Guide — Troubleshooting](/services/disaster-recovery/user-guide/troubleshooting)
+    - For lag issues: see [Disaster Recovery User Guide — Troubleshooting](/services/disaster-recovery/user-guide/troubleshooting)
     - For deleted resources: remove the stale resource reference from the plan by
       selecting the resource in the plan editor and clicking **Remove Resource**
   </Accordion>
@@ -119,7 +119,7 @@ user-facing issues such as replication lag and DR test access problems, see
 
 ## Diagnostics Reference
 
-All diagnostic operations are performed through the XDR Dashboard:
+All diagnostic operations are performed through the Disaster Recovery Dashboard:
 
 | Issue | Dashboard Location |
 |-------|-------------------|
@@ -137,9 +137,9 @@ All diagnostic operations are performed through the XDR Dashboard:
 
 | Log Source | Access Method |
 |-----------|--------------|
-| XDR controller logs | **Monitoring → Log Explorer** → `service: xdr-controller` |
-| XDR agent logs (primary) | **Monitoring → Log Explorer** → `service: xdr-agent AND site: primary-dc1` |
-| XDR agent logs (DR) | **Monitoring → Log Explorer** → `service: xdr-agent AND site: dr-site-a` |
+| Disaster Recovery controller logs | **Monitoring → Log Explorer** → `service: disaster-recovery-controller` |
+| Disaster Recovery agent logs (primary) | **Monitoring → Log Explorer** → `service: disaster-recovery-agent AND site: primary-dc1` |
+| Disaster Recovery agent logs (DR) | **Monitoring → Log Explorer** → `service: disaster-recovery-agent AND site: dr-site-a` |
 | Failover event timeline | **Disaster Recovery → Failover Status → [Plan] → Event Timeline** |
 | Runbook output | **Disaster Recovery → Failover Status → [Plan] → Runbook Log** |
 
@@ -152,7 +152,7 @@ Contact [support@polystack.tech](mailto:support@polystack.tech) if:
 - Initial sync has made no progress for more than 4 hours despite connectivity being confirmed
 - Sites show `CONNECTED` but replication lag continues to increase
 - Certificate renewal fails repeatedly and replication has stopped
-- A failover event log shows an internal XDR controller error (not a script or connectivity error)
+- A failover event log shows an internal Disaster Recovery controller error (not a script or connectivity error)
 - Failback cannot be initiated after an unexpected automatic failover
 
 ---
@@ -160,7 +160,7 @@ Contact [support@polystack.tech](mailto:support@polystack.tech) if:
 ## Next Steps
 
 <CardGroup cols={2}>
-  <Card title="XDR User Guide — Troubleshooting" href="/services/disaster-recovery/user-guide/troubleshooting" color="#197560">
+  <Card title="Disaster Recovery User Guide — Troubleshooting" href="/services/disaster-recovery/user-guide/troubleshooting" color="#197560">
     User-facing replication lag, stuck failover, and test access issues
   </Card>
   <Card title="Replication Configuration" href="/services/disaster-recovery/admin-guide/replication-config" color="#197560">

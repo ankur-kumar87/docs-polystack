@@ -1,12 +1,12 @@
 ---
-title: "XDR Security"
-description: "Secure XDR deployments with replication encryption, RBAC access control, site token management, and audit logging."
+title: "Disaster Recovery Security"
+description: "Secure Disaster Recovery deployments with replication encryption, RBAC access control, site token management, and audit logging."
 sidebarTitle: "Security"
 ---
 
 ## Overview
 
-XDR security spans three domains: encryption of data in transit across the replication
+Disaster Recovery security spans three domains: encryption of data in transit across the replication
 link, access control over who can initiate potentially destructive failover operations,
 and credential isolation between sites using token-based authentication.
 
@@ -44,7 +44,7 @@ All replication traffic between primary and DR sites is encrypted in transit.
 
     To manually trigger certificate renewal, navigate to **Disaster Recovery → Sites → [Site] → Certificates** and click **Renew Certificate**.
 
-    Monitor certificate expiry in XIMP by creating an alert rule:
+    Monitor certificate expiry in Monitoring by creating an alert rule:
 
     | Setting | Value |
     |---------|-------|
@@ -55,7 +55,7 @@ All replication traffic between primary and DR sites is encrypted in transit.
   <Accordion title="Encryption at rest" icon="hard-drive">
     Replicated data at rest on the DR site is encrypted using the same storage
     encryption policy as the primary site. Configure encryption at rest in Software-Defined-Storage
-    at the pool or volume level — XDR inherits the encryption status of the
+    at the pool or volume level — Disaster Recovery inherits the encryption status of the
     source volumes.
 
     See [Software-Defined-Storage Admin — Security](/services/sds/admin-guide/security) for storage
@@ -67,7 +67,7 @@ All replication traffic between primary and DR sites is encrypted in transit.
 
 ## RBAC Access Control
 
-XDR operations are governed by Polystack identity roles. Failover and failback are
+Disaster Recovery operations are governed by Polystack identity roles. Failover and failback are
 potentially disruptive operations — restrict them to trained personnel.
 
 | Role | Permissions |
@@ -102,7 +102,7 @@ potentially disruptive operations — restrict them to trained personnel.
 </Tabs>
 
 <Warning>
-  Grant `dr-operator` access only to personnel trained in XDR failover procedures.
+  Grant `dr-operator` access only to personnel trained in Disaster Recovery failover procedures.
   An untrained operator initiating an unnecessary failover can cause extended
   service disruption and require a full failback cycle to restore normal operations.
 </Warning>
@@ -111,7 +111,7 @@ potentially disruptive operations — restrict them to trained personnel.
 
 ## Site Token Management
 
-XDR agents authenticate between sites using site-specific tokens, not user credentials.
+Disaster Recovery agents authenticate between sites using site-specific tokens, not user credentials.
 This isolates site-to-site authentication from user identity management.
 
 ### Token Lifecycle
@@ -139,7 +139,7 @@ Manage tokens from **Disaster Recovery → Sites → [Site] → Token Management
 
 ## Audit Logging
 
-XDR records all administrative actions and failover events in an immutable audit log.
+Disaster Recovery records all administrative actions and failover events in an immutable audit log.
 
 | Event Category | Logged Information |
 |---------------|-------------------|
@@ -182,7 +182,7 @@ to verify that only the required replication ports are accessible between sites.
     Export audit logs for compliance reporting
   </Card>
   <Card title="Software-Defined-Storage Admin — Security" href="/services/sds/admin-guide/security" color="#197560">
-    Configure storage encryption that XDR inherits
+    Configure storage encryption that Disaster Recovery inherits
   </Card>
   <Card title="Identity & Access Admin Guide" href="/services/identity/admin-guide" color="#197560">
     Manage Polystack RBAC roles and identity federation

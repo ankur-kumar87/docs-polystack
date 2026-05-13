@@ -1,6 +1,6 @@
 ---
 title: "Monitoring"
-description: "Monitor Software-Defined-Storage cluster health, OSD status, and I/O performance through XIMP integration — key metrics, alert thresholds, and observability configuration."
+description: "Monitor Software-Defined-Storage cluster health, OSD status, and I/O performance through Monitoring integration — key metrics, alert thresholds, and observability configuration."
 sidebarTitle: "Monitoring"
 ---
 
@@ -8,7 +8,7 @@ import AdminWarning from '/snippets/admin-warning.mdx';
 
 ## Overview
 
-Software-Defined-Storage cluster health and performance data is exported to XIMP for centralized monitoring
+Software-Defined-Storage cluster health and performance data is exported to Monitoring for centralized monitoring
 and alerting. This page covers the key metrics to monitor, recommended alert thresholds,
 and how to configure the integration.
 
@@ -17,7 +17,7 @@ and how to configure the integration.
 <Note>
   **Prerequisites**
   - Administrator credentials with the `admin` role
-  - XIMP deployed and accessible (see [XIMP Admin Guide](/services/monitoring/admin-guide))
+  - Monitoring deployed and accessible (see [Monitoring Admin Guide](/services/monitoring/admin-guide))
   - Metric scrape target configured for the Software-Defined-Storage cluster metrics endpoint
 </Note>
 
@@ -37,7 +37,7 @@ and how to configure the integration.
 
 ---
 
-## Configuring XIMP Integration
+## Configuring Monitoring Integration
 
 <Steps titleSize="h3">
   <Step title="Verify metrics endpoint" icon="activity">
@@ -50,7 +50,7 @@ and how to configure the integration.
 
     Port `9283` is the default metrics exporter port deployed by XDeploy.
   </Step>
-  <Step title="Add scrape target in XIMP" icon="plus">
+  <Step title="Add scrape target in Monitoring" icon="plus">
     Navigate to **Monitoring → Administration → Scrape Targets → Add Target**:
 
     | Field | Value |
@@ -61,7 +61,7 @@ and how to configure the integration.
 
     Or via CLI:
     ```bash title="Add Software-Defined-Storage scrape target"
-    ximp target add \
+    monitoring target add \
       --url http://<MGMT_NODE_IP>:9283/metrics \
       --interval 60s \
       --label service=Software-Defined-Storage \
@@ -92,7 +92,7 @@ and how to configure the integration.
 
 ## Built-In Dashboards
 
-The XIMP portal includes pre-built Software-Defined-Storage dashboards. Navigate to
+The Monitoring portal includes pre-built Software-Defined-Storage dashboards. Navigate to
 **Monitoring → Dashboards** and search for "Software-Defined-Storage" or "Storage":
 
 | Dashboard | Shows |
@@ -103,7 +103,7 @@ The XIMP portal includes pre-built Software-Defined-Storage dashboards. Navigate
 | **Software-Defined-Storage Recovery** | Active recovery operations, estimated completion time |
 
 <Tip>
-  Pin the "Software-Defined-Storage Cluster Overview" dashboard to your XIMP home screen for constant
+  Pin the "Software-Defined-Storage Cluster Overview" dashboard to your Monitoring home screen for constant
   visibility during on-call rotations.
 </Tip>
 
@@ -111,7 +111,7 @@ The XIMP portal includes pre-built Software-Defined-Storage dashboards. Navigate
 
 ## Cluster CLI Health Check
 
-For quick health checks without opening the XIMP portal, use the management CLI
+For quick health checks without opening the Monitoring portal, use the management CLI
 directly from a cluster node:
 
 ```bash title="Quick health overview"
@@ -135,7 +135,7 @@ ceph health detail | grep -i slow
 ## Next Steps
 
 <CardGroup cols={2}>
-  <Card title="XIMP Admin Guide" href="/services/monitoring/admin-guide" color="#197560">
+  <Card title="Monitoring Admin Guide" href="/services/monitoring/admin-guide" color="#197560">
     Configure the monitoring platform that collects and displays Software-Defined-Storage metrics
   </Card>
   <Card title="Capacity Planning" href="/services/sds/admin-guide/capacity-planning" color="#197560">
@@ -144,7 +144,7 @@ ceph health detail | grep -i slow
   <Card title="Troubleshooting" href="/services/sds/admin-guide/troubleshooting" color="#197560">
     Diagnose the issues surfaced by monitoring alerts
   </Card>
-  <Card title="XIMP Alert Rules" href="/services/monitoring/admin-guide/alert-channels" color="#197560">
+  <Card title="Monitoring Alert Rules" href="/services/monitoring/admin-guide/alert-channels" color="#197560">
     Configure notification channels for storage health alerts
   </Card>
 </CardGroup>

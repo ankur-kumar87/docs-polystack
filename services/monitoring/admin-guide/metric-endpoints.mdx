@@ -1,6 +1,6 @@
 ---
 title: "Metric Endpoints"
-description: "Configure XIMP metric scrape targets, manage endpoint discovery, and organize metrics by namespace for alert rules and dashboards."
+description: "Configure Monitoring metric scrape targets, manage endpoint discovery, and organize metrics by namespace for alert rules and dashboards."
 sidebarTitle: "Metric Endpoints"
 ---
 
@@ -8,7 +8,7 @@ import AdminWarning from '/snippets/admin-warning.mdx';
 
 ## Overview
 
-XIMP scrapes metrics from standardized metric endpoints exposed by services across
+Monitoring scrapes metrics from standardized metric endpoints exposed by services across
 the infrastructure. Most infrastructure services are auto-detected via agent registration.
 This page covers configuring additional endpoints for application-specific exporters
 and managing the namespace organization of collected metrics.
@@ -18,7 +18,7 @@ and managing the namespace organization of collected metrics.
 <Note>
   **Prerequisites**
   - Administrator credentials with the `admin` role
-  - Target endpoints must be reachable from the XIMP collector nodes
+  - Target endpoints must be reachable from the Monitoring collector nodes
 </Note>
 
 ---
@@ -35,11 +35,11 @@ and managing the namespace organization of collected metrics.
   </Tab>
   <Tab title="CLI" icon="terminal">
     ```bash title="List all scrape targets"
-    ximp target list
+    monitoring target list
     ```
 
     ```bash title="Check target health with details"
-    ximp target health --verbose
+    monitoring target health --verbose
     ```
 
     Targets with status `DOWN` are not being scraped. Review connectivity and
@@ -65,7 +65,7 @@ and managing the namespace organization of collected metrics.
   </Tab>
   <Tab title="CLI" icon="terminal">
     ```bash title="Add scrape target"
-    ximp target add \
+    monitoring target add \
       --url http://10.0.1.71:9399/metrics \
       --interval 30s \
       --label service=polystack-filefs \
@@ -73,7 +73,7 @@ and managing the namespace organization of collected metrics.
     ```
 
     ```bash title="Add target with basic auth"
-    ximp target add \
+    monitoring target add \
       --url https://10.0.1.71:9291/metrics \
       --interval 60s \
       --label service=storage-cluster \
@@ -82,7 +82,7 @@ and managing the namespace organization of collected metrics.
     ```
 
     ```bash title="Remove a target"
-    ximp target remove <TARGET_ID>
+    monitoring target remove <TARGET_ID>
     ```
   </Tab>
 </Tabs>
@@ -91,7 +91,7 @@ and managing the namespace organization of collected metrics.
 
 ## Metric Namespaces
 
-XIMP organizes metrics by namespace. Use the namespace prefix when writing alert
+Monitoring organizes metrics by namespace. Use the namespace prefix when writing alert
 rules and dashboard queries:
 
 | Namespace | Source | Example Metrics |
@@ -101,23 +101,23 @@ rules and dashboard queries:
 | `polystack_network` | Network agents | `interface_rx_bytes`, `packet_loss_pct` |
 | `polystack_vm` | Ironcore Guest Agent | `vm_cpu_usage`, `vm_memory_rss` |
 | `polystack_filefs` | File FS service | `requests_total`, `guestfs_handles_active` |
-| `xdr` | Disaster recovery agent | `replication_lag_seconds`, `site_health` |
+| `disaster-recovery` | Disaster recovery agent | `replication_lag_seconds`, `site_health` |
 
 ---
 
 ## Firewall Requirements
 
-Metric endpoints must be accessible from the XIMP collector nodes. Configure
+Metric endpoints must be accessible from the Monitoring collector nodes. Configure
 security groups or firewall rules to permit:
 
 | Source | Destination | Port | Protocol |
 |--------|-------------|------|----------|
-| XIMP collector IP | Target node | Configured scrape port | TCP |
-| XIMP collector IP | 9100 (node exporter default) | All nodes | TCP |
-| XIMP collector IP | 9283 (Software-Defined-Storage metrics) | Storage nodes | TCP |
+| Monitoring collector IP | Target node | Configured scrape port | TCP |
+| Monitoring collector IP | 9100 (node exporter default) | All nodes | TCP |
+| Monitoring collector IP | 9283 (Software-Defined-Storage metrics) | Storage nodes | TCP |
 
 <Note>
-  XIMP collector IPs are listed under **Monitor Center > Monitoring** (Collectors, admin view).
+  Monitoring collector IPs are listed under **Monitor Center > Monitoring** (Collectors, admin view).
   Update security group rules to include all collector IPs when adding new collectors
   during scale-out.
 </Note>

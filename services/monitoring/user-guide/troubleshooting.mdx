@@ -1,12 +1,12 @@
 ---
 title: "Troubleshooting"
-description: "Diagnose common XIMP user-facing issues — alerts not firing, missing metrics, log ingestion delays, and dashboard data problems."
+description: "Diagnose common Monitoring user-facing issues — alerts not firing, missing metrics, log ingestion delays, and dashboard data problems."
 sidebarTitle: "Troubleshooting"
 ---
 
 ## Overview
 
-This page covers the most common issues encountered when using XIMP — from alert
+This page covers the most common issues encountered when using Monitoring — from alert
 rules that fail to fire, to dashboards showing no data, to missing or delayed logs.
 
 <Note>
@@ -28,14 +28,14 @@ rules that fail to fire, to dashboards showing no data, to missing or delayed lo
     1. Verify the rule's evaluation period — the condition must persist for the full
        duration before the alert fires:
        ```bash title="Check alert rule configuration"
-       ximp alert rule show <RULE_NAME>
+       monitoring alert rule show <RULE_NAME>
        ```
     2. Check **Monitor Center > Monitoring** (Alert Channels, admin view) to confirm the notification channel
        is active and credentials are valid
     3. Check **Monitor Center > Monitoring** (Silences, admin view) — confirm no active silence covers
        the alert:
        ```bash title="List active silences"
-       ximp alert silence list --status active
+       monitoring alert silence list --status active
        ```
     4. Verify the metric has data in the time window — navigate to the Dashboards and
        check whether the metric panel shows values above the threshold
@@ -49,11 +49,11 @@ rules that fail to fire, to dashboards showing no data, to missing or delayed lo
 
   <Accordion title="Metrics not appearing in dashboards" icon="activity">
     **Cause**: The monitoring agent on the target host is not running, or the host
-    is not registered with XIMP.
+    is not registered with Monitoring.
 
     **Resolution**:
     ```bash title="Check agent registration"
-    ximp agent list --status all
+    monitoring agent list --status all
     ```
 
     Look for hosts with status `offline` or `unknown`. If metrics are missing, contact your administrator. They can verify the monitoring agent status through [XDeploy](/deployment/operations).
@@ -69,7 +69,7 @@ rules that fail to fire, to dashboards showing no data, to missing or delayed lo
     2. Confirm the file path pattern matches the current log file location
     3. Check the collector queue depth:
        ```bash title="Check ingestion queue depth"
-       ximp log ingest-status
+       monitoring log ingest-status
        ```
 
     <Note>
@@ -88,11 +88,11 @@ rules that fail to fire, to dashboards showing no data, to missing or delayed lo
        and look for targets in `DOWN` state
     2. Verify the agent is active for that host:
        ```bash title="Check agent status"
-       ximp agent list --node <HOSTNAME>
+       monitoring agent list --node <HOSTNAME>
        ```
     3. Search for the metric to verify it exists and find the correct name:
        ```bash title="Search metrics by prefix"
-       ximp metric search --prefix polystack_compute_cpu
+       monitoring metric search --prefix polystack_compute_cpu
        ```
   </Accordion>
 
@@ -105,10 +105,10 @@ rules that fail to fire, to dashboards showing no data, to missing or delayed lo
        to send a test notification
     2. If the test fails, review the channel configuration:
        ```bash title="Check channel configuration"
-       ximp alert channel show <CHANNEL_NAME>
+       monitoring alert channel show <CHANNEL_NAME>
        ```
     3. For email channels: verify SMTP credentials and server reachability
-    4. For webhook channels: verify the URL is accessible from the XIMP server
+    4. For webhook channels: verify the URL is accessible from the Monitoring server
     5. For PagerDuty: verify the integration key has not been rotated
 
     <Tip>
@@ -124,11 +124,11 @@ rules that fail to fire, to dashboards showing no data, to missing or delayed lo
 
 | Issue | First Step |
 |-------|-----------|
-| Alert not firing | `ximp alert rule show <RULE_NAME>` |
+| Alert not firing | `monitoring alert rule show <RULE_NAME>` |
 | Agent offline | Contact your administrator to verify agent status via [XDeploy](/deployment/operations) |
-| Missing metric | `ximp metric search --prefix <METRIC_PREFIX>` |
-| Log ingestion backlog | `ximp log ingest-status` |
-| Channel test | Use **Test** button in Dashboard or `ximp alert channel test <NAME>` |
+| Missing metric | `monitoring metric search --prefix <METRIC_PREFIX>` |
+| Log ingestion backlog | `monitoring log ingest-status` |
+| Channel test | Use **Test** button in Dashboard or `monitoring alert channel test <NAME>` |
 
 ---
 
@@ -136,12 +136,12 @@ rules that fail to fire, to dashboards showing no data, to missing or delayed lo
 
 Contact your monitoring administrator if any of the following persist. Your administrator can configure this through [XDeploy](/deployment).
 
-- A host does not appear in `ximp agent list` after restarting the agent service
+- A host does not appear in `monitoring agent list` after restarting the agent service
 - All metrics are missing for multiple hosts simultaneously
 - Log ingestion queue depth has been growing for more than 1 hour
 - TLS certificate errors prevent agent communication
 
-See the [XIMP Admin Guide](/services/monitoring/admin-guide) for administrator-level
+See the [Monitoring Admin Guide](/services/monitoring/admin-guide) for administrator-level
 diagnostics and configuration.
 
 ---
@@ -149,8 +149,8 @@ diagnostics and configuration.
 ## Next Steps
 
 <CardGroup cols={2}>
-  <Card title="XIMP Admin Guide" href="/services/monitoring/admin-guide" color="#197560">
-    Infrastructure-level XIMP administration and agent configuration
+  <Card title="Monitoring Admin Guide" href="/services/monitoring/admin-guide" color="#197560">
+    Infrastructure-level Monitoring administration and agent configuration
   </Card>
   <Card title="Metrics & Alerts" href="/services/monitoring/user-guide/metrics-alerts" color="#197560">
     Review and adjust alert rule configurations

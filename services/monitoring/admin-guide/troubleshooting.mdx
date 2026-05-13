@@ -1,6 +1,6 @@
 ---
 title: "Troubleshooting"
-description: "Diagnose XIMP administrative issues — high cardinality metric performance problems, log ingestion backlogs, missing dashboard data, and scrape target failures."
+description: "Diagnose Monitoring administrative issues — high cardinality metric performance problems, log ingestion backlogs, missing dashboard data, and scrape target failures."
 sidebarTitle: "Troubleshooting"
 ---
 
@@ -8,16 +8,16 @@ import AdminWarning from '/snippets/admin-warning.mdx';
 
 ## Overview
 
-This page covers administrator-level XIMP troubleshooting. For user-facing issues
+This page covers administrator-level Monitoring troubleshooting. For user-facing issues
 such as alert delivery failures and missing metrics on dashboards, see the
-[XIMP User Guide Troubleshooting](/services/monitoring/user-guide/troubleshooting) page.
+[Monitoring User Guide Troubleshooting](/services/monitoring/user-guide/troubleshooting) page.
 
 <AdminWarning />
 
 <Note>
   **Prerequisites**
   - Administrator credentials with the `admin` role
-  - Access to XIMP CLI and management interfaces
+  - Access to Monitoring CLI and management interfaces
 </Note>
 
 ---
@@ -32,7 +32,7 @@ such as alert delivery failures and missing metrics on dashboards, see the
 
     **Diagnosis**:
     ```bash title="List highest-cardinality metric series"
-    ximp metric cardinality top --limit 20
+    monitoring metric cardinality top --limit 20
     ```
 
     **Resolution**:
@@ -45,7 +45,7 @@ such as alert delivery failures and missing metrics on dashboards, see the
 
     Apply via:
     ```bash title="Apply relabel configuration"
-    ximp target update <TARGET_ID> --relabel-file relabel.yaml
+    monitoring target update <TARGET_ID> --relabel-file relabel.yaml
     ```
 
     <Warning>
@@ -61,7 +61,7 @@ such as alert delivery failures and missing metrics on dashboards, see the
 
     **Diagnosis**:
     ```bash title="Check ingestion queue depth"
-    ximp log ingest-status
+    monitoring log ingest-status
     ```
 
     **Resolution**:
@@ -69,14 +69,14 @@ such as alert delivery failures and missing metrics on dashboards, see the
       ```bash title="Example: reduce Nova log level"
       docker exec nova_api crudini --set /etc/nova/nova.conf DEFAULT debug false
       ```
-    - Increase log collector worker count in the XIMP configuration:
+    - Increase log collector worker count in the Monitoring configuration:
       Navigate to **Monitor Center > Logging** (Collector Settings, admin view)
     - Add a second log collector node through XDeploy for horizontal scaling
 
     <Tip>
       A single high-verbosity service at DEBUG level can generate more log volume than
       100 services at INFO. Identify the top log emitters:
-      `ximp log stats top-emitters --last 1h`
+      `monitoring log stats top-emitters --last 1h`
     </Tip>
   </Accordion>
 
@@ -86,7 +86,7 @@ such as alert delivery failures and missing metrics on dashboards, see the
 
     **Diagnosis**:
     ```bash title="Check specific target health"
-    ximp target health --target <URL> --verbose
+    monitoring target health --target <URL> --verbose
     ```
 
     Common causes:
@@ -94,25 +94,25 @@ such as alert delivery failures and missing metrics on dashboards, see the
     | Symptom | Cause | Resolution |
     |---------|-------|-----------|
     | Connection refused | Service not running on target port | Verify service is running; check port |
-    | Timeout | Firewall blocking | Add inbound rule for XIMP collector IP |
+    | Timeout | Firewall blocking | Add inbound rule for Monitoring collector IP |
     | 401 Unauthorized | Invalid auth credentials | Update auth config in target definition |
     | 503 Service Unavailable | Service overloaded | Review service health; reduce scrape frequency |
   </Accordion>
 
-  <Accordion title="XIMP metric store disk full" icon="hard-drive">
+  <Accordion title="Monitoring metric store disk full" icon="hard-drive">
     **Cause**: Metric volume has exceeded the allocated storage for the metric store.
     This can occur from high cardinality, insufficient retention management, or
     unexpected metric bursts.
 
     **Diagnosis**:
     ```bash title="Check metric store disk usage"
-    ximp storage status
+    monitoring storage status
     ```
 
     **Resolution** (in order of preference):
     1. Reduce raw metric retention to free space immediately:
        ```bash title="Reduce raw retention to 15 days (emergency)"
-       ximp retention set --type metrics-raw --duration 15d
+       monitoring retention set --type metrics-raw --duration 15d
        ```
     2. Identify and drop high-cardinality series (see above)
     3. Expand storage on the metric store node through XDeploy
@@ -124,11 +124,11 @@ such as alert delivery failures and missing metrics on dashboards, see the
     changed after a software update.
 
     **Diagnosis**:
-    1. Check target health: `ximp target health --target <URL>`
-    2. Verify agent is active: `ximp agent list --node <HOSTNAME>`
+    1. Check target health: `monitoring target health --target <URL>`
+    2. Verify agent is active: `monitoring agent list --node <HOSTNAME>`
     3. Search for the metric by prefix to find renamed metrics:
        ```bash title="Search metrics by prefix"
-       ximp metric search --prefix polystack_compute_cpu
+       monitoring metric search --prefix polystack_compute_cpu
        ```
 
     If the metric was renamed in a recent software update, update dashboard queries
@@ -142,12 +142,12 @@ such as alert delivery failures and missing metrics on dashboards, see the
 
 | Issue | Diagnostic Command |
 |-------|------------------|
-| Cardinality | `ximp metric cardinality top --limit 20` |
-| Log backlog | `ximp log ingest-status` |
-| Target DOWN | `ximp target health --verbose` |
-| Storage usage | `ximp storage status` |
-| Agent offline | `ximp agent list --status offline` |
-| Top log emitters | `ximp log stats top-emitters --last 1h` |
+| Cardinality | `monitoring metric cardinality top --limit 20` |
+| Log backlog | `monitoring log ingest-status` |
+| Target DOWN | `monitoring target health --verbose` |
+| Storage usage | `monitoring storage status` |
+| Agent offline | `monitoring agent list --status offline` |
+| Top log emitters | `monitoring log stats top-emitters --last 1h` |
 
 ---
 

@@ -1,6 +1,6 @@
 ---
 title: "Alert Channels"
-description: "Configure XIMP notification channels — email, webhook, PagerDuty, and Slack — and set up multi-tier escalation policies for critical infrastructure alerts."
+description: "Configure Monitoring notification channels — email, webhook, PagerDuty, and Slack — and set up multi-tier escalation policies for critical infrastructure alerts."
 sidebarTitle: "Alert Channels"
 ---
 
@@ -8,7 +8,7 @@ import AdminWarning from '/snippets/admin-warning.mdx';
 
 ## Overview
 
-Alert channels define how XIMP delivers notifications when alert rules fire. Channels
+Alert channels define how Monitoring delivers notifications when alert rules fire. Channels
 must be configured before creating alert rules that reference them. This page covers
 creating and testing all supported channel types, and configuring escalation policies
 for critical alerts.
@@ -52,7 +52,7 @@ for critical alerts.
     </Steps>
   </Tab>
   <Tab title="CLI" icon="terminal">
-    Alert channels can also be configured through the XIMP CLI and the Monitoring
+    Alert channels can also be configured through the Monitoring CLI and the Monitoring
     Dashboard. See the sections below for channel-specific configuration.
   </Tab>
 </Tabs>
@@ -97,11 +97,11 @@ for critical alerts.
   </Tab>
   <Tab title="CLI" icon="terminal">
     ```bash title="List configured channels"
-    ximp alert channel list
+    monitoring alert channel list
     ```
 
     ```bash title="Add email channel"
-    ximp alert channel create \
+    monitoring alert channel create \
       --name ops-email \
       --type email \
       --to ops-team@example.com \
@@ -109,19 +109,19 @@ for critical alerts.
     ```
 
     ```bash title="Add webhook channel"
-    ximp alert channel create \
+    monitoring alert channel create \
       --name ops-webhook \
       --type webhook \
-      --url https://hooks.example.com/ximp \
+      --url https://hooks.example.com/monitoring \
       --method POST
     ```
 
     ```bash title="Test a channel"
-    ximp alert channel test ops-webhook
+    monitoring alert channel test ops-webhook
     ```
 
     ```bash title="Delete a channel"
-    ximp alert channel delete ops-webhook
+    monitoring alert channel delete ops-webhook
     ```
   </Tab>
 </Tabs>
@@ -169,10 +169,10 @@ Configure multi-tier escalation for critical infrastructure alerts:
     smtp:
       server: smtp.example.com
       port: 587
-      username: ximp@example.com
+      username: monitoring@example.com
       password: <SMTP_PASSWORD>
       tls: starttls
-    from: ximp@example.com
+    from: monitoring@example.com
     recipients:
       - ops-team@example.com
       - oncall@example.com
@@ -197,7 +197,7 @@ Configure multi-tier escalation for critical infrastructure alerts:
     type: slack
     webhook_url: https://hooks.slack.com/services/T.../B.../...
     channel: "#ops-alerts"
-    username: "XIMP Alerts"
+    username: "Monitoring Alerts"
     icon_emoji: ":alert:"
     ```
 

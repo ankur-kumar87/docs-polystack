@@ -1,6 +1,6 @@
 ---
 title: "DDoS Protection"
-description: "Configure XIMP DDoS detection thresholds, mitigation policies, whitelist exemptions, and review attack events and false-positive unblocking procedures."
+description: "Configure Monitoring DDoS detection thresholds, mitigation policies, whitelist exemptions, and review attack events and false-positive unblocking procedures."
 sidebarTitle: "DDoS Protection"
 ---
 
@@ -8,7 +8,7 @@ import AdminWarning from '/snippets/admin-warning.mdx';
 
 ## Overview
 
-XIMP's DDoS prevention module analyzes traffic patterns and automatically mitigates
+Monitoring's DDoS prevention module analyzes traffic patterns and automatically mitigates
 volumetric and application-layer attacks before they reach protected workloads.
 The module operates in two modes: Monitor (detection only) and Mitigate (automatic
 blocking).
@@ -47,7 +47,7 @@ blocking).
   </Step>
   <Step title="Add whitelist entries" icon="list">
     Add IP ranges that should never be blocked regardless of traffic volume:
-    - XIMP monitoring system IPs (prevent self-blocking)
+    - Monitoring monitoring system IPs (prevent self-blocking)
     - Partner or customer IP ranges with legitimate high-volume traffic
     - Internal automation systems
 
@@ -83,15 +83,15 @@ blocking).
   </Tab>
   <Tab title="CLI" icon="terminal">
     ```bash title="List recent DDoS events"
-    ximp security ddos events --last 24h
+    monitoring security ddos events --last 24h
     ```
 
     ```bash title="View details of a specific event"
-    ximp security ddos event show <EVENT_ID>
+    monitoring security ddos event show <EVENT_ID>
     ```
 
     ```bash title="List currently blocked sources"
-    ximp security ddos blocklist
+    monitoring security ddos blocklist
     ```
   </Tab>
 </Tabs>
@@ -105,12 +105,12 @@ If a legitimate source is incorrectly blocked:
 <Steps titleSize="h3">
   <Step title="Identify the blocked source" icon="search">
     ```bash title="Check if a specific IP is blocked"
-    ximp security ddos blocklist | grep <IP_ADDRESS>
+    monitoring security ddos blocklist | grep <IP_ADDRESS>
     ```
   </Step>
   <Step title="Unblock the source" icon="unlock">
     ```bash title="Unblock a specific source"
-    ximp security ddos unblock --source 203.0.113.50
+    monitoring security ddos unblock --source 203.0.113.50
     ```
   </Step>
   <Step title="Add to whitelist to prevent future blocks" icon="list">
@@ -133,7 +133,7 @@ If a legitimate source is incorrectly blocked:
     Configure notification channels for DDoS detection events
   </Card>
   <Card title="Security" href="/services/monitoring/admin-guide/security" color="#197560">
-    Overall XIMP security configuration including access control
+    Overall Monitoring security configuration including access control
   </Card>
   <Card title="Troubleshooting" href="/services/monitoring/admin-guide/troubleshooting" color="#197560">
     Diagnose false positive blocks and detection threshold tuning

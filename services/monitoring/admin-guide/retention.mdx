@@ -1,6 +1,6 @@
 ---
 title: "Retention Policies"
-description: "Configure XIMP metric and log retention periods to balance historical depth against storage costs for raw, downsampled, and log data."
+description: "Configure Monitoring metric and log retention periods to balance historical depth against storage costs for raw, downsampled, and log data."
 sidebarTitle: "Retention"
 ---
 
@@ -8,7 +8,7 @@ import AdminWarning from '/snippets/admin-warning.mdx';
 
 ## Overview
 
-Retention policies control how long XIMP stores metric, log, and flow data. Longer
+Retention policies control how long Monitoring stores metric, log, and flow data. Longer
 retention enables deeper historical analysis and incident review; shorter retention
 reduces storage costs. Downsampled metric retention provides long-term trend data
 at a fraction of the storage cost of raw metrics.
@@ -54,23 +54,23 @@ at a fraction of the storage cost of raw metrics.
   </Tab>
   <Tab title="CLI" icon="terminal">
     ```bash title="View current retention policies"
-    ximp retention list
+    monitoring retention list
     ```
 
     ```bash title="Set raw metric retention"
-    ximp retention set \
+    monitoring retention set \
       --type metrics-raw \
       --duration 30d
     ```
 
     ```bash title="Set log retention"
-    ximp retention set \
+    monitoring retention set \
       --type logs \
       --duration 90d
     ```
 
     ```bash title="Set flow data retention"
-    ximp retention set \
+    monitoring retention set \
       --type flows \
       --duration 30d
     ```
@@ -111,7 +111,7 @@ For regulatory compliance, consult the following minimum retention guidelines:
 | HIPAA | 6 years | Healthcare system access logs |
 
 <Tip>
-  Set XIMP log retention to match your most demanding regulatory requirement. Storage
+  Set Monitoring log retention to match your most demanding regulatory requirement. Storage
   cost for log data is typically dominated by verbosity — reduce log levels to `WARNING`
   on non-critical services to reduce volume without losing important events.
 </Tip>

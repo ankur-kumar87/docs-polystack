@@ -1,12 +1,12 @@
 ---
 title: "Log Analytics"
-description: "Search, filter, and analyze centralized log streams in XIMP. Create log-based alert rules for real-time event detection across your infrastructure."
+description: "Search, filter, and analyze centralized log streams in Monitoring. Create log-based alert rules for real-time event detection across your infrastructure."
 sidebarTitle: "Log Analytics"
 ---
 
 ## Overview
 
-XIMP aggregates log streams from all registered infrastructure nodes and services
+Monitoring aggregates log streams from all registered infrastructure nodes and services
 into a centralized, searchable index. Log Analytics lets you query events across
 your entire environment with full-text search, structured field filtering, and
 anomaly detection — from a single interface.
@@ -15,7 +15,7 @@ anomaly detection — from a single interface.
   **Prerequisites**
   - An active Polystack account with project access
   - Log collection configured for the services you want to query
-    (see [XIMP Admin — Log Collection](/services/monitoring/admin-guide/log-collection))
+    (see [Monitoring Admin — Log Collection](/services/monitoring/admin-guide/log-collection))
 </Note>
 
 ---
@@ -53,14 +53,14 @@ anomaly detection — from a single interface.
   </Tab>
   <Tab title="CLI" icon="terminal">
     ```bash title="Search logs from the last hour"
-    ximp log search \
+    monitoring log search \
       --query 'level:ERROR service:nova*' \
       --from now-1h \
       --limit 100
     ```
 
     ```bash title="Export logs to a file"
-    ximp log export \
+    monitoring log export \
       --query 'host:xd1' \
       --from 2026-03-01 \
       --to 2026-03-15 \
@@ -68,7 +68,7 @@ anomaly detection — from a single interface.
     ```
 
     ```bash title="Tail live log stream"
-    ximp log tail --query 'level:ERROR'
+    monitoring log tail --query 'level:ERROR'
     ```
   </Tab>
 </Tabs>
@@ -154,7 +154,7 @@ Create alerts that fire whenever a log entry matching a query appears.
   <Card title="Metrics & Alerts" href="/services/monitoring/user-guide/metrics-alerts" color="#197560">
     Combine log-based alerts with metric thresholds for comprehensive coverage
   </Card>
-  <Card title="XIMP Admin — Log Collection" href="/services/monitoring/admin-guide/log-collection" color="#197560">
+  <Card title="Monitoring Admin — Log Collection" href="/services/monitoring/admin-guide/log-collection" color="#197560">
     Configure log source paths and syslog forwarding (administrator)
   </Card>
   <Card title="Network Monitoring" href="/services/monitoring/user-guide/network-monitoring" color="#197560">

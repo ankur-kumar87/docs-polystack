@@ -1,6 +1,6 @@
 ---
 title: "Agent Configuration"
-description: "Deploy XIMP monitoring agents via XDeploy or manually, configure custom scrape targets, and manage per-node agent authentication tokens."
+description: "Deploy Monitoring monitoring agents via XDeploy or manually, configure custom scrape targets, and manage per-node agent authentication tokens."
 sidebarTitle: "Agent Configuration"
 ---
 
@@ -9,7 +9,7 @@ import AdminWarning from '/snippets/admin-warning.mdx';
 ## Overview
 
 Monitoring agents run on every managed node and are responsible for collecting host-level
-metrics, forwarding logs, and reporting health status to the XIMP platform. Agents are
+metrics, forwarding logs, and reporting health status to the Monitoring platform. Agents are
 deployed automatically when a node is registered in XDeploy, or manually for nodes
 outside XDeploy management.
 
@@ -29,7 +29,7 @@ outside XDeploy management.
 <Steps titleSize="h3">
   <Step title="Register the node" icon="plus">
     Navigate to **XDeploy → Infrastructure → Nodes → Add Node**. Provide the node
-    IP, hostname, and role. XDeploy installs and configures the XIMP agent as part
+    IP, hostname, and role. XDeploy installs and configures the Monitoring agent as part
     of the node onboarding process.
   </Step>
   <Step title="Verify agent registration" icon="circle-check">
@@ -37,7 +37,7 @@ outside XDeploy management.
     with status **Active** within 2–3 minutes of registration.
 
     ```bash title="Check agent status via CLI"
-    ximp agent list --status all
+    monitoring agent list --status all
     ```
 
     <Check>Agent shows `ACTIVE` and last-seen timestamp is within the scrape interval.</Check>
@@ -50,7 +50,7 @@ outside XDeploy management.
     provide the endpoint URL and scrape interval.
 
     <Tip>
-      Metric endpoints must be accessible from the XIMP collector nodes. Ensure
+      Metric endpoints must be accessible from the Monitoring collector nodes. Ensure
       security group rules permit inbound connections on the target port from the
       collector IP range.
     </Tip>
@@ -65,14 +65,14 @@ For nodes not managed by XDeploy, install and configure the agent manually.
 
 <Steps titleSize="h3">
   <Step title="Install the agent package" icon="download">
-    ```bash title="Install XIMP agent"
-    apt install ximp-agent
+    ```bash title="Install Monitoring agent"
+    apt install monitoring-agent
     ```
   </Step>
   <Step title="Retrieve an agent token" icon="key">
-    Generate an agent authentication token from the XIMP portal:
+    Generate an agent authentication token from the Monitoring portal:
     ```bash title="Create agent token"
-    ximp agent token create \
+    monitoring agent token create \
       --node <HOSTNAME> \
       --expires 365d
     ```
@@ -80,11 +80,11 @@ For nodes not managed by XDeploy, install and configure the agent manually.
     Store the token securely — it cannot be retrieved after the command completes.
   </Step>
   <Step title="Configure the agent" icon="file-text">
-    Edit `/etc/ximp/agent.yaml`:
+    Edit `/etc/monitoring/agent.yaml`:
 
-    ```yaml title="/etc/ximp/agent.yaml"
+    ```yaml title="/etc/monitoring/agent.yaml"
     server:
-      endpoint: https://ximp.polystack.internal:9090
+      endpoint: https://monitoring.polystack.internal:9090
       auth_token: <AGENT_AUTH_TOKEN>
 
     node:
@@ -100,15 +100,15 @@ For nodes not managed by XDeploy, install and configure the agent manually.
     ```
   </Step>
   <Step title="Start and enable the agent" icon="play">
-    ```bash title="Enable and start XIMP agent"
-    systemctl enable --now ximp-agent
+    ```bash title="Enable and start Monitoring agent"
+    systemctl enable --now monitoring-agent
     ```
 
     ```bash title="Verify agent is running"
-    systemctl status ximp-agent
+    systemctl status monitoring-agent
     ```
 
-    <Check>Agent service is `active (running)` and registers with XIMP within 30 seconds.</Check>
+    <Check>Agent service is `active (running)` and registers with Monitoring within 30 seconds.</Check>
   </Step>
 </Steps>
 
@@ -119,15 +119,15 @@ For nodes not managed by XDeploy, install and configure the agent manually.
 <Tabs>
   <Tab title="Token Operations" icon="key">
     ```bash title="List all agent tokens"
-    ximp agent token list
+    monitoring agent token list
     ```
 
     ```bash title="Create a new token"
-    ximp agent token create --node compute-node-04 --expires 365d
+    monitoring agent token create --node compute-node-04 --expires 365d
     ```
 
     ```bash title="Revoke a token (e.g., for decommissioned nodes)"
-    ximp agent token revoke <TOKEN_ID>
+    monitoring agent token revoke <TOKEN_ID>
     ```
   </Tab>
   <Tab title="Token Rotation" icon="refresh-cw">
@@ -137,18 +137,18 @@ For nodes not managed by XDeploy, install and configure the agent manually.
     <Steps titleSize="h3">
       <Step title="Generate a new token" icon="plus">
         ```bash title="Create replacement token"
-        ximp agent token create --node compute-node-04 --expires 365d
+        monitoring agent token create --node compute-node-04 --expires 365d
         ```
       </Step>
       <Step title="Update agent configuration" icon="settings">
-        Update `/etc/ximp/agent.yaml` on the node with the new token, then restart:
+        Update `/etc/monitoring/agent.yaml` on the node with the new token, then restart:
         ```bash title="Restart agent with new token"
-        systemctl restart ximp-agent
+        systemctl restart monitoring-agent
         ```
       </Step>
       <Step title="Revoke the old token" icon="trash">
         ```bash title="Revoke old token"
-        ximp agent token revoke <OLD_TOKEN_ID>
+        monitoring agent token revoke <OLD_TOKEN_ID>
         ```
 
         <Check>Old token is revoked and agent authenticates successfully with the new token.</Check>
@@ -163,10 +163,10 @@ For nodes not managed by XDeploy, install and configure the agent manually.
 
 | Symptom | Diagnostic | Resolution |
 |---------|-----------|-----------|
-| Agent shows `offline` | `systemctl status ximp-agent` | Restart service; check token validity |
-| Agent not in list | `ximp agent list --status all` | Verify token; re-register node |
-| High scrape latency | `ximp agent stats --node <HOST>` | Reduce scrape targets; scale up node resources |
-| Authentication errors | Check `/var/log/ximp/agent.log` | Rotate token; verify endpoint URL |
+| Agent shows `offline` | `systemctl status monitoring-agent` | Restart service; check token validity |
+| Agent not in list | `monitoring agent list --status all` | Verify token; re-register node |
+| High scrape latency | `monitoring agent stats --node <HOST>` | Reduce scrape targets; scale up node resources |
+| Authentication errors | Check `/var/log/monitoring/agent.log` | Rotate token; verify endpoint URL |
 
 ---
 

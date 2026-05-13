@@ -1,13 +1,13 @@
 ---
 title: "Metrics & Alerts"
-description: "Create and manage XIMP alert rules, define notification channels, and monitor alert history for your infrastructure and applications."
+description: "Create and manage Monitoring alert rules, define notification channels, and monitor alert history for your infrastructure and applications."
 sidebarTitle: "Metrics & Alerts"
 ---
 
 ## Overview
 
-XIMP evaluates metric-based alert rules continuously against live time-series data.
-When a rule's condition is met for the configured evaluation period, XIMP fires an
+Monitoring evaluates metric-based alert rules continuously against live time-series data.
+When a rule's condition is met for the configured evaluation period, Monitoring fires an
 alert to the configured notification channels. This page covers creating, managing,
 and troubleshooting alert rules.
 
@@ -60,7 +60,7 @@ and troubleshooting alert rules.
     <Steps titleSize="h3">
       <Step title="Create from a definition file" icon="plus">
         ```bash title="Create alert rule from file"
-        ximp alert rule create --file alert-cpu-high.yaml
+        monitoring alert rule create --file alert-cpu-high.yaml
         ```
 
         ```yaml title="alert-cpu-high.yaml"
@@ -77,20 +77,20 @@ and troubleshooting alert rules.
       </Step>
       <Step title="List existing rules" icon="list">
         ```bash title="List all alert rules"
-        ximp alert rule list
+        monitoring alert rule list
         ```
 
         ```bash title="Show specific rule details"
-        ximp alert rule show high-cpu-utilization
+        monitoring alert rule show high-cpu-utilization
         ```
       </Step>
       <Step title="Update or delete a rule" icon="settings">
         ```bash title="Update rule threshold"
-        ximp alert rule update high-cpu-utilization --threshold 85
+        monitoring alert rule update high-cpu-utilization --threshold 85
         ```
 
         ```bash title="Delete a rule"
-        ximp alert rule delete high-cpu-utilization
+        monitoring alert rule delete high-cpu-utilization
         ```
       </Step>
     </Steps>
@@ -114,15 +114,15 @@ and troubleshooting alert rules.
   </Tab>
   <Tab title="CLI" icon="terminal">
     ```bash title="View alert history for a rule"
-    ximp alert history --rule high-cpu-utilization --last 24h
+    monitoring alert history --rule high-cpu-utilization --last 24h
     ```
 
     ```bash title="View all active (currently firing) alerts"
-    ximp alert list --status active
+    monitoring alert list --status active
     ```
 
     ```bash title="Acknowledge an active alert"
-    ximp alert acknowledge <ALERT_ID> --comment "Investigating high CPU on compute-node-03"
+    monitoring alert acknowledge <ALERT_ID> --comment "Investigating high CPU on compute-node-03"
     ```
   </Tab>
 </Tabs>
@@ -148,7 +148,7 @@ and troubleshooting alert rules.
   <Card title="Alert Rules (Advanced)" href="/services/monitoring/user-guide/alert-rules" color="#197560">
     Compound conditions, silences, inhibition rules, and escalation policies
   </Card>
-  <Card title="XIMP Admin — Alert Channels" href="/services/monitoring/admin-guide/alert-channels" color="#197560">
+  <Card title="Monitoring Admin — Alert Channels" href="/services/monitoring/admin-guide/alert-channels" color="#197560">
     Configure email, webhook, PagerDuty, and Slack notification channels
   </Card>
   <Card title="Dashboards" href="/services/monitoring/user-guide/dashboards" color="#197560">
