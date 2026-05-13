@@ -95,7 +95,7 @@
 - **Phone**: +91-9289062555
 - **Tagline**: "Helping India build their Next-Gen Cloud Infra"
 - **Colors**: Primary `#197560`, Light `#3F8F7E`, Dark `#145C4C`
-- **Fonts**: Gilroy (headings), Tenorite (body)
+- **Fonts**: Linden theme defaults
 
 ### Products
 | Product | Full Name | Description |

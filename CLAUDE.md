@@ -17,7 +17,7 @@
 ## Branding
 - **Company**: Polystack Technologies
 - **Colors**: Primary `#197560`, Light `#3F8F7E`, Dark `#145C4C`
-- **Fonts**: Gilroy (headings), Tenorite (body)
+- **Fonts**: Linden theme defaults
 - **Products**: Ironcore, Monitoring, XHCI, Disaster Recovery, Software-Defined-Storage, XNAS, XNexus, XOS
 - **Support**: support@polystack.tech
 
@@ -46,7 +46,7 @@ introduction.mdx             # Landing page (homepage)
 quickstart.mdx               # Quickstart — XDeploy deployment flow
 authentication.mdx           # Dashboard login + CLI openrc auth
 images/                      # Static assets (logo, favicon)
-resources/                   # Fonts (Gilroy, Tenorite)
+resources/                   # Static support assets
 snippets/                    # Reusable MDX snippets
 .claude/                     # Authoring guidelines
 .mcp.json                    # Mintlify MCP server config
