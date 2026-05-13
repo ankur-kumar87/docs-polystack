@@ -5,8 +5,8 @@
 
 /* Increase docs sidebar/header logo size */
 .nav-logo {
-  height: 4.5rem !important;
-  max-width: 22rem !important;
+  height: 3.25rem !important;
+  max-width: 17rem !important;
 }
 
 .partner-attribution {
