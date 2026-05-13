@@ -138,7 +138,7 @@ and troubleshooting alert rules.
 | High disk I/O latency | `polystack_storage_osd_apply_latency_ms` | `>` | 20ms | 10m |
 | Pool capacity warning | `polystack_storage_pool_used_pct` | `>` | 70% | 15m |
 | Host unreachable | `up{job="node_exporter"}` | `==` | 0 | 2m |
-| Replication lag | `xdr_replication_lag_seconds` | `>` | RPO target | 5m |
+| Replication lag | `disaster_recovery_replication_lag_seconds` | `>` | RPO target | 5m |
 
 ---
 

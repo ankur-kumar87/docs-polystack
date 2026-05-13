@@ -36,7 +36,7 @@
 |---|---|
 | Watcher | Resource Optimizer / Dynamic Cluster Optimization |
 | FileFS | File-Level Restore |
-| xDeploy | Deployment Wizard / Management Platform |
+| Deployment Console | Deployment Wizard / Management Platform |
 | Ironcore-Ansible | Deployment Automation |
 | Nova polystack-adjust | Live Resource Scaling |
 | Wazuh | Integrated Security Platform |
@@ -63,7 +63,7 @@
 | Manila | Polystack Shared Filesystem | |
 | Masakari | Polystack High Availability / Instance HA | |
 | Heat | Polystack Orchestration | |
-| Horizon | Polystack Dashboard (current) → XCONNECT (future) | |
+| Horizon | Polystack Dashboard | |
 
 ### Where "OpenStack" IS acceptable
 - CLI commands: `openstack server list`, `python-openstackclient`
@@ -383,7 +383,7 @@ the deployment console Key → Bootstrap → Hosts → Software-Defined-Storage 
 - 12 broken links fixed
 - OpenStack jargon replaced in user guides
 
-**Remaining gaps**: 42 of 82 features undocumented (51%), "Coming soon" on homepage for Unified Storage, XCONNECT roadmap exposed on dashboard page
+**Remaining gaps**: 42 of 82 features undocumented (51%)
 
 ---
 

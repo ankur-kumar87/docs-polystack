@@ -14,7 +14,7 @@ Documentation MUST use customer-facing names (from `polystack-public-content-gua
 |---|---|
 | Watcher | Automated Workload Optimization / Resource Optimizer |
 | FileFS | File-Level Restore |
-| xDeploy | Deployment Wizard / Management Platform |
+| Deployment Console | Deployment Wizard / Management Platform |
 | Ironcore-Ansible | Deployment Automation |
 | Nova polystack-adjust | Live Resource Scaling |
 | Wazuh | Integrated Security Platform |
@@ -105,7 +105,7 @@ Documentation MUST use customer-facing names (from `polystack-public-content-gua
 | D12 | **SBOM CI Pipeline** | CP-050 | MISSING | — | Trivy+Syft+cosign supply chain security |
 | D13 | **Triple Compliance** (SCA+Lynis+OpenSCAP) | CP-045 | MISSING | — | Three independent scanners |
 
-## CATEGORY E: DEPLOYMENT & LIFECYCLE (xDeploy — 69 commits + ironcore-ansible)
+## CATEGORY E: DEPLOYMENT & LIFECYCLE (Deployment Console + ironcore-ansible)
 
 | # | Feature | CP | Doc Status | Current Page | Gap |
 |---|---------|-----|-----------|--------------|-----|

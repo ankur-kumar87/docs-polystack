@@ -133,16 +133,14 @@ When viewing instances through the admin view (visible to users with the
 
 ## Auto-Discovery of Instances Launched Outside the Dashboard
 
-The Polystack Platform's compute layer keeps a single source of truth for every
-running virtual machine. Whether an instance was launched through the Polystack
-Dashboard, through XCONNECT, or through any external client (`openstack server
-create`, Terraform, Ansible, Heat stack, custom script using the SDK), the
-instance appears in **Compute → Instances** automatically.
+The Polystack compute layer keeps a single source of truth for every running
+virtual machine. Whether an instance was launched through the Dashboard, CLI,
+infrastructure-as-code, orchestration, or a custom SDK workflow, the instance
+appears in **Compute → Instances** automatically.
 
 | Where the VM came from | Visible in Compute → Instances? |
 |------------------------|:--------------------------------:|
-| Polystack Dashboard — Create Instance wizard | Yes |
-| XCONNECT | Yes |
+| Dashboard — Create Instance wizard | Yes |
 | `openstack server create` from the CLI | Yes |
 | Terraform `openstack_compute_instance_v2` | Yes |
 | Ansible `os_server` module | Yes |

@@ -239,7 +239,7 @@ Today on Polystack:
 |------|--------------|
 | **Dashboard (Modify Instance Tags)** | Plain strings only. By convention you can write `env=production` as a single string and split on `=` in your tooling, but the platform stores it as one opaque label. |
 | **CLI** | True key-value pairs are supported via the `--property` flag, which writes server metadata. Available today. |
-| **Dashboard (XCONNECT v2)** | A dedicated **Custom Metadata** editor for instances is on the roadmap for XCONNECT v2 — the next-generation Polystack Dashboard. It will surface the same key-value metadata as a first-class form on every instance row, so you will not need the CLI for this. |
+| **Dashboard metadata editor** | Custom metadata editing is handled through supported Dashboard and API workflows. Use the CLI metadata commands when you need direct key-value updates for automation. |
 
 <Note>
   Server metadata and instance tags are two different stores under the hood.
