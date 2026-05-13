@@ -43,17 +43,16 @@
       },
       {
         "group": "Products",
-        "icon": "package",
+        "icon": "box",
         "root": "products/index",
         "pages": [
           "products/edge-computing",
-          "products/ironcore",
-          "products/monitoring"
+          "products/ironcore"
         ]
       },
       {
         "group": "Core Services",
-        "icon": "layers",
+        "icon": "layer-group",
         "pages": [
           {
             "group": "Compute",
@@ -102,7 +101,7 @@
                   "services/compute/troubleshooting"
                 ],
                 "root": "services/compute/admin-guide",
-                "icon": "shield"
+                "icon": "shield-halved"
               },
               "services/compute/cli-reference"
             ]
@@ -148,14 +147,14 @@
                   "services/storage/security",
                   "services/storage/admin-troubleshooting"
                 ],
-                "icon": "shield"
+                "icon": "shield-halved"
               },
               "services/storage/cli-reference"
             ]
           },
           {
             "group": "Networking",
-            "icon": "network",
+            "icon": "network-wired",
             "root": "services/networking/index",
             "pages": [
               {
@@ -189,14 +188,14 @@
                   "services/networking/security",
                   "services/networking/admin-troubleshooting"
                 ],
-                "icon": "shield"
+                "icon": "shield-halved"
               },
               "services/networking/cli-reference"
             ]
           },
           {
             "group": "Images",
-            "icon": "disc",
+            "icon": "compact-disc",
             "root": "services/images/index",
             "pages": [
               {
@@ -230,14 +229,14 @@
                   "services/images/image-security",
                   "services/images/admin-troubleshooting"
                 ],
-                "icon": "shield"
+                "icon": "shield-halved"
               },
               "services/images/cli-reference"
             ]
           },
           {
             "group": "Orchestration",
-            "icon": "workflow",
+            "icon": "diagram-project",
             "root": "services/orchestration/index",
             "pages": [
               {
@@ -263,7 +262,7 @@
                   "services/orchestration/security",
                   "services/orchestration/admin-troubleshooting"
                 ],
-                "icon": "shield"
+                "icon": "shield-halved"
               },
               "services/orchestration/cli-reference"
             ]
@@ -300,7 +299,7 @@
                   "services/dashboard/admin-guide/quotas",
                   "services/dashboard/admin-guide/host-aggregates"
                 ],
-                "icon": "shield"
+                "icon": "shield-halved"
               }
             ]
           },
@@ -337,7 +336,7 @@
                   "services/identity/security",
                   "services/identity/admin-troubleshooting"
                 ],
-                "icon": "shield"
+                "icon": "shield-halved"
               },
               "services/identity/cli-reference"
             ]
@@ -346,11 +345,11 @@
       },
       {
         "group": "Other Services",
-        "icon": "grid-2x2",
+        "icon": "table-cells-large",
         "pages": [
           {
             "group": "Load Balancer",
-            "icon": "combine",
+            "icon": "object-group",
             "root": "services/load-balancer",
             "pages": [
               {
@@ -378,7 +377,7 @@
                   "services/load-balancer/lb-security",
                   "services/load-balancer/lb-troubleshooting"
                 ],
-                "icon": "shield"
+                "icon": "shield-halved"
               },
               "services/load-balancer/cli-reference"
             ]
@@ -413,7 +412,7 @@
                   "services/dns/security",
                   "services/dns/admin-troubleshooting"
                 ],
-                "icon": "shield"
+                "icon": "shield-halved"
               },
               "services/dns/cli-reference"
             ]
@@ -447,7 +446,7 @@
                   "services/key-manager/security",
                   "services/key-manager/admin-troubleshooting"
                 ],
-                "icon": "shield"
+                "icon": "shield-halved"
               },
               "services/key-manager/cli-reference"
             ]
@@ -484,14 +483,14 @@
                   "services/object-storage/monitoring",
                   "services/object-storage/admin-troubleshooting"
                 ],
-                "icon": "shield"
+                "icon": "shield-halved"
               },
               "services/object-storage/cli-reference"
             ]
           },
           {
             "group": "Monitoring",
-            "icon": "activity",
+            "icon": "chart-line",
             "root": "services/monitoring/index",
             "pages": [
               {
@@ -520,7 +519,7 @@
                   "services/monitoring/admin-guide/security",
                   "services/monitoring/admin-guide/troubleshooting"
                 ],
-                "icon": "shield"
+                "icon": "shield-halved"
               }
             ]
           },
@@ -554,14 +553,14 @@
                   "services/instance-ha/admin-guide/security",
                   "services/instance-ha/admin-guide/troubleshooting"
                 ],
-                "icon": "shield"
+                "icon": "shield-halved"
               },
               "services/instance-ha/cli-reference"
             ]
           },
           {
             "group": "Kubernetes (K8SaaS)",
-            "icon": "container",
+            "icon": "boxes-stacked",
             "root": "services/kubernetes/index",
             "pages": [
               {
@@ -591,14 +590,14 @@
                   "services/kubernetes/admin-guide/security",
                   "services/kubernetes/admin-guide/troubleshooting"
                 ],
-                "icon": "shield"
+                "icon": "shield-halved"
               },
               "services/kubernetes/cli-reference"
             ]
           },
           {
             "group": "Resource Optimizer",
-            "icon": "trending-up",
+            "icon": "arrow-trend-up",
             "root": "services/optimization/index",
             "pages": [
               {
@@ -626,7 +625,7 @@
                   "services/optimization/admin-guide/security",
                   "services/optimization/admin-guide/troubleshooting"
                 ],
-                "icon": "shield"
+                "icon": "shield-halved"
               },
               "services/optimization/cli-reference"
             ]
@@ -635,7 +634,7 @@
       },
       {
         "group": "Security",
-        "icon": "shield",
+        "icon": "shield-halved",
         "root": "security/index",
         "pages": [
           {
@@ -674,7 +673,7 @@
         {
           "anchor": "Admin Guide",
           "href": "/admin-guide",
-          "icon": "shield"
+          "icon": "shield-halved"
         },
         {
           "anchor": "User Guide",
