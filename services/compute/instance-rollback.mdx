@@ -12,16 +12,16 @@ disturbing its network identity. Floating IPs, fixed IPs, ports, security
 groups, key pair, flavor, and metadata are all preserved. Only the bytes on
 disk change.
 
-<Info>**Xloud-Developed** — In-place instance rollback is built by Xloud and ships with XAVS / XPCI on Xloud Distributed Storage (XSDS) backed clusters. It is the equivalent of VMware vSphere "Revert to Snapshot" and Proxmox "Rollback".</Info>
+<Info>**Polystack-Developed** — In-place instance rollback is built by Polystack and ships with Ironcore / XPCI on Polystack Distributed Storage (Software-Defined-Storage) backed clusters. It is the equivalent of VMware vSphere "Revert to Snapshot" and Proxmox "Rollback".</Info>
 
 <Note>
   **Prerequisites**
-  - The instance is on **Xloud Distributed Storage (XSDS / Ceph RBD)**. Other
+  - The instance is on **Polystack Distributed Storage (Software-Defined-Storage / Ceph RBD)**. Other
     storage backends are rejected at pre-flight time.
   - The instance is in `Active`, `Shutdown`, or `Error` state and has no other
     operation in progress (no migration, no resize, no other rollback).
   - At least one Instance Snapshot exists for the VM.
-  - Your project role permits rollback (`os_compute_api:xloud_rollback:rollback`).
+  - Your project role permits rollback (`os_compute_api:polystack_rollback:rollback`).
 </Note>
 
 ---
@@ -73,7 +73,7 @@ the pre-rollback state.
 <Note>
   Safety snapshots use copy-on-write at the storage layer, so they are
   effectively instant and consume only the storage of changes written after
-  they are taken. They are named with the prefix `_xloud_safety_` and tagged
+  they are taken. They are named with the prefix `_polystack_safety_` and tagged
   with metadata so administrators can identify and clean them up later.
 </Note>
 
@@ -89,7 +89,7 @@ the platform or an administrator can recover the VM to its prior state.
 ### Roll Back to ANY Snapshot, Not Only the Most Recent
 
 Most cloud platforms only let you revert to the latest snapshot, forcing you
-to delete newer snapshots first or to chain rollbacks one at a time. Xloud
+to delete newer snapshots first or to chain rollbacks one at a time. Polystack
 Instance Rollback works against any snapshot in the VM's history.
 
 <Tip>
@@ -128,11 +128,11 @@ preserved on the underlying storage, so any snapshot is a valid target.
         | **Snapshot** | The snapshot that will be applied. |
         | **Target Instance** | The VM that will be reverted (auto-detected). |
         | **Pre-flight Check** | Backend type, number of volumes to revert, warnings, and errors. |
-        | **Supported Scope** | Notes that XSDS is required and the VM will be stopped briefly. |
+        | **Supported Scope** | Notes that Software-Defined-Storage is required and the VM will be stopped briefly. |
 
         <Note>
           If the pre-flight check fails (for example, the storage backend is not
-          XSDS, or another operation is in progress on the VM), the dialog shows
+          Software-Defined-Storage, or another operation is in progress on the VM), the dialog shows
           a clear error and the **Confirm** button stays disabled. Transient
           errors offer a **Retry** button.
         </Note>
@@ -179,7 +179,7 @@ preserved on the underlying storage, so any snapshot is a valid target.
     curl -sS -X POST \
       -H "X-Auth-Token: $TOKEN" \
       -H "Content-Type: application/json" \
-      -d "{\"xloud-rollback-dry-run\": {\"snapshot_id\": \"$SNAPSHOT_ID\"}}" \
+      -d "{\"polystack-rollback-dry-run\": {\"snapshot_id\": \"$SNAPSHOT_ID\"}}" \
       "$NOVA_URL/servers/$INSTANCE_ID/action" | jq .
     ```
 
@@ -191,7 +191,7 @@ preserved on the underlying storage, so any snapshot is a valid target.
       -H "X-Auth-Token: $TOKEN" \
       -H "Content-Type: application/json" \
       -d "{
-        \"xloud-rollback\": {
+        \"polystack-rollback\": {
           \"snapshot_id\": \"$SNAPSHOT_ID\",
           \"skip_safety_snapshot\": false,
           \"power_state_after\": \"on\"
@@ -204,7 +204,7 @@ preserved on the underlying storage, so any snapshot is a valid target.
 
     ```json
     {
-      "xloud_rollback": {
+      "polystack_rollback": {
         "request_id": "req-...",
         "instance_uuid": "...",
         "snapshot_id": "...",
@@ -229,7 +229,7 @@ If the rollback was not what you wanted, you can recover.
 <Steps titleSize="h3">
   <Step title="Locate the safety snapshot">
     Navigate to **Storage > Volume Snapshots**. Filter by the prefix
-    `_xloud_safety_`. Each safety snapshot is named with the rollback request
+    `_polystack_safety_`. Each safety snapshot is named with the rollback request
     ID, the device name, and a timestamp, so you can correlate it with the
     rollback you want to undo.
   </Step>
@@ -252,10 +252,10 @@ If the rollback was not what you wanted, you can recover.
 ## Pre-flight Errors and What They Mean
 
 <AccordionGroup>
-  <Accordion title="Storage backend requires Ceph RBD/XSDS">
-    The instance has at least one volume on a backend other than XSDS (for
+  <Accordion title="Storage backend requires Ceph RBD/Software-Defined-Storage">
+    The instance has at least one volume on a backend other than Software-Defined-Storage (for
     example, a third-party iSCSI array). Instance Rollback v1 only supports
-    XSDS-backed volumes. Migrate the volume to XSDS or use snapshot-based
+    Software-Defined-Storage-backed volumes. Migrate the volume to Software-Defined-Storage or use snapshot-based
     cloning to recover state.
   </Accordion>
   <Accordion title="Cannot determine source instance for this snapshot">
@@ -286,9 +286,9 @@ If the rollback was not what you wanted, you can recover.
 
 | Out of scope (v1) | Why |
 |---|---|
-| Non-XSDS backends | Other backends do not expose the in-place revert primitive that makes the operation safe and instant. |
+| Non-Software-Defined-Storage backends | Other backends do not expose the in-place revert primitive that makes the operation safe and instant. |
 | Hot rollback (running VM) | The VM is stopped automatically as part of the workflow. The disk cannot be reverted while a hypervisor is writing to it. |
-| Mixed backends in one VM | If any attached volume is not on XSDS, the entire rollback is rejected. No partial rollback. |
+| Mixed backends in one VM | If any attached volume is not on Software-Defined-Storage, the entire rollback is rejected. No partial rollback. |
 | Bulk rollback across many VMs | Rollback is per-instance. |
 | Scheduled rollback | The action runs immediately when triggered. |
 
@@ -301,7 +301,7 @@ If the rollback was not what you wanted, you can recover.
   the feature.
 </Note>
 
-For an Xloud Distributed Storage backed volume, a snapshot is a copy-on-write
+For an Polystack Distributed Storage backed volume, a snapshot is a copy-on-write
 marker on the underlying object — it does **not** copy data. Rollback is a
 single storage-layer call that points the volume's "head" back at the chosen
 snapshot. After rollback:

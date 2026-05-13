@@ -1,6 +1,6 @@
 ---
 title: "OpenSCAP"
-description: "Scan Xloud virtual machines and host nodes against CIS Benchmarks, DISA STIGs, and PCI-DSS profiles using OpenSCAP and the SCAP Security Guide."
+description: "Scan Polystack virtual machines and host nodes against CIS Benchmarks, DISA STIGs, and PCI-DSS profiles using OpenSCAP and the SCAP Security Guide."
 sidebarTitle: "OpenSCAP"
 ---
 
@@ -8,9 +8,9 @@ sidebarTitle: "OpenSCAP"
 
 OpenSCAP is the open standard for automated security compliance scanning. It evaluates your system against machine-readable SCAP (Security Content Automation Protocol) content — including CIS Benchmarks, DISA STIGs, PCI-DSS, HIPAA, and ANSSI profiles. Each scan produces detailed HTML and XML reports that map every test to a specific compliance requirement.
 
-Xloud Platform ships OpenSCAP tooling on XOS and supports fleet-wide compliance scanning via the XDeploy automation pipeline. You can forward scan reports to SIEM systems or store them as audit artifacts for regulatory reviews.
+Polystack Platform ships OpenSCAP tooling on XOS and supports fleet-wide compliance scanning via the XDeploy automation pipeline. You can forward scan reports to SIEM systems or store them as audit artifacts for regulatory reviews.
 
-<Info>**Xloud-Developed** — OpenSCAP is one of three independent scanners in [Xloud SIEM](/security/xloud-siem) — Wazuh, Lynis, and OpenSCAP run in parallel across all nodes for layered compliance coverage. Results are aggregated on the **Security Posture** page in Monitor Center.</Info>
+<Info>**Polystack-Developed** — OpenSCAP is one of three independent scanners in [Polystack SIEM](/security/polystack-siem) — Wazuh, Lynis, and OpenSCAP run in parallel across all nodes for layered compliance coverage. Results are aggregated on the **Security Posture** page in Monitor Center.</Info>
 
 <Note>
   **Prerequisites**
@@ -24,7 +24,7 @@ Xloud Platform ships OpenSCAP tooling on XOS and supports fleet-wide compliance 
 
 ## Available Profiles
 
-The SCAP Security Guide ships dozens of profiles for common compliance frameworks. Key profiles for Xloud environments:
+The SCAP Security Guide ships dozens of profiles for common compliance frameworks. Key profiles for Polystack environments:
 
 | Profile ID | Framework | Target |
 |-----------|-----------|--------|
@@ -161,7 +161,7 @@ oscap info /usr/share/xml/scap/ssg/content/ssg-ubuntu2204-ds.xml | grep "Profile
     ```
 
     ```bash title="Run the fleet scan"
-    xavs-ansible run --playbook openscap-scan.yml
+    ironcore-ansible run --playbook openscap-scan.yml
     ```
   </Tab>
 </Tabs>
@@ -252,8 +252,8 @@ chmod +x /etc/cron.weekly/openscap-scan
 ## Next Steps
 
 <CardGroup cols={2}>
-  <Card title="Xloud SIEM Overview" href="/security/xloud-siem" color="#197560">
-    Back to the unified Xloud SIEM hub — Security Posture and Alerts dashboards
+  <Card title="Polystack SIEM Overview" href="/security/polystack-siem" color="#197560">
+    Back to the unified Polystack SIEM hub — Security Posture and Alerts dashboards
   </Card>
   <Card title="Wazuh HIDS" href="/security/wazuh" color="#197560">
     Complement SCAP scans with continuous real-time host intrusion detection

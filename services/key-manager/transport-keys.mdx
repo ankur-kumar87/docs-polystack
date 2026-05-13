@@ -1,6 +1,6 @@
 ---
 title: "Transport Keys"
-description: "Manage the RSA transport key in Xloud Key Manager for client-side encryption. View the current transport key and understand the rotation process."
+description: "Manage the RSA transport key in Polystack Key Manager for client-side encryption. View the current transport key and understand the rotation process."
 sidebarTitle: "Transport Keys"
 ---
 
@@ -89,7 +89,7 @@ generating a new RSA key pair:
   </Step>
   <Step title="Deploy the updated configuration">
     ```bash title="Deploy Key Manager configuration"
-    xavs-ansible deploy -t barbican
+    ironcore-ansible deploy -t barbican
     ```
   </Step>
   <Step title="Notify API clients">

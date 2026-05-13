@@ -1,6 +1,6 @@
 ---
 title: "Networking Admin Troubleshooting"
-description: "Diagnose and resolve Xloud Networking infrastructure issues — downed agents, VXLAN tunnel failures, HA router failover problems, and MTU mismatches."
+description: "Diagnose and resolve Polystack Networking infrastructure issues — downed agents, VXLAN tunnel failures, HA router failover problems, and MTU mismatches."
 sidebarTitle: "Troubleshooting"
 ---
 
@@ -62,7 +62,7 @@ openstack router list --all-projects -f json | grep -E '"id"|"ha"|"status"'
        ```
     3. Restart the agent via XDeploy:
        ```bash title="Redeploy networking agents"
-       xavs-ansible deploy --tags neutron
+       ironcore-ansible deploy --tags neutron
        ```
 
     <Tip>
@@ -159,11 +159,11 @@ openstack router list --all-projects -f json | grep -E '"id"|"ha"|"status"'
        ```
     2. Confirm the bridge exists on the host:
        ```bash title="Check bridge on compute node"
-       ssh xloud@<compute-node> "ip link show br-ex"
+       ssh polystack@<compute-node> "ip link show br-ex"
        ```
     3. If the bridge is missing, redeploy the networking configuration:
        ```bash title="Redeploy networking"
-       xavs-ansible deploy --tags neutron
+       ironcore-ansible deploy --tags neutron
        ```
   </Accordion>
 </AccordionGroup>

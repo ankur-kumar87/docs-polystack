@@ -1,6 +1,6 @@
 ---
 title: "Networking Troubleshooting"
-description: "Diagnose and resolve common networking issues in Xloud Cloud Platform — connectivity failures, floating IP problems, DHCP errors, and MTU mismatches."
+description: "Diagnose and resolve common networking issues in Polystack Cloud Platform — connectivity failures, floating IP problems, DHCP errors, and MTU mismatches."
 sidebarTitle: "Troubleshooting"
 ---
 
@@ -8,14 +8,14 @@ import CliAuth from '/snippets/cli-auth.mdx';
 
 ## Overview
 
-This guide covers the most common networking issues encountered in Xloud Cloud Platform
+This guide covers the most common networking issues encountered in Polystack Cloud Platform
 and provides step-by-step resolution procedures. Each scenario includes diagnostic
 commands and remediation steps that you can apply from the Dashboard or CLI.
 
 <Note>
   **Prerequisites**
   - CLI configured with valid credentials
-  - Access to the **Xloud Dashboard** for instance console access
+  - Access to the **Polystack Dashboard** for instance console access
 </Note>
 
 ---
@@ -137,7 +137,7 @@ openstack server show my-instance -f json | grep -E "addresses|security_groups"
     ```
 
     <Info>
-      For VXLAN networks, Xloud recommends an MTU of `1450`. For VLAN networks backed
+      For VXLAN networks, Polystack recommends an MTU of `1450`. For VLAN networks backed
       by jumbo-frame-capable switches, you may use up to `9000`.
     </Info>
   </Accordion>

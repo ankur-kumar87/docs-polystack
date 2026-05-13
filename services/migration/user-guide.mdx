@@ -1,6 +1,6 @@
 ---
 title: "Migration User Guide"
-description: "Register a VMware source, discover workloads, run preflight checks, execute cold and warm migrations, and finish with cutover using the Xloud Dashboard."
+description: "Register a VMware source, discover workloads, run preflight checks, execute cold and warm migrations, and finish with cutover using the Polystack Dashboard."
 sidebarTitle: "User Guide"
 mode: "wide"
 ---
@@ -10,8 +10,8 @@ import PrerequisitesAuth from '/snippets/prerequisites-auth.mdx';
 ## Overview
 
 
-XMS (Xloud Migration Suite) moves virtual machine workloads from VMware vSphere
-and standalone ESXi hosts into Xloud. This guide walks through the end-to-end
+XMS (Polystack Migration Suite) moves virtual machine workloads from VMware vSphere
+and standalone ESXi hosts into Polystack. This guide walks through the end-to-end
 flow: register a source, discover workloads, validate compatibility, run cold
 or warm migrations, and complete cutover.
 
@@ -31,7 +31,7 @@ or warm migrations, and complete cutover.
     Inventory VMs, disks, networks, and guest metadata through the vSphere API.
   </Card>
   <Card title="Preflight Assessment" icon="clipboard-check" href="/services/migration/user-guide/preflight" color="#197560">
-    Validate each candidate workload against Xloud compatibility rules before
+    Validate each candidate workload against Polystack compatibility rules before
     submitting a migration job.
   </Card>
   <Card title="Cold Migration" icon="power" href="/services/migration/user-guide/cold-migration" color="#197560">
@@ -44,7 +44,7 @@ or warm migrations, and complete cutover.
   </Card>
   <Card title="Cutover" icon="zap" href="/services/migration/user-guide/cutover" color="#197560">
     Trigger the final sync and switch a warm migration job to its target
-    Xloud instance.
+    Polystack instance.
   </Card>
   <Card title="Post-Migration Validation" icon="circle-check" href="/services/migration/user-guide/post-migration" color="#197560">
     Verify the migrated instance boots, has network connectivity, and mounts
@@ -84,8 +84,8 @@ or warm migrations, and complete cutover.
   <Card title="Block Storage" icon="hard-drive" href="/services/storage/user-guide" color="#197560">
     Understand volume types and quotas that apply to migrated disks
   </Card>
-  <Card title="Xloud Compute" icon="server" href="/services/compute/user-guide" color="#197560">
-    Manage migrated workloads as Xloud Compute instances
+  <Card title="Polystack Compute" icon="server" href="/services/compute/user-guide" color="#197560">
+    Manage migrated workloads as Polystack Compute instances
   </Card>
   <Card title="Infrastructure Monitoring" icon="activity" href="/services/monitoring/user-guide" color="#197560">
     Monitor migrated workloads with XIMP dashboards and alerts

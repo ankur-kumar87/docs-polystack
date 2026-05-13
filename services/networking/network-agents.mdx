@@ -1,6 +1,6 @@
 ---
 title: "Network Agent Management"
-description: "Monitor and manage Xloud SDN agents across your cluster. Check agent health, enable or disable agents for maintenance, and schedule networks to DHCP agents."
+description: "Monitor and manage Polystack SDN agents across your cluster. Check agent health, enable or disable agents for maintenance, and schedule networks to DHCP agents."
 sidebarTitle: "Network Agents"
 ---
 
@@ -9,7 +9,7 @@ import CliAuth from '/snippets/cli-auth.mdx';
 
 ## Overview
 
-Xloud Networking distributes work across multiple agents running on compute and network
+Polystack Networking distributes work across multiple agents running on compute and network
 nodes. Monitoring agent health is a core administrative responsibility — a downed agent
 can silently prevent new port bindings, DHCP assignments, or routing updates. This guide
 covers how to inspect, manage, and recover agents across your cluster.
@@ -123,7 +123,7 @@ When an agent shows `Alive: False`, restart the service on the affected host. Ag
 running inside Docker containers are managed by XDeploy:
 
 ```bash title="Restart networking agents via XDeploy"
-xavs-ansible deploy --tags neutron
+ironcore-ansible deploy --tags neutron
 ```
 
 After restarting, allow up to 30 seconds for the agent to re-register and send a

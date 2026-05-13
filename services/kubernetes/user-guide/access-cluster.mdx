@@ -1,13 +1,13 @@
 ---
 title: "Access Your Kubernetes Cluster"
-description: "Download kubeconfig, configure kubectl, and verify access to your Xloud K8SaaS cluster — connect to the API server and validate node readiness."
+description: "Download kubeconfig, configure kubectl, and verify access to your Polystack K8SaaS cluster — connect to the API server and validate node readiness."
 sidebarTitle: "Access Cluster"
 ---
 
 ## Overview
 
 After a cluster reaches `CREATE_COMPLETE` status, you connect to it using `kubectl`
-and the cluster's kubeconfig file. Xloud K8SaaS generates a unique certificate authority
+and the cluster's kubeconfig file. Polystack K8SaaS generates a unique certificate authority
 per cluster and embeds the cluster API server endpoint, CA certificate, and user
 credentials into the kubeconfig. This page covers downloading credentials, configuring
 `kubectl`, and verifying connectivity.

@@ -1,6 +1,6 @@
 ---
 title: "Compute Security Hardening"
-description: "Harden the Xloud Compute control plane with metadata protection, live migration TLS, and API rate limiting."
+description: "Harden the Polystack Compute control plane with metadata protection, live migration TLS, and API rate limiting."
 sidebarTitle: "Security"
 ---
 
@@ -8,7 +8,7 @@ import AdminWarning from '/snippets/admin-warning.mdx';
 
 ## Overview
 
-The Xloud Compute control plane manages hypervisor hosts, instance lifecycle, and
+The Polystack Compute control plane manages hypervisor hosts, instance lifecycle, and
 metadata delivery. Securing it against unauthorized access, network eavesdropping, and
 API abuse is critical in any production deployment. This guide covers the three primary
 hardening areas: metadata service protection, live migration TLS, and API rate limiting.
@@ -135,7 +135,7 @@ degrading control plane performance and enabling denial-of-service conditions.
 
 <AccordionGroup>
   <Accordion title="Configure rate limits" icon="gauge">
-    Xloud recommends the following rate limits for production deployments:
+    Polystack recommends the following rate limits for production deployments:
 
     | Operation Type | Recommended Limit | Scope |
     |---------------|------------------|-------|
@@ -161,7 +161,7 @@ degrading control plane performance and enabling denial-of-service conditions.
     <Tip>
       Review API access logs regularly for patterns that indicate credential stuffing,
       automated instance enumeration, or quota exhaustion attacks. Set up an alert
-      in Xloud Monitoring (XIMP) for sustained `429` error rates above 1% of total
+      in Polystack Monitoring (XIMP) for sustained `429` error rates above 1% of total
       API traffic.
     </Tip>
   </Accordion>

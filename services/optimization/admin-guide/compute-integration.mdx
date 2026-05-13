@@ -1,12 +1,12 @@
 ---
 title: "Compute Integration"
-description: "Configure Xloud Compute for Optimization compatibility — verify shared storage, live migration capability, and host state for optimization action execution."
+description: "Configure Polystack Compute for Optimization compatibility — verify shared storage, live migration capability, and host state for optimization action execution."
 sidebarTitle: "Compute Integration"
 ---
 
 ## Overview
 
-The Optimization relies on Xloud Compute for both cluster state collection and
+The Optimization relies on Polystack Compute for both cluster state collection and
 migration execution. All optimization actions that produce live migrations require
 compute hosts to support live migration — which in turn requires shared storage for
 instance disks. This page covers the compute requirements, verification steps, and
@@ -15,8 +15,8 @@ configuration adjustments needed before enabling optimization in production.
 <Note>
   **Prerequisites**
   - Administrator privileges
-  - Xloud Compute deployed and operational
-  - Xloud Distributed Storage or equivalent shared storage for instance volumes
+  - Polystack Compute deployed and operational
+  - Polystack Distributed Storage or equivalent shared storage for instance volumes
 </Note>
 
 ---
@@ -24,7 +24,7 @@ configuration adjustments needed before enabling optimization in production.
 ## Shared Storage Requirement
 
 <Warning>
-  Live migration requires that instance disks are backed by shared storage (Xloud
+  Live migration requires that instance disks are backed by shared storage (Polystack
   Distributed Storage or equivalent). Instances with local ephemeral disks cannot
   be live-migrated. Such instances will cause actions to fail during plan execution.
 </Warning>
@@ -100,7 +100,7 @@ all hosts in the optimization segment.
         Click **New File** or select an existing `nova.conf` from the **File Browser**
         (right panel). Add the following in the **Code Editor** (center panel):
 
-        ```ini title="/etc/xavs/config/nova/nova.conf"
+        ```ini title="/etc/ironcore/config/nova/nova.conf"
         [libvirt]
         cpu_mode = custom
         cpu_model = Cascadelake-Server-noTSX

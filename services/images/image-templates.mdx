@@ -1,6 +1,6 @@
 ---
 title: "Image Templates and Catalogs"
-description: "Use Xloud images as VM templates, manage image catalogs, share community images, export images, and track versions across projects."
+description: "Use Polystack images as VM templates, manage image catalogs, share community images, export images, and track versions across projects."
 sidebarTitle: "Templates & Catalogs"
 ---
 
@@ -9,7 +9,7 @@ import CliAuth from '/snippets/cli-auth.mdx';
 
 ## Overview
 
-An image in Xloud serves as more than a boot disk — it is the authoritative template for instance provisioning. A well-managed image catalog ensures consistent deployments, enforces approved operating system versions, and supports multi-project sharing with access control. This guide covers using images as templates, organizing a catalog, publishing community images, exporting images for external use, and managing versions.
+An image in Polystack serves as more than a boot disk — it is the authoritative template for instance provisioning. A well-managed image catalog ensures consistent deployments, enforces approved operating system versions, and supports multi-project sharing with access control. This guide covers using images as templates, organizing a catalog, publishing community images, exporting images for external use, and managing versions.
 
 ---
 
@@ -186,7 +186,7 @@ openstack image reactivate <image-id>
 
 ## Image Versioning
 
-Xloud Image Service does not enforce versioning natively — version tracking is implemented through naming conventions and image properties. The recommended approach:
+Polystack Image Service does not enforce versioning natively — version tracking is implemented through naming conventions and image properties. The recommended approach:
 
 **Naming convention:** `<os>-<version>-<profile>-v<major>.<minor>`
 

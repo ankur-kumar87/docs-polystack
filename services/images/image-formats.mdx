@@ -1,12 +1,12 @@
 ---
 title: "Image Formats"
-description: "Compare QCOW2, RAW, VHD, and VMDK image formats and choose the right one for your Xloud workloads."
+description: "Compare QCOW2, RAW, VHD, and VMDK image formats and choose the right one for your Polystack workloads."
 sidebarTitle: "Image Formats"
 ---
 
 ## Overview
 
-The Xloud Image Service supports multiple virtual disk formats. Selecting the right format
+The Polystack Image Service supports multiple virtual disk formats. Selecting the right format
 affects launch performance, storage efficiency, and compatibility with your source
 environment. This guide compares supported formats, explains conversion workflows, and
 provides recommendations for common use cases.
@@ -34,7 +34,7 @@ provides recommendations for common use cases.
 
 <AccordionGroup>
   <Accordion title="QCOW2 — Recommended" icon="layers" defaultOpen>
-    QCOW2 (QEMU Copy-On-Write v2) is the default and recommended format for Xloud.
+    QCOW2 (QEMU Copy-On-Write v2) is the default and recommended format for Polystack.
     It supports thin provisioning (only stores data that has been written), internal
     snapshots, compression, and optional AES encryption.
 
@@ -54,7 +54,7 @@ provides recommendations for common use cases.
 
   <Accordion title="RAW — Maximum Performance" icon="zap">
     RAW images are unformatted disk dumps. There is zero overhead from the format layer.
-    When Xloud Distributed Storage (Ceph RBD) is the image and volume backend, RBD handles
+    When Polystack Distributed Storage (Ceph RBD) is the image and volume backend, RBD handles
     copy-on-write natively — making RAW the optimal format.
 
     | Property | Value |
@@ -72,7 +72,7 @@ provides recommendations for common use cases.
 
   <Accordion title="VHD / VHDX — Hyper-V Migration" icon="arrow-right-left">
     VHD and VHDX are the native disk formats for Microsoft Hyper-V. Import them directly
-    into Xloud when migrating workloads from a Hyper-V environment.
+    into Polystack when migrating workloads from a Hyper-V environment.
 
     | Format | Source Platform | Notes |
     |--------|----------------|-------|
@@ -80,7 +80,7 @@ provides recommendations for common use cases.
     | VHDX | Hyper-V (Gen 2) | Preferred format for Hyper-V 2012+ |
 
     <Tip>
-      Convert VHD/VHDX to QCOW2 after import for optimal performance and Xloud snapshot support.
+      Convert VHD/VHDX to QCOW2 after import for optimal performance and Polystack snapshot support.
     </Tip>
   </Accordion>
 
@@ -94,7 +94,7 @@ provides recommendations for common use cases.
     | Flat VMDK | Pre-allocated. Larger file, no format overhead. |
 
     <Tip>
-      Convert VMDKs to QCOW2 after import to enable Xloud snapshot and resize operations.
+      Convert VMDKs to QCOW2 after import to enable Polystack snapshot and resize operations.
     </Tip>
   </Accordion>
 </AccordionGroup>
@@ -131,7 +131,7 @@ qemu-img info disk.qcow2
 
 <CardGroup cols={2}>
   <Card title="Upload an Image" href="/services/images/upload-image" color="#197560">
-    Upload your converted image to the Xloud Image Service.
+    Upload your converted image to the Polystack Image Service.
   </Card>
   <Card title="Image Properties" href="/services/images/image-properties" color="#197560">
     Set hardware properties matching your image format and source platform.

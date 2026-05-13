@@ -1,6 +1,6 @@
 ---
 title: "XDeploy Platform"
-description: "Complete deployment and lifecycle management for your Xloud cloud infrastructure"
+description: "Complete deployment and lifecycle management for your Polystack cloud infrastructure"
 icon: "play"
 sidebarTitle: "XDeploy"
 mode: "wide"
@@ -13,7 +13,7 @@ XDeploy is the deployment and management platform that transforms bare servers i
   - Physical or virtual servers running [XOS](/products/xos)
   - Root or sudo access on all target nodes
   - Network connectivity between all cluster nodes
-  - A valid XDeploy activation key from [license.xloud.tech](https://license.xloud.tech)
+  - A valid XDeploy activation key from [license.polystack.tech](https://license.polystack.tech)
 </Note>
 
 ---
@@ -22,14 +22,14 @@ XDeploy is the deployment and management platform that transforms bare servers i
 
 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
   <div>
-    End-to-end XDEPLOY walkthrough — activation, hosts, XSDS storage, cluster configuration, load balancer, monitoring, advanced features, cluster licensing, and the Operations workflow that brings the cluster live.
+    End-to-end XDEPLOY walkthrough — activation, hosts, Software-Defined-Storage storage, cluster configuration, load balancer, monitoring, advanced features, cluster licensing, and the Operations workflow that brings the cluster live.
 
     Watch this before you begin — the 20-minute tour covers every module and decision point you will hit during a production deployment.
   </div>
   <iframe
     className="w-full aspect-video rounded-xl"
     src="https://www.youtube.com/embed/d3LdoBMgjSg"
-    title="How to Deploy Xloud with XDEPLOY — Full Walkthrough"
+    title="How to Deploy Polystack with XDEPLOY — Full Walkthrough"
     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
     allowFullScreen
   ></iframe>
@@ -51,8 +51,8 @@ Follow this sequence for a successful deployment. Each stage builds on the previ
   <Step title="Hosts" icon="server">
     Build cluster inventory, establish SSH, assign node roles.
   </Step>
-  <Step title="XSDS Bootstrap" icon="database">
-    Deploy the distributed storage cluster. **Skip this step if not using XSDS as your storage backend.**
+  <Step title="Software-Defined-Storage Bootstrap" icon="database">
+    Deploy the distributed storage cluster. **Skip this step if not using Software-Defined-Storage as your storage backend.**
   </Step>
   <Step title="Configuration" icon="settings">
     Set networking, storage, monitoring, and feature toggles.
@@ -85,7 +85,7 @@ Complete every step below before initiating your first deployment.
   <Step title="Install XOS on All Nodes" icon="monitor">
     All target servers must be running **XOS**. XOS includes all required kernel modules, drivers, and base packages pre-configured for cloud deployment.
 
-    <Info>XOS is available as an ISO from your Xloud representative or the [license portal](https://license.xloud.tech). See the [XOS product page](/products/xos) for details.</Info>
+    <Info>XOS is available as an ISO from your Polystack representative or the [license portal](https://license.polystack.tech). See the [XOS product page](/products/xos) for details.</Info>
   </Step>
   <Step title="Verify Hardware Requirements" icon="cpu">
     Confirm every target server meets or exceeds these minimums:
@@ -108,8 +108,8 @@ Complete every step below before initiating your first deployment.
     | VM Traffic (Tenant) | Instance-to-instance communication | Yes |
     | Provider / External | Floating IPs, VM internet access | Yes |
     | Load Balancer (Octavia) | Amphora management traffic | Yes (if LBaaS enabled) |
-    | Storage Client (XSDS) | Client-to-Ceph I/O | Recommended |
-    | Storage Replication (XSDS) | Ceph OSD-to-OSD replication | Recommended |
+    | Storage Client (Software-Defined-Storage) | Client-to-Ceph I/O | Recommended |
+    | Storage Replication (Software-Defined-Storage) | Ceph OSD-to-OSD replication | Recommended |
     | Additional Provider VLANs | Customer-specific external networks | As needed |
 
     <Warning>Never mix management and provider traffic on a single NIC. If tenant instance traffic saturates the interface, the control plane becomes unreachable.</Warning>
@@ -125,8 +125,8 @@ Complete every step below before initiating your first deployment.
   <Step title="Gather Credentials" icon="key">
     Collect the following before starting:
     - **SSH credentials** from the deployment node to all target servers (password or key-based)
-    - **XDeploy activation key** (`.xlic`) from [license.xloud.tech](https://license.xloud.tech)
-    - **Cluster license key** (`.xlic`) from [license.xloud.tech](https://license.xloud.tech)
+    - **XDeploy activation key** (`.xlic`) from [license.polystack.tech](https://license.polystack.tech)
+    - **Cluster license key** (`.xlic`) from [license.polystack.tech](https://license.polystack.tech)
   </Step>
   <Step title="Choose Architecture and Node Roles" icon="layout">
     Select the deployment architecture that matches your requirements:
@@ -143,7 +143,7 @@ Complete every step below before initiating your first deployment.
       </Card>
     </CardGroup>
 
-    <Tip>For production environments, Xloud recommends HCI with a minimum of 3 nodes or Distributed with 5+ nodes for full high availability.</Tip>
+    <Tip>For production environments, Polystack recommends HCI with a minimum of 3 nodes or Distributed with 5+ nodes for full high availability.</Tip>
   </Step>
 </Steps>
 
@@ -182,7 +182,7 @@ XDeploy provides 11 specialized tools, each handling a distinct stage of the dep
   <Card title="Cloud Fleet" icon="globe" href="/deployment/cloud-fleet" color="#197560">
     Interactive infrastructure topology map
   </Card>
-  <Card title="XSDS Storage" icon="database" href="/deployment/xsds" color="#197560">
+  <Card title="Software-Defined-Storage Storage" icon="database" href="/deployment/software-defined-storage" color="#197560">
     Distributed storage deployment and tier management
   </Card>
   <Card title="Cluster License" icon="key" href="/deployment/cluster-license" color="#197560">

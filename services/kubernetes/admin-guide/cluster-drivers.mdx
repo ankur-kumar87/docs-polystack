@@ -1,6 +1,6 @@
 ---
 title: "Cluster Drivers"
-description: "Configure and manage Xloud K8SaaS cluster drivers — the provisioning engine that templates and deploys Kubernetes clusters on the platform infrastructure."
+description: "Configure and manage Polystack K8SaaS cluster drivers — the provisioning engine that templates and deploys Kubernetes clusters on the platform infrastructure."
 sidebarTitle: "Cluster Drivers"
 ---
 
@@ -8,7 +8,7 @@ sidebarTitle: "Cluster Drivers"
 
 Cluster drivers are the provisioning engine behind K8SaaS. Each driver defines the
 orchestration templates and bootstrap scripts used to deploy and manage a specific
-type of cluster. Xloud K8SaaS ships with the `kubernetes` driver as the supported
+type of cluster. Polystack K8SaaS ships with the `kubernetes` driver as the supported
 default. You can enable, disable, or configure driver behaviour through
 the K8SaaS service configuration file.
 
@@ -23,9 +23,9 @@ the K8SaaS service configuration file.
 
 | Driver | Status | Description |
 |--------|--------|-------------|
-| `kubernetes` | <Badge color="green" size="sm" shape="pill">Default</Badge> | Provisions Kubernetes clusters using Xloud Orchestration (Heat) templates |
+| `kubernetes` | <Badge color="green" size="sm" shape="pill">Default</Badge> | Provisions Kubernetes clusters using Polystack Orchestration (Heat) templates |
 
-The `kubernetes` driver is the only supported driver in standard Xloud K8SaaS deployments.
+The `kubernetes` driver is the only supported driver in standard Polystack K8SaaS deployments.
 Third-party drivers (e.g., `swarm`, `mesos`) are not enabled by default and are not
 supported in production configurations.
 
@@ -42,7 +42,7 @@ is active.
 
 ```bash title="Check driver configuration"
 grep -E "disabled_drivers|driver" \
-  /etc/xavs/kubernetes/kubernetes.conf
+  /etc/ironcore/kubernetes/kubernetes.conf
 ```
 
 If `disabled_drivers` is empty or not present, all built-in drivers are enabled.
@@ -55,7 +55,7 @@ Driver behaviour is configurable in the K8SaaS service configuration file.
 
 <Tree>
   <Tree.Folder name="etc" defaultOpen>
-    <Tree.Folder name="xavs" defaultOpen>
+    <Tree.Folder name="ironcore" defaultOpen>
       <Tree.Folder name="kubernetes" defaultOpen>
         <Tree.File name="kubernetes.conf — K8SaaS service configuration" />
       </Tree.Folder>
@@ -100,7 +100,7 @@ Driver behaviour is configurable in the K8SaaS service configuration file.
     To restrict the platform to only the `kubernetes` driver and prevent experimental
     drivers from being registered:
 
-    ```ini title="/etc/xavs/kubernetes/kubernetes.conf"
+    ```ini title="/etc/ironcore/kubernetes/kubernetes.conf"
     [drivers]
     disabled_drivers = swarm,mesos
     ```
@@ -109,7 +109,7 @@ Driver behaviour is configurable in the K8SaaS service configuration file.
 
     Increase the number of Conductor workers to handle more concurrent cluster operations:
 
-    ```ini title="/etc/xavs/kubernetes/kubernetes.conf"
+    ```ini title="/etc/ironcore/kubernetes/kubernetes.conf"
     [DEFAULT]
     workers = 4
     ```

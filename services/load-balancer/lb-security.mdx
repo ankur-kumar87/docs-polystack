@@ -1,6 +1,6 @@
 ---
 title: "Load Balancer Security"
-description: "Restrict management plane access, manage TLS certificate lifecycle, and audit quota usage for Xloud Load Balancer security hardening."
+description: "Restrict management plane access, manage TLS certificate lifecycle, and audit quota usage for Polystack Load Balancer security hardening."
 sidebarTitle: "Security"
 ---
 
@@ -8,7 +8,7 @@ import AdminWarning from '/snippets/admin-warning.mdx';
 
 ## Overview
 
-Securing the Xloud Load Balancer infrastructure protects both the management plane
+Securing the Polystack Load Balancer infrastructure protects both the management plane
 (controller-to-appliance communication) and the data plane (client traffic). This guide
 covers network isolation of the management plane, appliance TLS certificate lifecycle,
 quota auditing, and access log configuration.
@@ -115,11 +115,11 @@ octavia_access_log_facility: LOG_LOCAL0
 
 Apply:
 ```bash title="Apply access log configuration"
-xavs-ansible deploy --tags octavia
+ironcore-ansible deploy --tags octavia
 ```
 
 <Tip>
-  Store load balancer access logs in Xloud Object Storage for long-term retention.
+  Store load balancer access logs in Polystack Object Storage for long-term retention.
   A retention policy of 90 days satisfies most compliance frameworks.
 </Tip>
 

@@ -1,22 +1,22 @@
-# XLoud Complete Feature Inventory vs Documentation Coverage
+# Polystack Complete Feature Inventory vs Documentation Coverage
 
 **Generated**: 2026-03-20
-**Sources**: XLOUD_BIBLE (37 features), DEVELOPMENT-TRACKER, 26 compliance docs, 35 blueprints, 7 selfheal guides, comparison matrices (430+ features), 30 verified LinkedIn posts, all rules files
+**Sources**: POLYSTACK_BIBLE (37 features), DEVELOPMENT-TRACKER, 26 compliance docs, 35 blueprints, 7 selfheal guides, comparison matrices (430+ features), 30 verified LinkedIn posts, all rules files
 **Total Repos**: 24 | **Total Commits**: 11,000+ | **Compliance Points**: 76
 
 ---
 
 ## CRITICAL: PUBLIC CONTENT GUARDRAILS
 
-Documentation MUST use customer-facing names (from `xloud-public-content-guardrails.md`):
+Documentation MUST use customer-facing names (from `polystack-public-content-guardrails.md`):
 
 | Internal Name | Customer-Facing Name |
 |---|---|
 | Watcher | Automated Workload Optimization / Resource Optimizer |
 | FileFS | File-Level Restore |
 | xDeploy | Deployment Wizard / Management Platform |
-| XAVS-Ansible | Deployment Automation |
-| Nova xloud-adjust | Live Resource Scaling |
+| Ironcore-Ansible | Deployment Automation |
+| Nova polystack-adjust | Live Resource Scaling |
 | Wazuh | Integrated Security Platform |
 | Ceph | Distributed Storage |
 | OVN/Neutron | Software-Defined Networking |
@@ -52,7 +52,7 @@ Documentation MUST use customer-facing names (from `xloud-public-content-guardra
 | A8 | **Hugepages** (2MB/1GB) | CP-003 | PARTIAL | mentioned | Needs section |
 | A9 | **CPU Feature Masking (EVC equivalent)** | CP-003 | MISSING | — | Per-flavor granularity vs VMware cluster-wide |
 | A10 | **vTPM 2.0** | CP-004 | PARTIAL | accordion in advanced-features | Needs full page: Barbican secret, live migration |
-| A11 | **Live Migration** | CP-009 | DOCUMENTED | `compute/live-migration.mdx` | Needs XLoud enhancements (cross-CPU, vTPM, automated) |
+| A11 | **Live Migration** | CP-009 | DOCUMENTED | `compute/live-migration.mdx` | Needs Polystack enhancements (cross-CPU, vTPM, automated) |
 | A12 | **Server Groups** (affinity/anti-affinity) | CP-007 | DOCUMENTED | `compute/server-groups.mdx` | Needs Watcher enforcement callout |
 | A13 | **Atomic Container Upgrades** | CP-005 | MISSING | — | Per-service rollback in 2-10s |
 | A14 | **Horizontal Scaling** (no node cap) | CP-006 | MISSING | — | No hard limit, Cells v2, proven at CERN 8K+ nodes |
@@ -65,10 +65,10 @@ Documentation MUST use customer-facing names (from `xloud-public-content-guardra
 
 | # | Feature | CP | Doc Status | Current Page | Gap |
 |---|---------|-----|-----------|--------------|-----|
-| B1 | **DRS Workload Balancing** | CP-008 | PARTIAL | `optimization/admin-guide/strategy-config.mdx` | XLoud enhancements (safety checks, max_iterations) not called out |
+| B1 | **DRS Workload Balancing** | CP-008 | PARTIAL | `optimization/admin-guide/strategy-config.mdx` | Polystack enhancements (safety checks, max_iterations) not called out |
 | B2 | **Storage Tier Auto-Balance** | F-025 | PARTIAL | `storage/storage-tiers.mdx` | Watcher auto-tiering strategy not mentioned |
 | B3 | **Server Group Awareness** | CP-007 | MISSING | — | All 14 strategies respect affinity constraints |
-| B4 | **14 Strategies Total** | — | PARTIAL | strategy-config page lists them | XLoud production enhancements not highlighted |
+| B4 | **14 Strategies Total** | — | PARTIAL | strategy-config page lists them | Polystack production enhancements not highlighted |
 
 ## CATEGORY C: DASHBOARD (Horizon — 94 commits over upstream)
 
@@ -87,14 +87,14 @@ Documentation MUST use customer-facing names (from `xloud-public-content-guardra
 | C11 | **Dark Mode** | F-031 | N/A-DOCS | — | Auto-detected from system preference |
 | C12 | **License Enforcement** | CP-002 | N/A-DOCS | — | Backend middleware |
 
-## CATEGORY D: SECURITY & COMPLIANCE (xavs-ansible — 154 commits)
+## CATEGORY D: SECURITY & COMPLIANCE (ironcore-ansible — 154 commits)
 
 | # | Feature | CP | Doc Status | Current Page | Gap |
 |---|---------|-----|-----------|--------------|-----|
 | D1 | **Wazuh SIEM Full Stack** | CP-045 | PARTIAL | `security/wazuh.mdx` | 95 commits of detail not covered |
-| D2 | **OS Hardening (CIS Benchmark)** | — | PARTIAL | `security/hardening-guide.mdx` | XLoud-specific roles not covered |
-| D3 | **OpenSCAP Compliance** | — | PARTIAL | `security/openscap.mdx` | May need XLoud config detail |
-| D4 | **Lynis Audit** | — | PARTIAL | `security/lynis.mdx` | May need XLoud config detail |
+| D2 | **OS Hardening (CIS Benchmark)** | — | PARTIAL | `security/hardening-guide.mdx` | Polystack-specific roles not covered |
+| D3 | **OpenSCAP Compliance** | — | PARTIAL | `security/openscap.mdx` | May need Polystack config detail |
+| D4 | **Lynis Audit** | — | PARTIAL | `security/lynis.mdx` | May need Polystack config detail |
 | D5 | **Grafana Security Ops Dashboard** | — | MISSING | — | Auto-deployed with Wazuh panels |
 | D6 | **Self-Healing Credentials** (3-layer) | ENH-11 | MISSING | — | Post-deploy + cron + filesystem guardian |
 | D7 | **Wazuh Master Failover** | CR-02 | MISSING | — | Manual failover playbook |
@@ -105,14 +105,14 @@ Documentation MUST use customer-facing names (from `xloud-public-content-guardra
 | D12 | **SBOM CI Pipeline** | CP-050 | MISSING | — | Trivy+Syft+cosign supply chain security |
 | D13 | **Triple Compliance** (SCA+Lynis+OpenSCAP) | CP-045 | MISSING | — | Three independent scanners |
 
-## CATEGORY E: DEPLOYMENT & LIFECYCLE (xDeploy — 69 commits + xavs-ansible)
+## CATEGORY E: DEPLOYMENT & LIFECYCLE (xDeploy — 69 commits + ironcore-ansible)
 
 | # | Feature | CP | Doc Status | Current Page | Gap |
 |---|---------|-----|-----------|--------------|-----|
 | E1 | **Deployment Wizard** (18 modules) | — | MISSING | — | Should be major docs section |
 | E2 | **Security Compliance Module** (scanning UI) | I-003 | MISSING | — | CIS comparison, Lynis scoring |
 | E3 | **AlertManager Config UI** | — | MISSING | — | SMTP/Webhook configuration |
-| E4 | **Ceph Storage Tiering UI** | F-004/F-005 | MISSING | — | XSDS tier management |
+| E4 | **Ceph Storage Tiering UI** | F-004/F-005 | MISSING | — | Software-Defined-Storage tier management |
 | E5 | **LCM** (22 CLI commands) | CP-072 | MISSING | — | Full lifecycle management |
 | E6 | **Safe Day-2 Operations** (dry-run) | CP-074 | MISSING | — | --check, --diff, guardrails |
 | E7 | **Pre-Deployment Validation** | CP-073 | MISSING | — | 50+ checks, stress testing |
@@ -121,7 +121,7 @@ Documentation MUST use customer-facing names (from `xloud-public-content-guardra
 
 | # | Feature | CP | Doc Status | Current Page | Gap |
 |---|---------|-----|-----------|--------------|-----|
-| F1 | **Storage Tiering** (NVMe/SSD/HDD) | CP-013 | PARTIAL | `storage/storage-tiers.mdx` | Needs auto-tiering, XSDS UI |
+| F1 | **Storage Tiering** (NVMe/SSD/HDD) | CP-013 | PARTIAL | `storage/storage-tiers.mdx` | Needs auto-tiering, Software-Defined-Storage UI |
 | F2 | **Storage QoS** (IOPS/bandwidth) | CP-030 | PARTIAL | `storage/qos.mdx` | Bronze/Silver/Gold tiers not covered |
 | F3 | **Volume Encryption** (LUKS+Barbican) | CP-043 | PARTIAL | `storage/encryption.mdx` | Per-volume selective encryption unique |
 | F4 | **Manila Shared Filesystems** | CP-033 | PARTIAL | product page only | Service docs exist at `services/sds/` but Manila specifically? |
@@ -141,7 +141,7 @@ Documentation MUST use customer-facing names (from `xloud-public-content-guardra
 
 | # | Feature | CP | Doc Status | Current Page | Gap |
 |---|---------|-----|-----------|--------------|-----|
-| H1 | **VM HA** (Masakari) | CP-005 | PARTIAL | `services/instance-ha/` | Full section exists — check XLoud specifics |
+| H1 | **VM HA** (Masakari) | CP-005 | PARTIAL | `services/instance-ha/` | Full section exists — check Polystack specifics |
 | H2 | **Power Recovery** (9-phase playbook) | — | MISSING | — | 7-13min target RTO |
 | H3 | **Container Autoheal** (3-tier daemon) | — | MISSING | — | Circuit breaker, dependency graph |
 | H4 | **120 Alert Rules** (13 groups) | — | MISSING | — | Predictive rules with predict_linear |
@@ -155,7 +155,7 @@ Documentation MUST use customer-facing names (from `xloud-public-content-guardra
 | I1 | **XMS Migration Suite** | 6 repos, 1,671 commits | MISSING | XIMP product page only | 10+ platforms, AI scoring, incremental sync |
 | I2 | **xInsight-AI** | xinsight-ai, 26 commits | MISSING | XNexus product page only | 42 MCP tools, 3 chat modes, on-premises LLM |
 | I3 | **XLicense Portal** | xlicense, 110 commits | N/A-DOCS | — | Backend portal |
-| I4 | **XAVS Guest Agent** | xavs-guest-agent, 3 commits | MISSING | — | VSS provider for Windows app-consistent snapshots |
+| I4 | **Ironcore Guest Agent** | ironcore-guest-agent, 3 commits | MISSING | — | VSS provider for Windows app-consistent snapshots |
 | I5 | **XOS** (custom Ubuntu 24.04) | subiquity+cubic | PARTIAL | XOS product page | No install guide |
 | I6 | **Magnum** (Managed K8s) | magnum, 5,624 upstream | PARTIAL | `services/kubernetes/` | Check if it covers Magnum specifics |
 | I7 | **Cyborg** (GPU/Accelerator) | cyborg, 1,058 upstream | MISSING | — | 10 drivers, GPU management |
@@ -223,7 +223,7 @@ Documentation MUST use customer-facing names (from `xloud-public-content-guardra
 18. Atomic Upgrades / per-service rollback (A13)
 19. Self-Healing Infrastructure (H1-H6)
 20. LCM / Day-2 Operations (E5+E6)
-21. XAVS Guest Agent / VSS (I4)
+21. Ironcore Guest Agent / VSS (I4)
 22. Global Notification Bell (C3)
 
 ### P2 — Supporting Features

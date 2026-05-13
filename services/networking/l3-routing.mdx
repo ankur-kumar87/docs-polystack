@@ -9,7 +9,7 @@ import CliAuth from '/snippets/cli-auth.mdx';
 
 ## Overview
 
-Xloud Networking supports two advanced router modes for production deployments: High
+Polystack Networking supports two advanced router modes for production deployments: High
 Availability (HA) routers using VRRP for automatic failover between L3 agents, and
 Distributed Virtual Routing (DVR) that moves L3 forwarding to each compute node to
 eliminate centralized bottlenecks. This guide covers enabling and validating both modes.
@@ -75,7 +75,7 @@ graph LR
 </Tabs>
 
 <Info>
-  HA routers require at least two L3 agents running in the cluster. Xloud Networking
+  HA routers require at least two L3 agents running in the cluster. Polystack Networking
   automatically schedules the router across all available L3 agents. Verify with
   `openstack network agent list --agent-type l3` before creating HA routers.
 </Info>
@@ -103,7 +103,7 @@ network node as a bottleneck for east-west and north-south traffic.
     | `neutron_l3_ha` | `True` | Enable VRRP HA for centralized L3 agents |
     | `enable_neutron_dvr` | `True` | Distribute L3 forwarding to compute nodes |
 
-    Click **Save and Deploy**. XDeploy applies the configuration via xavs-ansible.
+    Click **Save and Deploy**. XDeploy applies the configuration via ironcore-ansible.
 
     <Warning>
       Enabling DVR on an existing cluster requires a rolling restart of all L3 and

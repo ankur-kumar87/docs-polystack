@@ -9,7 +9,7 @@ import CliAuth from '/snippets/cli-auth.mdx';
 
 ## Overview
 
-Xloud Block Storage backups are managed by the `cinder-backup` service, which stores volume backup data in a configurable backend. The backup backend is independent of the volume backend — backups from any volume backend (Ceph, NetApp, LVM) can be stored in any backup backend (Ceph, Swift, NFS, S3). Selecting the right backup backend depends on your recovery time objectives, storage capacity, and existing infrastructure.
+Polystack Block Storage backups are managed by the `cinder-backup` service, which stores volume backup data in a configurable backend. The backup backend is independent of the volume backend — backups from any volume backend (Ceph, NetApp, LVM) can be stored in any backup backend (Ceph, Swift, NFS, S3). Selecting the right backup backend depends on your recovery time objectives, storage capacity, and existing infrastructure.
 
 <AdminWarning />
 
@@ -26,7 +26,7 @@ Xloud Block Storage backups are managed by the `cinder-backup` service, which st
 
 | Backend | Driver | Transport | Use Case |
 |---------|--------|-----------|----------|
-| **Ceph RBD** | `ceph` | RBD protocol | Native XAVS — incremental backups, fast restores |
+| **Ceph RBD** | `ceph` | RBD protocol | Native Ironcore — incremental backups, fast restores |
 | **Swift** | `swift` | HTTP/S | Built-in object storage, multi-node replication |
 | **NFS** | `nfs` | NFS | Shared NAS appliances, on-premises tape replacement |
 | **S3-compatible** | `s3` | HTTPS | AWS S3, Ceph RGW, MinIO, Dell ECS, any S3 endpoint |
@@ -40,7 +40,7 @@ Xloud Block Storage backups are managed by the `cinder-backup` service, which st
 All backup backend settings are placed in the `[DEFAULT]` section of `cinder.conf`. Only one backup backend is active at a time.
 
 <AccordionGroup>
-  <Accordion title="Ceph RBD — recommended for XAVS" icon="database">
+  <Accordion title="Ceph RBD — recommended for Ironcore" icon="database">
     The Ceph backup driver stores backups as RBD images in a dedicated backup pool. It supports **incremental backups** — only changed blocks are transferred after the first full backup, making subsequent backups fast and space-efficient.
 
     ```ini title="cinder.conf — Ceph backup backend"
@@ -167,10 +167,10 @@ All backup backend settings are placed in the `[DEFAULT]` section of `cinder.con
 
 ## Apply Backup Backend Configuration
 
-In XAVS deployments, backup backend settings are configured through XDeploy and applied via Ansible. Do not edit `cinder.conf` directly.
+In Ironcore deployments, backup backend settings are configured through XDeploy and applied via Ansible. Do not edit `cinder.conf` directly.
 
 ```bash title="Apply backup configuration changes"
-xavs-ansible deploy --tags cinder
+ironcore-ansible deploy --tags cinder
 ```
 
 After deployment, verify the backup service is running:

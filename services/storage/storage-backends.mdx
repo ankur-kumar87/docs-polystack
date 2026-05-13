@@ -9,7 +9,7 @@ import CliAuth from '/snippets/cli-auth.mdx';
 
 ## Overview
 
-A storage backend is the combination of a driver and a physical storage system that serves Xloud Block Storage volumes. Backends are configured at deploy time through XDeploy and registered with the scheduler. Each backend must have a unique `volume_backend_name` that maps to at least one volume type, making it accessible to users.
+A storage backend is the combination of a driver and a physical storage system that serves Polystack Block Storage volumes. Backends are configured at deploy time through XDeploy and registered with the scheduler. Each backend must have a unique `volume_backend_name` that maps to at least one volume type, making it accessible to users.
 
 <AdminWarning />
 
@@ -43,7 +43,7 @@ A storage backend is the combination of a driver and a physical storage system t
 
 ## Configure a Distributed Storage (RBD) Backend
 
-The distributed storage driver is the recommended backend for all production deployments. It uses RADOS Block Devices backed by a Xloud Distributed Storage cluster.
+The distributed storage driver is the recommended backend for all production deployments. It uses RADOS Block Devices backed by a Polystack Distributed Storage cluster.
 
 <Tabs>
   <Tab title="XDeploy" icon="package">
@@ -63,8 +63,8 @@ The distributed storage driver is the recommended backend for all production dep
         | Parameter | Description | Example |
         |-----------|-------------|---------|
         | Pool Name | Name of the storage pool for volumes | `volumes` |
-        | Auth Username | Storage authentication user | `xloud-volume` |
-        | Keyring Path | Path to the keyring file on volume service nodes | `/etc/ceph/ceph.client.xloud-volume.keyring` |
+        | Auth Username | Storage authentication user | `polystack-volume` |
+        | Keyring Path | Path to the keyring file on volume service nodes | `/etc/ceph/ceph.client.polystack-volume.keyring` |
         | Cluster Name | Storage cluster identifier | `ceph` |
         | Backend Name | Unique name for this backend | `rbd-ssd` |
       </Step>
@@ -126,7 +126,7 @@ LVM backends are suitable for development and single-node testing environments o
       <Step title="Configure LVM parameters" icon="sliders">
         | Parameter | Description | Example |
         |-----------|-------------|---------|
-        | Volume Group | LVM volume group name | `xloud-volumes` |
+        | Volume Group | LVM volume group name | `polystack-volumes` |
         | Target Helper | iSCSI helper binary | `lioadm` |
         | Backend Name | Unique name for this backend | `lvm-local` |
       </Step>

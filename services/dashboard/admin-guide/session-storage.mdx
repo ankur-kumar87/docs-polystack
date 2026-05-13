@@ -1,12 +1,12 @@
 ---
 title: "Session Management"
-description: "Understand how the Xloud Dashboard manages user sessions using JWT tokens. Configure session duration and security settings."
+description: "Understand how the Polystack Dashboard manages user sessions using JWT tokens. Configure session duration and security settings."
 sidebarTitle: "Session Management"
 ---
 
 ## Overview
 
-The Xloud Dashboard uses JWT (JSON Web Token) based session management. When a user
+The Polystack Dashboard uses JWT (JSON Web Token) based session management. When a user
 logs in, the Dashboard obtains a Keystone authentication token and wraps it in a JWT
 stored as a browser cookie named `session`. No server-side session storage (Memcached,
 Redis, database) is required.
@@ -89,7 +89,7 @@ sequenceDiagram
     </Steps>
   </Tab>
   <Tab title="CLI" icon="terminal">
-    The Skyline API server configuration is at `/etc/xavs/config/skyline-apiserver/`.
+    The Skyline API server configuration is at `/etc/ironcore/config/skyline-apiserver/`.
 
     ```bash title="View current session configuration"
     cat /etc/skyline/skyline.yaml | grep -A 5 session
@@ -98,7 +98,7 @@ sequenceDiagram
     After changes, restart the Skyline API server:
 
     ```bash title="Apply configuration"
-    xavs-ansible reconfigure -t skyline
+    ironcore-ansible reconfigure -t skyline
     ```
   </Tab>
 </Tabs>

@@ -1,18 +1,18 @@
 ---
 title: "Cluster Optimization"
-description: "Automated resource optimization for Xloud — workload placement, consolidation, and dynamic scaling."
+description: "Automated resource optimization for Polystack — workload placement, consolidation, and dynamic scaling."
 icon: "trending-up"
 sidebarTitle: "Optimization"
 mode: "wide"
 ---
 
 Maximize infrastructure efficiency with automated workload analysis and intelligent
-placement. Xloud Cluster Optimization continuously audits your compute cluster, generates
+placement. Polystack Cluster Optimization continuously audits your compute cluster, generates
 actionable improvement plans, and executes workload rebalancing — reducing resource
 waste, lowering energy consumption, and improving workload performance.
 
-<Card title="XAVS — Advanced Virtualization Solutions" icon="external-link" href="https://xloud.tech/xavs" color="#197560" horizontal>
-  Product details on xloud.tech
+<Card title="Ironcore — Advanced Virtualization Solutions" icon="external-link" href="https://polystack.tech/ironcore" color="#197560" horizontal>
+  Product details on polystack.tech
 </Card>
 
 ---
@@ -33,7 +33,7 @@ waste, lowering energy consumption, and improving workload performance.
     using the openstack CLI.
   </Card>
   <Card title="Compute Service" icon="server" href="/services/compute" color="#197560">
-    Xloud Compute provides the workload and host metrics that drive optimization
+    Polystack Compute provides the workload and host metrics that drive optimization
     decisions and executes the resulting migration actions.
   </Card>
 </CardGroup>
@@ -81,7 +81,7 @@ graph TD
     D -->|Reviewed by operator| E{Start?}
     E -->|Yes| F[Action Applier]
     E -->|No| G[Discard / Modify]
-    F -->|Start migrations| H[Xloud Compute API]
+    F -->|Start migrations| H[Polystack Compute API]
     H -->|Live migrate workloads| I[Optimized Cluster]
 ```
 
@@ -103,13 +103,13 @@ graph TD
 <p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Related Services</p>
 
 <CardGroup cols={3}>
-  <Card title="Xloud Compute" icon="server" href="/services/compute" color="#197560">
+  <Card title="Polystack Compute" icon="server" href="/services/compute" color="#197560">
     Workload placement and live migration executed by the Optimization
   </Card>
   <Card title="Instance HA" icon="heart-pulse" href="/services/instance-ha/index" color="#197560">
     Recovery events that trigger rebalancing workflows
   </Card>
-  <Card title="Xloud Identity" icon="fingerprint" href="/services/identity/index" color="#197560">
+  <Card title="Polystack Identity" icon="fingerprint" href="/services/identity/index" color="#197560">
     RBAC policies governing who can approve and execute optimization actions
   </Card>
 </CardGroup>

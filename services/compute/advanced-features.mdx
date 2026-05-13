@@ -8,7 +8,7 @@ import AdminWarning from '/snippets/admin-warning.mdx';
 
 ## Overview
 
-Xloud Compute exposes advanced hypervisor capabilities for workloads that require
+Polystack Compute exposes advanced hypervisor capabilities for workloads that require
 dedicated hardware resources, hardware-enforced security, or accelerated computing.
 These features are activated through flavor extra specs and require corresponding
 host-level configuration on participating compute nodes.
@@ -30,14 +30,14 @@ host-level configuration on participating compute nodes.
   <Accordion title="NUMA-Aware Scheduling" icon="cpu">
     <Badge color="purple" size="sm" shape="pill" icon="building">Enterprise</Badge>
 
-    <Info>**Xloud-Developed** — NUMA-aware scheduling with per-flavor granularity is developed by Xloud and ships with XAVS / XPCI.</Info>
+    <Info>**Polystack-Developed** — NUMA-aware scheduling with per-flavor granularity is developed by Polystack and ships with Ironcore / XPCI.</Info>
 
     NUMA-aware scheduling ensures that an instance's vCPUs and memory are allocated
     from the same physical NUMA cell on the host, avoiding cross-node memory access
     penalties. The `NUMATopologyFilter` in the scheduler evaluates each host's NUMA
     topology and rejects placements that would split an instance across cells.
 
-    Unlike VMware's cluster-wide EVC setting, Xloud provides **per-flavor NUMA
+    Unlike VMware's cluster-wide EVC setting, Polystack provides **per-flavor NUMA
     granularity** — each flavor can define its own NUMA cell count and CPU/memory
     distribution, allowing mixed workload profiles on the same compute cluster.
 
@@ -68,14 +68,14 @@ host-level configuration on participating compute nodes.
   <Accordion title="CPU Pinning" icon="microchip">
     <Badge color="purple" size="sm" shape="pill" icon="building">Enterprise</Badge>
 
-    <Info>**Xloud-Developed** — CPU pinning with mixed-policy support is developed by Xloud and ships with XAVS / XPCI.</Info>
+    <Info>**Polystack-Developed** — CPU pinning with mixed-policy support is developed by Polystack and ships with Ironcore / XPCI.</Info>
 
     CPU pinning dedicates physical CPU threads exclusively to a single instance,
     eliminating scheduling jitter and improving performance predictability for
     latency-sensitive workloads such as real-time databases, financial applications,
     and telco VNFs.
 
-    Xloud supports three CPU policy modes:
+    Polystack supports three CPU policy modes:
 
     - **`dedicated`** — all vCPUs are pinned to exclusive physical threads
     - **`shared`** — vCPUs float across all available host CPUs (default behavior)
@@ -125,12 +125,12 @@ host-level configuration on participating compute nodes.
   <Accordion title="CPU Feature Masking (EVC Equivalent)" icon="shield">
     <Badge color="purple" size="sm" shape="pill" icon="building">Enterprise</Badge>
 
-    <Info>**Xloud-Developed** — Per-flavor CPU feature masking is developed by Xloud and ships with XAVS / XPCI.</Info>
+    <Info>**Polystack-Developed** — Per-flavor CPU feature masking is developed by Polystack and ships with Ironcore / XPCI.</Info>
 
     CPU feature masking normalizes the CPU instruction set exposed to instances,
     enabling live migration across compute nodes with different CPU generations. This
-    is the Xloud equivalent of VMware's Enhanced vMotion Compatibility (EVC), with a
-    key difference: Xloud applies masking **per-flavor or per-image** rather than at
+    is the Polystack equivalent of VMware's Enhanced vMotion Compatibility (EVC), with a
+    key difference: Polystack applies masking **per-flavor or per-image** rather than at
     the cluster level, allowing different workloads to use different CPU baselines on
     the same cluster.
 
@@ -158,11 +158,11 @@ host-level configuration on participating compute nodes.
   <Accordion title="Huge Pages" icon="layers">
     <Badge color="purple" size="sm" shape="pill" icon="building">Enterprise</Badge>
 
-    <Info>**Xloud-Developed** — Huge page management with per-flavor page size selection is developed by Xloud and ships with XAVS / XPCI.</Info>
+    <Info>**Polystack-Developed** — Huge page management with per-flavor page size selection is developed by Polystack and ships with Ironcore / XPCI.</Info>
 
     Huge pages reduce TLB (Translation Lookaside Buffer) pressure for memory-intensive
     workloads. The hypervisor pre-allocates huge page pools on the host at boot time.
-    Xloud supports two page sizes:
+    Polystack supports two page sizes:
 
     - **2 MB huge pages** — suitable for most workloads including databases, application servers, and general-purpose memory optimization. Lower host memory fragmentation risk.
     - **1 GB huge pages** — optimal for HPC, in-memory analytics, and latency-sensitive network functions (DPDK, VNFs) where TLB coverage per entry is critical.
@@ -235,12 +235,12 @@ host-level configuration on participating compute nodes.
   <Accordion title="vTPM (Virtual Trusted Platform Module)" icon="shield-check">
     <Badge color="purple" size="sm" shape="pill" icon="building">Enterprise</Badge>
 
-    <Info>**Xloud-Developed** — vTPM with live migration support and Dashboard integration is developed by Xloud and ships with XAVS / XPCI.</Info>
+    <Info>**Polystack-Developed** — vTPM with live migration support and Dashboard integration is developed by Polystack and ships with Ironcore / XPCI.</Info>
 
     vTPM provides a software-emulated TPM chip inside the instance, enabling disk
     encryption (BitLocker, LUKS), measured boot attestation, and secure credential
-    storage. Xloud supports **live migration of vTPM instances** with automatic secret
-    transfer via [Xloud Key Management](/services/key-manager/admin-guide) — the
+    storage. Polystack supports **live migration of vTPM instances** with automatic secret
+    transfer via [Polystack Key Management](/services/key-manager/admin-guide) — the
     encrypted TPM state is seamlessly transferred to the destination host without
     manual intervention.
 
@@ -251,7 +251,7 @@ host-level configuration on participating compute nodes.
     | `tpm-crb` (Command Response Buffer) | Recommended for TPM 2.0. Modern interface used by Windows 11, RHEL 9+, Ubuntu 22.04+ |
     | `tpm-tis` (TPM Interface Specification) | Legacy interface for TPM 1.2 compatibility and older operating systems |
 
-    **Host requirements**: [Xloud Key Management](/services/key-manager/admin-guide)
+    **Host requirements**: [Polystack Key Management](/services/key-manager/admin-guide)
     must be enabled for secret storage. The `swtpm` software TPM emulator must be
     installed on all compute nodes.
 
@@ -280,8 +280,8 @@ host-level configuration on participating compute nodes.
     | `hw:tpm_model` / `hw_tpm_model` | `tpm-tis`, `tpm-crb` | Virtual TPM hardware model |
 
     <Warning>
-      vTPM state is encrypted at rest using a secret stored in Xloud Key Management.
-      Ensure Xloud Key Management is enabled and healthy before provisioning vTPM
+      vTPM state is encrypted at rest using a secret stored in Polystack Key Management.
+      Ensure Polystack Key Management is enabled and healthy before provisioning vTPM
       instances. If the Key Management service is unavailable, vTPM instances cannot
       start or be live-migrated.
     </Warning>

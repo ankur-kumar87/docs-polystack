@@ -14,10 +14,6 @@
   "interaction": {
     "drilldown": false
   },
-  "banner": {
-    "content": "XAVS 2025.1 LTS, XPCI 2025.1, XDeploy 2025.1-beta & XOS 3.1 are now available! [See what's new \u2192](/changelog)",
-    "dismissible": true
-  },
   "homepage": "introduction",
   "css": "/custom.css",
   "navigation": {
@@ -27,8 +23,7 @@
         "icon": "rocket",
         "root": "introduction",
         "pages": [
-          "cli-setup",
-          "deployment/index"
+          "cli-setup"
         ]
       },
       {
@@ -46,43 +41,7 @@
         "group": "Products",
         "icon": "package",
         "root": "products/index",
-        "pages": [
-          {
-            "group": "Infrastructure",
-            "icon": "boxes",
-            "pages": [
-              "products/xavs",
-              "products/xpci",
-              "products/xhci"
-            ]
-          },
-          {
-            "group": "Virtualization",
-            "icon": "server",
-            "pages": [
-              "products/xos"
-            ]
-          },
-          {
-            "group": "Storage",
-            "icon": "database",
-            "pages": [
-              "products/xsds",
-              "products/xnas",
-              "products/xnexus"
-            ]
-          },
-          {
-            "group": "Operations",
-            "icon": "activity",
-            "pages": [
-              "products/ximp",
-              "products/xdr",
-              "products/xms",
-              "products/xinsight"
-            ]
-          }
-        ]
+        "pages": []
       },
       {
         "group": "Core Services",
@@ -776,8 +735,8 @@
         "root": "security/index",
         "pages": [
           {
-            "group": "Xloud SIEM",
-            "root": "security/xloud-siem",
+            "group": "Polystack SIEM",
+            "root": "security/polystack-siem",
             "pages": [
               "security/wazuh",
               "security/lynis",
@@ -794,24 +753,6 @@
         ]
       },
       {
-        "group": "Deployment",
-        "icon": "play",
-        "root": "deployment/index",
-        "pages": [
-          "deployment/xdeploy-key",
-          "deployment/bootstrap",
-          "deployment/hosts",
-          "deployment/configuration",
-          "deployment/advanced-config",
-          "deployment/images",
-          "deployment/operations",
-          "deployment/management",
-          "deployment/cloud-fleet",
-          "deployment/xsds",
-          "deployment/cluster-license"
-        ]
-      },
-      {
         "group": "Integrations",
         "icon": "plug",
         "root": "integrations/index",
@@ -822,27 +763,10 @@
           "integrations/grafana",
           "integrations/wazuh"
         ]
-      },
-      {
-        "group": "Video Tutorials",
-        "icon": "play",
-        "root": "videos/index",
-        "pages": [
-          "videos/compute",
-          "videos/storage",
-          "videos/networking",
-          "videos/security",
-          "videos/monitoring"
-        ]
       }
     ],
     "global": {
       "anchors": [
-        {
-          "anchor": "What's New",
-          "href": "/updates",
-          "icon": "newspaper"
-        },
         {
           "anchor": "Admin Guide",
           "href": "/admin-guide",
@@ -852,36 +776,26 @@
           "anchor": "User Guide",
           "href": "/user-guide",
           "icon": "book-open"
-        },
-        {
-          "anchor": "Release Notes",
-          "href": "/changelog",
-          "icon": "layers"
-        },
-        {
-          "anchor": "Manage License",
-          "href": "https://license.xloud.tech",
-          "icon": "key"
         }
       ]
     }
   },
-  "logo": "/images/Xloud Docs.svg",
+  "logo": "/images/Polystack Docs.svg",
   "navbar": {
     "links": [
       {
         "label": "Contact Sales",
-        "href": "mailto:sales@xloud.tech"
+        "href": "mailto:sales@polystack.tech"
       },
       {
         "label": "Support",
-        "href": "mailto:support@xloud.tech"
+        "href": "mailto:support@polystack.tech"
       }
     ],
     "primary": {
       "type": "button",
       "label": "Dashboard",
-      "href": "https://xloud.tech"
+      "href": "https://polystack.tech"
     }
   },
   "contextual": {
@@ -900,15 +814,15 @@
         "items": [
           {
             "label": "About Us",
-            "href": "https://xloud.tech/about"
+            "href": "https://polystack.tech/about"
           },
           {
             "label": "Contact Us",
-            "href": "https://xloud.tech/contact"
+            "href": "https://polystack.tech/contact"
           },
           {
             "label": "Knowledge Base",
-            "href": "https://xloud.tech/knowledgeBase/getting-started"
+            "href": "https://polystack.tech/knowledgeBase/getting-started"
           }
         ],
         "header": "Company"
@@ -918,23 +832,19 @@
         "items": [
           {
             "label": "XIMP - Infrastructure Monitoring",
-            "href": "https://xloud.tech/XIMP"
+            "href": "https://polystack.tech/XIMP"
           },
           {
-            "label": "XAVS - Advanced Virtualization",
-            "href": "https://xloud.tech/xavs"
-          },
-          {
-            "label": "XHCI - Hyperconverged Infrastructure",
-            "href": "https://xloud.tech/hyperconverged"
+            "label": "Ironcore - Advanced Virtualization",
+            "href": "https://polystack.tech/ironcore"
           },
           {
             "label": "XDR - Disaster Recovery",
-            "href": "https://xloud.tech/disaster-recovery"
+            "href": "https://polystack.tech/disaster-recovery"
           },
           {
-            "label": "XSDS - Software Defined Storage",
-            "href": "https://xloud.tech/ceph"
+            "label": "Software-Defined-Storage - Software Defined Storage",
+            "href": "https://polystack.tech/ceph"
           }
         ],
         "header": "Solutions"
@@ -944,15 +854,11 @@
         "items": [
           {
             "label": "XNAS - NAS Storage",
-            "href": "https://xloud.tech/xnas"
-          },
-          {
-            "label": "XHCI - Hyperconverged Infrastructure",
-            "href": "https://xloud.tech/hyperconverged"
+            "href": "https://polystack.tech/xnas"
           },
           {
             "label": "XNexus - Unified Storage",
-            "href": "https://xloud.tech/xnexus"
+            "href": "https://polystack.tech/xnexus"
           }
         ],
         "header": "Products"
@@ -962,30 +868,30 @@
         "items": [
           {
             "label": "Privacy Policy",
-            "href": "https://xloud.tech/privacy-policy"
+            "href": "https://polystack.tech/privacy-policy"
           },
           {
             "label": "Terms & Conditions",
-            "href": "https://xloud.tech/terms-and-conditions"
+            "href": "https://polystack.tech/terms-and-conditions"
           },
           {
             "label": "Legal",
-            "href": "https://xloud.tech/legal"
+            "href": "https://polystack.tech/legal"
           },
           {
             "label": "Refund and Cancellation Policy",
-            "href": "https://xloud.tech/refund-and-cancellation-policy"
+            "href": "https://polystack.tech/refund-and-cancellation-policy"
           }
         ],
         "header": "Company Policies"
       }
     ],
     "socials": {
-      "linkedin": "https://linkedin.com/company/xloud",
-      "instagram": "https://instagram.com/xloudtech",
-      "x": "https://x.com/xloudtech",
-      "youtube": "https://youtube.com/@xloudtech",
-      "website": "https://xloud.tech/"
+      "linkedin": "https://linkedin.com/company/polystack",
+      "instagram": "https://instagram.com/polystacktech",
+      "x": "https://x.com/polystacktech",
+      "youtube": "https://youtube.com/@polystacktech",
+      "website": "https://polystack.tech/"
     }
   },
   "background": {
@@ -1005,5 +911,5 @@
       "weight": 400
     }
   },
-  "description": "Build, operate, and optimize your XAVS environment with our documentation. Find step-by-step walkthroughs, administrative guides, API and CLI references, release updates, and troubleshooting resources."
+  "description": "Build, operate, and optimize your Ironcore environment with our documentation. Find step-by-step walkthroughs, administrative guides, API and CLI references, release updates, and troubleshooting resources."
 }

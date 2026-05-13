@@ -89,9 +89,9 @@ The Bootstrap module is organized into four tabs. Navigate between tabs to inspe
     | **Python Dependencies** | git, python3-dev, libffi-dev, gcc, libssl-dev, python3-venv | Ansible modules and Python libraries require compilation of C extensions |
     | **System Tools** | Monitoring, networking, storage, and virtualization CLI utilities | Ansible playbooks detect interfaces, disks, and containers using these tools |
     | **Python Environment** | Isolated Python virtual environment | Prevents version conflicts between system Python packages and deployment tooling |
-    | **XDeploy Dependencies** | Ansible + XAVS Deployment Automation | Core deployment engine and service playbooks that provision every cloud component |
+    | **XDeploy Dependencies** | Ansible + Ironcore Deployment Automation | Core deployment engine and service playbooks that provision every cloud component |
     | **CLI Clients** | nova, neutron, cinder, keystone, swift, octavia, magnum, barbican | Command-line tools for post-deployment management and troubleshooting |
-    | **Configuration Setup** | `/etc/xavs` directory with correct ownership and permissions | Scaffolds the configuration directory structure: globals, inventory, and password files |
+    | **Configuration Setup** | `/etc/ironcore` directory with correct ownership and permissions | Scaffolds the configuration directory structure: globals, inventory, and password files |
     | **Password Generation** | Auto-generated secure random passwords | Produces 50+ internal passwords for databases, service accounts, and message queue authentication |
 
     <Tip>

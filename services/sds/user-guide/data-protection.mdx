@@ -1,18 +1,18 @@
 ---
 title: "Data Protection"
-description: "Configure replication and erasure coding in XSDS to protect your data against hardware failures with the right balance of durability and storage efficiency."
+description: "Configure replication and erasure coding in Software-Defined-Storage to protect your data against hardware failures with the right balance of durability and storage efficiency."
 sidebarTitle: "Data Protection"
 ---
 
 ## Overview
 
-XSDS offers two data protection strategies: **replication** and **erasure coding**.
+Software-Defined-Storage offers two data protection strategies: **replication** and **erasure coding**.
 The appropriate choice depends on your durability requirements, acceptable storage
 overhead, and the latency sensitivity of your workload.
 
 <Note>
   **Prerequisites**
-  - An active Xloud account with project member access
+  - An active Polystack account with project member access
   - Contact your storage administrator to provision erasure-coded pools — they are
     configured at the cluster level by an administrator. Your administrator can configure this through [XDeploy](/deployment).
 </Note>
@@ -36,7 +36,7 @@ The default replication factor is **3** — three full copies are maintained at 
 
 <Tabs>
   <Tab title="How It Works" icon="copy">
-    When data is written to a replicated pool, XSDS simultaneously writes it to the
+    When data is written to a replicated pool, Software-Defined-Storage simultaneously writes it to the
     number of OSDs defined by the replication factor. Each copy is placed on a
     different host according to the CRUSH map, ensuring that host-level failures
     do not cause data loss.
@@ -54,7 +54,7 @@ The default replication factor is **3** — three full copies are maintained at 
     - Best suited for latency-sensitive workloads (databases, boot volumes)
   </Tab>
   <Tab title="Selecting a Replicated Pool" icon="gauge">
-    Volume types in the Xloud Dashboard map to specific storage pools. Replicated pools
+    Volume types in the Polystack Dashboard map to specific storage pools. Replicated pools
     appear as volume types with names such as `ceph-ssd` or `ceph-nvme`.
 
     <Steps titleSize="h3">
@@ -119,7 +119,7 @@ providing durability at significantly lower storage overhead than replication.
     <Note>
       Erasure coding is enabled at the pool level during pool creation by an
       administrator. Contact your storage administrator to provision an erasure-coded
-      pool for your project. Your administrator can configure this through [XDeploy](/deployment). See the [XSDS Admin Guide](/services/sds/admin-guide/pool-management)
+      pool for your project. Your administrator can configure this through [XDeploy](/deployment). See the [Software-Defined-Storage Admin Guide](/services/sds/admin-guide/pool-management)
       for pool creation procedures.
     </Note>
 
@@ -195,10 +195,10 @@ Confirm your volume is using the expected protection policy:
   <Card title="Storage Tiers" href="/services/sds/user-guide/performance" color="#197560">
     Route workloads to NVMe, SSD, or HDD tiers based on access patterns
   </Card>
-  <Card title="XSDS Admin — Pool Management" href="/services/sds/admin-guide/pool-management" color="#197560">
+  <Card title="Software-Defined-Storage Admin — Pool Management" href="/services/sds/admin-guide/pool-management" color="#197560">
     Create and configure replicated and erasure-coded pools (administrator)
   </Card>
-  <Card title="XSDS Admin — CRUSH Maps" href="/services/sds/admin-guide/crush-maps" color="#197560">
+  <Card title="Software-Defined-Storage Admin — CRUSH Maps" href="/services/sds/admin-guide/crush-maps" color="#197560">
     Configure failure domains and device class rules (administrator)
   </Card>
 </CardGroup>

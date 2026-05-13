@@ -1,6 +1,6 @@
 ---
 title: "Modify Images"
-description: "Customize existing cloud images offline using virt-customize, guestfish, and guestmount before uploading to Xloud."
+description: "Customize existing cloud images offline using virt-customize, guestfish, and guestmount before uploading to Polystack."
 sidebarTitle: "Modify Images"
 ---
 
@@ -122,7 +122,7 @@ Use it for one-off edits, configuration file changes, or inspecting image conten
     ```
     Or write content directly with `write`:
     ```text title="Write content to a file"
-    ><fs> write /etc/motd "Xloud Custom Image - $(date +%Y-%m)\n"
+    ><fs> write /etc/motd "Polystack Custom Image - $(date +%Y-%m)\n"
     ```
   </Step>
   <Step title="Copy files into the image" icon="file-input">
@@ -209,13 +209,13 @@ virt-sysprep \
 
 <CardGroup cols={2}>
   <Card title="Image Requirements" href="/services/images/image-requirements" color="#197560">
-    Verify your modified image meets all Xloud Compute compatibility requirements.
+    Verify your modified image meets all Polystack Compute compatibility requirements.
   </Card>
   <Card title="Convert Formats" href="/services/images/convert-formats" color="#197560">
     Convert VMDK, VHD, or RAW images to QCOW2 after modification.
   </Card>
   <Card title="Upload an Image" href="/services/images/upload-image" color="#197560">
-    Upload the customized image to the Xloud Image Service.
+    Upload the customized image to the Polystack Image Service.
   </Card>
   <Card title="Image Properties" href="/services/images/image-properties" color="#197560">
     Tag uploaded images with OS metadata and hardware requirements.

@@ -11,7 +11,7 @@ rules that fail to fire, to dashboards showing no data, to missing or delayed lo
 
 <Note>
   **Prerequisites**
-  - An active Xloud account with project access
+  - An active Polystack account with project access
   - For agent and infrastructure-level issues, contact your monitoring administrator. Your administrator can configure this through [XDeploy](/deployment).
 </Note>
 
@@ -41,7 +41,7 @@ rules that fail to fire, to dashboards showing no data, to missing or delayed lo
        check whether the metric panel shows values above the threshold
 
     <Warning>
-      An alert rule evaluating `xloud_compute_cpu_utilization > 90` will only fire
+      An alert rule evaluating `polystack_compute_cpu_utilization > 90` will only fire
       if the metric is above 90% for the ENTIRE evaluation period. Brief spikes that
       resolve within the period will not trigger the alert.
     </Warning>
@@ -92,7 +92,7 @@ rules that fail to fire, to dashboards showing no data, to missing or delayed lo
        ```
     3. Search for the metric to verify it exists and find the correct name:
        ```bash title="Search metrics by prefix"
-       ximp metric search --prefix xloud_compute_cpu
+       ximp metric search --prefix polystack_compute_cpu
        ```
   </Accordion>
 
@@ -158,7 +158,7 @@ diagnostics and configuration.
   <Card title="Dashboards" href="/services/monitoring/user-guide/dashboards" color="#197560">
     Verify metric availability in dashboard panels
   </Card>
-  <Card title="Support" href="mailto:support@xloud.tech" color="#197560">
-    Contact Xloud support for issues requiring platform-level investigation
+  <Card title="Support" href="mailto:support@polystack.tech" color="#197560">
+    Contact Polystack support for issues requiring platform-level investigation
   </Card>
 </CardGroup>

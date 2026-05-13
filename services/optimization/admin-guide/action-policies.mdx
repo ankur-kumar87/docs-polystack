@@ -1,6 +1,6 @@
 ---
 title: "Action Plan Policies"
-description: "Configure Xloud Optimization action plan execution policies — manual approval workflows, automatic execution for trusted strategies, and plan expiry controls."
+description: "Configure Polystack Optimization action plan execution policies — manual approval workflows, automatic execution for trusted strategies, and plan expiry controls."
 sidebarTitle: "Action Policies"
 ---
 
@@ -80,7 +80,7 @@ Configure a maximum plan age to prevent outdated migrations from executing.
         Click **New File** or select an existing `watcher.conf` from the **File Browser**
         (right panel). Add the following in the **Code Editor** (center panel):
 
-        ```ini title="/etc/xavs/config/watcher/watcher.conf"
+        ```ini title="/etc/ironcore/config/watcher/watcher.conf"
         [DEFAULT]
         action_plan_expiry = 24
         ```
@@ -99,7 +99,7 @@ Configure a maximum plan age to prevent outdated migrations from executing.
   <Tab title="CLI" icon="terminal">
     Edit the configuration file directly:
 
-    ```ini title="/etc/xavs/watcher/watcher.conf"
+    ```ini title="/etc/ironcore/watcher/watcher.conf"
     [DEFAULT]
     action_plan_expiry = 24
     ```

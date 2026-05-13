@@ -104,7 +104,7 @@ The Operations wizard guides you through four steps to execute any deployment ac
     | Action | Purpose |
     |--------|---------|
     | **Deploy Containers** | Deploy only the container infrastructure layer without configuring services |
-    | **Octavia Certificates** | Generate or renew TLS certificates for the Xloud Load Balancer service |
+    | **Octavia Certificates** | Generate or renew TLS certificates for the Polystack Load Balancer service |
     | **Generate Config** | Generate all service configuration files without deploying — useful for pre-review |
     | **Validate Config** | Check configuration files for syntax errors and missing required values |
     | **Gather Facts** | Collect system information (hardware, network, OS) from all target hosts |
@@ -181,7 +181,7 @@ Follow this sequence for a successful first deployment. Each step must complete 
     Execute Post-Deploy to create the admin user account, default tenant networks, base compute flavors, and initial project structure. This step finalizes the environment for production use.
   </Step>
   <Step title="Verify via Dashboard and CLI" icon="circle-check">
-    Log in to the **Xloud Dashboard** (`https://connect.<your-domain>`) with the admin credentials created during Post-Deploy. Verify that all services are listed and operational.
+    Log in to the **Polystack Dashboard** (`https://connect.<your-domain>`) with the admin credentials created during Post-Deploy. Verify that all services are listed and operational.
 
     ```bash title="Verify service endpoints"
     source openrc.sh
@@ -214,7 +214,7 @@ Follow this sequence for a successful first deployment. Each step must complete 
     **Resolution**: Return to the [Images](/deployment/images) tool and verify that all required images are loaded and pushed to the local registry. Confirm that `docker-registry:4000` is listed as an insecure registry in the Docker daemon configuration on every node.
   </Accordion>
   <Accordion title="Post-Deploy fails to create admin user" icon="alert-triangle">
-    **Cause**: The Xloud Identity service is not yet fully initialized when Post-Deploy runs.
+    **Cause**: The Polystack Identity service is not yet fully initialized when Post-Deploy runs.
 
     **Resolution**: Wait 30-60 seconds after Deploy completes before running Post-Deploy. The identity service needs time to complete database migrations and start accepting requests. Re-run Post-Deploy after the brief delay.
   </Accordion>

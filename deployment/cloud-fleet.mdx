@@ -28,7 +28,7 @@ The top statistics bar provides an immediate summary of your entire infrastructu
 | **Overall Health** | Aggregate cluster status: Healthy, Degraded, or Critical |
 | **Cluster Name** | The configured cluster identifier from your deployment |
 | **Region** | Geographic or logical region label assigned during configuration |
-| **Version** | Currently deployed XAVS platform version |
+| **Version** | Currently deployed Ironcore platform version |
 
 <Info>
   A cluster is **Healthy** when all hosts are reachable and all services are running. **Degraded** indicates at least one host or service is in a warning state. **Critical** means one or more hosts are unreachable or core services have failed.
@@ -72,7 +72,7 @@ Cloud Fleet visualizes the four distinct network planes that connect your cluste
 | Plane | Color | Purpose |
 |-------|-------|---------|
 | Management | Blue | API calls, SSH access, Ansible communication, inter-service messaging |
-| Storage | Green | Xloud Distributed Storage replication traffic and client I/O |
+| Storage | Green | Polystack Distributed Storage replication traffic and client I/O |
 | External | Orange | Virtual machine internet access, floating IP routing |
 | Octavia | Purple | Load balancer management traffic and health monitor probes |
 
@@ -110,7 +110,7 @@ Below the topology map, a tabular inventory lists every link between hosts in th
   <Card title="Operations" icon="play" href="/deployment/operations" color="#197560">
     Deploy, upgrade, reconfigure, and manage cloud services across the cluster
   </Card>
-  <Card title="XSDS Storage" icon="database" href="/deployment/xsds" color="#197560">
+  <Card title="Software-Defined-Storage Storage" icon="database" href="/deployment/software-defined-storage" color="#197560">
     Configure distributed storage tiers and manage the storage cluster
   </Card>
 </CardGroup>

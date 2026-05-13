@@ -6,7 +6,7 @@ sidebarTitle: "Architecture"
 
 ## Overview
 
-Xloud Instance HA is a fault-detection and automated recovery service deployed alongside
+Polystack Instance HA is a fault-detection and automated recovery service deployed alongside
 the compute cluster. Its architecture separates detection (monitors), event routing
 (notification engine), decision-making (recovery engine), and execution (Compute API
 calls) into independently scalable components. Understanding this separation helps
@@ -39,7 +39,7 @@ graph TD
     end
 
     subgraph Execution
-        CA[Xloud Compute API]
+        CA[Polystack Compute API]
     end
 
     HM -->|Host fault| NE
@@ -74,7 +74,7 @@ graph TD
     Receives raw fault signals from monitors, deduplicates events within a configurable
     window, and routes structured notifications to the Recovery Engine via the message bus.
 
-    The default driver is `NovaNotificationDriver`, which also listens to the Xloud
+    The default driver is `NovaNotificationDriver`, which also listens to the Polystack
     Compute message bus for host and instance failure events.
   </Accordion>
   <Accordion title="Recovery Engine" icon="rotate">
@@ -111,20 +111,20 @@ graph TD
 
 <Note>
   In XDeploy-managed deployments, all Instance HA components are deployed as Docker
-  containers. Configuration files are managed via the `/etc/xavs/instance-ha/` overlay
+  containers. Configuration files are managed via the `/etc/ironcore/instance-ha/` overlay
   directory.
 </Note>
 
 ---
 
-## Integration with Xloud Services
+## Integration with Polystack Services
 
 | Service | Integration | Purpose |
 |---------|-------------|---------|
-| Xloud Compute | Evacuation API (`/os-evacuate`) | Executes instance migrations to healthy hosts |
-| Xloud Identity | Service account authentication | Authenticates Instance HA API calls |
+| Polystack Compute | Evacuation API (`/os-evacuate`) | Executes instance migrations to healthy hosts |
+| Polystack Identity | Service account authentication | Authenticates Instance HA API calls |
 | AMQP Message Bus | `NovaNotificationDriver` subscription | Receives host/instance failure events from the Compute message bus |
-| Xloud Distributed Storage | Shared instance disk backend | Required for live evacuation — local disk instances cannot be moved |
+| Polystack Distributed Storage | Shared instance disk backend | Required for live evacuation — local disk instances cannot be moved |
 
 ---
 
@@ -136,7 +136,7 @@ sequenceDiagram
     participant NE as Notification Engine
     participant DB as Instance HA DB
     participant RE as Recovery Engine
-    participant NOVA as Xloud Compute API
+    participant NOVA as Polystack Compute API
 
     HM->>NE: IPMI / SSH timeout — host unreachable
     NE->>DB: Create notification record (status: new)

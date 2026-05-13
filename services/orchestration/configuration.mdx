@@ -1,6 +1,6 @@
 ---
 title: "Orchestration Configuration"
-description: "Configure the Xloud Orchestration service — key settings, stack domain setup, default quotas, and XDeploy integration for production deployments."
+description: "Configure the Polystack Orchestration service — key settings, stack domain setup, default quotas, and XDeploy integration for production deployments."
 sidebarTitle: "Configuration"
 ---
 
@@ -35,7 +35,7 @@ managed through XDeploy.
 
 <Note>
   Enable the Orchestration service by setting `enable_heat: "yes"` in
-  `/etc/xavs/globals.d/_50_orchestration.yml` and running `xavs-ansible deploy -t heat`.
+  `/etc/ironcore/globals.d/_50_orchestration.yml` and running `ironcore-ansible deploy -t heat`.
 </Note>
 
 ---
@@ -65,7 +65,7 @@ managed through XDeploy.
     <Steps titleSize="h3">
       <Step title="Create configuration override" icon="file-code">
         ```bash title="Create orchestration globals"
-        cat > /etc/xavs/globals.d/_50_orchestration.yml << 'EOF'
+        cat > /etc/ironcore/globals.d/_50_orchestration.yml << 'EOF'
         enable_heat: "yes"
         heat_engine_workers: 4
         heat_api_workers: 4
@@ -75,7 +75,7 @@ managed through XDeploy.
       </Step>
       <Step title="Deploy the service" icon="play">
         ```bash title="Deploy Orchestration"
-        xavs-ansible deploy -t heat
+        ironcore-ansible deploy -t heat
         ```
       </Step>
       <Step title="Verify the service" icon="circle-check">
@@ -93,7 +93,7 @@ managed through XDeploy.
 
 ## Stack Domain Setup
 
-The stack domain is a dedicated Xloud Identity domain used for trust delegation.
+The stack domain is a dedicated Polystack Identity domain used for trust delegation.
 When a template creates resources that require credentials (e.g., `WaitCondition`
 signals, auto-scaling webhooks), the engine uses a stack domain user — scoped to
 the stack's project — rather than the submitting user's credentials.
@@ -109,7 +109,7 @@ Orchestration deployment. The following variables control the domain:
 
 | Setting | Description |
 |---------|-------------|
-| `heat_domain_name` | Name of the stack domain in Xloud Identity (default: `heat`) |
+| `heat_domain_name` | Name of the stack domain in Polystack Identity (default: `heat`) |
 | `heat_domain_admin` | Admin user for the stack domain |
 | `heat_domain_admin_password` | Password for the stack domain admin (stored in `passwords.yml`) |
 

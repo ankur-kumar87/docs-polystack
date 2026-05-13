@@ -1,6 +1,6 @@
 ---
 title: "Load Balancer Monitoring"
-description: "Monitor Xloud Load Balancer appliance health, connection statistics, and service component status for platform observability."
+description: "Monitor Polystack Load Balancer appliance health, connection statistics, and service component status for platform observability."
 sidebarTitle: "Monitoring"
 ---
 
@@ -110,7 +110,7 @@ watch -n 5 "openstack loadbalancer show <lb-name> -c provisioning_status"
 
 ## Prometheus Integration
 
-Xloud Load Balancer exposes metrics via the Octavia Prometheus exporter when configured.
+Polystack Load Balancer exposes metrics via the Octavia Prometheus exporter when configured.
 Key metrics to alert on:
 
 | Metric | Alert Threshold | Description |

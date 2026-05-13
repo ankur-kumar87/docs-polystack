@@ -1,17 +1,17 @@
 ---
 title: "Instance High Availability"
-description: "Automatically detect and recover failed instances and compute hosts with Xloud Instance HA — zero-touch failover for mission-critical workloads."
+description: "Automatically detect and recover failed instances and compute hosts with Polystack Instance HA — zero-touch failover for mission-critical workloads."
 icon: "heart-pulse"
 sidebarTitle: "Instance HA"
 mode: "wide"
 ---
 
 Protect your workloads from compute host failures with automatic detection and recovery.
-Xloud Instance HA continuously monitors compute nodes and instances, triggering evacuation
+Polystack Instance HA continuously monitors compute nodes and instances, triggering evacuation
 and restart workflows the moment a fault is detected — without manual intervention.
 
-<Card title="XAVS — Advanced Virtualization Solutions" icon="external-link" href="https://xloud.tech/xavs" color="#197560" horizontal>
-  Product details on xloud.tech
+<Card title="Ironcore — Advanced Virtualization Solutions" icon="external-link" href="https://polystack.tech/ironcore" color="#197560" horizontal>
+  Product details on polystack.tech
 </Card>
 
 ---
@@ -32,7 +32,7 @@ and restart workflows the moment a fault is detected — without manual interven
     notifications using the openstack CLI.
   </Card>
   <Card title="Compute Service" icon="server" href="/services/compute" color="#197560">
-    Xloud Compute provides the hypervisor layer that Instance HA monitors and manages
+    Polystack Compute provides the hypervisor layer that Instance HA monitors and manages
     during host failover events.
   </Card>
 </CardGroup>
@@ -86,26 +86,26 @@ graph TD
 
 <p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Platform Resilience</p>
 
-<Info>**Xloud-Developed** — These resilience capabilities are developed by Xloud and ship with XAVS.</Info>
+<Info>**Polystack-Developed** — These resilience capabilities are developed by Polystack and ship with Ironcore.</Info>
 
 <CardGroup cols={2}>
   <Card title="VM High Availability" icon="heart-pulse" color="#197560">
-    Automatic instance restart on host failure. Configurable per-instance priority. Failover segments for per-group recovery policies. Requires XAVS.
+    Automatic instance restart on host failure. Configurable per-instance priority. Failover segments for per-group recovery policies. Requires Ironcore.
   </Card>
   <Card title="Power Recovery Automation" icon="bolt" color="#197560">
-    9-phase automated recovery playbook. Target recovery time: 7-13 minutes. Sequential service startup with health gates between each phase. Requires XAVS.
+    9-phase automated recovery playbook. Target recovery time: 7-13 minutes. Sequential service startup with health gates between each phase. Requires Ironcore.
   </Card>
   <Card title="Container Self-Healing" icon="rotate" color="#197560">
-    Three-tier autoheal daemon with dependency-aware restart ordering. Circuit breaker pattern prevents restart loops. Exponential backoff. Requires XAVS.
+    Three-tier autoheal daemon with dependency-aware restart ordering. Circuit breaker pattern prevents restart loops. Exponential backoff. Requires Ironcore.
   </Card>
   <Card title="Proactive Monitoring" icon="bell" color="#197560">
-    Pre-configured alert rules across 13 groups covering storage, database, message queue, compute, networking, containers, APIs, system resources, disk, memory, security, and capacity. Predictive alerts for capacity forecasting. Requires XAVS.
+    Pre-configured alert rules across 13 groups covering storage, database, message queue, compute, networking, containers, APIs, system resources, disk, memory, security, and capacity. Predictive alerts for capacity forecasting. Requires Ironcore.
   </Card>
   <Card title="Network Resilience" icon="network" color="#197560">
-    L3 high availability and DHCP high availability with sub-3-second failover. Automatic ARP gratuitous announcements for fast VIP convergence. Requires XAVS.
+    L3 high availability and DHCP high availability with sub-3-second failover. Automatic ARP gratuitous announcements for fast VIP convergence. Requires Ironcore.
   </Card>
   <Card title="Rolling Upgrades with Rollback" icon="arrow-up-circle" color="#197560">
-    Per-service container upgrades with 2-10 second swap time. Canary deployment (first node only). Image tag rollback mechanism. Previous images cached locally. Requires XAVS.
+    Per-service container upgrades with 2-10 second swap time. Canary deployment (first node only). Image tag rollback mechanism. Previous images cached locally. Requires Ironcore.
   </Card>
 </CardGroup>
 
@@ -114,13 +114,13 @@ graph TD
 <p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Related Services</p>
 
 <CardGroup cols={3}>
-  <Card title="Xloud Compute" icon="server" href="/services/compute" color="#197560">
+  <Card title="Polystack Compute" icon="server" href="/services/compute" color="#197560">
     The hypervisor layer monitored and managed by Instance HA
   </Card>
   <Card title="Resource Optimizer" icon="trending-up" href="/services/optimization/index" color="#197560">
     Rebalances workloads after recovery to restore cluster efficiency
   </Card>
-  <Card title="Xloud Block Storage" icon="hard-drive" href="/services/storage/index" color="#197560">
+  <Card title="Polystack Block Storage" icon="hard-drive" href="/services/storage/index" color="#197560">
     Persistent volumes that survive host failover when using shared storage
   </Card>
 </CardGroup>

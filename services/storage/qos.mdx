@@ -295,8 +295,8 @@ openstack volume qos delete bronze-1000iops
 ## Monitoring QoS Compliance
 
 <Tabs>
-  <Tab title="Xloud Dashboard (XIMP)" icon="activity">
-    Navigate to **Monitoring → Storage → Volume Metrics** in Xloud XIMP. Per-volume IOPS and throughput graphs show whether volumes are hitting their QoS limits:
+  <Tab title="Polystack Dashboard (XIMP)" icon="activity">
+    Navigate to **Monitoring → Storage → Volume Metrics** in Polystack XIMP. Per-volume IOPS and throughput graphs show whether volumes are hitting their QoS limits:
 
     - IOPS at or near the `total_iops_sec` limit — the volume is QoS-constrained
     - Sustained IOPS below limit — the workload does not require the full allocation
@@ -349,9 +349,9 @@ openstack volume qos delete bronze-1000iops
 
 ## Tiered QoS Profiles
 
-<Info>**Xloud-Developed** -- This capability is developed by Xloud and ships with XAVS / XPCI.</Info>
+<Info>**Polystack-Developed** -- This capability is developed by Polystack and ships with Ironcore / XPCI.</Info>
 
-Xloud provides pre-defined tiered QoS profiles that align with common workload classes. Each profile sets per-instance IOPS limits, bandwidth caps, and burst allowances with separate read and write thresholds.
+Polystack provides pre-defined tiered QoS profiles that align with common workload classes. Each profile sets per-instance IOPS limits, bandwidth caps, and burst allowances with separate read and write thresholds.
 
 | Profile | IOPS (sustained) | Throughput | Burst IOPS | Target Workload |
 |---------|------------------|------------|------------|-----------------|

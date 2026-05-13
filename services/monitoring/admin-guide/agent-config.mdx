@@ -18,7 +18,7 @@ outside XDeploy management.
 <Note>
   **Prerequisites**
   - Administrator credentials with the `admin` role
-  - Access to **XDeploy** (the **Xloud Dashboard**) for node management
+  - Access to **XDeploy** (the **Polystack Dashboard**) for node management
   - SSH access to target nodes for manual agent installation
 </Note>
 
@@ -84,7 +84,7 @@ For nodes not managed by XDeploy, install and configure the agent manually.
 
     ```yaml title="/etc/ximp/agent.yaml"
     server:
-      endpoint: https://ximp.xloud.internal:9090
+      endpoint: https://ximp.polystack.internal:9090
       auth_token: <AGENT_AUTH_TOKEN>
 
     node:

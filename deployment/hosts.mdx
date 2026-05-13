@@ -40,17 +40,17 @@ Every server in your cluster is assigned one or more roles that determine which 
 
 | Role | Purpose | Services |
 |------|---------|----------|
-| **Controller** | Cloud control plane | Xloud Identity, Xloud Dashboard, Xloud Compute API, Xloud Networking Server, MariaDB, RabbitMQ, HAProxy |
+| **Controller** | Cloud control plane | Polystack Identity, Polystack Dashboard, Polystack Compute API, Polystack Networking Server, MariaDB, RabbitMQ, HAProxy |
 | **Network** | Network agents | L3 Router Agent, DHCP Agent (often combined with Controller) |
-| **Compute** | Virtual machine hosts | Xloud Compute, Libvirt --- where VMs run |
-| **Storage** | Persistent volumes | Xloud Block Storage volumes --- where VM disk data lives |
+| **Compute** | Virtual machine hosts | Polystack Compute, Libvirt --- where VMs run |
+| **Storage** | Persistent volumes | Polystack Block Storage volumes --- where VM disk data lives |
 | **Monitoring** | Observability stack | Prometheus, Grafana, logging services |
-| **XAVS-Deployment** | Ansible controller | Runs deployment playbooks (usually the same server as Controller) |
-| **XSDS-Bootstrap** | First storage node | Bootstraps the Xloud Distributed Storage cluster |
-| **XSDS** | Storage nodes | Additional Xloud Distributed Storage nodes |
+| **Ironcore-Deployment** | Ansible controller | Runs deployment playbooks (usually the same server as Controller) |
+| **Software-Defined-Storage-Bootstrap** | First storage node | Bootstraps the Polystack Distributed Storage cluster |
+| **Software-Defined-Storage** | Storage nodes | Additional Polystack Distributed Storage nodes |
 
 <Info>
-  A single server can hold multiple roles. In smaller deployments, it is common to combine Controller, Network, and XAVS-Deployment on the same server.
+  A single server can hold multiple roles. In smaller deployments, it is common to combine Controller, Network, and Ironcore-Deployment on the same server.
 </Info>
 
 ---
@@ -67,7 +67,7 @@ The Hosts module is organized into four tabs. Each tab handles a distinct part o
 
     <AccordionGroup>
       <Accordion title="Single Add" icon="plus" defaultOpen>
-        Add one host at a time through the form. Enter hostname (e.g., xd1.example), IP address, SSH port (default 22), then select roles using the toggle buttons: Controller, Network, Compute, Storage, Monitoring, XAVS-Deployment, XSDS-Bootstrap, XSDS.
+        Add one host at a time through the form. Enter hostname (e.g., xd1.example), IP address, SSH port (default 22), then select roles using the toggle buttons: Controller, Network, Compute, Storage, Monitoring, Ironcore-Deployment, Software-Defined-Storage-Bootstrap, Software-Defined-Storage.
 
         Click **Ping** to verify connectivity before adding.
       </Accordion>
@@ -75,7 +75,7 @@ The Hosts module is organized into four tabs. Each tab handles a distinct part o
         Paste multiple hosts, one per line: `hostname,ip,roles` (roles separated by `|` or `;`).
 
         ```text title="Example"
-        ctrl-01,192.168.1.10,controller|network|xavs-deployment
+        ctrl-01,192.168.1.10,controller|network|ironcore-deployment
         compute-01,192.168.1.11,compute
         compute-02,192.168.1.12,compute|storage
         ```

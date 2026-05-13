@@ -8,7 +8,7 @@ sidebarTitle: "Notification Drivers"
 
 Notification drivers are the bridge between external monitoring systems and the Instance HA
 recovery engine. They receive fault signals in various formats, translate them into
-structured Instance HA notifications, and route them to the Recovery Engine. Xloud Instance
+structured Instance HA notifications, and route them to the Recovery Engine. Polystack Instance
 HA ships with the `NovaNotificationDriver` as the default. Custom drivers allow integration
 with existing monitoring infrastructure such as Prometheus Alertmanager or Nagios.
 
@@ -18,7 +18,7 @@ with existing monitoring infrastructure such as Prometheus Alertmanager or Nagio
 
 | Driver | Source | Protocol | When to Use |
 |--------|--------|----------|-------------|
-| `NovaNotificationDriver` | Xloud Compute message bus | AMQP | Default — all standard deployments |
+| `NovaNotificationDriver` | Polystack Compute message bus | AMQP | Default — all standard deployments |
 | `TaskFlowDriver` | TaskFlow workflow engine | Internal RPC | Advanced workflow orchestration |
 | Custom webhook driver | Third-party tools (Prometheus, Nagios) | HTTP POST | Environments with existing monitoring infrastructure |
 
@@ -26,8 +26,8 @@ with existing monitoring infrastructure such as Prometheus Alertmanager or Nagio
 
 ## NovaNotificationDriver (Default)
 
-The `NovaNotificationDriver` is enabled by default in all Xloud Instance HA deployments.
-It subscribes to the Xloud Compute AMQP message bus and listens for `compute.host.error`
+The `NovaNotificationDriver` is enabled by default in all Polystack Instance HA deployments.
+It subscribes to the Polystack Compute AMQP message bus and listens for `compute.host.error`
 and `compute.instance.error` notification events.
 
 <AccordionGroup>
@@ -43,7 +43,7 @@ and `compute.instance.error` notification events.
   <Accordion title="Verify the driver is active" icon="circle-check">
     ```bash title="Check driver configuration"
     grep -i notification_driver \
-      /etc/xavs/instance-ha/instance-ha.conf
+      /etc/ironcore/instance-ha/instance-ha.conf
     ```
 
     Expected output:
@@ -77,7 +77,7 @@ Content-Type: application/json
 
 ```json title="Host fault notification payload"
 {
-  "hostname": "compute-01.xloud.local",
+  "hostname": "compute-01.polystack.local",
   "type": "COMPUTE_HOST",
   "payload": {
     "event": "STOPPED",
@@ -109,7 +109,7 @@ receivers:
 ```
 
 <Warning>
-  The Instance HA API uses Xloud Identity token authentication. Generate a service
+  The Instance HA API uses Polystack Identity token authentication. Generate a service
   token for the alertmanager integration using a dedicated service account with
   the `admin` role. Do not use personal user tokens in production.
 </Warning>
@@ -156,7 +156,7 @@ plugin in the configuration.
   <Tab title="CLI" icon="terminal">
     Edit the configuration file directly and restart the engine container:
 
-    ```ini title="/etc/xavs/instance-ha/instance-ha.conf"
+    ```ini title="/etc/ironcore/instance-ha/instance-ha.conf"
     [recovery_workflow_on_stop]
     targets = disableComputeNodeTask, PrepareHAEnabled, EvacuateHost
     ```
@@ -185,7 +185,7 @@ plugin in the configuration.
   <Tab title="CLI" icon="terminal">
     ```bash title="Create a test notification (test environments only)"
     openstack notification create \
-      --hostname compute-01.xloud.local \
+      --hostname compute-01.polystack.local \
       --type COMPUTE_HOST \
       --payload '{"event": "STOPPED", "cluster_status": "OFFLINE", "host_status": "NORMAL"}'
     ```

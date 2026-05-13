@@ -1,6 +1,6 @@
 ---
 title: "Thin and Thick Provisioning"
-description: "Configure thin and thick provisioning for Xloud Block Storage backends. Understand overcommit ratios, backend-specific settings, and capacity monitoring."
+description: "Configure thin and thick provisioning for Polystack Block Storage backends. Understand overcommit ratios, backend-specific settings, and capacity monitoring."
 sidebarTitle: "Provisioning"
 ---
 
@@ -9,7 +9,7 @@ import CliAuth from '/snippets/cli-auth.mdx';
 
 ## Overview
 
-Xloud Block Storage supports both thin and thick provisioning models. Thin provisioning allocates storage capacity on demand — physical space is consumed only as data is written, not when the volume is created. Thick provisioning reserves the full volume capacity immediately at creation time. The provisioning behavior is controlled by the backend driver and the scheduler overcommit configuration.
+Polystack Block Storage supports both thin and thick provisioning models. Thin provisioning allocates storage capacity on demand — physical space is consumed only as data is written, not when the volume is created. Thick provisioning reserves the full volume capacity immediately at creation time. The provisioning behavior is controlled by the backend driver and the scheduler overcommit configuration.
 
 <AdminWarning />
 
@@ -78,7 +78,7 @@ Xloud Block Storage supports both thin and thick provisioning models. Thin provi
     **Step 3: Apply the configuration**
 
     ```bash title="Deploy block storage configuration"
-    xavs-ansible deploy --tags cinder
+    ironcore-ansible deploy --tags cinder
     ```
 
     **Step 4: Verify thin volumes are created**

@@ -1,13 +1,13 @@
 ---
 title: "Host Monitors"
-description: "Configure Xloud Instance HA host monitors — IPMI out-of-band and SSH in-band monitoring for compute hosts, with timing parameters and credential management."
+description: "Configure Polystack Instance HA host monitors — IPMI out-of-band and SSH in-band monitoring for compute hosts, with timing parameters and credential management."
 sidebarTitle: "Host Monitors"
 ---
 
 ## Overview
 
 Host monitors are the detection layer of Instance HA. They continuously poll registered
-compute hosts and emit fault notifications when a host becomes unreachable. Xloud Instance
+compute hosts and emit fault notifications when a host becomes unreachable. Polystack Instance
 HA supports two monitor types: IPMI (out-of-band, recommended for production) and SSH
 (in-band, for environments without IPMI access). This page covers configuration for both
 types and the timing parameters that control detection sensitivity.
@@ -72,7 +72,7 @@ the host in a segment.
 
     <Warning>
       IPMI credentials are stored in the Instance HA database. Restrict database access
-      to the Instance HA service account only. Consider using Xloud Key Management to
+      to the Instance HA service account only. Consider using Polystack Key Management to
       manage IPMI secrets and inject them via a custom notification driver.
     </Warning>
   </Tab>
@@ -112,7 +112,7 @@ for the Instance HA service account — no password authentication is used.
     the public key on the controller node:
 
     ```bash title="Find service public key"
-    cat /etc/xavs/instance-ha/id_rsa.pub
+    cat /etc/ironcore/instance-ha/id_rsa.pub
     ```
   </Step>
   <Step title="Deploy to compute hosts" icon="upload">
@@ -120,7 +120,7 @@ for the Instance HA service account — no password authentication is used.
     as (typically `root` or a dedicated service account):
 
     ```bash title="Deploy key to compute host"
-    ssh-copy-id -i /etc/xavs/instance-ha/id_rsa.pub root@<compute-host>
+    ssh-copy-id -i /etc/ironcore/instance-ha/id_rsa.pub root@<compute-host>
     ```
   </Step>
   <Step title="Register with SSH attributes" icon="terminal">
@@ -135,7 +135,7 @@ for the Instance HA service account — no password authentication is used.
   </Step>
   <Step title="Validate connectivity" icon="circle-check">
     ```bash title="Test SSH from controller"
-    ssh -i /etc/xavs/instance-ha/id_rsa root@<compute-host> hostname
+    ssh -i /etc/ironcore/instance-ha/id_rsa root@<compute-host> hostname
     ```
 
     <Check>SSH connection succeeds without password prompt.</Check>
@@ -190,7 +190,7 @@ Adjust monitoring sensitivity through the parameters below:
     Edit the configuration file directly and restart the host monitor container:
 
     ```bash title="Open Instance HA configuration"
-    vi /etc/xavs/instance-ha/instance-ha.conf
+    vi /etc/ironcore/instance-ha/instance-ha.conf
     ```
 
     ```ini title="Example timing configuration"

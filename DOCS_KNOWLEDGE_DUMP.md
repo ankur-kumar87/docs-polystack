@@ -1,4 +1,4 @@
-# Xloud Documentation — Complete Knowledge Dump
+# Polystack Documentation — Complete Knowledge Dump
 
 **Generated**: 2026-03-31
 **Source**: Memory files, CLAUDE.md, authoring guidelines, rules files, and full conversation history
@@ -10,7 +10,7 @@
 - **Repo**: `/home/ankur/Ankur-Workspace/docs/`
 - **Platform**: Mintlify (docs-as-code, MDX format)
 - **Config**: `docs.json` — navigation, theme, fonts, footer
-- **URL**: https://docs.xloud.tech
+- **URL**: https://docs.polystack.tech
 - **Branch**: `main` = production, `staging` = working
 - **Total pages**: ~250+ MDX files across 15+ service sections
 - **Guidelines**: `.claude/doc-authoring-guidelines.mdx` (471 lines, MUST read before writing)
@@ -37,33 +37,33 @@
 | Watcher | Resource Optimizer / Dynamic Cluster Optimization |
 | FileFS | File-Level Restore |
 | xDeploy | Deployment Wizard / Management Platform |
-| XAVS-Ansible | Deployment Automation |
-| Nova xloud-adjust | Live Resource Scaling |
+| Ironcore-Ansible | Deployment Automation |
+| Nova polystack-adjust | Live Resource Scaling |
 | Wazuh | Integrated Security Platform |
-| Ceph | Distributed Storage / XSDS |
+| Ceph | Distributed Storage / Software-Defined-Storage |
 | OVN/Neutron | Software-Defined Networking |
 | KVM/QEMU/libvirt | Native Hypervisor (KVM naming OK in tech context) |
-| OpenStack | Xloud (in prose) / OpenStack (in CLI commands only) |
-| Kolla-Ansible | XAVS Deployment Automation |
+| OpenStack | Polystack (in prose) / OpenStack (in CLI commands only) |
+| Kolla-Ansible | Ironcore Deployment Automation |
 | Hystax Acura | XDR (never mention Hystax) |
 
 ### Service Mapping
 
-| OpenStack Service | Xloud Name | Notes |
+| OpenStack Service | Polystack Name | Notes |
 |---|---|---|
-| Nova | Xloud Compute | |
-| Cinder | Xloud Block Storage | |
-| Neutron | Xloud Networking | |
-| Glance | Xloud Image Service | |
-| Keystone | Xloud Identity | |
-| Swift | Xloud Object Storage | |
-| Octavia | Xloud Load Balancer | |
-| Barbican | Xloud Key Management / KMS | |
-| Designate | Xloud DNS | |
-| Manila | Xloud Shared Filesystem | |
-| Masakari | Xloud High Availability / Instance HA | |
-| Heat | Xloud Orchestration | |
-| Horizon | Xloud Dashboard (current) → XCONNECT (future) | |
+| Nova | Polystack Compute | |
+| Cinder | Polystack Block Storage | |
+| Neutron | Polystack Networking | |
+| Glance | Polystack Image Service | |
+| Keystone | Polystack Identity | |
+| Swift | Polystack Object Storage | |
+| Octavia | Polystack Load Balancer | |
+| Barbican | Polystack Key Management / KMS | |
+| Designate | Polystack DNS | |
+| Manila | Polystack Shared Filesystem | |
+| Masakari | Polystack High Availability / Instance HA | |
+| Heat | Polystack Orchestration | |
+| Horizon | Polystack Dashboard (current) → XCONNECT (future) | |
 
 ### Where "OpenStack" IS acceptable
 - CLI commands: `openstack server list`, `python-openstackclient`
@@ -74,9 +74,9 @@
 - Horizon UI button: "Download OpenStack RC File"
 
 ### Where "OpenStack" is NOT acceptable
-- Prose descriptions: "OpenStack API layer" → "Xloud API layer"
-- Prerequisites: "OpenStack CLI configured" → "Xloud CLI configured"
-- Marketing text: never say "OpenStack cloud" → "Xloud platform"
+- Prose descriptions: "OpenStack API layer" → "Polystack API layer"
+- Prerequisites: "OpenStack CLI configured" → "Polystack CLI configured"
+- Marketing text: never say "OpenStack cloud" → "Polystack platform"
 
 ### Tech names that ARE OK to use
 - KVM, OVN, HAProxy, RabbitMQ, MariaDB, Ceph, Prometheus, Grafana, OpenSearch
@@ -89,9 +89,9 @@
 ## 4. COMPANY & PRODUCTS
 
 ### Company Info
-- **Name**: Xloud Technologies Private Limited
+- **Name**: Polystack Technologies Private Limited
 - **Address**: A 307, Ansal Chamber 1, Bhikaji Cama Place, Delhi 110066
-- **Email**: info@xloud.tech, support@xloud.tech
+- **Email**: info@polystack.tech, support@polystack.tech
 - **Phone**: +91-9289062555
 - **Tagline**: "Helping India build their Next-Gen Cloud Infra"
 - **Colors**: Primary `#197560`, Light `#3F8F7E`, Dark `#145C4C`
@@ -100,10 +100,10 @@
 ### Products
 | Product | Full Name | Description |
 |---|---|---|
-| XAVS | Advanced Virtualization Suite | VM and container management |
+| Ironcore | Advanced Virtualization Suite | VM and container management |
 | XPCI | Private Cloud Infrastructure | Full cloud platform |
 | XHCI | Hyper Converged Infrastructure | Compute+storage+networking consolidated |
-| XSDS | Software Defined Storage | Ceph-based block, object, file |
+| Software-Defined-Storage | Software Defined Storage | Ceph-based block, object, file |
 | XIMP | Infrastructure Monitoring Platform | Prometheus+Grafana+OpenSearch+Wazuh |
 | XDR | Disaster Recovery | Hystax-based, Dashboard-only (no CLI) |
 | XNAS | NAS Storage | SMB, NFS, AFP, FTP, snapshots, HA |
@@ -113,9 +113,9 @@
 | xInsight-AI | AI-Powered Ops | 42 MCP tools, on-premises LLM (separate product from XNexus) |
 
 ### Product Page Rules
-- XSDS is the example — keep all product pages minimal like XSDS
+- Software-Defined-Storage is the example — keep all product pages minimal like Software-Defined-Storage
 - Max 4 services per product page
-- Link to website for full details: `https://xloud.tech/contact`
+- Link to website for full details: `https://polystack.tech/contact`
 - Each product page links to docs pages, not website pages
 - XMS is SEPARATE from XIMP
 - xInsight-AI is SEPARATE from XNexus
@@ -134,14 +134,14 @@
 | Module | Tabs | Config Path |
 |---|---|---|
 | Bootstrap | Overview, Hardware, Dependencies, Logs | System detection |
-| Hosts | Hosts, SSH Access, DNS, Logs | `/etc/xavs/nodes` |
-| Configuration | Basics, Network, Storage, Load Balancer, Monitoring, Advance Features, Custom Config, Logs | `/etc/xavs/globals.d/_99_xavs.yml` |
-| Advanced Config | 3-panel: Service Tree + Code Editor + File Browser | `/etc/xavs/config/{service}/` |
+| Hosts | Hosts, SSH Access, DNS, Logs | `/etc/ironcore/nodes` |
+| Configuration | Basics, Network, Storage, Load Balancer, Monitoring, Advance Features, Custom Config, Logs | `/etc/ironcore/globals.d/_99_ironcore.yml` |
+| Advanced Config | 3-panel: Service Tree + Code Editor + File Browser | `/etc/ironcore/config/{service}/` |
 | Images | Overview, Extract/Pull, Registry, Logs | Docker images |
-| Operations | Deploy, Manage, Backend, Advanced (23 total commands) | Runs xavs-ansible |
+| Operations | Deploy, Manage, Backend, Advanced (23 total commands) | Runs ironcore-ansible |
 | Management | User Management, Scaling | OpenStack users/workers |
 | Cloud Fleet | Topology map, host list, connections | Cluster visualization |
-| XSDS | Bootstrap Config, Storage Tiers, Config File, Logs | Ceph management |
+| Software-Defined-Storage | Bootstrap Config, Storage Tiers, Config File, Logs | Ceph management |
 | Cluster License | License dashboard, activation | `.xlic` files |
 | XDeploy Key | Activation status, key management | Hardware-bound key |
 
@@ -168,7 +168,7 @@ enable_prometheus, enable_grafana, enable_central_logging, enable_prometheus_ale
 When alerts enabled: SMTP server, from/to emails, SMTP password, webhook URL, Test buttons
 
 ### Advanced Configuration Service Paths
-All services at `/etc/xavs/config/{service}/`:
+All services at `/etc/ironcore/config/{service}/`:
 nova, glance, keystone, neutron, cinder, placement, horizon, heat, ironic, octavia, magnum, mistral, masakari, barbican, manila, designate, watcher, ceilometer, gnocchi, prometheus, grafana, opensearch, fluentd, haproxy, redis + 10 more
 
 ### XDeploy Steps Pattern (for admin guide pages)
@@ -192,7 +192,7 @@ For config file edits:
 
 ---
 
-## 6. XLOUD-DEVELOPED FEATURES (82 total, 51% undocumented)
+## 6. POLYSTACK-DEVELOPED FEATURES (82 total, 51% undocumented)
 
 ### P0 — Competitive Differentiators
 1. **Agentless File-Level Restore** (FileFS) — browse snapshot filesystems, download individual files
@@ -212,9 +212,9 @@ For config file edits:
 - **Security**: Wazuh SIEM, OS hardening (CIS), OpenSCAP, Lynis, Grafana security ops dashboard, self-healing credentials, active response, cert expiry monitoring, custom detection rules, AlertManager rules, SBOM CI pipeline
 - **Self-Healing**: VM HA (Masakari), power recovery (9-phase), container autoheal (3-tier), 120 alert rules, network resilience (VRRP), rolling upgrades with rollback
 
-### Mark Xloud-developed features with:
+### Mark Polystack-developed features with:
 ```mdx
-<Info>**Xloud-Developed** — This capability is developed by Xloud and ships with XAVS / XPCI.</Info>
+<Info>**Polystack-Developed** — This capability is developed by Polystack and ships with Ironcore / XPCI.</Info>
 ```
 
 ---
@@ -333,7 +333,7 @@ services/<service>/
 - Manual config editing goes in CLI tab as secondary method
 - Service credentials and database connections are AUTO-MANAGED by XDeploy — note this clearly
 - Always end config changes with: "Go to Operations → run reconfigure"
-- Reference correct paths: `/etc/xavs/config/{service}/` for Advanced Configuration
+- Reference correct paths: `/etc/ironcore/config/{service}/` for Advanced Configuration
 
 ### XDeploy Tips already added to these admin pages:
 storage/admin-guide, networking/admin-guide, load-balancer/admin-guide, monitoring/architecture, key-manager/admin-guide, instance-ha/admin-guide, optimization/admin-guide, storage/encryption, sds/architecture, sds/storage-tiers, monitoring/alert-channels, security/wazuh
@@ -346,11 +346,11 @@ storage/admin-guide, networking/admin-guide, load-balancer/admin-guide, monitori
 1. XOS running on all nodes
 2. Plan network (API/MGMT, VM traffic, LB, Storage, Replication VLANs)
 3. Prepare DNS and domain names + SSL
-4. Gather credentials (SSH from deployment node, license from license.xloud.tech)
+4. Gather credentials (SSH from deployment node, license from license.polystack.tech)
 5. Architecture decision (AIO / HCI / Distributed)
 
 ### Deployment workflow order:
-XDeploy Key → Bootstrap → Hosts → XSDS (if using) → Configuration → Images → Operations → Management → Cloud Fleet → Cluster License
+XDeploy Key → Bootstrap → Hosts → Software-Defined-Storage (if using) → Configuration → Images → Operations → Management → Cloud Fleet → Cluster License
 
 ---
 
@@ -358,13 +358,13 @@ XDeploy Key → Bootstrap → Hosts → XSDS (if using) → Configuration → Im
 
 | Context | Path Pattern |
 |---|---|
-| Service config (XDeploy Advanced Config) | `/etc/xavs/config/{service}/{filename}` |
-| Global config | `/etc/xavs/globals.d/_99_xavs.yml` |
-| Passwords | `/etc/xavs/passwords.yml` |
-| Inventory | `/etc/xavs/nodes` |
+| Service config (XDeploy Advanced Config) | `/etc/ironcore/config/{service}/{filename}` |
+| Global config | `/etc/ironcore/globals.d/_99_ironcore.yml` |
+| Passwords | `/etc/ironcore/passwords.yml` |
+| Inventory | `/etc/ironcore/nodes` |
 | Container logs | `/var/log/kolla/{service}/` (keep as-is) |
 | Container config files | `/var/lib/kolla/config_files/` (keep as-is) |
-| Certificates | `/etc/xavs/certificates/` |
+| Certificates | `/etc/ironcore/certificates/` |
 | YAML config keys | `kolla_enable_tls_*` (keep as-is — actual config keys) |
 
 ---
@@ -377,9 +377,9 @@ XDeploy Key → Bootstrap → Hosts → XSDS (if using) → Configuration → Im
 
 **Fixed Issues**:
 - Invented `xdr` CLI removed (DR is Dashboard-only)
-- "OpenStack" replaced with "Xloud" in prose (11 files)
+- "OpenStack" replaced with "Polystack" in prose (11 files)
 - Duplicate chmod in hardening guide removed
-- Kolla → XAVS in prose (12 files, /var/log/kolla and /var/lib/kolla kept)
+- Kolla → Ironcore in prose (12 files, /var/log/kolla and /var/lib/kolla kept)
 - admin-openrc.sh → openrc.sh in 20 user guide files
 - XDeploy-first Tabs in 23 admin guide pages
 - 86+ icon replacements for valid Lucide names
@@ -407,11 +407,11 @@ XDeploy Key → Bootstrap → Hosts → XSDS (if using) → Configuration → Im
 | Docs repo | `/home/ankur/Ankur-Workspace/docs/` |
 | XDeploy repo | `/home/ankur/Ankur-Workspace/xdeploy/` |
 | Claude config | `/home/ankur/Ankur-Workspace/claude-config/` |
-| Feature inventory | `/home/ankur/Ankur-Workspace/docs/XLOUD_FEATURE_INVENTORY.md` |
+| Feature inventory | `/home/ankur/Ankur-Workspace/docs/POLYSTACK_FEATURE_INVENTORY.md` |
 | XDeploy screenshots | `/home/ankur/Ankur-Workspace/xdeploy/xdeploy tools-images/` |
 | Website repo | `/home/ankur/Ankur-Workspace/website/` |
 | Authoring guidelines | `/home/ankur/Ankur-Workspace/docs/.claude/doc-authoring-guidelines.mdx` |
-| Bible (all commits) | `/home/ankur/Ankur-Workspace/claude-config/XLOUD_BIBLE_COMMITS_OVER_UPSTREAM.md` |
+| Bible (all commits) | `/home/ankur/Ankur-Workspace/claude-config/POLYSTACK_BIBLE_COMMITS_OVER_UPSTREAM.md` |
 | Dev tracker | `/home/ankur/Ankur-Workspace/claude-config/DEVELOPMENT-TRACKER.md` |
 | Compliance docs | `/home/ankur/Ankur-Workspace/claude-config/compliance/` (26 docs, 35 blueprints) |
 | XDeploy tool doc | `/home/ankur/Ankur-Workspace/xdeploy/xdeploy tool.md` |

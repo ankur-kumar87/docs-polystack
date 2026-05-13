@@ -1,6 +1,6 @@
 ---
 title: "DNS Security"
-description: "Harden Xloud DNS infrastructure — restrict zone transfers, protect zone apex records, manage DNSSEC signing keys, and audit DNS API access."
+description: "Harden Polystack DNS infrastructure — restrict zone transfers, protect zone apex records, manage DNSSEC signing keys, and audit DNS API access."
 sidebarTitle: "Security"
 ---
 
@@ -48,7 +48,7 @@ for platform administrators.
 
   <Accordion title="DNSSEC key management" icon="key">
     DNSSEC signing protects DNS responses from tampering and spoofing. Signing keys
-    are stored in Xloud Key Manager:
+    are stored in Polystack Key Manager:
 
     - Store Zone Signing Keys (ZSK) and Key Signing Keys (KSK) as secrets in Key Manager
     - Rotate ZSKs every 90 days; KSKs annually
@@ -59,7 +59,7 @@ for platform administrators.
       ```
 
     <Tip>
-      Use Xloud Key Manager's expiration feature to track ZSK and KSK rotation schedules.
+      Use Polystack Key Manager's expiration feature to track ZSK and KSK rotation schedules.
       Set expiration dates on signing keys and build a rotation workflow triggered before
       expiry.
     </Tip>
@@ -75,7 +75,7 @@ for platform administrators.
     - Quota changes and project assignments
 
     <Tip>
-      Store DNS audit logs in Xloud Object Storage with a minimum 1-year retention policy
+      Store DNS audit logs in Polystack Object Storage with a minimum 1-year retention policy
       to satisfy compliance requirements for DNS change auditing.
     </Tip>
   </Accordion>

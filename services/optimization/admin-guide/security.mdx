@@ -1,6 +1,6 @@
 ---
 title: "Security"
-description: "Secure the Xloud Optimization — configure the Applier service account, restrict RBAC execution policies, enable API audit logging, and protect the."
+description: "Secure the Polystack Optimization — configure the Applier service account, restrict RBAC execution policies, enable API audit logging, and protect the."
 sidebarTitle: "Security"
 ---
 
@@ -13,8 +13,8 @@ a complete audit trail for all optimization activity.
 
 <Note>
   **Prerequisites**
-  - Administrator privileges on both the Optimization and Xloud Identity
-  - Xloud Compute deployed and operational
+  - Administrator privileges on both the Optimization and Polystack Identity
+  - Polystack Compute deployed and operational
   - Optimization services running (API, Decision Engine, Applier)
 </Note>
 
@@ -37,7 +37,7 @@ scoped to the minimum necessary privileges.
         | Field | Value |
         |-------|-------|
         | **Username** | `watcher-service` |
-        | **Email** | `watcher@internal.xloud.tech` |
+        | **Email** | `watcher@internal.polystack.tech` |
         | **Project** | `service` |
         | **Role** | `admin` (required for live migration) |
 
@@ -93,7 +93,7 @@ access to this file on controller nodes and verify the authentication configurat
 
         Modify the `[keystone_authtoken]` section in the **Code Editor** (center panel):
 
-        ```ini title="/etc/xavs/config/watcher/watcher.conf"
+        ```ini title="/etc/ironcore/config/watcher/watcher.conf"
         [keystone_authtoken]
         www_authenticate_uri = http://10.0.1.71:5000
         auth_url = http://10.0.1.71:5000/v3
@@ -118,13 +118,13 @@ access to this file on controller nodes and verify the authentication configurat
     Restrict access to the configuration file on controller nodes:
 
     ```bash title="Restrict watcher.conf permissions"
-    chmod 640 /etc/xavs/watcher/watcher.conf
-    chown root:watcher /etc/xavs/watcher/watcher.conf
+    chmod 640 /etc/ironcore/watcher/watcher.conf
+    chown root:watcher /etc/ironcore/watcher/watcher.conf
     ```
 
     Verify the `[keystone_authtoken]` section uses the dedicated account:
 
-    ```ini title="/etc/xavs/watcher/watcher.conf -- keystone_authtoken section"
+    ```ini title="/etc/ironcore/watcher/watcher.conf -- keystone_authtoken section"
     [keystone_authtoken]
     www_authenticate_uri = http://10.0.1.71:5000
     auth_url = http://10.0.1.71:5000/v3
@@ -140,7 +140,7 @@ access to this file on controller nodes and verify the authentication configurat
 </Tabs>
 
 <Warning>
-  Never store credentials in plain text outside `/etc/xavs/`. Do not commit `watcher.conf`
+  Never store credentials in plain text outside `/etc/ironcore/`. Do not commit `watcher.conf`
   to version control. If the password must be rotated, update `watcher.conf` and restart
   the Applier container.
 </Warning>
@@ -181,7 +181,7 @@ openstack role add optimizer-operator \
   --project service
 ```
 
-```yaml title="/etc/xavs/watcher/policy.yaml — execution override"
+```yaml title="/etc/ironcore/watcher/policy.yaml — execution override"
 "action_plan:execute": "role:optimizer-operator or role:admin"
 ```
 
@@ -195,7 +195,7 @@ docker restart watcher_api
 
 Enable verbose API request logging to record who approved and executed each action plan:
 
-```ini title="/etc/xavs/watcher/watcher.conf — audit logging"
+```ini title="/etc/ironcore/watcher/watcher.conf — audit logging"
 [DEFAULT]
 use_journal = True
 
@@ -203,7 +203,7 @@ use_journal = True
 enable_proxy_headers_parsing = True
 ```
 
-Logs are written to the container's journal and to the XAVS log volume:
+Logs are written to the container's journal and to the Ironcore log volume:
 
 ```bash title="Follow real-time API logs"
 docker logs -f watcher_api
@@ -237,14 +237,14 @@ by the platform-wide `[oslo_messaging_rabbit]` configuration.
 When rotating the Applier service account password:
 
 <Steps titleSize="h3">
-  <Step title="Update the password in Xloud Identity" icon="key">
+  <Step title="Update the password in Polystack Identity" icon="key">
     ```bash title="Set a new password"
     openstack user set watcher-service \
       --password "<new-strong-password>"
     ```
   </Step>
   <Step title="Update watcher.conf" icon="file-pen">
-    Edit `/etc/xavs/watcher/watcher.conf` and update the `password` field under
+    Edit `/etc/ironcore/watcher/watcher.conf` and update the `password` field under
     `[keystone_authtoken]`.
   </Step>
   <Step title="Restart all Optimizer containers" icon="rotate">
@@ -284,7 +284,7 @@ When rotating the Applier service account password:
     Expected: `HTTP 403 Forbidden — Policy does not allow this request to be performed.`
 
     ```bash title="Verify watcher.conf permissions"
-    stat /etc/xavs/watcher/watcher.conf
+    stat /etc/ironcore/watcher/watcher.conf
     ```
 
     Expected: `Access: (0640/-rw-r-----)  Uid: (    0/    root)   Gid: ( XXXX/watcher)`

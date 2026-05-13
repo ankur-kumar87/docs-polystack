@@ -1,6 +1,6 @@
 ---
 title: "Create Your First Stack"
-description: "Learn how to define an orchestration template, deploy a stack on Xloud, and manage the stack lifecycle using the Dashboard and CLI."
+description: "Learn how to define an orchestration template, deploy a stack on Polystack, and manage the stack lifecycle using the Dashboard and CLI."
 sidebarTitle: "Getting Started"
 ---
 
@@ -9,17 +9,17 @@ import AdminWarning from '/snippets/admin-warning.mdx';
 ## Overview
 
 A <Tooltip tip="A stack is a collection of cloud resources — instances, networks, volumes, and more — defined in a single template and managed as a unit.">stack</Tooltip>
-is the fundamental unit of Xloud Orchestration. You describe the desired infrastructure
+is the fundamental unit of Polystack Orchestration. You describe the desired infrastructure
 in an orchestration template, submit it to the Orchestration API, and the engine provisions
 every resource in dependency order, reporting the overall stack status when complete.
 
 <Note>
   **Prerequisites**
   - A project with `member` or `admin` role
-  - At least one image available in the Xloud Image Service
+  - At least one image available in the Polystack Image Service
   - At least one flavor available for your project
   - A network available in your project
-  - `xloud` CLI installed and authenticated (see [CLI Setup](/cli-setup))
+  - `polystack` CLI installed and authenticated (see [CLI Setup](/cli-setup))
 </Note>
 
 ---
@@ -44,7 +44,7 @@ The following template launches a single compute instance with a configurable fl
 Save it as `first-stack.yaml`:
 
 ```yaml title="first-stack.yaml"
-xloud_template_version: "2025-10-15"
+polystack_template_version: "2025-10-15"
 
 description: >
   A minimal orchestration template that launches a single compute
@@ -82,7 +82,7 @@ parameters:
 
 resources:
   my_instance:
-    type: Xloud::Compute::Server
+    type: Polystack::Compute::Server
     properties:
       name: { get_param: instance_name }
       flavor: { get_param: flavor }

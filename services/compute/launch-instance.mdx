@@ -6,7 +6,7 @@ sidebarTitle: "Create Instance"
 
 ## Overview
 
-Launching an instance creates a virtual machine on an Xloud Compute host. The Dashboard
+Launching an instance creates a virtual machine on an Polystack Compute host. The Dashboard
 provides a 4-step wizard that walks you through base configuration, networking, system
 settings, and a confirmation review. Once active, the instance can be accessed via SSH,
 console, or RDP depending on the guest OS.
@@ -22,7 +22,7 @@ console, or RDP depending on the guest OS.
 
 <Note>
   **Prerequisites**
-  - An active image in the Xloud Image Service (or an existing bootable volume)
+  - An active image in the Polystack Image Service (or an existing bootable volume)
   - A flavor appropriate for your workload
   - At least one network available in your project
   - An SSH key pair for Linux instances, or a configured password for Windows
@@ -34,7 +34,7 @@ console, or RDP depending on the guest OS.
 <iframe
   className="w-full aspect-video rounded-xl"
   src="https://www.youtube.com/embed/OXlBmUSqFK0"
-  title="How to Create a Virtual Machine on Xloud"
+  title="How to Create a Virtual Machine on Polystack"
   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
   allowFullScreen
 ></iframe>
@@ -83,7 +83,7 @@ console, or RDP depending on the guest OS.
 
         | Source | Description |
         |--------|-------------|
-        | **Image** | Boot from an OS image in the Xloud Image Service |
+        | **Image** | Boot from an OS image in the Polystack Image Service |
         | **Instance Snapshot** | Restore from a previously captured instance snapshot |
         | **Bootable Volume** | Boot from an existing persistent block storage volume (only shown if block storage is enabled) |
 
@@ -191,11 +191,11 @@ console, or RDP depending on the guest OS.
         | **Physical Node** | Admin only | Smart Scheduling (default) or Manually Specify a hypervisor |
         | **Server Group** | All users | Select an existing server group for affinity/anti-affinity placement |
         | **User Data** | All users | Cloud-init script (text area with file upload, ASCII only, max 1000 characters) |
-        | **Virtual TPM** | All users | Attach a virtual TPM device (requires Xloud KMS). See [vTPM and Secure Boot](/services/compute/vtpm-secure-boot) |
-        | **Secure Boot** | All users | Require UEFI Secure Boot (requires Xloud KMS). See [vTPM and Secure Boot](/services/compute/vtpm-secure-boot) |
+        | **Virtual TPM** | All users | Attach a virtual TPM device (requires Polystack KMS). See [vTPM and Secure Boot](/services/compute/vtpm-secure-boot) |
+        | **Secure Boot** | All users | Require UEFI Secure Boot (requires Polystack KMS). See [vTPM and Secure Boot](/services/compute/vtpm-secure-boot) |
 
         <Info>
-          **Virtual TPM** and **Secure Boot** both require the **Xloud Key Management**
+          **Virtual TPM** and **Secure Boot** both require the **Polystack Key Management**
           service to be enabled on the cluster — both checkboxes are disabled otherwise.
           Full walkthrough: [vTPM and Secure Boot](/services/compute/vtpm-secure-boot).
         </Info>

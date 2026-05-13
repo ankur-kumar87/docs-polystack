@@ -1,6 +1,6 @@
 ---
 title: "Live vCPU & RAM Scaling"
-description: "Increase or decrease vCPU and RAM on a running instance with no downtime using the Xloud Dashboard's Resource Adjustment dialog."
+description: "Increase or decrease vCPU and RAM on a running instance with no downtime using the Polystack Dashboard's Resource Adjustment dialog."
 sidebarTitle: "Live vCPU/RAM Scaling"
 ---
 
@@ -11,7 +11,7 @@ without rebooting**. Changes take effect immediately while the instance continue
 serving traffic. The Dashboard provides a slider-based dialog for intuitive scaling
 within the bounds configured on the instance's flavor.
 
-<Info>**Xloud-Developed** — Bidirectional CPU hotplug (add AND remove vCPUs) and combined memory scaling (balloon + DIMM + virtio-mem) are developed by Xloud and ship with XAVS / XPCI.</Info>
+<Info>**Polystack-Developed** — Bidirectional CPU hotplug (add AND remove vCPUs) and combined memory scaling (balloon + DIMM + virtio-mem) are developed by Polystack and ship with Ironcore / XPCI.</Info>
 
 <Note>
   **Prerequisites**
@@ -92,31 +92,31 @@ within the bounds configured on the instance's flavor.
     source openrc.sh
     ```
 
-    Live resource adjustment uses the Xloud-developed Nova API extension. The
+    Live resource adjustment uses the Polystack-developed Nova API extension. The
     `openstack` CLI does not have a native command for this operation.
 
     <CodeGroup>
     ```bash title="Check current live resource status"
     curl -s -H "X-Auth-Token: $TOKEN" \
-      "$NOVA_ENDPOINT/v2.1/servers/<INSTANCE_ID>/xloud-status" | python3 -m json.tool
+      "$NOVA_ENDPOINT/v2.1/servers/<INSTANCE_ID>/polystack-status" | python3 -m json.tool
     ```
     ```bash title="Adjust vCPU count"
     curl -X POST -H "X-Auth-Token: $TOKEN" \
       -H "Content-Type: application/json" \
       -d '{"current_vcpus": 4}' \
-      "$NOVA_ENDPOINT/v2.1/os-xloud-adjust/<INSTANCE_ID>"
+      "$NOVA_ENDPOINT/v2.1/os-polystack-adjust/<INSTANCE_ID>"
     ```
     ```bash title="Adjust memory (in MB)"
     curl -X POST -H "X-Auth-Token: $TOKEN" \
       -H "Content-Type: application/json" \
       -d '{"current_memory_mb": 8192}' \
-      "$NOVA_ENDPOINT/v2.1/os-xloud-adjust/<INSTANCE_ID>"
+      "$NOVA_ENDPOINT/v2.1/os-polystack-adjust/<INSTANCE_ID>"
     ```
     ```bash title="Adjust both simultaneously"
     curl -X POST -H "X-Auth-Token: $TOKEN" \
       -H "Content-Type: application/json" \
       -d '{"current_vcpus": 4, "current_memory_mb": 8192}' \
-      "$NOVA_ENDPOINT/v2.1/os-xloud-adjust/<INSTANCE_ID>"
+      "$NOVA_ENDPOINT/v2.1/os-polystack-adjust/<INSTANCE_ID>"
     ```
     </CodeGroup>
   </Tab>

@@ -1,6 +1,6 @@
 ---
 title: "Compute Troubleshooting"
-description: "Resolve common Xloud Compute issues — instances stuck in BUILD/ERROR, migration failures, scheduling errors, and quota issues."
+description: "Resolve common Polystack Compute issues — instances stuck in BUILD/ERROR, migration failures, scheduling errors, and quota issues."
 sidebarTitle: "Troubleshooting"
 ---
 
@@ -8,7 +8,7 @@ import AdminWarning from '/snippets/admin-warning.mdx';
 
 ## Overview
 
-This guide covers the most common operational issues encountered in Xloud Compute
+This guide covers the most common operational issues encountered in Polystack Compute
 environments. Each section provides the diagnostic commands, root cause analysis,
 and resolution steps needed to restore normal operation.
 
@@ -50,10 +50,10 @@ and resolution steps needed to restore normal operation.
 
     | Symptom in Event Log | Resolution |
     |---------------------|-----------|
-    | `Image download failed` | Verify Xloud Image Service reachability from the compute node |
+    | `Image download failed` | Verify Polystack Image Service reachability from the compute node |
     | `Quota exceeded on host` | Check host capacity with `openstack hypervisor show <host>` |
     | `Network interface allocation failed` | Verify network agent status on the host |
-    | `Volume attachment failed` | Check Xloud Block Storage service health |
+    | `Volume attachment failed` | Check Polystack Block Storage service health |
 
     <Tip>
       If the instance is permanently stuck, force-delete it with

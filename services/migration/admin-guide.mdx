@@ -1,13 +1,13 @@
 ---
 title: "XMS Admin Guide"
-description: "Operator-facing reference for running the Xloud Migration Suite — architecture, prerequisites, credentials, network ports, storage back-ends, and capacity planning."
+description: "Operator-facing reference for running the Polystack Migration Suite — architecture, prerequisites, credentials, network ports, storage back-ends, and capacity planning."
 sidebarTitle: "Admin Guide"
 ---
 
 ## Overview
 
 The Admin Guide is for operators who install, configure, and run XMS
-(Xloud Migration Suite) for their organization. It covers the pieces that sit
+(Polystack Migration Suite) for their organization. It covers the pieces that sit
 behind the end-user migration experience — service architecture, source
 credential design, network access, storage back-ends, and capacity planning.
 
@@ -18,7 +18,7 @@ credential design, network access, storage back-ends, and capacity planning.
 
 <Warning>
   XMS requires network access from the migration workers to both the source
-  hypervisor API and the Xloud platform services. Review the
+  hypervisor API and the Polystack platform services. Review the
   [Network Ports](/services/migration/admin-guide/network-ports) page before
   onboarding a new source environment.
 </Warning>
@@ -30,7 +30,7 @@ credential design, network access, storage back-ends, and capacity planning.
 <CardGroup cols={2}>
   <Card title="Architecture" icon="network" href="/services/migration/admin-guide/architecture" color="#197560">
     How XMS is structured, how workload data flows, and how it integrates with
-    the rest of the Xloud platform.
+    the rest of the Polystack platform.
   </Card>
   <Card title="Prerequisites" icon="clipboard-check" href="/services/migration/admin-guide/prerequisites" color="#197560">
     Platform, project, quota, and identity prerequisites operators must meet
@@ -41,11 +41,11 @@ credential design, network access, storage back-ends, and capacity planning.
     recommended least-privilege role for VMware sources.
   </Card>
   <Card title="Network Ports" icon="plug" href="/services/migration/admin-guide/network-ports" color="#197560">
-    Which ports must be reachable between XMS, source environments, Xloud
+    Which ports must be reachable between XMS, source environments, Polystack
     services, and target guests.
   </Card>
   <Card title="Storage Back-ends" icon="database" href="/services/migration/admin-guide/storage-backends" color="#197560">
-    How XMS writes migrated disk data into Xloud Block Storage and the
+    How XMS writes migrated disk data into Polystack Block Storage and the
     supported back-end configurations.
   </Card>
   <Card title="Capacity Planning" icon="chart-bar" href="/services/migration/admin-guide/capacity-planning" color="#197560">

@@ -1,23 +1,23 @@
 ---
 title: "Warm Migration"
-description: "Replicate a running VMware virtual machine to Xloud with a full sync followed by continuous incremental block-level replication — minimal downtime at cutover."
+description: "Replicate a running VMware virtual machine to Polystack with a full sync followed by continuous incremental block-level replication — minimal downtime at cutover."
 sidebarTitle: "Warm Migration"
 ---
 
 ## Overview
 
-Warm migration moves a workload from VMware to Xloud while the source VM
+Warm migration moves a workload from VMware to Polystack while the source VM
 continues to run. XMS takes a snapshot on the source, copies the full disk
-contents into a target Xloud Block Storage volume, and then replicates only
+contents into a target Polystack Block Storage volume, and then replicates only
 the blocks that change on the source between syncs. When you trigger cutover,
 XMS replicates the final delta, powers the source off, runs guest conversion,
-and starts the target instance on Xloud — typically within minutes.
+and starts the target instance on Polystack — typically within minutes.
 
 <Note>
   **Prerequisites**
   - A discovered workload that has passed [preflight assessment](/services/migration/user-guide/preflight)
   - Changed Block Tracking (CBT) available on the source host
-  - A target Xloud project with enough quota for the compute, memory, and
+  - A target Polystack project with enough quota for the compute, memory, and
     volume footprint of the migrated VM
   - A stable network path between the migration service and the source
     environment that can sustain the full sync and incremental syncs
@@ -48,7 +48,7 @@ graph LR
 | **Ready** | Initial copy is complete. The job sits idle between scheduled syncs. |
 | **Syncing** | An incremental sync is in progress — only blocks changed since the last baseline are read and applied |
 | **Cutting Over** | Final delta sync, source power off, guest conversion, and target boot |
-| **Completed** | Target instance is running on Xloud |
+| **Completed** | Target instance is running on Polystack |
 
 ---
 
@@ -69,14 +69,14 @@ graph LR
       <Step title="Configure target" icon="folder">
         | Field | Description |
         |-------|-------------|
-        | **Target Project** | Xloud project that will host the migrated instance |
+        | **Target Project** | Polystack project that will host the migrated instance |
         | **Instance Name** | Name the target instance will use after cutover |
-        | **Flavor** | Xloud flavor to match or exceed the source shape |
+        | **Flavor** | Polystack flavor to match or exceed the source shape |
         | **Volume Type** | Storage tier for the target volume (chosen once, used for every sync) |
         | **Availability Zone** | Optional — pin the target instance to a zone |
       </Step>
       <Step title="Map networks and set sync schedule" icon="network">
-        Map every source NIC to a target Xloud network and subnet. Choose a
+        Map every source NIC to a target Polystack network and subnet. Choose a
         sync cadence:
 
         | Cadence | Typical Use |
@@ -148,7 +148,7 @@ graph LR
     C --> D["Advance baseline<br/>in the job record"]
 ```
 
-Because every write targets the same offsets on the same Xloud Block Storage
+Because every write targets the same offsets on the same Polystack Block Storage
 volume, there is no intermediate copy and the target volume is always a
 byte-for-byte current replica of the source at the time of the last sync.
 
@@ -163,7 +163,7 @@ You can:
 - Trigger **Sync Now** manually to force an incremental at any time
 - **Pause** the job to stop incrementals without losing progress
 - Proceed to [cutover](/services/migration/user-guide/cutover) when you are
-  ready to switch the workload to Xloud
+  ready to switch the workload to Polystack
 
 <Warning>
   The job retains CBT baselines as long as it is active. If you pause a warm
@@ -192,7 +192,7 @@ Each warm migration exposes live sync metrics in the Warm Migration tab:
 
 <CardGroup cols={3}>
   <Card title="Cutover" href="/services/migration/user-guide/cutover" color="#197560">
-    Execute the final sync and switch the workload to Xloud
+    Execute the final sync and switch the workload to Polystack
   </Card>
   <Card title="Post-Migration Validation" href="/services/migration/user-guide/post-migration" color="#197560">
     Verify the migrated instance boots and behaves correctly

@@ -1,6 +1,6 @@
 ---
 title: "Security"
-description: "Secure XSDS deployments with encryption at rest, cluster authentication (cephx), key rotation, and network isolation for production environments."
+description: "Secure Software-Defined-Storage deployments with encryption at rest, cluster authentication (cephx), key rotation, and network isolation for production environments."
 sidebarTitle: "Security"
 ---
 
@@ -8,7 +8,7 @@ import AdminWarning from '/snippets/admin-warning.mdx';
 
 ## Overview
 
-XSDS security encompasses encryption at rest for stored data, cluster authentication
+Software-Defined-Storage security encompasses encryption at rest for stored data, cluster authentication
 between all services using cephx, network isolation to separate replication traffic
 from client-facing traffic, and regular key rotation procedures.
 
@@ -25,7 +25,7 @@ from client-facing traffic, and regular key rotation procedures.
 
 ## Encryption at Rest
 
-XSDS supports OSD-level encryption at rest using dm-crypt. All data written to an
+Software-Defined-Storage supports OSD-level encryption at rest using dm-crypt. All data written to an
 encrypted OSD is encrypted before it reaches the physical disk.
 
 <Tabs>
@@ -37,7 +37,7 @@ encrypted OSD is encrypted before it reaches the physical disk.
         Navigate to **XDeploy → Storage → OSD Deployment** and enable
         **Encrypt OSDs at deployment** before provisioning new OSDs.
 
-        Encryption keys are managed by the Xloud Key Management service and rotated
+        Encryption keys are managed by the Polystack Key Management service and rotated
         on a configurable schedule.
       </Step>
       <Step title="Verify encryption on deployed OSDs" icon="circle-check">
@@ -58,7 +58,7 @@ encrypted OSD is encrypted before it reaches the physical disk.
     </Warning>
   </Tab>
   <Tab title="Key Management" icon="key">
-    Encryption keys for XSDS OSDs are managed by the Xloud Key Management (XKM) service.
+    Encryption keys for Software-Defined-Storage OSDs are managed by the Polystack Key Management (XKM) service.
 
     - Keys are generated per-OSD at deployment time
     - Keys are stored in the XKM service, not on the OSD nodes themselves
@@ -77,7 +77,7 @@ encrypted OSD is encrypted before it reaches the physical disk.
 
 ## Cluster Authentication (cephx)
 
-All cluster communication uses cephx, the XSDS cluster authentication framework.
+All cluster communication uses cephx, the Software-Defined-Storage cluster authentication framework.
 Each service has its own key with minimum required capabilities.
 
 <Tabs>
@@ -188,8 +188,8 @@ storage replication I/O from client-facing traffic.
   <Card title="Encryption at Rest" href="/services/storage/encryption" color="#197560">
     Block storage volume-level encryption managed through the Key Management service
   </Card>
-  <Card title="Xloud Key Management" href="/services/key-manager/admin-guide" color="#197560">
-    Manage and rotate the encryption keys used by XSDS and other services
+  <Card title="Polystack Key Management" href="/services/key-manager/admin-guide" color="#197560">
+    Manage and rotate the encryption keys used by Software-Defined-Storage and other services
   </Card>
   <Card title="Cluster Management" href="/services/sds/admin-guide/cluster-management" color="#197560">
     Ongoing operational management for a secured cluster

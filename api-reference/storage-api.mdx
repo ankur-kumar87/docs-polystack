@@ -1,12 +1,12 @@
 ---
 title: "Storage API Reference"
-description: "Xloud Block Storage API (Cinder) overview, key endpoints, and examples for managing volumes, snapshots, backups, and volume types programmatically."
+description: "Polystack Block Storage API (Cinder) overview, key endpoints, and examples for managing volumes, snapshots, backups, and volume types programmatically."
 sidebarTitle: "Storage API"
 ---
 
 ## Overview
 
-The Xloud Block Storage API provides programmatic management of persistent storage volumes, volume snapshots, volume backups, volume types, and QoS specifications. Volumes attach to compute instances as block devices — independent of instance lifecycle.
+The Polystack Block Storage API provides programmatic management of persistent storage volumes, volume snapshots, volume backups, volume types, and QoS specifications. Volumes attach to compute instances as block devices — independent of instance lifecycle.
 
 <Note>
   **Prerequisites**
@@ -240,7 +240,7 @@ curl -X POST https://api.<your-domain>/volume/v3/volumes \
 
 ## Backups
 
-Backups are stored in Xloud Object Storage and are independent of volume availability.
+Backups are stored in Polystack Object Storage and are independent of volume availability.
 
 ```bash title="Create a full backup"
 curl -X POST https://api.<your-domain>/volume/v3/backups \

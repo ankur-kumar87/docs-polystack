@@ -1,6 +1,6 @@
 ---
 title: "DNS Configuration"
-description: "Configure DNS name servers and hostname resolution for Xloud tenant subnets. Push resolvers to instances via DHCP for private and public name resolution."
+description: "Configure DNS name servers and hostname resolution for Polystack tenant subnets. Push resolvers to instances via DHCP for private and public name resolution."
 sidebarTitle: "DNS Configuration"
 ---
 
@@ -8,7 +8,7 @@ import CliAuth from '/snippets/cli-auth.mdx';
 
 ## Overview
 
-DNS configuration in Xloud Networking controls which resolvers instances use for hostname
+DNS configuration in Polystack Networking controls which resolvers instances use for hostname
 resolution. Name servers are set at the subnet level and pushed to instances via DHCP at
 boot time. You can configure private internal resolvers, public fallback resolvers, or a
 combination — giving instances access to both internal service hostnames and public domain
@@ -140,9 +140,9 @@ openstack subnet set app-subnet --no-dns-nameservers
 | Internal (example) | `10.0.0.53` | Resolves private hostnames within your cluster |
 
 <Info>
-  For deployments with a dedicated DNS service, Xloud Networking supports the optional
-  DNS service (Xloud DNS) which provides zone management, record lifecycle, and floating
-  IP-to-hostname associations. Contact your administrator to enable Xloud DNS.
+  For deployments with a dedicated DNS service, Polystack Networking supports the optional
+  DNS service (Polystack DNS) which provides zone management, record lifecycle, and floating
+  IP-to-hostname associations. Contact your administrator to enable Polystack DNS.
 </Info>
 
 ---

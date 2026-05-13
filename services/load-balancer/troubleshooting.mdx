@@ -1,12 +1,12 @@
 ---
 title: "Load Balancer Troubleshooting"
-description: "Diagnose and resolve common Xloud Load Balancer issues — provisioning failures, member health problems, and TLS errors."
+description: "Diagnose and resolve common Polystack Load Balancer issues — provisioning failures, member health problems, and TLS errors."
 sidebarTitle: "Troubleshooting"
 ---
 
 ## Overview
 
-This guide covers the most common issues encountered when working with Xloud Load Balancer
+This guide covers the most common issues encountered when working with Polystack Load Balancer
 — provisioning delays, member health failures, 503 errors, and TLS handshake problems.
 
 <Note>
@@ -161,7 +161,7 @@ This guide covers the most common issues encountered when working with Xloud Loa
       openssl x509 -noout -dates
     ```
 
-    **Resolution**: Upload a valid certificate through Xloud Key Manager and update
+    **Resolution**: Upload a valid certificate through Polystack Key Manager and update
     the listener's TLS container reference:
     ```bash title="Update listener TLS container"
     openstack loadbalancer listener set listener-https \

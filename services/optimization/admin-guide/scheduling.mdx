@@ -1,6 +1,6 @@
 ---
 title: "Scheduling Audits"
-description: "Automate Xloud Optimization audits with audit templates and schedules — configure recurring optimization runs and manage the audit template lifecycle."
+description: "Automate Polystack Optimization audits with audit templates and schedules — configure recurring optimization runs and manage the audit template lifecycle."
 sidebarTitle: "Scheduling"
 ---
 
@@ -157,7 +157,7 @@ completion. Configure expiry to prevent old plans from being executed.
         Click **New File** or select an existing `watcher.conf` from the **File Browser**
         (right panel). Add the following in the **Code Editor** (center panel):
 
-        ```ini title="/etc/xavs/config/watcher/watcher.conf"
+        ```ini title="/etc/ironcore/config/watcher/watcher.conf"
         [DEFAULT]
         action_plan_expiry = 24
         ```
@@ -176,7 +176,7 @@ completion. Configure expiry to prevent old plans from being executed.
   <Tab title="CLI" icon="terminal">
     Edit the configuration file directly:
 
-    ```ini title="/etc/xavs/watcher/watcher.conf"
+    ```ini title="/etc/ironcore/watcher/watcher.conf"
     [DEFAULT]
     action_plan_expiry = 24
     ```

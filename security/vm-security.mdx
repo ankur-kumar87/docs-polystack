@@ -6,12 +6,12 @@ sidebarTitle: "VM Security"
 
 ## Overview
 
-Xloud enforces virtual machine security at the hypervisor layer — below the guest OS — through a combination of isolation controls, hardware security features, and network policy enforcement. This agentless model means security policies apply regardless of what runs inside the VM, making it suitable for your regulated environments, multi-tenant deployments, and zero-trust architectures.
+Polystack enforces virtual machine security at the hypervisor layer — below the guest OS — through a combination of isolation controls, hardware security features, and network policy enforcement. This agentless model means security policies apply regardless of what runs inside the VM, making it suitable for your regulated environments, multi-tenant deployments, and zero-trust architectures.
 
 <Note>
   **Prerequisites**
-  - Xloud Platform with XAVS or XPCI
-  - Administrator or project-member role in Xloud Identity
+  - Polystack Platform with Ironcore or XPCI
+  - Administrator or project-member role in Polystack Identity
   - For vTPM: XPCI license with Barbican key management enabled
   - For Secure Boot: UEFI-compatible image with the appropriate properties set
 </Note>
@@ -31,7 +31,7 @@ Each virtual machine runs in a fully isolated compute process. The hypervisor en
 | Resource limits | CPU pinning and memory hard limits prevent noisy-neighbor interference |
 
 <Info>
-  Xloud uses dedicated service users for the compute hypervisor process. These accounts have no login shell and no home directory. The AppArmor profile runs in complain mode by default. You can switch it to enforce mode using the hardening guide.
+  Polystack uses dedicated service users for the compute hypervisor process. These accounts have no login shell and no home directory. The AppArmor profile runs in complain mode by default. You can switch it to enforce mode using the hardening guide.
 </Info>
 
 ---
@@ -44,7 +44,7 @@ Security groups provide stateful L3/L4 firewalling for virtual machine network i
   <Tab title="Dashboard" icon="gauge">
     <Steps titleSize="h3">
       <Step title="Open Security Groups" icon="shield">
-        Navigate to **Project → Network → Security Groups** in the Xloud Dashboard.
+        Navigate to **Project → Network → Security Groups** in the Polystack Dashboard.
       </Step>
       <Step title="Create a new security group" icon="plus">
         Click **Create Security Group**. Provide a name (e.g., `web-servers`) and an optional description.
@@ -103,7 +103,7 @@ Security groups provide stateful L3/L4 firewalling for virtual machine network i
 
 <Badge color="purple" size="sm" shape="pill">Enterprise</Badge>
 
-Virtual TPM provides a hardware-backed cryptographic identity to virtual machines. Xloud Key Management (Barbican) encrypts vTPM state using a stored key, and the state is portable across live migrations.
+Virtual TPM provides a hardware-backed cryptographic identity to virtual machines. Polystack Key Management (Barbican) encrypts vTPM state using a stored key, and the state is portable across live migrations.
 
 ### Use Cases
 
@@ -159,7 +159,7 @@ Virtual TPM provides a hardware-backed cryptographic identity to virtual machine
 
 ## Encrypted Volumes
 
-You can encrypt block storage volumes using LUKS (Linux Unified Key Setup). Xloud Key Management manages the encryption keys and never stores them on the compute node.
+You can encrypt block storage volumes using LUKS (Linux Unified Key Setup). Polystack Key Management manages the encryption keys and never stores them on the compute node.
 
 <Tabs>
   <Tab title="Dashboard" icon="gauge">
@@ -175,7 +175,7 @@ You can encrypt block storage volumes using LUKS (Linux Unified Key Setup). Xlou
         | Control Location | `front-end` |
       </Step>
       <Step title="Create an encrypted volume" icon="hard-drive">
-        Navigate to **Project → Volumes → Create Volume**. Select the encrypted volume type. The system generates and stores the encryption key in Xloud Key Management automatically.
+        Navigate to **Project → Volumes → Create Volume**. Select the encrypted volume type. The system generates and stores the encryption key in Polystack Key Management automatically.
 
         <Check>The volume details page shows **Encryption** as **Yes**.</Check>
       </Step>
@@ -248,16 +248,16 @@ openstack server create \
 ```
 
 <Warning>
-  Anti-affinity placement may fail if there are insufficient compute hosts. Xloud returns a scheduling error rather than placing instances on the same host when the policy cannot be satisfied.
+  Anti-affinity placement may fail if there are insufficient compute hosts. Polystack returns a scheduling error rather than placing instances on the same host when the policy cannot be satisfied.
 </Warning>
 
 ---
 
 ## Live Migration Security
 
-Live migrations transmit VM memory state across the network. Xloud encrypts migration streams using TLS to prevent eavesdropping on in-transit memory contents.
+Live migrations transmit VM memory state across the network. Polystack encrypts migration streams using TLS to prevent eavesdropping on in-transit memory contents.
 
-```yaml title="/etc/xavs/globals.d/_60_migration_security.yml"
+```yaml title="/etc/ironcore/globals.d/_60_migration_security.yml"
 nova_live_migration_tunnelled: "yes"
 nova_console_allowed_origins: "https://<dashboard-hostname>"
 ```

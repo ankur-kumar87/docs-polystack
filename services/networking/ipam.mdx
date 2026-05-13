@@ -9,7 +9,7 @@ import CliAuth from '/snippets/cli-auth.mdx';
 
 ## Overview
 
-Xloud Networking manages IP address allocation through a pluggable IPAM (IP Address Management) driver. The default built-in driver handles IP allocation from subnets defined within the platform. For organizations with existing enterprise IPAM infrastructure — such as Infoblox, Bluecat, or NetBox — an external driver can delegate IP assignment and tracking to that system, ensuring consistency across the entire network environment.
+Polystack Networking manages IP address allocation through a pluggable IPAM (IP Address Management) driver. The default built-in driver handles IP allocation from subnets defined within the platform. For organizations with existing enterprise IPAM infrastructure — such as Infoblox, Bluecat, or NetBox — an external driver can delegate IP assignment and tracking to that system, ensuring consistency across the entire network environment.
 
 When an external IPAM driver is active, every Neutron port creation calls the IPAM API to reserve an IP before the port is assigned. On port deletion, the IP is released back to the external system. This integration is transparent to tenants — they create ports and subnets through the standard Dashboard or CLI interface.
 
@@ -88,7 +88,7 @@ wapi_max_results = 1000
 
 **Required Infoblox configuration:**
 
-The service account (`neutron-svc`) must have IPAM Admin rights on the Infoblox Grid. Create a Network View in Infoblox to map to the Xloud environment, and configure member assignments as needed.
+The service account (`neutron-svc`) must have IPAM Admin rights on the Infoblox Grid. Create a Network View in Infoblox to map to the Polystack environment, and configure member assignments as needed.
 
 ### Bluecat Address Manager Driver
 
@@ -124,17 +124,17 @@ netbox_site = datacenter-1
 ```
 
 <Note>
-  The NetBox adapter is a community-maintained plugin. Verify driver compatibility with your deployed Neutron version before deployment. Contact support@xloud.tech for guidance on driver selection.
+  The NetBox adapter is a community-maintained plugin. Verify driver compatibility with your deployed Neutron version before deployment. Contact support@polystack.tech for guidance on driver selection.
 </Note>
 
 ---
 
 ## Apply the Configuration
 
-In XAVS deployments, the IPAM driver configuration is managed through XDeploy and Ansible:
+In Ironcore deployments, the IPAM driver configuration is managed through XDeploy and Ansible:
 
 ```bash title="Apply Neutron configuration changes"
-xavs-ansible deploy --tags neutron
+ironcore-ansible deploy --tags neutron
 ```
 
 After deployment, verify Neutron is running with the configured driver:
@@ -154,11 +154,11 @@ When an external IPAM driver is active, subnet and port creation behaves differe
     <Steps titleSize="h3">
       <Step title="Pre-configure the network range in IPAM" icon="settings">
         In your external IPAM system (Infoblox, Bluecat, etc.), create the network container
-        for the IP range you intend to use in Xloud (e.g., `10.50.0.0/24`).
+        for the IP range you intend to use in Polystack (e.g., `10.50.0.0/24`).
 
         Assign the range to the appropriate view or zone before creating the Neutron subnet.
       </Step>
-      <Step title="Create the subnet in Xloud" icon="plus">
+      <Step title="Create the subnet in Polystack" icon="plus">
         Navigate to **Network > Networks**, select the network, and click
         **Create Subnet**.
 

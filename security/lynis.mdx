@@ -1,6 +1,6 @@
 ---
 title: "Lynis"
-description: "Run Lynis security audits on Xloud virtual machines and host nodes to detect misconfigurations, hardening gaps, and compliance deviations with remediation guidance."
+description: "Run Lynis security audits on Polystack virtual machines and host nodes to detect misconfigurations, hardening gaps, and compliance deviations with remediation guidance."
 sidebarTitle: "Lynis"
 ---
 
@@ -8,9 +8,9 @@ sidebarTitle: "Lynis"
 
 Lynis is an open-source security auditing tool that performs in-depth system scans directly on Linux hosts — no agent required. It checks over 300 security controls covering kernel hardening, authentication configuration, filesystem permissions, network services, software patches, and logging posture. Each scan produces a hardening index score and a prioritized list of remediation suggestions.
 
-Xloud bundles Lynis in XOS and makes it available via the XDeploy automation pipeline for both individual node audits and fleet-wide compliance sweeps.
+Polystack bundles Lynis in XOS and makes it available via the XDeploy automation pipeline for both individual node audits and fleet-wide compliance sweeps.
 
-<Info>**Xloud-Developed** — Lynis is one of three independent scanners in [Xloud SIEM](/security/xloud-siem) — Wazuh, Lynis, and OpenSCAP run in parallel across all nodes for layered compliance coverage. Results are aggregated on the **Security Posture** page in Monitor Center.</Info>
+<Info>**Polystack-Developed** — Lynis is one of three independent scanners in [Polystack SIEM](/security/polystack-siem) — Wazuh, Lynis, and OpenSCAP run in parallel across all nodes for layered compliance coverage. Results are aggregated on the **Security Posture** page in Monitor Center.</Info>
 
 <Note>
   **Prerequisites**
@@ -140,7 +140,7 @@ graph LR
     ```
 
     ```bash title="Run the fleet audit"
-    xavs-ansible run --playbook lynis-audit.yml --limit web-tier
+    ironcore-ansible run --playbook lynis-audit.yml --limit web-tier
     ```
   </Tab>
 </Tabs>
@@ -169,7 +169,7 @@ graph LR
     **Finding**: ASLR disabled, IP forwarding enabled unnecessarily, or core dumps allowed.
 
     ```bash title="Apply kernel hardening via sysctl"
-    cat >> /etc/sysctl.d/99-xloud-hardening.conf << 'EOF'
+    cat >> /etc/sysctl.d/99-polystack-hardening.conf << 'EOF'
     kernel.randomize_va_space = 2
     kernel.dmesg_restrict = 1
     kernel.kptr_restrict = 2
@@ -191,7 +191,7 @@ graph LR
     ```
 
     ```bash title="Add basic audit rules"
-    cat >> /etc/audit/rules.d/xloud.rules << 'EOF'
+    cat >> /etc/audit/rules.d/polystack.rules << 'EOF'
     -w /etc/passwd -p wa -k identity
     -w /etc/shadow -p wa -k identity
     -w /etc/sudoers -p wa -k sudo
@@ -260,8 +260,8 @@ chmod +x /etc/cron.weekly/lynis-audit
 ## Next Steps
 
 <CardGroup cols={2}>
-  <Card title="Xloud SIEM Overview" href="/security/xloud-siem" color="#197560">
-    Back to the unified Xloud SIEM hub — Security Posture and Alerts dashboards
+  <Card title="Polystack SIEM Overview" href="/security/polystack-siem" color="#197560">
+    Back to the unified Polystack SIEM hub — Security Posture and Alerts dashboards
   </Card>
   <Card title="Wazuh HIDS" href="/security/wazuh" color="#197560">
     Add real-time intrusion detection and file integrity monitoring on top of periodic Lynis audits

@@ -1,6 +1,6 @@
 ---
 title: "Post-Migration Validation"
-description: "Verify a migrated workload boots, networks, stores, and behaves correctly on Xloud before retiring the source VM."
+description: "Verify a migrated workload boots, networks, stores, and behaves correctly on Polystack before retiring the source VM."
 sidebarTitle: "Post-Migration"
 ---
 
@@ -16,7 +16,7 @@ decommission the source.
   **Prerequisites**
   - A completed [cold migration](/services/migration/user-guide/cold-migration)
     or [warm migration cutover](/services/migration/user-guide/cutover)
-  - Xloud Dashboard access to the target project
+  - Polystack Dashboard access to the target project
   - Guest-level credentials or a console login path for the migrated instance
 </Note>
 
@@ -26,7 +26,7 @@ decommission the source.
 
 <Steps titleSize="h3">
   <Step title="Target instance reaches active power state" icon="power">
-    In the Xloud Dashboard, open **Compute → Instances** in the target project
+    In the Polystack Dashboard, open **Compute → Instances** in the target project
     and confirm the migrated instance shows an active power state. A status
     of `ERROR` or `BUILD` stuck for more than a few minutes indicates a
     platform-level issue — see
@@ -35,7 +35,7 @@ decommission the source.
     <Check>Instance is active and the volume is attached.</Check>
   </Step>
   <Step title="Boot completed and console is reachable" icon="monitor">
-    Open the instance console from the Xloud Dashboard and confirm:
+    Open the instance console from the Polystack Dashboard and confirm:
 
     - The guest reached a login prompt or desktop session
     - No unexpected disk-check prompts or recovery-mode banners
@@ -95,7 +95,7 @@ decommission the source.
 | **Guest boots to recovery mode (Linux)** | GRUB was pointing at old device names | Boot from recovery, regenerate GRUB config, update initramfs |
 | **Windows BSOD on boot (INACCESSIBLE_BOOT_DEVICE)** | VirtIO storage driver was not loaded at early boot | Attach the target volume to a rescue instance and enable the `viostor` service at boot |
 | **Network interface missing** | Guest tied the interface to a specific MAC or driver | Remove the stale interface record (for example, NetworkManager keyfile or udev persistent-net rule) and re-detect |
-| **Hostname resolves but services not reachable** | Firewall inside the guest blocks the new IP range | Update the guest firewall rules to allow the target Xloud network range |
+| **Hostname resolves but services not reachable** | Firewall inside the guest blocks the new IP range | Update the guest firewall rules to allow the target Polystack network range |
 | **High CPU usage at idle** | Leftover source-side tools (for example, VMware Tools) running in a loop | Uninstall source-side hypervisor tools from the guest |
 | **Clock drift** | Guest time source is still pointing at source NTP | Reconfigure the guest time source for the target network |
 
@@ -148,8 +148,8 @@ the migrated instance is authoritative should you retire the source VM.
   <Card title="Troubleshooting" href="/services/migration/user-guide/troubleshooting" color="#197560">
     Diagnose boot, network, and guest-level issues after migration
   </Card>
-  <Card title="Xloud Compute" href="/services/compute" color="#197560">
-    Manage the migrated instance lifecycle on Xloud
+  <Card title="Polystack Compute" href="/services/compute" color="#197560">
+    Manage the migrated instance lifecycle on Polystack
   </Card>
   <Card title="Infrastructure Monitoring" href="/services/monitoring" color="#197560">
     Add the migrated instance to monitoring and alerting

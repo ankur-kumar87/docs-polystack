@@ -1,6 +1,6 @@
 ---
 title: "Troubleshooting"
-description: "Diagnose and resolve Xloud Optimization failures — audit errors, action plan execution failures, live migration issues, data source connectivity, and."
+description: "Diagnose and resolve Polystack Optimization failures — audit errors, action plan execution failures, live migration issues, data source connectivity, and."
 sidebarTitle: "Troubleshooting"
 ---
 
@@ -149,7 +149,7 @@ If the plan is expired, create a new audit to generate a fresh plan.
 
 ### Live Migration Action Fails
 
-The Applier attempted a migration but Xloud Compute rejected it.
+The Applier attempted a migration but Polystack Compute rejected it.
 
 ```bash title="Check action-level failure details"
 watcher action list \
@@ -235,7 +235,7 @@ docker exec watcher_decision_engine \
 Expected: `"status": "success"` with results.
 
 ```bash title="Check Prometheus section in watcher.conf"
-grep -A 5 "\[prometheus_client\]" /etc/xavs/watcher/watcher.conf
+grep -A 5 "\[prometheus_client\]" /etc/ironcore/watcher/watcher.conf
 ```
 
 ---
@@ -246,7 +246,7 @@ Strategies that require Telemetry (`workload_stabilization`, `noisy_neighbor`) f
 with `InsufficientData` or generate no recommendations.
 
 ```bash title="Check Telemetry collector is configured"
-grep -A 5 "\[ceilometer_client\]" /etc/xavs/watcher/watcher.conf
+grep -A 5 "\[ceilometer_client\]" /etc/ironcore/watcher/watcher.conf
 ```
 
 ```bash title="Verify metrics exist in Telemetry"
@@ -254,7 +254,7 @@ openstack metric resource list --type instance | head -5
 ```
 
 If no instance resources are listed, the Telemetry service is not collecting metrics.
-Verify Xloud Telemetry is deployed and the `ceilometer` compute agent is enabled.
+Verify Polystack Telemetry is deployed and the `ceilometer` compute agent is enabled.
 
 ---
 

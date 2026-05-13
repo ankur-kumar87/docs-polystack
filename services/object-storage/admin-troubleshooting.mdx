@@ -1,6 +1,6 @@
 ---
 title: "Object Storage Admin Troubleshooting"
-description: "Diagnose and resolve platform-level Xloud Object Storage issues — 507 storage errors, proxy latency, ring inconsistencies, and slow replication."
+description: "Diagnose and resolve platform-level Polystack Object Storage issues — 507 storage errors, proxy latency, ring inconsistencies, and slow replication."
 sidebarTitle: "Troubleshooting"
 ---
 
@@ -19,19 +19,19 @@ For user-facing issues such as 403 access errors or upload timeouts, see the
 ## Diagnostic Checklist
 
 ```bash title="Overall cluster health"
-xavs-storage-recon --all
+ironcore-storage-recon --all
 ```
 
 ```bash title="Disk usage across all nodes"
-xavs-storage-recon --diskusage
+ironcore-storage-recon --diskusage
 ```
 
 ```bash title="Replication status"
-xavs-storage-recon --replication
+ironcore-storage-recon --replication
 ```
 
 ```bash title="Ring file consistency"
-xavs-storage-recon --md5
+ironcore-storage-recon --md5
 ```
 
 ---
@@ -45,7 +45,7 @@ xavs-storage-recon --md5
 
     **Diagnosis**:
     ```bash title="Check disk usage per node"
-    xavs-storage-recon --diskusage
+    ironcore-storage-recon --diskusage
     ```
 
     **Resolution**:
@@ -53,9 +53,9 @@ xavs-storage-recon --md5
     - Expand storage capacity by adding new drives (see [Ring Management](/services/object-storage/ring-management))
     - Alternatively, rebalance the ring to shift weight toward nodes with available space:
       ```bash title="Adjust weight on high-capacity node"
-      xavs-ring-builder object.builder set_weight <device-id> <reduced-weight>
-      xavs-ring-builder object.builder rebalance
-      xavs-ring-builder object.builder write_ring
+      ironcore-ring-builder object.builder set_weight <device-id> <reduced-weight>
+      ironcore-ring-builder object.builder rebalance
+      ironcore-ring-builder object.builder write_ring
       ```
   </Accordion>
 
@@ -65,7 +65,7 @@ xavs-storage-recon --md5
 
     **Diagnosis**:
     ```bash title="Check replication load"
-    xavs-storage-recon --replication --verbose
+    ironcore-storage-recon --replication --verbose
     ```
 
     If a specific node shows high `replication_time`, inspect that node's disk I/O:
@@ -84,13 +84,13 @@ xavs-storage-recon --md5
 
     **Diagnosis**:
     ```bash title="Check MD5 of ring files on all nodes"
-    xavs-storage-recon --md5
+    ironcore-storage-recon --md5
     ```
 
     **Resolution**: Nodes with mismatched MD5 hashes have stale ring files. Redistribute
     the ring to affected nodes:
     ```bash title="Copy ring files to an affected node"
-    scp /etc/xavs-object-storage/*.ring.gz <node-ip>:/etc/xavs-object-storage/
+    scp /etc/ironcore-object-storage/*.ring.gz <node-ip>:/etc/ironcore-object-storage/
     ```
 
     Restart the object-server and replicator on the affected node after distribution.
@@ -102,7 +102,7 @@ xavs-storage-recon --md5
 
     **Diagnosis**:
     ```bash title="Check quarantine counts"
-    xavs-storage-recon --quarantined --verbose
+    ironcore-storage-recon --quarantined --verbose
     ```
 
     ```bash title="Check drive health (SSH to node)"
@@ -133,7 +133,7 @@ xavs-storage-recon --md5
     ```
 
     ```bash title="Verify storage nodes are reachable from proxy"
-    xavs-storage-recon --all | grep -i "error\|fail"
+    ironcore-storage-recon --all | grep -i "error\|fail"
     ```
 
     **Resolution**:

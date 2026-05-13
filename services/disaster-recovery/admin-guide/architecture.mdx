@@ -26,7 +26,7 @@ failures effectively.
 graph TD
     subgraph Primary["Primary Site"]
         PA["Compute Instances"]
-        PS["XSDS Block / Object Storage"]
+        PS["Software-Defined-Storage Block / Object Storage"]
         PC["XDR Agent (Primary)"]
         PM["XIMP Agent"]
     end
@@ -144,7 +144,7 @@ Data flows through a multi-stage pipeline from the primary site to the DR site:
     <Warning>
       Active-active deployments require careful application design to avoid write
       conflicts. Not all workloads are suitable for bidirectional replication.
-      Contact Xloud support before deploying active-active XDR.
+      Contact Polystack support before deploying active-active XDR.
     </Warning>
   </Tab>
   <Tab title="Multi-Site Fan-Out" icon="git-branch">

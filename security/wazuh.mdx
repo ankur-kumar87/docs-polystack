@@ -1,16 +1,16 @@
 ---
 title: "Wazuh"
-description: "Deploy Wazuh agents across Xloud virtual machines for real-time threat detection, file integrity monitoring, vulnerability assessment, and compliance auditing."
+description: "Deploy Wazuh agents across Polystack virtual machines for real-time threat detection, file integrity monitoring, vulnerability assessment, and compliance auditing."
 sidebarTitle: "Wazuh"
 ---
 
 ## Overview
 
-Wazuh is the host-based intrusion detection and security monitoring platform bundled with Xloud Platform. It provides host-level visibility into what is happening inside each of your virtual machines through a lightweight agent. The Wazuh manager runs as a centralized service. Agents deploy to each instance and stream security events, file changes, and vulnerability data back for real-time correlation.
+Wazuh is the host-based intrusion detection and security monitoring platform bundled with Polystack Platform. It provides host-level visibility into what is happening inside each of your virtual machines through a lightweight agent. The Wazuh manager runs as a centralized service. Agents deploy to each instance and stream security events, file changes, and vulnerability data back for real-time correlation.
 
-Xloud ships this platform pre-integrated with XDeploy, so you can mass-deploy agents across projects using the standard automation pipeline.
+Polystack ships this platform pre-integrated with XDeploy, so you can mass-deploy agents across projects using the standard automation pipeline.
 
-<Info>**Xloud-Developed** — This capability is developed by Xloud and ships with XAVS. The integrated security platform is surfaced in the Xloud Dashboard as the **Security Posture** page in Monitor Center, providing a unified view of agent status, threat alerts, and compliance results across the cluster. See [Xloud SIEM](/security/xloud-siem) for the full overview.</Info>
+<Info>**Polystack-Developed** — This capability is developed by Polystack and ships with Ironcore. The integrated security platform is surfaced in the Polystack Dashboard as the **Security Posture** page in Monitor Center, providing a unified view of agent status, threat alerts, and compliance results across the cluster. See [Polystack SIEM](/security/polystack-siem) for the full overview.</Info>
 
 <Tip>
   **XDeploy GUI** — Enable Wazuh (with Lynis auditing, OpenSCAP compliance, and OS hardening) through the [XDeploy Configuration](/deployment/configuration) interface under **XDeploy → Security → HIDS**. No manual file editing required.
@@ -71,8 +71,8 @@ graph LR
   <Tab title="Linux (Ansible)" icon="terminal">
     Use the bundled Ansible role to deploy agents across all instances in a project:
 
-    ```bash title="Deploy Wazuh agents via xavs-ansible"
-    xavs-ansible deploy --tags wazuh-agent \
+    ```bash title="Deploy Wazuh agents via ironcore-ansible"
+    ironcore-ansible deploy --tags wazuh-agent \
       --extra-vars "wazuh_manager_ip=<MANAGER_IP> wazuh_registration_token=<TOKEN>"
     ```
 
@@ -238,8 +238,8 @@ Forward Wazuh alerts to external systems:
 ## Next Steps
 
 <CardGroup cols={2}>
-  <Card title="Xloud SIEM Overview" href="/security/xloud-siem" color="#197560">
-    Back to the unified Xloud SIEM hub — Security Posture and Alerts dashboards
+  <Card title="Polystack SIEM Overview" href="/security/polystack-siem" color="#197560">
+    Back to the unified Polystack SIEM hub — Security Posture and Alerts dashboards
   </Card>
   <Card title="Lynis Security Auditing" href="/security/lynis" color="#197560">
     Run automated OS security audits and generate hardening recommendations
@@ -248,6 +248,6 @@ Forward Wazuh alerts to external systems:
     Scan instances against CIS, STIG, and PCI-DSS profiles using SCAP content
   </Card>
   <Card title="Compliance and Auditing" href="/security/compliance" color="#197560">
-    Understand audit logging and compliance frameworks supported by Xloud
+    Understand audit logging and compliance frameworks supported by Polystack
   </Card>
 </CardGroup>

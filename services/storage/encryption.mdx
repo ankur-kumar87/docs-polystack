@@ -1,6 +1,6 @@
 ---
 title: "Volume Encryption"
-description: "Configure at-rest encryption for Xloud Block Storage volume types. Enable LUKS-based transparent encryption backed by the Xloud Key Management service."
+description: "Configure at-rest encryption for Polystack Block Storage volume types. Enable LUKS-based transparent encryption backed by the Polystack Key Management service."
 sidebarTitle: "Volume Encryption"
 ---
 
@@ -9,7 +9,7 @@ import CliAuth from '/snippets/cli-auth.mdx';
 
 ## Overview
 
-Volume encryption provides transparent at-rest protection for block storage data. Encryption is configured per volume type — all volumes created from an encrypted type are automatically encrypted without any additional action from you. Encryption keys are managed by the Xloud Key Management service and retrieved at volume attach time by the volume service, ensuring keys are never stored on the compute node's disk.
+Volume encryption provides transparent at-rest protection for block storage data. Encryption is configured per volume type — all volumes created from an encrypted type are automatically encrypted without any additional action from you. Encryption keys are managed by the Polystack Key Management service and retrieved at volume attach time by the volume service, ensuring keys are never stored on the compute node's disk.
 
 <AdminWarning />
 
@@ -20,7 +20,7 @@ Volume encryption provides transparent at-rest protection for block storage data
     <Steps titleSize="h3">
       <Step title="Enable KMS first" icon="key">
         Navigate to **XDeploy → Configuration → Advance Features** and ensure
-        **Enable KMS** is set to **Yes**. Disk encryption requires the Xloud Key
+        **Enable KMS** is set to **Yes**. Disk encryption requires the Polystack Key
         Management service to store and manage encryption keys.
       </Step>
       <Step title="Enable Disk Encryption" icon="lock">
@@ -49,7 +49,7 @@ Volume encryption provides transparent at-rest protection for block storage data
 <Note>
   **Prerequisites**
   - Administrator credentials with the `admin` role
-  - Xloud Key Management service deployed and accessible
+  - Polystack Key Management service deployed and accessible
   - At least one unencrypted volume type to apply encryption to (or create a new type)
   - All compute nodes must be able to reach the Key Management service API
 </Note>
@@ -213,7 +213,7 @@ Verify that encryption is working end-to-end by creating and attaching a test vo
 <Warning>
   Encryption key loss means the volume data is permanently inaccessible — there is no
   recovery path without the key. Before enabling volume encryption in production, ensure
-  the Xloud Key Management service is:
+  the Polystack Key Management service is:
   - Deployed in a high-availability configuration
   - Backed up regularly (key database backup)
   - Accessible from all compute nodes that may attach encrypted volumes
@@ -226,14 +226,14 @@ with an authentication or connectivity error.
 
 ## Per-Volume Selective Encryption
 
-<Info>**Xloud-Developed** -- This capability is developed by Xloud and ships with XAVS / XPCI.</Info>
+<Info>**Polystack-Developed** -- This capability is developed by Polystack and ships with Ironcore / XPCI.</Info>
 
-Xloud supports **selective encryption** -- encrypted and unencrypted volume types coexist within the same deployment. This allows administrators to apply encryption only where compliance or data sensitivity requires it, avoiding the performance overhead of blanket encryption on non-sensitive workloads.
+Polystack supports **selective encryption** -- encrypted and unencrypted volume types coexist within the same deployment. This allows administrators to apply encryption only where compliance or data sensitivity requires it, avoiding the performance overhead of blanket encryption on non-sensitive workloads.
 
 Key characteristics:
 
-- **Per-tenant key isolation** -- each tenant's encryption keys are stored and managed independently in the Xloud Key Management service. Tenants cannot access each other's keys, even if they share the same storage backend.
-- **Three independent encryption layers** -- Xloud provides encryption at three distinct levels that can be enabled independently or together:
+- **Per-tenant key isolation** -- each tenant's encryption keys are stored and managed independently in the Polystack Key Management service. Tenants cannot access each other's keys, even if they share the same storage backend.
+- **Three independent encryption layers** -- Polystack provides encryption at three distinct levels that can be enabled independently or together:
 
 | Layer | Scope | Encryption Point |
 |-------|-------|-----------------|
@@ -253,7 +253,7 @@ Key characteristics:
 
 <CardGroup cols={2}>
   <Card title="Key Manager User Guide" href="/services/key-manager/user-guide" color="#197560">
-    Manage encryption keys and secrets in the Xloud Key Management service
+    Manage encryption keys and secrets in the Polystack Key Management service
   </Card>
   <Card title="Volume Types & QoS" href="/services/storage/volume-types-admin" color="#197560">
     Create and manage volume types with backend associations

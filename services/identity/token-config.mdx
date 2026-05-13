@@ -1,6 +1,6 @@
 ---
 title: "Token Configuration"
-description: "Configure Fernet key rotation, token lifetime, and expiration policies for Xloud Identity."
+description: "Configure Fernet key rotation, token lifetime, and expiration policies for Polystack Identity."
 sidebarTitle: "Token Config"
 ---
 
@@ -8,7 +8,7 @@ import AdminWarning from '/snippets/admin-warning.mdx';
 
 ## Overview
 
-Xloud Identity uses Fernet tokens by default — stateless, symmetric-key-encrypted tokens
+Polystack Identity uses Fernet tokens by default — stateless, symmetric-key-encrypted tokens
 that do not require a database lookup on every validation request. This guide covers
 token format selection, Fernet key rotation procedures, and lifetime configuration.
 Proper token configuration balances security (short lifetimes) with operational convenience
@@ -27,7 +27,7 @@ Proper token configuration balances security (short lifetimes) with operational 
 
 <Tip>
   Fernet is the recommended format for all deployments. JWT tokens are useful when
-  you need to validate tokens outside of Xloud (e.g., in a sidecar proxy or API gateway).
+  you need to validate tokens outside of Polystack (e.g., in a sidecar proxy or API gateway).
 </Tip>
 
 ---

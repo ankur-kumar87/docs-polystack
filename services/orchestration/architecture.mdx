@@ -1,6 +1,6 @@
 ---
 title: "Orchestration Service Architecture"
-description: "Understand the Xloud Orchestration service components — API, Engine, and resource plugins — and how they process templates to provision cloud infrastructure."
+description: "Understand the Polystack Orchestration service components — API, Engine, and resource plugins — and how they process templates to provision cloud infrastructure."
 sidebarTitle: "Architecture"
 ---
 
@@ -8,7 +8,7 @@ import AdminWarning from '/snippets/admin-warning.mdx';
 
 ## Overview
 
-Xloud Orchestration is built on a three-tier architecture: an API tier that accepts
+Polystack Orchestration is built on a three-tier architecture: an API tier that accepts
 template submissions, an engine tier that resolves dependencies and drives resource
 provisioning, and a plugin layer that delegates individual resource operations to the
 appropriate cloud service API. The engine is stateless — all stack state is persisted
@@ -26,10 +26,10 @@ graph TD
     API -->|Parse template| ENG[Orchestration Engine]
     ENG -->|Store state| DB[(Database)]
     ENG -->|Resolve graph| GRAPH[Dependency Resolver]
-    GRAPH -->|Provision resource| COMPUTE[Xloud Compute API<br/>:8774]
-    GRAPH -->|Provision resource| NET[Xloud Networking API<br/>:9696]
-    GRAPH -->|Provision resource| STORE[Xloud Block Storage API<br/>:8776]
-    GRAPH -->|Provision resource| ID[Xloud Identity API<br/>:5000]
+    GRAPH -->|Provision resource| COMPUTE[Polystack Compute API<br/>:8774]
+    GRAPH -->|Provision resource| NET[Polystack Networking API<br/>:9696]
+    GRAPH -->|Provision resource| STORE[Polystack Block Storage API<br/>:8776]
+    GRAPH -->|Provision resource| ID[Polystack Identity API<br/>:5000]
     COMPUTE & NET & STORE & ID -->|Resource status| ENG
     ENG -->|Stack status + outputs| API
     API -->|Response| U
@@ -109,7 +109,7 @@ are queued until all prerequisite resources reach `CREATE_COMPLETE`.
 
 ### Resource Plugin Architecture
 
-Each resource type (`Xloud::Compute::Server`, `Xloud::Networking::Net`, etc.) is
+Each resource type (`Polystack::Compute::Server`, `Polystack::Networking::Net`, etc.) is
 handled by a dedicated plugin that implements a standard interface:
 
 | Plugin Method | Trigger | Description |

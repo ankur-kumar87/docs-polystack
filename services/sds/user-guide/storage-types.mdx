@@ -1,18 +1,18 @@
 ---
 title: "Storage Types"
-description: "Understand block, object, and shared file storage in XSDS — capabilities, use cases, and how to choose the right interface for your workload."
+description: "Understand block, object, and shared file storage in Software-Defined-Storage — capabilities, use cases, and how to choose the right interface for your workload."
 sidebarTitle: "Storage Types"
 ---
 
 ## Overview
 
-XSDS exposes three distinct storage interfaces from a single distributed platform.
+Software-Defined-Storage exposes three distinct storage interfaces from a single distributed platform.
 Each interface suits a different application pattern — selecting the right type for
 your workload is the first step to optimal performance and cost efficiency.
 
 <Note>
   **Prerequisites**
-  - An active Xloud account with project access
+  - An active Polystack account with project access
   - Familiarity with your application's I/O pattern (random vs sequential, latency vs throughput)
 </Note>
 
@@ -32,7 +32,7 @@ your workload is the first step to optimal performance and cost efficiency.
 
 <Tabs>
   <Tab title="Overview" icon="hard-drive">
-    Block storage volumes attach to Xloud Compute instances as persistent disks. Volumes
+    Block storage volumes attach to Polystack Compute instances as persistent disks. Volumes
     exist independently of instance lifecycle — data survives instance deletion and can
     be re-attached to a different instance.
 
@@ -43,7 +43,7 @@ your workload is the first step to optimal performance and cost efficiency.
     | Hot-attach | Attach to running instances without rebooting |
     | Online resize | Extend volume size without downtime (extend only) |
     | Snapshots | Point-in-time copies for recovery or cloning |
-    | Encryption | At-rest encryption via the Xloud Key Management service |
+    | Encryption | At-rest encryption via the Polystack Key Management service |
     | QoS | IOPS and throughput limits configurable via volume types |
 
     <Tip>
@@ -60,7 +60,7 @@ your workload is the first step to optimal performance and cost efficiency.
     - POSIX-compliant file system on top of the volume (ext4, XFS, etc.)
     - Database workloads: PostgreSQL, MySQL, MongoDB, Redis
 
-    See the [Xloud Block Storage guide](/services/storage/user-guide) for complete
+    See the [Polystack Block Storage guide](/services/storage/user-guide) for complete
     volume lifecycle management procedures.
   </Tab>
 </Tabs>
@@ -87,7 +87,7 @@ your workload is the first step to optimal performance and cost efficiency.
     | Static website hosting | Serve static content directly from buckets |
 
     <Note>
-      Access credentials for object storage are separate from your Xloud Dashboard
+      Access credentials for object storage are separate from your Polystack Dashboard
       credentials. Generate S3-compatible access keys from the Dashboard under
       **Project → Object Store → Access Keys**.
     </Note>

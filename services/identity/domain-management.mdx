@@ -1,6 +1,6 @@
 ---
 title: "Domain Management"
-description: "Create and manage organizational domains with independent user namespaces and authentication backends in Xloud Identity."
+description: "Create and manage organizational domains with independent user namespaces and authentication backends in Polystack Identity."
 sidebarTitle: "Domain Management"
 ---
 
@@ -11,7 +11,7 @@ import AdminWarning from '/snippets/admin-warning.mdx';
 Domains provide administrative isolation between organizations, business units, or customers.
 Each domain has its own user namespace, and users in one domain cannot see users in another.
 A single domain can be configured with its own authentication backend (SQL, LDAP, or
-federation), making domains the fundamental multi-tenancy boundary in Xloud Identity.
+federation), making domains the fundamental multi-tenancy boundary in Polystack Identity.
 
 <AdminWarning />
 
@@ -153,7 +153,7 @@ keystone_domain_config:
 
 Deploy after configuring:
 ```bash title="Apply domain configuration"
-xavs-ansible deploy --tags keystone
+ironcore-ansible deploy --tags keystone
 ```
 
 ---
@@ -165,7 +165,7 @@ xavs-ansible deploy --tags keystone
     Configure LDAP and federation backends for domain authentication.
   </Card>
   <Card title="Service Catalog" href="/services/identity/service-catalog" color="#197560">
-    Manage endpoint registration across regions for all Xloud services.
+    Manage endpoint registration across regions for all Polystack services.
   </Card>
   <Card title="Policy Management" href="/services/identity/policy-management" color="#197560">
     Customize RBAC policies for domain-scoped administrative operations.

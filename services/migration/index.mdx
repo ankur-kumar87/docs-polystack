@@ -1,19 +1,19 @@
 ---
 title: "Migration Suite (XMS)"
-description: "Agentless workload migration from VMware vSphere and ESXi to Xloud with incremental sync, automatic driver injection, and minimal cutover downtime."
+description: "Agentless workload migration from VMware vSphere and ESXi to Polystack with incremental sync, automatic driver injection, and minimal cutover downtime."
 icon: "truck"
 sidebarTitle: "Migration (XMS)"
 mode: "wide"
 ---
 
-XMS (Xloud Migration Suite) moves virtual machine workloads from VMware vSphere
-and standalone ESXi hosts into Xloud with no agent installed in the source guest.
+XMS (Polystack Migration Suite) moves virtual machine workloads from VMware vSphere
+and standalone ESXi hosts into Polystack with no agent installed in the source guest.
 Cold migrations power off the source VM and stream its disks in a single pass;
 warm migrations perform an online full sync followed by incremental block-level
 replication, keeping cutover downtime to minutes.
 
-<Card title="XMS — Migration Suite" icon="external-link" href="https://xloud.tech/contact" color="#197560" horizontal>
-  Contact the Xloud team for XMS planning, sizing, and licensing
+<Card title="XMS — Migration Suite" icon="external-link" href="https://polystack.tech/contact" color="#197560" horizontal>
+  Contact the Polystack team for XMS planning, sizing, and licensing
 </Card>
 
 ---
@@ -24,7 +24,7 @@ replication, keeping cutover downtime to minutes.
 <CardGroup cols={2}>
   <Card title="User Guide" icon="book-open" href="/services/migration/user-guide" color="#197560">
     Register VMware sources, discover workloads, run preflight checks, and
-    execute cold or warm migrations from the Xloud Dashboard.
+    execute cold or warm migrations from the Polystack Dashboard.
   </Card>
   <Card title="Admin Guide" icon="settings" href="/services/migration/admin-guide" color="#197560">
     Deploy the migration service, configure network access to vCenter and ESXi,
@@ -34,7 +34,7 @@ replication, keeping cutover downtime to minutes.
     Available command-line workflows and the scope of Dashboard-only operations.
   </Card>
   <Card title="Block Storage" icon="hard-drive" href="/services/storage/index" color="#197560">
-    Target volumes are provisioned through Xloud Block Storage — review volume
+    Target volumes are provisioned through Polystack Block Storage — review volume
     types, capacity, and quotas before planning a migration wave.
   </Card>
 </CardGroup>
@@ -44,7 +44,7 @@ replication, keeping cutover downtime to minutes.
 ## Key Capabilities
 
 
-<Info>**Xloud-Developed** — XMS is developed by Xloud and ships with XAVS / XPCI.</Info>
+<Info>**Polystack-Developed** — XMS is developed by Polystack and ships with Ironcore / XPCI.</Info>
 
 <CardGroup cols={2}>
   <Card title="Agentless Source Access" icon="server">
@@ -69,12 +69,12 @@ replication, keeping cutover downtime to minutes.
   <Card title="Incremental Cutover" icon="zap">
     Warm migration repeatedly syncs only changed blocks since the last sync
     using Changed Block Tracking. The final cutover replicates a minimal
-    delta and switches the workload to Xloud.
+    delta and switches the workload to Polystack.
   </Card>
   <Card title="End-to-End Dashboard" icon="gauge">
     Discovery, assessment, job submission, live progress, event streaming,
     and post-migration reports are all available from the Migration panel
-    in the Xloud Dashboard.
+    in the Polystack Dashboard.
   </Card>
 </CardGroup>
 
@@ -99,7 +99,7 @@ replication, keeping cutover downtime to minutes.
   </Step>
   <Step title="Submit migration" icon="play">
     Choose cold (single-pass) or warm (continuous sync) mode, pick the target
-    Xloud project, network, and volume type, and queue the job.
+    Polystack project, network, and volume type, and queue the job.
   </Step>
   <Step title="Sync and cutover" icon="rotate-cw">
     Cold migrations run end-to-end immediately. Warm migrations complete a
@@ -107,7 +107,7 @@ replication, keeping cutover downtime to minutes.
   </Step>
   <Step title="Guest conversion and boot" icon="cpu">
     XMS injects VirtIO drivers, repairs the boot loader, and launches the
-    migrated instance in the target Xloud project.
+    migrated instance in the target Polystack project.
   </Step>
 </Steps>
 
@@ -130,7 +130,7 @@ replication, keeping cutover downtime to minutes.
     libraries for each supported generation.
   </Card>
   <Card title="BIOS and UEFI Guests" icon="shield">
-    Both BIOS and UEFI guests migrate to Xloud without firmware-specific
+    Both BIOS and UEFI guests migrate to Polystack without firmware-specific
     preparation. Secure Boot status is detected during discovery.
   </Card>
 </CardGroup>
@@ -141,12 +141,12 @@ replication, keeping cutover downtime to minutes.
 
 
 <CardGroup cols={3}>
-  <Card title="Xloud Compute" icon="server" href="/services/compute" color="#197560">
-    Migrated workloads run as Xloud Compute instances with full lifecycle and
+  <Card title="Polystack Compute" icon="server" href="/services/compute" color="#197560">
+    Migrated workloads run as Polystack Compute instances with full lifecycle and
     scaling features.
   </Card>
   <Card title="Block Storage" icon="hard-drive" href="/services/storage/index" color="#197560">
-    Target disks land as Xloud Block Storage volumes. Choose volume types to
+    Target disks land as Polystack Block Storage volumes. Choose volume types to
     place migrated workloads on the correct storage tier.
   </Card>
   <Card title="Infrastructure Monitoring" icon="activity" href="/services/monitoring/index" color="#197560">

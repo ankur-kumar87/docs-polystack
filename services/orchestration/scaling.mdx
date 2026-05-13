@@ -1,6 +1,6 @@
 ---
 title: "Scaling the Orchestration Service"
-description: "Deploy multiple Xloud Orchestration engine workers, configure convergence mode, and tune performance settings for high-throughput template deployments."
+description: "Deploy multiple Polystack Orchestration engine workers, configure convergence mode, and tune performance settings for high-throughput template deployments."
 sidebarTitle: "Scaling the Service"
 ---
 
@@ -52,13 +52,13 @@ the message queue.
   </Tab>
   <Tab title="CLI" icon="terminal">
     ```bash title="Set engine workers in globals"
-    # Edit /etc/xavs/globals.d/_50_orchestration.yml
+    # Edit /etc/ironcore/globals.d/_50_orchestration.yml
     heat_engine_workers: 8      # Adjust based on controller CPU count
     heat_api_workers: 4
     ```
 
     ```bash title="Deploy to apply changes"
-    xavs-ansible deploy -t heat
+    ironcore-ansible deploy -t heat
     ```
   </Tab>
 </Tabs>

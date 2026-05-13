@@ -1,6 +1,6 @@
 ---
 title: "Block Storage Administration"
-description: "Configure and operate Xloud Block Storage — backends, volume types, storage tiers, quotas, encryption, and migration."
+description: "Configure and operate Polystack Block Storage — backends, volume types, storage tiers, quotas, encryption, and migration."
 sidebarTitle: "Admin Guide"
 mode: "wide"
 ---
@@ -9,7 +9,7 @@ import AdminWarning from '/snippets/admin-warning.mdx';
 
 <p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Overview</p>
 
-The Xloud Block Storage service delivers persistent block volumes to compute instances through a distributed architecture of API, scheduler, volume service, and backend driver components. As an administrator, you are responsible for configuring storage backends, defining volume types and QoS policies, managing storage tiers, enforcing project quotas, maintaining service health, and ensuring data security across your deployment.
+The Polystack Block Storage service delivers persistent block volumes to compute instances through a distributed architecture of API, scheduler, volume service, and backend driver components. As an administrator, you are responsible for configuring storage backends, defining volume types and QoS policies, managing storage tiers, enforcing project quotas, maintaining service health, and ensuring data security across your deployment.
 
 <AdminWarning />
 
@@ -40,7 +40,7 @@ The Xloud Block Storage service delivers persistent block volumes to compute ins
   </Tab>
   <Tab title="CLI" icon="terminal">
     Configure storage backends by editing `cinder.conf` directly at
-    `/etc/xavs/config/cinder/cinder.conf`. See the individual backend guides below
+    `/etc/ironcore/config/cinder/cinder.conf`. See the individual backend guides below
     for detailed configuration parameters.
   </Tab>
 </Tabs>

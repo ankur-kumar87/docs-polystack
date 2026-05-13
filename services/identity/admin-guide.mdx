@@ -1,6 +1,6 @@
 ---
 title: "Identity Administration"
-description: "Configure authentication backends, federation, LDAP, and access policies for Xloud Identity."
+description: "Configure authentication backends, federation, LDAP, and access policies for Polystack Identity."
 sidebarTitle: "Admin Guide"
 mode: "wide"
 ---
@@ -9,7 +9,7 @@ import AdminWarning from '/snippets/admin-warning.mdx';
 
 <p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Overview</p>
 
-Xloud Identity administration covers every layer of the authentication and authorization
+Polystack Identity administration covers every layer of the authentication and authorization
 stack — from the backend that validates credentials to the policies that govern what each
 role can do. Use the guides below to configure your deployment, manage domains, secure
 token issuance, and troubleshoot platform-level issues.
@@ -32,7 +32,7 @@ token issuance, and troubleshoot platform-level issues.
     Configure Fernet key rotation, token lifetime, and expiration policies.
   </Card>
   <Card title="Service Catalog" icon="list" href="/services/identity/service-catalog" color="#197560">
-    Manage endpoint registration for all Xloud services across regions and interfaces.
+    Manage endpoint registration for all Polystack services across regions and interfaces.
   </Card>
   <Card title="Federation" icon="link" href="/services/identity/federation" color="#197560">
     Integrate SAML 2.0 and OIDC identity providers for enterprise single sign-on.
@@ -57,7 +57,7 @@ token issuance, and troubleshoot platform-level issues.
 
 | Task | Command |
 |------|---------|
-| Rotate Fernet keys | `xavs-ansible deploy --tags keystone-fernet-rotate` |
+| Rotate Fernet keys | `ironcore-ansible deploy --tags keystone-fernet-rotate` |
 | List all domains | `openstack domain list` |
 | List all users | `openstack user list --domain Default` |
 | List all role assignments | `openstack role assignment list --names` |

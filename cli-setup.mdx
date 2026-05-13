@@ -1,26 +1,26 @@
 ---
 title: "CLI Setup"
-description: "Install and configure the command-line interface for managing Xloud Cloud Platform resources."
+description: "Install and configure the command-line interface for managing Polystack Cloud Platform resources."
 icon: "terminal"
 sidebarTitle: "CLI Setup"
 ---
 
 ## Overview
 
-The Xloud command-line interface gives you full control over every platform service directly from your terminal. With a single authenticated session you can provision instances, manage volumes, configure networks, and automate infrastructure workflows — without opening a browser. The CLI is compatible with all major operating systems and integrates cleanly into CI/CD pipelines and shell scripts.
+The Polystack command-line interface gives you full control over every platform service directly from your terminal. With a single authenticated session you can provision instances, manage volumes, configure networks, and automate infrastructure workflows — without opening a browser. The CLI is compatible with all major operating systems and integrates cleanly into CI/CD pipelines and shell scripts.
 
 <Note>
   **Prerequisites**
-  - An active Xloud account with project access
+  - An active Polystack account with project access
   - Python 3.8 or later installed on your workstation
-  - Network access to your Xloud API endpoint
+  - Network access to your Polystack API endpoint
 </Note>
 
 ---
 
 ## Installation
 
-Install the Xloud CLI using the package manager for your operating system.
+Install the Polystack CLI using the package manager for your operating system.
 
 <Tabs>
   <Tab title="Ubuntu / Debian" icon="server">
@@ -32,7 +32,7 @@ Install the Xloud CLI using the package manager for your operating system.
 
     <Tip>
       Install into a virtual environment to avoid conflicts with system Python packages:
-      `python3 -m venv ~/.xloud-cli && source ~/.xloud-cli/bin/activate && pip install python-openstackclient`
+      `python3 -m venv ~/.polystack-cli && source ~/.polystack-cli/bin/activate && pip install python-openstackclient`
     </Tip>
   </Tab>
   <Tab title="CentOS / RHEL" icon="server">
@@ -101,7 +101,7 @@ The CLI authenticates using an RC (credentials) file that sets environment varia
     export OS_USER_DOMAIN_NAME=Default
     export OS_REGION_NAME=RegionOne
     export OS_IDENTITY_API_VERSION=3
-    echo "Please enter your Xloud password for project $OS_PROJECT_NAME as user $OS_USERNAME:"
+    echo "Please enter your Polystack password for project $OS_PROJECT_NAME as user $OS_USERNAME:"
     read -sr OS_PASSWORD_INPUT
     export OS_PASSWORD=$OS_PASSWORD_INPUT
     ```
@@ -119,7 +119,7 @@ The CLI authenticates using an RC (credentials) file that sets environment varia
     source openrc.sh
     ```
 
-    Enter your Xloud account password when prompted.
+    Enter your Polystack account password when prompted.
   </Step>
   <Step title="Verify authentication" icon="circle-check">
     Confirm the CLI can authenticate successfully:
@@ -140,10 +140,10 @@ The CLI authenticates using an RC (credentials) file that sets environment varia
 
   | Variable | Purpose |
   |----------|---------|
-  | `OS_AUTH_URL` | Xloud Identity service endpoint |
+  | `OS_AUTH_URL` | Polystack Identity service endpoint |
   | `OS_PROJECT_NAME` | Target project for all operations |
   | `OS_PROJECT_DOMAIN_NAME` | Project domain (typically `Default`) |
-  | `OS_USERNAME` | Your Xloud account username |
+  | `OS_USERNAME` | Your Polystack account username |
   | `OS_USER_DOMAIN_NAME` | User domain (typically `Default`) |
   | `OS_REGION_NAME` | Target region for API calls |
   | `OS_IDENTITY_API_VERSION` | Identity API version (`3`) |
@@ -281,7 +281,7 @@ The CLI supports multiple output formats controlled by the `--format` flag.
 
     ```yaml title="~/.config/openstack/clouds.yaml"
     clouds:
-      xloud-prod:
+      polystack-prod:
         auth:
           auth_url: https://api.<your-domain>:5000/v3
           project_name: production
@@ -291,7 +291,7 @@ The CLI supports multiple output formats controlled by the `--format` flag.
           project_domain_name: Default
         region_name: RegionOne
         identity_api_version: 3
-      xloud-dev:
+      polystack-dev:
         auth:
           auth_url: https://api-dev.<your-domain>:5000/v3
           project_name: development
@@ -306,12 +306,12 @@ The CLI supports multiple output formats controlled by the `--format` flag.
     Switch between environments using `--os-cloud`:
 
     ```bash title="Use a named cloud profile"
-    openstack --os-cloud xloud-prod server list
-    openstack --os-cloud xloud-dev server list
+    openstack --os-cloud polystack-prod server list
+    openstack --os-cloud polystack-dev server list
     ```
 
     <Tip>
-      Set `OS_CLOUD=xloud-prod` in your shell to make a profile the default for all
+      Set `OS_CLOUD=polystack-prod` in your shell to make a profile the default for all
       commands in that session.
     </Tip>
   </Accordion>

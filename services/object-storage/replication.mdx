@@ -1,6 +1,6 @@
 ---
 title: "Object Storage Replication"
-description: "Monitor replication health in Xloud Object Storage — check replica consistency, manage quarantined objects, and verify data durability across storage nodes."
+description: "Monitor replication health in Polystack Object Storage — check replica consistency, manage quarantined objects, and verify data durability across storage nodes."
 sidebarTitle: "Replication"
 ---
 
@@ -21,11 +21,11 @@ replication health is essential for maintaining data durability guarantees.
 <Tabs>
   <Tab title="Cluster-wide status" icon="activity">
     ```bash title="Check replication status across all nodes"
-    xavs-storage-recon --replication
+    ironcore-storage-recon --replication
     ```
 
     ```bash title="Verbose replication check"
-    xavs-storage-recon --replication --verbose
+    ironcore-storage-recon --replication --verbose
     ```
 
     Key replication metrics:
@@ -38,20 +38,20 @@ replication health is essential for maintaining data durability guarantees.
   </Tab>
   <Tab title="Single node check" icon="server">
     ```bash title="Check replication on a specific storage node"
-    xavs-storage-recon --replication -v <storage-node-ip>
+    ironcore-storage-recon --replication -v <storage-node-ip>
     ```
   </Tab>
   <Tab title="Overall cluster health" icon="heart-pulse">
     ```bash title="Comprehensive cluster health check"
-    xavs-storage-recon --all
+    ironcore-storage-recon --all
     ```
 
     ```bash title="Disk usage across all nodes"
-    xavs-storage-recon --diskusage
+    ironcore-storage-recon --diskusage
     ```
 
     ```bash title="Check for quarantined objects"
-    xavs-storage-recon --quarantined
+    ironcore-storage-recon --quarantined
     ```
   </Tab>
 </Tabs>
@@ -72,11 +72,11 @@ reads until a healthy replica is served instead.
 </Warning>
 
 ```bash title="Check quarantine counts by node"
-xavs-storage-recon --quarantined --verbose
+ironcore-storage-recon --quarantined --verbose
 ```
 
 ```bash title="View quarantined objects on a node (SSH to node)"
-ls /var/lib/xavs-object-storage/quarantined/
+ls /var/lib/ironcore-object-storage/quarantined/
 ```
 
 If quarantine counts are high on a specific node:
@@ -102,7 +102,7 @@ changes:
 ```bash title="Temporarily increase replication concurrency (XDeploy config)"
 # Edit object storage configuration → replicator section
 # Set concurrency = 4, then deploy
-xavs-ansible deploy -t swift
+ironcore-ansible deploy -t swift
 ```
 
 ---

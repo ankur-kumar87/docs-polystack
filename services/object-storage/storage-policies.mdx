@@ -23,7 +23,7 @@ Storage policies define how object data is placed, replicated, and protected acr
 
 ## Policy Types
 
-Xloud Object Storage supports three storage policy types. Each maps to a distinct object ring file and enforces different data placement and durability behavior.
+Polystack Object Storage supports three storage policy types. Each maps to a distinct object ring file and enforces different data placement and durability behavior.
 
 <Tabs>
   <Tab title="Replication" icon="copy">
@@ -82,7 +82,7 @@ Xloud Object Storage supports three storage policy types. Each maps to a distinc
 
 ## Policy Configuration Reference
 
-Storage policies are defined in the Object Storage configuration managed by XDeploy. The configuration is applied during deployment via `xavs-ansible deploy -t swift`.
+Storage policies are defined in the Object Storage configuration managed by XDeploy. The configuration is applied during deployment via `ironcore-ansible deploy -t swift`.
 
 ```ini title="swift.conf — storage policy definition"
 [storage-policy:0]
@@ -186,7 +186,7 @@ ec_object_segment_size = 1048576
 
 ## S3 API Compatibility
 
-Xloud Object Storage exposes an S3-compatible API endpoint alongside the native Swift API. All storage policies are accessible via both APIs.
+Polystack Object Storage exposes an S3-compatible API endpoint alongside the native Swift API. All storage policies are accessible via both APIs.
 
 <Tabs>
   <Tab title="S3 API Access" icon="code">
@@ -204,7 +204,7 @@ Xloud Object Storage exposes an S3-compatible API endpoint alongside the native 
     ```
 
     <Info>
-      S3 bucket-to-policy mapping is configured by your administrator. Contact your Xloud
+      S3 bucket-to-policy mapping is configured by your administrator. Contact your Polystack
       administrator to assign a specific storage policy to S3 buckets, or use the Swift
       API to create containers with explicit policy selection.
     </Info>
@@ -246,14 +246,14 @@ Xloud Object Storage exposes an S3-compatible API endpoint alongside the native 
 
 ## Multi-Cloud Access Patterns
 
-Xloud Object Storage integrates with external cloud object storage providers. Tenant virtual machines can access multiple object storage systems using standard CLI tools and SDKs.
+Polystack Object Storage integrates with external cloud object storage providers. Tenant virtual machines can access multiple object storage systems using standard CLI tools and SDKs.
 
 <AccordionGroup>
   <Accordion title="Rclone — universal multi-cloud sync" icon="refresh-cw">
-    Rclone provides a unified interface for Xloud Object Storage, AWS S3, Google Cloud Storage, and Azure Blob Storage.
+    Rclone provides a unified interface for Polystack Object Storage, AWS S3, Google Cloud Storage, and Azure Blob Storage.
 
-    ```bash title="Configure Rclone for Xloud Object Storage"
-    rclone config create xloud-swift swift \
+    ```bash title="Configure Rclone for Polystack Object Storage"
+    rclone config create polystack-swift swift \
       auth https://identity.<your-domain>/v3 \
       user myuser \
       key mypassword \
@@ -261,19 +261,19 @@ Xloud Object Storage integrates with external cloud object storage providers. Te
       auth_version 3
     ```
 
-    ```bash title="Sync from AWS S3 to Xloud Object Storage"
-    rclone sync s3:my-aws-bucket xloud-swift:my-local-container
+    ```bash title="Sync from AWS S3 to Polystack Object Storage"
+    rclone sync s3:my-aws-bucket polystack-swift:my-local-container
     ```
 
-    ```bash title="Mount Xloud container as local filesystem"
-    rclone mount xloud-swift:my-container /mnt/xloud-storage \
+    ```bash title="Mount Polystack container as local filesystem"
+    rclone mount polystack-swift:my-container /mnt/polystack-storage \
       --vfs-cache-mode writes &
     ```
   </Accordion>
   <Accordion title="AWS CLI — S3-compatible access" icon="cloud">
-    The AWS CLI connects to the Xloud S3-compatible endpoint using standard credentials.
+    The AWS CLI connects to the Polystack S3-compatible endpoint using standard credentials.
 
-    ```bash title="Configure AWS CLI for Xloud S3 endpoint"
+    ```bash title="Configure AWS CLI for Polystack S3 endpoint"
     aws configure set aws_access_key_id YOUR_ACCESS_KEY
     aws configure set aws_secret_access_key YOUR_SECRET_KEY
     aws configure set default.region us-east-1
@@ -283,13 +283,13 @@ Xloud Object Storage integrates with external cloud object storage providers. Te
     aws s3 ls --endpoint-url https://object.<your-domain>
     ```
 
-    ```bash title="Sync local directory to Xloud"
+    ```bash title="Sync local directory to Polystack"
     aws s3 sync ./backup/ s3://my-backup-bucket \
       --endpoint-url https://object.<your-domain>
     ```
   </Accordion>
   <Accordion title="Python boto3 — programmatic access" icon="code">
-    ```python title="boto3 client for Xloud S3-compatible endpoint"
+    ```python title="boto3 client for Polystack S3-compatible endpoint"
     import boto3
 
     client = boto3.client(
@@ -310,7 +310,7 @@ Xloud Object Storage integrates with external cloud object storage providers. Te
     ```
   </Accordion>
   <Accordion title="Glance integration — image backend" icon="disc">
-    Xloud Image Service can store VM images and snapshots directly in Object Storage, eliminating local disk requirements on the image service nodes.
+    Polystack Image Service can store VM images and snapshots directly in Object Storage, eliminating local disk requirements on the image service nodes.
 
     ```ini title="glance-api.conf — Swift backend"
     [glance_store]
@@ -348,7 +348,7 @@ Mark a policy as deprecated to prevent new containers from using it while mainta
 ```bash title="Deprecate a policy via XDeploy configuration"
 # In the XDeploy Object Storage configuration:
 # Set deprecated = yes on the target policy section
-# Redeploy: xavs-ansible deploy -t swift
+# Redeploy: ironcore-ansible deploy -t swift
 ```
 
 <Info>

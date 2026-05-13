@@ -13,7 +13,7 @@ standardized instances with consistent configurations across your projects.
 Templates appear in the dedicated **Compute > VM Templates** page, separate from
 regular images and snapshots.
 
-<Info>**Xloud-Developed** — VM Templates are developed by Xloud and ship with XAVS / XPCI.</Info>
+<Info>**Polystack-Developed** — VM Templates are developed by Polystack and ship with Ironcore / XPCI.</Info>
 
 <Note>
   **Prerequisites**
@@ -26,7 +26,7 @@ regular images and snapshots.
 ## What a VM Template Is
 
 A VM Template is a **first-class template object surfaced in the Dashboard**,
-implemented on top of the Image Service with a `xloud_template=true` discriminator
+implemented on top of the Image Service with a `polystack_template=true` discriminator
 and captured config metadata. It is more than a snapshot used as a base image — it
 also carries the surrounding launch context.
 
@@ -47,9 +47,9 @@ action re-applies all of it in one click.
 
 <Info>
   **Implementation note** — under the hood, a VM Template is stored in the Image
-  Service like any other image, marked with `xloud_template=true` plus the captured
+  Service like any other image, marked with `polystack_template=true` plus the captured
   config metadata. Operators can list templates from the CLI with
-  `openstack image list --property xloud_template=true`. The same storage backend,
+  `openstack image list --property polystack_template=true`. The same storage backend,
   RBAC privileges, and quotas that apply to images apply to templates — there is
   no separate subsystem to learn.
 </Info>
@@ -88,7 +88,7 @@ action re-applies all of it in one click.
     ```
 
     ```bash title="List all VM templates"
-    openstack image list --property xloud_template=true
+    openstack image list --property polystack_template=true
     ```
 
     ```bash title="Show template details"
@@ -155,13 +155,13 @@ There are two ways to create a template:
     source openrc.sh
     ```
 
-    Template creation uses the Xloud-developed Nova API extension:
+    Template creation uses the Polystack-developed Nova API extension:
 
     ```bash title="Create a template from an instance"
     curl -X POST -H "X-Auth-Token: $TOKEN" \
       -H "Content-Type: application/json" \
       -d '{
-        "xloud-convert-template": {
+        "polystack-convert-template": {
           "name": "ubuntu-web-template",
           "version": "1.0",
           "category": "web-server",
@@ -236,7 +236,7 @@ the same as above except the source instance is pre-selected.
     import sys, json
     img = json.load(sys.stdin)
     for k, v in sorted(img.items()):
-        if k.startswith('xloud_template_'):
+        if k.startswith('polystack_template_'):
             print(f'{k}: {v}')
     "
     ```
@@ -282,9 +282,9 @@ the same as above except the source instance is pre-selected.
       openstack image show <TEMPLATE_ID> -c properties -f json | python3 -c "
       import sys, json
       props = json.load(sys.stdin)['properties']
-      print(f'Flavor: {props.get(\"xloud_template_flavor_name\", \"N/A\")}')
-      print(f'Network: {props.get(\"xloud_template_network_name\", \"N/A\")}')
-      print(f'Keypair: {props.get(\"xloud_template_keypair\", \"N/A\")}')
+      print(f'Flavor: {props.get(\"polystack_template_flavor_name\", \"N/A\")}')
+      print(f'Network: {props.get(\"polystack_template_network_name\", \"N/A\")}')
+      print(f'Keypair: {props.get(\"polystack_template_keypair\", \"N/A\")}')
       "
       ```
     </Tip>
@@ -314,8 +314,8 @@ the same as above except the source instance is pre-selected.
   <Tab title="CLI" icon="terminal">
     ```bash title="Update template metadata"
     openstack image set \
-      --property xloud_template_version="2.0" \
-      --property xloud_template_category="web-server" \
+      --property polystack_template_version="2.0" \
+      --property polystack_template_category="web-server" \
       <TEMPLATE_ID>
     ```
   </Tab>

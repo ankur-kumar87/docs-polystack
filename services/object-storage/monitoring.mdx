@@ -1,6 +1,6 @@
 ---
 title: "Object Storage Monitoring"
-description: "Monitor Xloud Object Storage cluster health — track capacity utilization, proxy request metrics, replication latency, and quarantined object counts."
+description: "Monitor Polystack Object Storage cluster health — track capacity utilization, proxy request metrics, replication latency, and quarantined object counts."
 sidebarTitle: "Monitoring"
 ---
 
@@ -21,7 +21,7 @@ key metrics and commands for ongoing operational visibility.
 <Tabs>
   <Tab title="Capacity overview" icon="database">
     ```bash title="Storage capacity across all nodes"
-    xavs-storage-recon --diskusage --verbose
+    ironcore-storage-recon --diskusage --verbose
     ```
 
     Capacity thresholds:
@@ -40,7 +40,7 @@ key metrics and commands for ongoing operational visibility.
   </Tab>
   <Tab title="Per-node usage" icon="hard-drive">
     ```bash title="Disk usage summary per node"
-    xavs-storage-recon --diskusage
+    ironcore-storage-recon --diskusage
     ```
 
     The output shows each node's total capacity, used bytes, and percentage utilized.
@@ -87,15 +87,15 @@ key metrics and commands for ongoing operational visibility.
 ## Replication Health
 
 ```bash title="Replication status across all nodes"
-xavs-storage-recon --replication
+ironcore-storage-recon --replication
 ```
 
 ```bash title="Check for quarantined (corrupted) objects"
-xavs-storage-recon --quarantined
+ironcore-storage-recon --quarantined
 ```
 
 ```bash title="Verify ring file consistency across nodes"
-xavs-storage-recon --md5
+ironcore-storage-recon --md5
 ```
 
 Replication health alerts:
@@ -112,11 +112,11 @@ Replication health alerts:
 ## Integration with XIMP
 
 For continuous monitoring, connect the object storage recon endpoint to XIMP
-(Xloud Infrastructure Monitoring Platform):
+(Polystack Infrastructure Monitoring Platform):
 
 ```yaml title="Prometheus scrape config for object storage"
 scrape_configs:
-  - job_name: 'xavs-object-storage-recon'
+  - job_name: 'ironcore-object-storage-recon'
     static_configs:
       - targets: ['<proxy-node-1>:6000', '<proxy-node-2>:6000']
     metrics_path: '/recon/metrics'

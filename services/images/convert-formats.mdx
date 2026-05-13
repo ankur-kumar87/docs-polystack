@@ -1,15 +1,15 @@
 ---
 title: "Convert Image Formats"
-description: "Convert virtual machine images between QCOW2, RAW, VMDK, VHD, and VDI formats using qemu-img before uploading to Xloud."
+description: "Convert virtual machine images between QCOW2, RAW, VMDK, VHD, and VDI formats using qemu-img before uploading to Polystack."
 sidebarTitle: "Convert Formats"
 ---
 
 ## Overview
 
 Images obtained from VMware, VirtualBox, Hyper-V, or other virtualization platforms use
-formats that differ from what Xloud Compute expects. The `qemu-img` tool converts between
+formats that differ from what Polystack Compute expects. The `qemu-img` tool converts between
 all major disk image formats quickly and without data loss. QCOW2 is the recommended
-format for Xloud — it provides compression, snapshot support, and efficient sparse storage.
+format for Polystack — it provides compression, snapshot support, and efficient sparse storage.
 
 <Note>
   **Prerequisites**
@@ -24,7 +24,7 @@ format for Xloud — it provides compression, snapshot support, and efficient sp
 
 | Format | Extension | Description | Use Case |
 |---|---|---|---|
-| **QCOW2** | `.qcow2` | Compressed, sparse, copy-on-write | Recommended for Xloud — best balance of size and performance |
+| **QCOW2** | `.qcow2` | Compressed, sparse, copy-on-write | Recommended for Polystack — best balance of size and performance |
 | **RAW** | `.img`, `.raw` | Uncompressed, full disk image | Maximum I/O performance; large file size |
 | **VMDK** | `.vmdk` | VMware native format | Import from VMware ESXi or Workstation |
 | **VHD / VHDX** | `.vhd`, `.vhdx` | Hyper-V / Azure native format | Import from Hyper-V or Microsoft Azure |
@@ -185,7 +185,7 @@ cluster_size: 65536
 
 ## Validation
 
-After conversion, perform a consistency check before uploading to Xloud:
+After conversion, perform a consistency check before uploading to Polystack:
 
 ```bash title="Check image integrity"
 qemu-img check output-image.qcow2
@@ -208,10 +208,10 @@ No errors were found on the image.
 
 <CardGroup cols={2}>
   <Card title="Upload an Image" href="/services/images/upload-image" color="#197560">
-    Upload the converted QCOW2 image to the Xloud Image Service.
+    Upload the converted QCOW2 image to the Polystack Image Service.
   </Card>
   <Card title="Image Requirements" href="/services/images/image-requirements" color="#197560">
-    Verify the image meets all Xloud Compute compatibility requirements.
+    Verify the image meets all Polystack Compute compatibility requirements.
   </Card>
   <Card title="Modify Images" href="/services/images/modify-images" color="#197560">
     Customize images with additional packages and configuration before uploading.

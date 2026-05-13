@@ -1,6 +1,6 @@
 ---
 title: "Kubernetes Security"
-description: "Secure Xloud K8SaaS deployments — TLS configuration, Kubernetes RBAC enforcement, node security groups, and hardened node image practices."
+description: "Secure Polystack K8SaaS deployments — TLS configuration, Kubernetes RBAC enforcement, node security groups, and hardened node image practices."
 sidebarTitle: "Security"
 ---
 
@@ -36,7 +36,7 @@ CA generated at provisioning time.
     and has not expired.
   </Accordion>
   <Accordion title="Key Management integration" icon="key">
-    Enable Xloud Key Management to store CA private keys outside the K8SaaS database.
+    Enable Polystack Key Management to store CA private keys outside the K8SaaS database.
     This prevents CA private keys from being accessible to anyone with database
     read access.
 
@@ -65,7 +65,7 @@ CA generated at provisioning time.
         </Steps>
       </Tab>
       <Tab title="CLI" icon="terminal">
-        ```ini title="/etc/xavs/kubernetes/kubernetes.conf"
+        ```ini title="/etc/ironcore/kubernetes/kubernetes.conf"
         [certificate]
         cert_manager_type = barbican
         ```
@@ -187,7 +187,7 @@ Use CIS-benchmarked or hardened node images for production cluster templates.
     Master API port 6443 is restricted to management CIDR only.
   </Step>
   <Step title="Key Management configured" icon="key">
-    CA private keys stored in Xloud Key Management, not the K8SaaS database.
+    CA private keys stored in Polystack Key Management, not the K8SaaS database.
   </Step>
 </Steps>
 
@@ -206,6 +206,6 @@ Use CIS-benchmarked or hardened node images for production cluster templates.
     Configure Calico for NetworkPolicy enforcement in production clusters.
   </Card>
   <Card title="Key Manager" href="/services/key-manager" color="#197560">
-    Configure Xloud Key Management for cluster CA storage.
+    Configure Polystack Key Management for cluster CA storage.
   </Card>
 </CardGroup>

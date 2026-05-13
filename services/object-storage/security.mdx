@@ -1,6 +1,6 @@
 ---
 title: "Object Storage Security"
-description: "Harden Xloud Object Storage — enforce TLS on proxy nodes, rotate temp URL keys, configure audit logging, and govern cross-project container access."
+description: "Harden Polystack Object Storage — enforce TLS on proxy nodes, rotate temp URL keys, configure audit logging, and govern cross-project container access."
 sidebarTitle: "Security"
 ---
 
@@ -22,7 +22,7 @@ This guide covers the key hardening areas for platform administrators.
   <Accordion title="TLS enforcement on proxy nodes" icon="lock" defaultOpen>
     All proxy-server endpoints must use TLS:
 
-    - Configure the proxy-server with SSL certificates issued through Xloud Key Manager
+    - Configure the proxy-server with SSL certificates issued through Polystack Key Manager
     - Disable plain HTTP access at the load balancer frontend — redirect all port 80
       traffic to 443
     - Set HSTS headers in the proxy pipeline:

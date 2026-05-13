@@ -54,11 +54,11 @@ All replication traffic between primary and DR sites is encrypted in transit.
   </Accordion>
   <Accordion title="Encryption at rest" icon="hard-drive">
     Replicated data at rest on the DR site is encrypted using the same storage
-    encryption policy as the primary site. Configure encryption at rest in XSDS
+    encryption policy as the primary site. Configure encryption at rest in Software-Defined-Storage
     at the pool or volume level — XDR inherits the encryption status of the
     source volumes.
 
-    See [XSDS Admin — Security](/services/sds/admin-guide/security) for storage
+    See [Software-Defined-Storage Admin — Security](/services/sds/admin-guide/security) for storage
     encryption configuration.
   </Accordion>
 </AccordionGroup>
@@ -67,7 +67,7 @@ All replication traffic between primary and DR sites is encrypted in transit.
 
 ## RBAC Access Control
 
-XDR operations are governed by Xloud identity roles. Failover and failback are
+XDR operations are governed by Polystack identity roles. Failover and failback are
 potentially disruptive operations — restrict them to trained personnel.
 
 | Role | Permissions |
@@ -87,14 +87,14 @@ potentially disruptive operations — restrict them to trained personnel.
   </Tab>
   <Tab title="CLI" icon="terminal">
     ```bash title="Assign dr-operator role to a user"
-    xloud role add \
+    polystack role add \
       --user operator@example.com \
       --role dr-operator \
       --project prod-project
     ```
 
     ```bash title="List users with DR roles"
-    xloud role list \
+    polystack role list \
       --role dr-operator \
       --project prod-project
     ```
@@ -181,10 +181,10 @@ to verify that only the required replication ports are accessible between sites.
   <Card title="Compliance" href="/services/disaster-recovery/admin-guide/compliance" color="#197560">
     Export audit logs for compliance reporting
   </Card>
-  <Card title="XSDS Admin — Security" href="/services/sds/admin-guide/security" color="#197560">
+  <Card title="Software-Defined-Storage Admin — Security" href="/services/sds/admin-guide/security" color="#197560">
     Configure storage encryption that XDR inherits
   </Card>
   <Card title="Identity & Access Admin Guide" href="/services/identity/admin-guide" color="#197560">
-    Manage Xloud RBAC roles and identity federation
+    Manage Polystack RBAC roles and identity federation
   </Card>
 </CardGroup>

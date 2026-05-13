@@ -1,12 +1,12 @@
 ---
-title: "Auto-Scaling with Xloud Orchestration"
+title: "Auto-Scaling with Polystack Orchestration"
 description: "Configure auto-scaling groups with Heat templates. Scale instances based on Prometheus metrics and webhooks."
 sidebarTitle: "Auto-Scaling"
 ---
 
 ## Overview
 
-Xloud Orchestration provides native auto-scaling through three coordinated resource types: a
+Polystack Orchestration provides native auto-scaling through three coordinated resource types: a
 <Tooltip tip="A managed group of identical instances that can scale in or out as a unit.">scaling group</Tooltip>,
 a scaling policy, and an alarm trigger. When a metric threshold is breached — such as CPU
 utilization exceeding 80% — the alarm fires a webhook that activates the scaling policy, which
@@ -18,7 +18,7 @@ support for multi-dimensional labels, alerting rules, and long-retention storage
 
 <Note>
   **Prerequisites**
-  - Xloud Orchestration enabled in your project
+  - Polystack Orchestration enabled in your project
   - A compatible image and flavor for scaled instances
   - Prometheus deployed and scraping compute metrics ([see Prometheus integration](/integrations/prometheus))
   - Basic familiarity with [orchestration templates](/services/orchestration/template-guide)
@@ -480,7 +480,7 @@ Cooldown prevents rapid successive scaling events from destabilizing your worklo
   <Card title="Prometheus Integration" href="/integrations/prometheus" color="#197560">
     Configure Prometheus scrape targets and alert rules for scaling triggers
   </Card>
-  <Card title="Xloud Load Balancer" href="/services/load-balancer" color="#197560">
+  <Card title="Polystack Load Balancer" href="/services/load-balancer" color="#197560">
     Front auto-scaling groups with a load balancer for traffic distribution
   </Card>
 </CardGroup>

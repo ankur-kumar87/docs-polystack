@@ -1,18 +1,18 @@
 ---
 title: "Kubernetes as a Service"
-description: "Deploy and manage production-grade Kubernetes clusters on Xloud infrastructure — automated provisioning, scaling, and lifecycle management for."
+description: "Deploy and manage production-grade Kubernetes clusters on Polystack infrastructure — automated provisioning, scaling, and lifecycle management for."
 icon: "container"
 sidebarTitle: "Kubernetes (K8SaaS)"
 mode: "wide"
 ---
 
-Deploy and manage production-grade Kubernetes clusters directly on your Xloud private
-cloud. Xloud Kubernetes as a Service (K8SaaS) automates cluster provisioning, node
+Deploy and manage production-grade Kubernetes clusters directly on your Polystack private
+cloud. Polystack Kubernetes as a Service (K8SaaS) automates cluster provisioning, node
 scaling, certificate management, and upgrades — giving teams a fully managed Kubernetes
 experience on dedicated infrastructure.
 
-<Card title="XAVS — Advanced Virtualization Solutions" icon="external-link" href="https://xloud.tech/xavs" color="#197560" horizontal>
-  Product details on xloud.tech
+<Card title="Ironcore — Advanced Virtualization Solutions" icon="external-link" href="https://polystack.tech/ironcore" color="#197560" horizontal>
+  Product details on polystack.tech
 </Card>
 
 ---
@@ -33,7 +33,7 @@ experience on dedicated infrastructure.
     kubeconfig files using the openstack CLI.
   </Card>
   <Card title="Compute Service" icon="server" href="/services/compute" color="#197560">
-    Xloud Compute provides the virtual machine instances that form Kubernetes master
+    Polystack Compute provides the virtual machine instances that form Kubernetes master
     and worker nodes.
   </Card>
 </CardGroup>
@@ -77,10 +77,10 @@ experience on dedicated infrastructure.
 ```mermaid
 graph TD
     U[User / Dashboard] -->|Create cluster| API[K8SaaS API]
-    API -->|Provision stack| ORCH[Xloud Orchestration]
-    ORCH -->|Launch VMs| COMPUTE[Xloud Compute]
-    ORCH -->|Allocate VIPs| LB[Xloud Load Balancer]
-    ORCH -->|Assign DNS| DNS[Xloud DNS]
+    API -->|Provision stack| ORCH[Polystack Orchestration]
+    ORCH -->|Launch VMs| COMPUTE[Polystack Compute]
+    ORCH -->|Allocate VIPs| LB[Polystack Load Balancer]
+    ORCH -->|Assign DNS| DNS[Polystack DNS]
     COMPUTE -->|Master nodes| MASTER[Control Plane VMs]
     COMPUTE -->|Worker nodes| WORKER[Worker Node VMs]
     MASTER -->|Join cluster| K8S[Kubernetes API Server]
@@ -108,22 +108,22 @@ graph TD
 <p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Related Services</p>
 
 <CardGroup cols={3}>
-  <Card title="Xloud Compute" icon="server" href="/services/compute" color="#197560">
+  <Card title="Polystack Compute" icon="server" href="/services/compute" color="#197560">
     Virtual machine instances that run Kubernetes master and worker nodes
   </Card>
-  <Card title="Xloud Load Balancer" icon="combine" href="/services/load-balancer" color="#197560">
+  <Card title="Polystack Load Balancer" icon="combine" href="/services/load-balancer" color="#197560">
     API server and service load balancing for Kubernetes clusters
   </Card>
-  <Card title="Xloud Networking" icon="network" href="/services/networking/index" color="#197560">
+  <Card title="Polystack Networking" icon="network" href="/services/networking/index" color="#197560">
     Tenant networks, floating IPs, and security groups for cluster nodes
   </Card>
-  <Card title="Xloud Block Storage" icon="hard-drive" href="/services/storage/index" color="#197560">
-    Persistent volume claims backed by Xloud block storage
+  <Card title="Polystack Block Storage" icon="hard-drive" href="/services/storage/index" color="#197560">
+    Persistent volume claims backed by Polystack block storage
   </Card>
-  <Card title="Xloud DNS" icon="globe" href="/services/dns" color="#197560">
+  <Card title="Polystack DNS" icon="globe" href="/services/dns" color="#197560">
     DNS records for Kubernetes ingress and service endpoints
   </Card>
-  <Card title="Xloud Key Management" icon="lock" href="/services/key-manager" color="#197560">
+  <Card title="Polystack Key Management" icon="lock" href="/services/key-manager" color="#197560">
     Secrets management for cluster certificates and service credentials
   </Card>
 </CardGroup>

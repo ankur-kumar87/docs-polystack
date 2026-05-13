@@ -1,6 +1,6 @@
 ---
 title: "Security"
-description: "Secure XIMP with agent token management, dashboard role-based access control via Xloud identity, and TLS certificate lifecycle management."
+description: "Secure XIMP with agent token management, dashboard role-based access control via Polystack identity, and TLS certificate lifecycle management."
 sidebarTitle: "Security"
 ---
 
@@ -9,7 +9,7 @@ import AdminWarning from '/snippets/admin-warning.mdx';
 ## Overview
 
 XIMP security encompasses agent authentication via per-node tokens, dashboard access
-control through Xloud identity roles, and TLS certificate lifecycle management for
+control through Polystack identity roles, and TLS certificate lifecycle management for
 all platform communications.
 
 <AdminWarning />
@@ -80,7 +80,7 @@ suspected compromised.
 
 ## Dashboard Access Control
 
-XIMP dashboard access is controlled through Xloud identity roles. Assign roles
+XIMP dashboard access is controlled through Polystack identity roles. Assign roles
 based on job function to enforce least-privilege access.
 
 | Role | Access Level | Typical Assignees |
@@ -150,7 +150,7 @@ Certificates are managed by XDeploy and renewed automatically 30 days before exp
   <Card title="Troubleshooting" href="/services/monitoring/admin-guide/troubleshooting" color="#197560">
     Diagnose TLS and authentication errors
   </Card>
-  <Card title="Xloud Identity" href="/services/identity/admin-guide" color="#197560">
-    Manage the Xloud identity roles used for XIMP access control
+  <Card title="Polystack Identity" href="/services/identity/admin-guide" color="#197560">
+    Manage the Polystack identity roles used for XIMP access control
   </Card>
 </CardGroup>

@@ -1,6 +1,6 @@
 ---
 title: "Floating IP Assignment"
-description: "Expose your Xloud Load Balancer VIP on a public network by associating a floating IP for external client access."
+description: "Expose your Polystack Load Balancer VIP on a public network by associating a floating IP for external client access."
 sidebarTitle: "Floating IP"
 ---
 
@@ -128,8 +128,8 @@ curl -v https://<floating-ip-address>/health
 Map a domain name to the floating IP for production services:
 
 <Tabs>
-  <Tab title="Xloud DNS" icon="globe">
-    If using Xloud DNS, create an A record pointing to the floating IP:
+  <Tab title="Polystack DNS" icon="globe">
+    If using Polystack DNS, create an A record pointing to the floating IP:
     ```bash title="Create DNS A record"
     openstack recordset create \
       --type A \
@@ -138,7 +138,7 @@ Map a domain name to the floating IP for production services:
       example.com. \
       api.example.com.
     ```
-    See the [Xloud DNS guide](/services/dns) for full DNS management instructions.
+    See the [Polystack DNS guide](/services/dns) for full DNS management instructions.
   </Tab>
   <Tab title="External DNS" icon="network">
     Point your external DNS provider's A record for your domain to the floating IP address.
@@ -154,10 +154,10 @@ Map a domain name to the floating IP for production services:
   <Card title="Listeners" href="/services/load-balancer/listeners" color="#197560">
     Add HTTPS termination to your listener before exposing it publicly.
   </Card>
-  <Card title="Xloud DNS" href="/services/dns" color="#197560">
+  <Card title="Polystack DNS" href="/services/dns" color="#197560">
     Create DNS records pointing to your load balancer floating IP.
   </Card>
-  <Card title="Xloud Key Manager" href="/services/key-manager" color="#197560">
+  <Card title="Polystack Key Manager" href="/services/key-manager" color="#197560">
     Store TLS certificates used by HTTPS listeners.
   </Card>
   <Card title="Troubleshooting" href="/services/load-balancer/troubleshooting" color="#197560">

@@ -27,8 +27,8 @@ The `cinder-backup` service writes volume data to a configurable backup target t
 
 | Backend | Driver | Best For | Incremental | HA |
 |---------|--------|---------|-------------|-----|
-| **Ceph RBD** | `ceph.CephBackupDriver` | XAVS deployments — fast, native, incremental | Yes | Yes |
-| **Swift** | `swift.SwiftBackupDriver` | Built-in Xloud Object Storage | Yes | Yes |
+| **Ceph RBD** | `ceph.CephBackupDriver` | Ironcore deployments — fast, native, incremental | Yes | Yes |
+| **Swift** | `swift.SwiftBackupDriver` | Built-in Polystack Object Storage | Yes | Yes |
 | **S3-compatible** | `s3.S3BackupDriver` | AWS S3, Ceph RGW, MinIO, Wasabi, Dell ECS | Yes | Yes |
 | **NFS** | `nfs.NFSBackupDriver` | Existing NAS/NFS infrastructure | Yes | Depends |
 | **Google Cloud Storage** | `gcs.GoogleBackupDriver` | Off-site cloud backup to GCS | Yes | Yes |
@@ -45,7 +45,7 @@ The `cinder-backup` service writes volume data to a configurable backup target t
 
 <Tabs>
   <Tab title="Ceph RBD" icon="database">
-    The Ceph backup driver is the **recommended backend for XAVS deployments**. It stores backups as RBD images in a dedicated Ceph pool and supports differential (incremental) backups — only changed blocks transfer after the first full backup. When both the volume backend and backup backend are Ceph, data is copied server-side without passing through the backup service node, dramatically reducing backup time and network load.
+    The Ceph backup driver is the **recommended backend for Ironcore deployments**. It stores backups as RBD images in a dedicated Ceph pool and supports differential (incremental) backups — only changed blocks transfer after the first full backup. When both the volume backend and backup backend are Ceph, data is copied server-side without passing through the backup service node, dramatically reducing backup time and network load.
 
     ```ini title="cinder.conf — Ceph RBD backup backend"
     [DEFAULT]
@@ -90,7 +90,7 @@ The `cinder-backup` service writes volume data to a configurable backup target t
   </Tab>
 
   <Tab title="Swift" icon="box">
-    The Swift backup driver stores volume backup data as objects in an Xloud Object Storage container. Each backup is split into chunks stored as individual objects. Swift's built-in replication provides durability. Supports auth versions 1, 2, and 3.
+    The Swift backup driver stores volume backup data as objects in an Polystack Object Storage container. Each backup is split into chunks stored as individual objects. Swift's built-in replication provides durability. Supports auth versions 1, 2, and 3.
 
     ```ini title="cinder.conf — Swift backup backend"
     [DEFAULT]
@@ -344,10 +344,10 @@ The `cinder-backup` service writes volume data to a configurable backup target t
 
 ## Apply Backup Backend Configuration
 
-In XAVS deployments, backup backend settings are configured through XDeploy and applied via Ansible. Do not edit `cinder.conf` directly on production nodes.
+In Ironcore deployments, backup backend settings are configured through XDeploy and applied via Ansible. Do not edit `cinder.conf` directly on production nodes.
 
 ```bash title="Apply backup configuration changes"
-xavs-ansible deploy --tags cinder
+ironcore-ansible deploy --tags cinder
 ```
 
 After deployment, verify the backup service is running:
@@ -432,7 +432,7 @@ openstack volume service list --service cinder-backup
     - **Authentication failure** — verify credentials (Swift/S3/GCS) are correct and the service user has access to the bucket/container
     - **NFS/GlusterFS mount failure** — verify the share is reachable and exported with write permission: `mount -t nfs <server>:<share> /mnt/test`
     - **Ceph connectivity** — verify the keyring and ceph.conf are correct: `ceph --user cinder-backup -s`
-    - **Container not started** — restart the backup service: `xavs-ansible deploy --tags cinder`
+    - **Container not started** — restart the backup service: `ironcore-ansible deploy --tags cinder`
   </Accordion>
   <Accordion title="Backup stuck in 'creating' status" icon="clock">
     **Cause**: Backup target is unreachable, slow, or the service is under load.

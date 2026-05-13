@@ -1,6 +1,6 @@
 ---
 title: "Image Service Architecture"
-description: "Understand the Xloud Image Service topology, storage backend options, and the upload and download data flow."
+description: "Understand the Polystack Image Service topology, storage backend options, and the upload and download data flow."
 sidebarTitle: "Architecture"
 ---
 
@@ -8,7 +8,7 @@ import AdminWarning from '/snippets/admin-warning.mdx';
 
 ## Overview
 
-The Xloud Image Service consists of an API tier, a registry database, and a pluggable
+The Polystack Image Service consists of an API tier, a registry database, and a pluggable
 storage backend. Upload and download traffic flows through the API, while metadata queries
 are handled by the registry backed by MariaDB. Understanding the architecture is essential
 for sizing deployments, selecting the right storage backend, and troubleshooting
@@ -30,8 +30,8 @@ graph TD
     G1 --> STORE[Storage Backend]
     G2 --> STORE
     STORE --> FILE[File Store<br/>/var/lib/glance/images]
-    STORE --> RBD[Xloud Distributed Storage<br/>RBD pool]
-    STORE --> SWIFT[Xloud Object Storage<br/>Swift container]
+    STORE --> RBD[Polystack Distributed Storage<br/>RBD pool]
+    STORE --> SWIFT[Polystack Object Storage<br/>Swift container]
     G1 --> CACHE[Image Cache<br/>optional per-node]
     style HAP fill:#197560,color:#fff
     style G1 fill:#3F8F7E,color:#fff
@@ -50,8 +50,8 @@ graph TD
 | HAProxy | 9292 | Load balances requests across all Image API nodes |
 | Registry | Internal | Stores image metadata in MariaDB |
 | File Store | — | Local filesystem storage (single-node or NFS) |
-| RBD Store | — | Xloud Distributed Storage (Ceph RBD) — recommended for HA |
-| Object Store | — | Xloud Object Storage (Swift) |
+| RBD Store | — | Polystack Distributed Storage (Ceph RBD) — recommended for HA |
+| Object Store | — | Polystack Object Storage (Swift) |
 | Image Cache | — | Optional local cache of frequently used image data |
 
 ---
@@ -90,7 +90,7 @@ sequenceDiagram
 | **Object Storage** | Yes | Moderate | When Swift is already deployed |
 
 <Tip>
-  For production deployments with Xloud Distributed Storage, use RBD as both the image
+  For production deployments with Polystack Distributed Storage, use RBD as both the image
   and volume backend. This enables zero-copy RBD cloning — instances launch in seconds
   regardless of image size.
 </Tip>

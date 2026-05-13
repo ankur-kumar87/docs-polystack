@@ -1,6 +1,6 @@
 ---
 title: "External Storage Integration"
-description: "Connect Xloud Block Storage to enterprise storage backends including NetApp, Pure Storage, Dell, HPE, Hitachi, IBM, and Ceph RBD."
+description: "Connect Polystack Block Storage to enterprise storage backends including NetApp, Pure Storage, Dell, HPE, Hitachi, IBM, and Ceph RBD."
 sidebarTitle: "External Storage"
 ---
 
@@ -9,7 +9,7 @@ import CliAuth from '/snippets/cli-auth.mdx';
 
 ## Overview
 
-Xloud Block Storage connects to a broad range of enterprise storage platforms through a pluggable driver architecture. Each backend is configured as a named section in `cinder.conf`, registered with the scheduler, and exposed to tenants as one or more volume types. Multiple backends can run simultaneously, enabling tiered storage, vendor-specific pools, and failover configurations within a single environment.
+Polystack Block Storage connects to a broad range of enterprise storage platforms through a pluggable driver architecture. Each backend is configured as a named section in `cinder.conf`, registered with the scheduler, and exposed to tenants as one or more volume types. Multiple backends can run simultaneously, enabling tiered storage, vendor-specific pools, and failover configurations within a single environment.
 
 <AdminWarning />
 
@@ -27,7 +27,7 @@ Xloud Block Storage connects to a broad range of enterprise storage platforms th
 
 | Backend | Protocol | Use Case | HA |
 |---------|----------|----------|----|
-| **Ceph RBD** | RBD | Production — native to XAVS, zero-copy clones | Yes |
+| **Ceph RBD** | RBD | Production — native to Ironcore, zero-copy clones | Yes |
 | **NetApp ONTAP** | iSCSI / NFS / FC | Enterprise NAS/SAN with ONTAP arrays | Yes |
 | **Pure Storage FlashArray** | iSCSI / FC / NVMe-oF | All-flash arrays, high IOPS workloads | Yes |
 | **Dell PowerStore** | iSCSI / FC / NVMe-oF | Dell enterprise all-flash and hybrid arrays | Yes |
@@ -74,7 +74,7 @@ pure_api_token = <api-token>
 ```
 
 <Tip>
-  In XAVS deployments, backend configuration is managed through XDeploy globals. The `cinder.conf` file is generated from Ansible templates and should not be edited directly on the host. Use `xavs-ansible deploy --tags cinder` to apply changes.
+  In Ironcore deployments, backend configuration is managed through XDeploy globals. The `cinder.conf` file is generated from Ansible templates and should not be edited directly on the host. Use `ironcore-ansible deploy --tags cinder` to apply changes.
 </Tip>
 
 ---
@@ -83,7 +83,7 @@ pure_api_token = <api-token>
 
 <AccordionGroup>
   <Accordion title="Ceph RBD" icon="database">
-    Ceph RBD is the native XAVS production backend. It supports thin provisioning by default and enables zero-copy clones between the image pool and volume pool for fast instance launches.
+    Ceph RBD is the native Ironcore production backend. It supports thin provisioning by default and enables zero-copy clones between the image pool and volume pool for fast instance launches.
 
     ```ini title="[ceph-ssd] section"
     volume_driver = cinder.volume.drivers.rbd.RBDDriver

@@ -1,13 +1,13 @@
 ---
 title: "Instance HA Admin Guide"
-description: "Configure and operate Xloud Instance HA — deploy monitors, create failover segments, register hosts, tune recovery methods, and integrate with compute clusters."
+description: "Configure and operate Polystack Instance HA — deploy monitors, create failover segments, register hosts, tune recovery methods, and integrate with compute clusters."
 sidebarTitle: "Admin Guide"
 mode: "wide"
 ---
 
 <p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Overview</p>
 
-Xloud Instance HA provides automated detection and recovery of failed compute hosts and
+Polystack Instance HA provides automated detection and recovery of failed compute hosts and
 instances. Administrators configure the failover infrastructure — segments, host monitors,
 instance monitors, and notification drivers — that power zero-touch recovery for project
 workloads. This guide covers the full administrative lifecycle, from initial deployment
@@ -42,14 +42,14 @@ to tuning recovery policies for production.
     Enable Instance HA by setting the flags in the globals configuration and deploying:
 
     ```bash title="Create Instance HA globals override"
-    cat > /etc/xavs/globals.d/_50_instance_ha.yml << 'EOF'
+    cat > /etc/ironcore/globals.d/_50_instance_ha.yml << 'EOF'
     enable_masakari: "yes"
     enable_hacluster: "yes"
     EOF
     ```
 
     ```bash title="Deploy the Instance HA service"
-    xavs-ansible deploy -t masakari
+    ironcore-ansible deploy -t masakari
     ```
 
     <Check>Instance HA API, engine, host monitor, and instance monitor containers are running on all target hosts.</Check>
@@ -99,7 +99,7 @@ to tuning recovery policies for production.
 | **API** | REST API for segment, host, and notification management |
 | **Engine** | Processes notifications and orchestrates recovery workflows |
 | **Host Monitor** | Detects host failures via IPMI/libvirt probing |
-| **Instance Monitor** | Detects instance failures via XAVS Guest Agent probing |
+| **Instance Monitor** | Detects instance failures via Ironcore Guest Agent probing |
 
 ---
 

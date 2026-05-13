@@ -1,6 +1,6 @@
 ---
 title: "Security"
-description: "Comprehensive security documentation for Xloud Platform — infrastructure hardening, VM isolation, API protection, data encryption, and compliance."
+description: "Comprehensive security documentation for Polystack Platform — infrastructure hardening, VM isolation, API protection, data encryption, and compliance."
 icon: "shield"
 sidebarTitle: "Security"
 mode: "wide"
@@ -8,16 +8,16 @@ mode: "wide"
 
 <p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Defense in Depth</p>
 
-Xloud Platform enforces security at every layer of the stack. From hypervisor isolation and encrypted data channels to role-based access control and audit logging, the platform is designed so that no single control failure exposes workloads. This layered approach — commonly called defense in depth — means each security boundary operates independently and reinforces the others.
+Polystack Platform enforces security at every layer of the stack. From hypervisor isolation and encrypted data channels to role-based access control and audit logging, the platform is designed so that no single control failure exposes workloads. This layered approach — commonly called defense in depth — means each security boundary operates independently and reinforces the others.
 
 The sections below cover every security domain: infrastructure TLS, VM isolation, API authentication, data encryption, network segmentation, compliance frameworks, pre-deployment hardening, and troubleshooting.
 
 ---
 
-## Xloud SIEM — Unified Security Operations
+## Polystack SIEM — Unified Security Operations
 
 <CardGroup cols={1}>
-  <Card title="Xloud SIEM" icon="shield-alert" href="/security/xloud-siem" color="#197560">
+  <Card title="Polystack SIEM" icon="shield-alert" href="/security/polystack-siem" color="#197560">
     The integrated Security Information and Event Management layer — Wazuh (HIDS), Lynis
     (auditing), and OpenSCAP (compliance) unified in the **Security Posture** and
     **Alerts** pages in Monitor Center. Start here for a single-pane view of the entire
@@ -79,9 +79,9 @@ The sections below cover every security domain: infrastructure TLS, VM isolation
 
 ---
 
-<p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Security Tools — Xloud SIEM</p>
+<p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Security Tools — Polystack SIEM</p>
 
-These three scanners run in parallel inside Xloud SIEM. Their combined results appear in
+These three scanners run in parallel inside Polystack SIEM. Their combined results appear in
 the **Security Posture** and **Alerts** pages in the Dashboard's Monitor Center.
 
 <CardGroup cols={3}>
@@ -100,28 +100,28 @@ the **Security Posture** and **Alerts** pages in the Dashboard's Monitor Center.
 
 <p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Security Architecture</p>
 
-The following table summarizes the security controls enforced at each layer of the Xloud platform.
+The following table summarizes the security controls enforced at each layer of the Polystack platform.
 
 | Layer | Controls |
 |-------|----------|
 | Hypervisor | Process isolation, seccomp profiles, AppArmor confinement, dedicated service users, live migration TLS |
 | Networking | Security groups (stateful), FWaaS, port security, anti-spoofing, VLAN/VXLAN isolation |
 | Control Plane | TLS on all APIs, token-based authentication, RBAC policy enforcement, rate limiting |
-| Storage | LUKS volume encryption, Ceph encryption at rest, key management via Xloud Key Management |
+| Storage | LUKS volume encryption, Ceph encryption at rest, key management via Polystack Key Management |
 | Audit | CADF event logging, centralized log aggregation, immutable audit trails |
 | Host Security | Integrated security platform (intrusion detection + FIM), system auditing, SCAP compliance scanning |
 
 <Note>
-  Xloud follows a shared responsibility model. The platform enforces infrastructure-level controls. Workload owners are responsible for securing applications running inside virtual machines.
+  Polystack follows a shared responsibility model. The platform enforces infrastructure-level controls. Workload owners are responsible for securing applications running inside virtual machines.
 </Note>
 
 ---
 
-<p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Xloud Security Platform Capabilities</p>
+<p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Polystack Security Platform Capabilities</p>
 
-<Info>**Xloud-Developed** — This capability is developed by Xloud and ships with XAVS.</Info>
+<Info>**Polystack-Developed** — This capability is developed by Polystack and ships with Ironcore.</Info>
 
-The following security capabilities are built into the Xloud platform and deploy automatically as part of XAVS. Each capability is production-ready and requires no third-party licensing.
+The following security capabilities are built into the Polystack platform and deploy automatically as part of Ironcore. Each capability is production-ready and requires no third-party licensing.
 
 <CardGroup cols={3}>
   <Card title="Integrated SIEM" icon="radar" color="#197560">

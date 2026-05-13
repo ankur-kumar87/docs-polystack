@@ -1,6 +1,6 @@
 ---
 title: "Key Manager Admin Guide"
-description: "Administer Xloud Key Manager — configure secret store backends, manage transport keys, enforce quotas, apply security hardening, and troubleshoot platform."
+description: "Administer Polystack Key Manager — configure secret store backends, manage transport keys, enforce quotas, apply security hardening, and troubleshoot platform."
 sidebarTitle: "Admin Guide"
 mode: "wide"
 ---
@@ -9,7 +9,7 @@ import AdminWarning from '/snippets/admin-warning.mdx';
 
 <p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Overview</p>
 
-This guide covers platform-level administration of the Xloud Key Manager service.
+This guide covers platform-level administration of the Polystack Key Manager service.
 Administrators configure the backend encryption store, manage transport keys for
 client-side encryption, define per-project quotas, and enforce security hardening
 policies. The Key Manager service is a critical security component — changes to its
@@ -40,7 +40,7 @@ configuration affect secret accessibility across all services that reference it.
   </Tab>
   <Tab title="CLI" icon="terminal">
     Configure the Key Management service by editing `barbican.conf` directly at
-    `/etc/xavs/config/barbican/barbican.conf`. See the individual topic guides below
+    `/etc/ironcore/config/barbican/barbican.conf`. See the individual topic guides below
     for backend configuration, secret stores, and security hardening parameters.
   </Tab>
 </Tabs>

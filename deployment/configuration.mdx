@@ -28,7 +28,7 @@ Configuration is the main settings interface for your entire cloud. All settings
 Navigate to **Configuration** in the left sidebar. The configuration interface is organized into eight tabs, each handling a distinct area of your deployment settings.
 
 <Tabs>
-  <Tab title="XAVS Settings" icon="settings">
+  <Tab title="Ironcore Settings" icon="settings">
     The primary settings tab covering networking, domains, and TLS configuration. These settings form the foundation of your entire deployment.
 
     ---
@@ -39,7 +39,7 @@ Navigate to **Configuration** in the left sidebar. The configuration interface i
     |-------|----------|-------------|
     | **API/Management Network Interface** | Yes | Select the NIC used for management traffic. Auto-fills the Internal VIP field based on the selected interface subnet. |
     | **Internal VIP Address** | Yes | Virtual IP for internal API calls. Floats between controllers via HAProxy for high availability. |
-    | **External VIP Address** | No | Public-facing VIP for external access and the Xloud Dashboard. Required only if external access is needed. |
+    | **External VIP Address** | No | Public-facing VIP for external access and the Polystack Dashboard. Required only if external access is needed. |
 
     <Warning>
       The Internal VIP is the single most important setting in your deployment. If it is wrong, nothing works. Ensure it is an **unused** IP address on the management subnet that does not conflict with any existing host.
@@ -52,8 +52,8 @@ Navigate to **Configuration** in the left sidebar. The configuration interface i
     | Field | Description |
     |-------|-------------|
     | **Enable Domain Setup** | Toggle to configure FQDNs instead of raw IP addresses for service endpoints |
-    | **Internal FQDN** | Hostname for internal API endpoints (e.g., `xavs-int.example.com`). Must resolve to the Internal VIP. |
-    | **External FQDN** | Hostname for external access (e.g., `xavs.example.com`). Must resolve to the External VIP. |
+    | **Internal FQDN** | Hostname for internal API endpoints (e.g., `ironcore-int.example.com`). Must resolve to the Internal VIP. |
+    | **External FQDN** | Hostname for external access (e.g., `ironcore.example.com`). Must resolve to the External VIP. |
 
     ---
 
@@ -66,7 +66,7 @@ Navigate to **Configuration** in the left sidebar. The configuration interface i
     | **Internal API TLS** | Toggle to enable TLS for internal service communication. Upload the certificate and private key. |
     | **External API TLS** | Toggle to enable TLS for the public-facing Dashboard and API. Upload the certificate and private key. |
 
-    Certificates are saved to `/etc/xavs/certificates/` on the deployment node and distributed to all controllers during deployment.
+    Certificates are saved to `/etc/ironcore/certificates/` on the deployment node and distributed to all controllers during deployment.
 
     <Tip>
       For production deployments, always enable TLS on external endpoints. Internal TLS is recommended when the management network is shared or untrusted.
@@ -74,7 +74,7 @@ Navigate to **Configuration** in the left sidebar. The configuration interface i
   </Tab>
 
   <Tab title="Network" icon="network">
-    Configures the Xloud Networking service --- interfaces, provider networks, and optional networking features.
+    Configures the Polystack Networking service --- interfaces, provider networks, and optional networking features.
 
     ---
 
@@ -108,7 +108,7 @@ Navigate to **Configuration** in the left sidebar. The configuration interface i
   </Tab>
 
   <Tab title="Storage" icon="hard-drive">
-    Configures Xloud Block Storage --- the persistent volume service for VM disks.
+    Configures Polystack Block Storage --- the persistent volume service for VM disks.
 
     ---
 
@@ -134,12 +134,12 @@ Navigate to **Configuration** in the left sidebar. The configuration interface i
     | **Pure Storage** | FlashArray via iSCSI, Fibre Channel, or NVMe | High-performance enterprise storage |
 
     <Tip>
-      For production multi-node deployments, Xloud recommends **Ceph RBD**. It provides data replication across nodes, eliminating single points of failure for VM disks.
+      For production multi-node deployments, Polystack recommends **Ceph RBD**. It provides data replication across nodes, eliminating single points of failure for VM disks.
     </Tip>
   </Tab>
 
   <Tab title="Load Balancer" icon="network">
-    Configures the Xloud Load Balancer service for distributing network traffic across backend instances.
+    Configures the Polystack Load Balancer service for distributing network traffic across backend instances.
 
     ---
 
@@ -262,7 +262,7 @@ Navigate to **Configuration** in the left sidebar. The configuration interface i
 
     | Feature | Default | Description |
     |---------|---------|-------------|
-    | **Enable KMS** | OFF | When enabled, the Xloud Key Management service (Barbican) is deployed for secret storage, encryption keys, and certificate management |
+    | **Enable KMS** | OFF | When enabled, the Polystack Key Management service (Barbican) is deployed for secret storage, encryption keys, and certificate management |
     | **Enable Host HA** | OFF | Enable high availability for hosts. Automatically detects and recovers from compute node failures by evacuating affected instances to healthy nodes. |
     | **Enable Dynamic Cluster Optimization** | OFF | Enable the dynamic cluster optimization service for automated workload balancing, resource consolidation, and thermal management across the cluster |
     | **Enable DB Backup Utility** | OFF | Enable the database backup utility for scheduled and on-demand backups of cloud service databases |
@@ -288,7 +288,7 @@ Navigate to **Configuration** in the left sidebar. The configuration interface i
     | **Documentation** | Free-text area for comments and notes about custom settings |
 
     <Tip>
-      Use Custom Configuration as an escape hatch. There are hundreds of deployment variables available in the underlying automation --- the other tabs cover the most common ones. Consult the [xavs-ansible variable reference](https://docs.xloud.tech) for the full list.
+      Use Custom Configuration as an escape hatch. There are hundreds of deployment variables available in the underlying automation --- the other tabs cover the most common ones. Consult the [ironcore-ansible variable reference](https://docs.polystack.tech) for the full list.
     </Tip>
 
     ```yaml title="Example custom configuration"

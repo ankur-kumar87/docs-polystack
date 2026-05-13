@@ -1,6 +1,6 @@
 ---
 title: "Storage Tiers"
-description: "Configure NVMe, SSD, and HDD storage tiers in Xloud Block Storage. Map hardware device classes to volume types and set the default tier for your deployment."
+description: "Configure NVMe, SSD, and HDD storage tiers in Polystack Block Storage. Map hardware device classes to volume types and set the default tier for your deployment."
 sidebarTitle: "Storage Tiers"
 ---
 
@@ -9,7 +9,7 @@ import CliAuth from '/snippets/cli-auth.mdx';
 
 ## Overview
 
-Storage tiering exposes different hardware performance classes as distinct volume types, allowing users to select the appropriate tier for each workload. Xloud Block Storage supports NVMe, SSD, and HDD tiers within a single distributed storage cluster by mapping CRUSH device classes to dedicated pools and volume types. Configure one volume type per hardware tier and set a default to ensure users without a specific preference land on the most appropriate tier.
+Storage tiering exposes different hardware performance classes as distinct volume types, allowing users to select the appropriate tier for each workload. Polystack Block Storage supports NVMe, SSD, and HDD tiers within a single distributed storage cluster by mapping CRUSH device classes to dedicated pools and volume types. Configure one volume type per hardware tier and set a default to ensure users without a specific preference land on the most appropriate tier.
 
 <AdminWarning />
 
@@ -57,7 +57,7 @@ Storage tiering exposes different hardware performance classes as distinct volum
         In the **Default Volume Type** field, select the tier to use when users create
         volumes without specifying a type.
 
-        Xloud recommends setting `ssd` as the default for most deployments — you can
+        Polystack recommends setting `ssd` as the default for most deployments — you can
         explicitly request `nvme` or `standard` when needed.
 
         Click **Apply**.
@@ -128,7 +128,7 @@ If your cluster has only one hardware class (e.g., all SSD), configure a single 
 type pointing to the existing pool. There is no need to create additional pools or types.
 
 <Tip>
-  In a single-tier cluster, Xloud recommends still naming the type explicitly (e.g.,
+  In a single-tier cluster, Polystack recommends still naming the type explicitly (e.g.,
   `ssd`) rather than using a generic name — this makes future tier additions easier
   without requiring users to update their volume creation workflows.
 </Tip>
@@ -172,9 +172,9 @@ When adding new hardware (e.g., NVMe drives to an existing SSD cluster):
 
 ## Automated Storage Tiering
 
-<Info>**Xloud-Developed** -- This capability is developed by Xloud and ships with XAVS / XPCI.</Info>
+<Info>**Polystack-Developed** -- This capability is developed by Polystack and ships with Ironcore / XPCI.</Info>
 
-The Xloud Resource Optimizer can automatically move volumes between NVMe, SSD, and HDD pools based on observed IOPS activity -- eliminating manual tier management for dynamic workloads.
+The Polystack Resource Optimizer can automatically move volumes between NVMe, SSD, and HDD pools based on observed IOPS activity -- eliminating manual tier management for dynamic workloads.
 
 | Parameter | Description |
 |-----------|-------------|

@@ -1,18 +1,18 @@
 ---
 title: "Access Methods"
-description: "Connect to XSDS block, object, and file storage through the Dashboard, CLI, S3-compatible API, and native mount protocols."
+description: "Connect to Software-Defined-Storage block, object, and file storage through the Dashboard, CLI, S3-compatible API, and native mount protocols."
 sidebarTitle: "Access Methods"
 ---
 
 ## Overview
 
-XSDS exposes storage through multiple access protocols. The appropriate method depends
+Software-Defined-Storage exposes storage through multiple access protocols. The appropriate method depends
 on the consumer application and the storage type being accessed. This page covers all
 supported access methods with configuration steps for each.
 
 <Note>
   **Prerequisites**
-  - An active Xloud account with project member access
+  - An active Polystack account with project member access
   - For CLI access: `openstack` CLI installed ([CLI Setup](/cli-setup))
   - For S3 API access: S3 access keys generated from the Dashboard
 </Note>
@@ -23,7 +23,7 @@ supported access methods with configuration steps for each.
 
 | Access Method | Storage Type | Typical User |
 |---------------|--------------|--------------|
-| **Xloud Dashboard** | Block, Object | GUI-based management and exploration |
+| **Polystack Dashboard** | Block, Object | GUI-based management and exploration |
 | **`openstack` CLI** | Block, Object | Scripted management and automation |
 | **S3-compatible API** | Object | Application integration, SDK access |
 | **NFS / SMB mount** | Shared File | Legacy application and workstation access |
@@ -37,7 +37,7 @@ supported access methods with configuration steps for each.
   <Tab title="Block Storage" icon="hard-drive">
     <Steps titleSize="h3">
       <Step title="Navigate to Volumes" icon="hard-drive">
-        Log in to the **Xloud Dashboard** (`https://connect.<your-domain>`) and navigate to
+        Log in to the **Polystack Dashboard** (`https://connect.<your-domain>`) and navigate to
         **Project → Volumes → Volumes**.
       </Step>
       <Step title="Manage volumes" icon="settings">
@@ -147,14 +147,14 @@ supported access methods with configuration steps for each.
 
 ## S3-Compatible API
 
-The XSDS object storage service exposes a fully S3-compatible API. Any application or
-tool that supports the AWS S3 API can connect to XSDS without modification.
+The Software-Defined-Storage object storage service exposes a fully S3-compatible API. Any application or
+tool that supports the AWS S3 API can connect to Software-Defined-Storage without modification.
 
 <Tabs>
   <Tab title="Generate Credentials" icon="key">
     <Steps titleSize="h3">
       <Step title="Navigate to Access Keys" icon="key">
-        In the Xloud Dashboard, navigate to **Project → Object Store → Access Keys**
+        In the Polystack Dashboard, navigate to **Project → Object Store → Access Keys**
         and click **Create Key**.
       </Step>
       <Step title="Save your credentials" icon="file-text">
@@ -177,7 +177,7 @@ tool that supports the AWS S3 API can connect to XSDS without modification.
         endpoint_url='https://object.<your-domain>',
         aws_access_key_id='YOUR_ACCESS_KEY',
         aws_secret_access_key='YOUR_SECRET_KEY',
-        region_name='xloud-region-1'
+        region_name='polystack-region-1'
     )
 
     # List buckets
@@ -194,29 +194,29 @@ tool that supports the AWS S3 API can connect to XSDS without modification.
   </Tab>
   <Tab title="CLI (aws s3)" icon="terminal">
     ```bash title="Configure AWS CLI profile"
-    aws configure --profile xloud
+    aws configure --profile polystack
     # AWS Access Key ID: YOUR_ACCESS_KEY
     # AWS Secret Access Key: YOUR_SECRET_KEY
-    # Default region name: xloud-region-1
+    # Default region name: polystack-region-1
     # Default output format: json
     ```
 
     ```bash title="List buckets"
-    aws s3 ls --endpoint-url https://object.<your-domain> --profile xloud
+    aws s3 ls --endpoint-url https://object.<your-domain> --profile polystack
     ```
 
     ```bash title="Upload a file"
     aws s3 cp local_file.txt \
       s3://my-bucket/remote_object.txt \
       --endpoint-url https://object.<your-domain> \
-      --profile xloud
+      --profile polystack
     ```
 
     ```bash title="Sync a directory"
     aws s3 sync ./local-dir/ \
       s3://my-bucket/remote-dir/ \
       --endpoint-url https://object.<your-domain> \
-      --profile xloud
+      --profile polystack
     ```
   </Tab>
 </Tabs>
@@ -262,7 +262,7 @@ tool that supports the AWS S3 API can connect to XSDS without modification.
       </Step>
       <Step title="Map network drive" icon="hard-drive">
         In Windows Explorer, right-click **This PC** and select **Map network drive**.
-        Enter the UNC path and provide your Xloud credentials when prompted.
+        Enter the UNC path and provide your Polystack credentials when prompted.
 
         Or from PowerShell:
         ```powershell title="Map network drive (PowerShell)"

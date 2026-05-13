@@ -1,17 +1,17 @@
 ---
-title: "XSDS Architecture"
+title: "Software-Defined-Storage Architecture"
 description: "Understand the distributed storage cluster components — MON, MGR, OSD, MDS, and RGW — and how they work together to deliver block, object, and file storage."
 sidebarTitle: "Architecture"
 ---
 
 ## Overview
 
-The XSDS distributed storage cluster is composed of several service types that work
+The Software-Defined-Storage distributed storage cluster is composed of several service types that work
 together to provide unified block, object, and file storage. Services are deployed
 and managed by XDeploy.
 
 <Tip>
-  **XDeploy GUI** — The distributed storage cluster can be bootstrapped and managed through the [XSDS Storage](/deployment/xsds) interface. Storage tiers, CRUSH rules, and Ceph configuration are all accessible from the GUI. No manual file editing required.
+  **XDeploy GUI** — The distributed storage cluster can be bootstrapped and managed through the [Software-Defined-Storage Storage](/deployment/software-defined-storage) interface. Storage tiers, CRUSH rules, and Ceph configuration are all accessible from the GUI. No manual file editing required.
 </Tip>
 
 <Note>
@@ -95,7 +95,7 @@ graph TD
 
     RGW supports:
     - S3-compatible API (buckets, objects, ACLs, lifecycle policies)
-    - Multi-site replication between XSDS clusters
+    - Multi-site replication between Software-Defined-Storage clusters
     - Pre-signed URLs for time-limited object access
   </Accordion>
 
@@ -107,7 +107,7 @@ graph TD
     to take over). On active MDS failure, a standby takes over within seconds.
 
     Multiple active MDS instances (multi-active MDS) can be configured for large
-    deployments with high metadata operation rates. Contact your Xloud support team
+    deployments with high metadata operation rates. Contact your Polystack support team
     for multi-active MDS configuration guidance.
   </Accordion>
 </AccordionGroup>
@@ -118,7 +118,7 @@ graph TD
 
 <Tabs>
   <Tab title="Single-Site" icon="server">
-    A standard single-site XSDS cluster distributes OSDs across at least 3 hosts,
+    A standard single-site Software-Defined-Storage cluster distributes OSDs across at least 3 hosts,
     with monitor and manager services co-located on the same hosts:
 
     ```mermaid
@@ -143,7 +143,7 @@ graph TD
     ```
   </Tab>
   <Tab title="Multi-Site" icon="globe">
-    For disaster recovery configurations, XSDS supports multi-site replication
+    For disaster recovery configurations, Software-Defined-Storage supports multi-site replication
     between two independent clusters. Each site runs its own full cluster with
     its own monitors, managers, and OSDs.
 

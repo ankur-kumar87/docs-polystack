@@ -1,6 +1,6 @@
 ---
 title: "Storage Tiers"
-description: "Configure multi-tier storage in XSDS by mapping device class pools to Cinder volume types, enabling workload-appropriate media selection for NVMe, SSD, and HDD tiers."
+description: "Configure multi-tier storage in Software-Defined-Storage by mapping device class pools to Cinder volume types, enabling workload-appropriate media selection for NVMe, SSD, and HDD tiers."
 sidebarTitle: "Storage Tiers"
 ---
 
@@ -9,14 +9,14 @@ import AdminWarning from '/snippets/admin-warning.mdx';
 ## Overview
 
 Multi-tier storage routes different workload classes to appropriate device media
-through volume types in the block storage service and pool configurations in XSDS.
+through volume types in the block storage service and pool configurations in Software-Defined-Storage.
 Tier configuration is managed through XDeploy's Storage Tiers panel, which
 auto-generates the required pool, CRUSH rule, and block storage backend configuration.
 
 <AdminWarning />
 
 <Tip>
-  **XDeploy GUI** — Storage tier detection, CRUSH rule creation, and pool configuration can be performed through the [XSDS Storage](/deployment/xsds) interface under the **Storage Tiers** tab. Click **Detect Tiers** to automatically discover device classes. No manual file editing required.
+  **XDeploy GUI** — Storage tier detection, CRUSH rule creation, and pool configuration can be performed through the [Software-Defined-Storage Storage](/deployment/software-defined-storage) interface under the **Storage Tiers** tab. Click **Detect Tiers** to automatically discover device classes. No manual file editing required.
 </Tip>
 
 <Note>
@@ -99,7 +99,7 @@ For environments where XDeploy is not managing tier configuration, configure tie
     Add the new backend to your Cinder configuration (managed by XDeploy via
     `globals.d/_50_ceph_tiers.yml`):
 
-    ```yaml title="/etc/xavs/globals.d/_50_ceph_tiers.yml"
+    ```yaml title="/etc/ironcore/globals.d/_50_ceph_tiers.yml"
     cinder_ceph_backends:
       - name: ceph-ssd
         pool: volumes
@@ -115,7 +115,7 @@ For environments where XDeploy is not managing tier configuration, configure tie
 
     Then deploy the block storage configuration:
     ```bash title="Deploy Cinder configuration"
-    xavs-ansible deploy -t cinder
+    ironcore-ansible deploy -t cinder
     ```
   </Tab>
 </Tabs>

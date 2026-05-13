@@ -12,7 +12,7 @@ be placed on a different network or availability zone. This is useful for scalin
 horizontally, creating test environments from production instances, or duplicating
 pre-configured application stacks.
 
-<Info>**Xloud-Developed** — Instance cloning is developed by Xloud and ships with XAVS / XPCI.</Info>
+<Info>**Polystack-Developed** — Instance cloning is developed by Polystack and ships with Ironcore / XPCI.</Info>
 
 <Note>
   **Prerequisites**
@@ -66,13 +66,13 @@ pre-configured application stacks.
     source openrc.sh
     ```
 
-    Clone uses the Xloud-developed Nova API extension:
+    Clone uses the Polystack-developed Nova API extension:
 
     ```bash title="Clone an instance"
     curl -X POST -H "X-Auth-Token: $TOKEN" \
       -H "Content-Type: application/json" \
       -d '{
-        "xloud-clone": {
+        "polystack-clone": {
           "name": "my-instance-clone",
           "auto_start": true
         }
@@ -84,7 +84,7 @@ pre-configured application stacks.
     curl -X POST -H "X-Auth-Token: $TOKEN" \
       -H "Content-Type: application/json" \
       -d '{
-        "xloud-clone": {
+        "polystack-clone": {
           "name": "my-instance-clone",
           "auto_start": true,
           "network_id": "<TARGET_NETWORK_ID>",
@@ -95,7 +95,7 @@ pre-configured application stacks.
     ```
 
     <Note>
-      Clone uses the Xloud-developed `xloud-clone` Nova server action. The standard
+      Clone uses the Polystack-developed `polystack-clone` Nova server action. The standard
       `openstack` CLI does not have a native clone command.
     </Note>
   </Tab>

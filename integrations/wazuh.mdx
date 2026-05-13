@@ -1,12 +1,12 @@
 ---
 title: "Wazuh SIEM Integration"
-description: "Deploy Wazuh agents on Xloud instances for real-time threat detection, file integrity monitoring, log collection, vulnerability scanning, and centralized SIEM visibility."
+description: "Deploy Wazuh agents on Polystack instances for real-time threat detection, file integrity monitoring, log collection, vulnerability scanning, and centralized SIEM visibility."
 sidebarTitle: "Wazuh"
 ---
 
 ## Overview
 
-Wazuh provides a unified security information and event management (SIEM) platform for your Xloud
+Wazuh provides a unified security information and event management (SIEM) platform for your Polystack
 environment. Agents deployed on your compute instances forward security events, system logs, and
 file integrity alerts to a central Wazuh manager. The manager correlates events across all
 monitored instances, applies detection rules, and generates alerts for security incidents,
@@ -123,7 +123,7 @@ graph TD
 
 ### Bulk Deployment via Ansible
 
-Deploy Wazuh agents to all Xloud instances using the Ansible dynamic inventory:
+Deploy Wazuh agents to all Polystack instances using the Ansible dynamic inventory:
 
 ```yaml title="playbooks/wazuh-deploy.yml"
 ---
@@ -177,7 +177,7 @@ Deploy Wazuh agents to all Xloud instances using the Ansible dynamic inventory:
         fail_msg: "Wazuh agent is not running on {{ inventory_hostname }}"
 ```
 
-Run the playbook using the Xloud dynamic inventory:
+Run the playbook using the Polystack dynamic inventory:
 
 ```bash title="Deploy Wazuh agents to all instances"
 ansible-playbook -i inventory/openstack.yml playbooks/wazuh-deploy.yml
@@ -361,6 +361,6 @@ View compliance dashboards in the Wazuh Dashboard under **Security → Regulator
     Build unified security and operations dashboards combining Wazuh and Prometheus data
   </Card>
   <Card title="Key Manager" href="/services/key-manager/store-secrets" color="#197560">
-    Store Wazuh registration keys securely in Xloud Key Manager
+    Store Wazuh registration keys securely in Polystack Key Manager
   </Card>
 </CardGroup>

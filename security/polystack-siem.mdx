@@ -1,15 +1,15 @@
 ---
-title: "Xloud SIEM"
-description: "Unified security operations on Xloud Platform — Wazuh, Lynis, and OpenSCAP in a single Security Posture view with live Alerts in Monitor Center."
-sidebarTitle: "Xloud SIEM"
+title: "Polystack SIEM"
+description: "Unified security operations on Polystack Platform — Wazuh, Lynis, and OpenSCAP in a single Security Posture view with live Alerts in Monitor Center."
+sidebarTitle: "Polystack SIEM"
 mode: "wide"
 ---
 
-<Info>**Xloud-Developed** — Xloud SIEM is the integrated Security Information and Event Management layer built into the Xloud Platform. It stitches together Wazuh, Lynis, and OpenSCAP into a single dashboard surface and correlates findings against your actual cluster inventory.</Info>
+<Info>**Polystack-Developed** — Polystack SIEM is the integrated Security Information and Event Management layer built into the Polystack Platform. It stitches together Wazuh, Lynis, and OpenSCAP into a single dashboard surface and correlates findings against your actual cluster inventory.</Info>
 
-## What is Xloud SIEM?
+## What is Polystack SIEM?
 
-Xloud SIEM is the integrated security operations layer on the Xloud Platform. It runs
+Polystack SIEM is the integrated security operations layer on the Polystack Platform. It runs
 three independent scanners in parallel — **Wazuh** for host intrusion detection,
 **Lynis** for OS-level auditing, and **OpenSCAP** for CIS / STIG compliance — and surfaces
 the combined results in two Dashboard views:
@@ -35,7 +35,7 @@ the combined results in two Dashboard views:
 </CardGroup>
 
 <Note>
-  **Prerequisites** — Xloud SIEM requires Wazuh to be enabled on the cluster
+  **Prerequisites** — Polystack SIEM requires Wazuh to be enabled on the cluster
   (XDeploy → Security → HIDS). When Wazuh is disabled, **Monitor Center → Security Posture**
   shows an empty state asking you to enable it.
 </Note>
@@ -47,7 +47,7 @@ the combined results in two Dashboard views:
 <iframe
   className="w-full aspect-video rounded-xl"
   src="https://www.youtube.com/embed/DWf7YdSXV1w"
-  title="How to Review Security Posture on Xloud"
+  title="How to Review Security Posture on Polystack"
   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
   allowFullScreen
 ></iframe>
@@ -56,7 +56,7 @@ the combined results in two Dashboard views:
 
 ## The Two Dashboard Views
 
-Everything Xloud SIEM exposes in the Dashboard lives in **Monitor Center** (admin view only):
+Everything Polystack SIEM exposes in the Dashboard lives in **Monitor Center** (admin view only):
 
 | Page | What it shows |
 |------|---------------|
@@ -72,7 +72,7 @@ Everything Xloud SIEM exposes in the Dashboard lives in **Monitor Center** (admi
 
 ## Security Posture — 8 Tabs
 
-The Security Posture page is the headline view for Xloud SIEM. Every tab aggregates data
+The Security Posture page is the headline view for Polystack SIEM. Every tab aggregates data
 across the cluster and links back to raw Wazuh, Lynis, or OpenSCAP output.
 
 <AccordionGroup>
@@ -156,7 +156,7 @@ interface, regardless of source:
 
 ## For Users
 
-Most Xloud users interact with Xloud SIEM indirectly — their VMs are scanned
+Most Polystack users interact with Polystack SIEM indirectly — their VMs are scanned
 automatically by the platform's security suite. If you are a non-admin user:
 
 <CardGroup cols={2}>
@@ -175,17 +175,17 @@ automatically by the platform's security suite. If you are a non-admin user:
 
 ## For Administrators
 
-Xloud SIEM is designed to work out of the box once Wazuh is enabled at deploy time.
+Polystack SIEM is designed to work out of the box once Wazuh is enabled at deploy time.
 Typical admin workflows:
 
 <Steps titleSize="h3">
-  <Step title="Enable Xloud SIEM at deploy time" icon="toggle-right">
+  <Step title="Enable Polystack SIEM at deploy time" icon="toggle-right">
     In XDeploy → Configuration → Monitoring & Logging, toggle **Enable Security Suite**.
     The suite activates Wazuh (HIDS), Lynis (auditing), and OpenSCAP (compliance) on every
     cluster node.
   </Step>
   <Step title="Deploy agents to tenant VMs" icon="server">
-    Use the bundled `xavs-ansible` role to mass-deploy Wazuh agents across projects. See
+    Use the bundled `ironcore-ansible` role to mass-deploy Wazuh agents across projects. See
     the [Wazuh](/security/wazuh) page for the exact command and options.
   </Step>
   <Step title="Review Security Posture daily" icon="clipboard-list">

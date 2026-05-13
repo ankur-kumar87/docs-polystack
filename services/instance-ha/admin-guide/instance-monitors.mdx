@@ -1,6 +1,6 @@
 ---
 title: "Instance Monitors"
-description: "Configure Xloud Instance HA instance-level monitors — guest heartbeat detection, notification types, and per-instance fault handling independent of host state."
+description: "Configure Polystack Instance HA instance-level monitors — guest heartbeat detection, notification types, and per-instance fault handling independent of host state."
 sidebarTitle: "Instance Monitors"
 ---
 
@@ -17,7 +17,7 @@ that consume all available resources without taking down the host.
   **Prerequisites**
   - Administrator privileges
   - Instance HA service deployed and running
-  - XAVS Guest Agent or heartbeat capability enabled in the instance image
+  - Ironcore Guest Agent or heartbeat capability enabled in the instance image
 </Note>
 
 ---
@@ -34,7 +34,7 @@ graph TD
 
     G2 -->|Instance fault| NE[Notification Engine]
     NE -->|COMPUTE_INSTANCE notification| RE[Recovery Engine]
-    RE -->|Restart instance| NOVA[Xloud Compute API]
+    RE -->|Restart instance| NOVA[Polystack Compute API]
 ```
 
 The instance monitor runs on each compute host and monitors all running instances.
@@ -88,7 +88,7 @@ HA configuration overlay.
 
 <Tree>
   <Tree.Folder name="etc" defaultOpen>
-    <Tree.Folder name="xavs" defaultOpen>
+    <Tree.Folder name="ironcore" defaultOpen>
       <Tree.Folder name="instance-ha" defaultOpen>
         <Tree.File name="instance-ha.conf" />
       </Tree.Folder>
@@ -138,7 +138,7 @@ Key instance monitor parameters:
     Edit the configuration file directly and restart the instance monitor on each
     compute host:
 
-    ```ini title="/etc/xavs/instance-ha/instance-ha.conf"
+    ```ini title="/etc/ironcore/instance-ha/instance-ha.conf"
     [instance_failure]
     recover_ignoring_error_instances = False
     recover_instance_failure_method = auto
@@ -158,14 +158,14 @@ Key instance monitor parameters:
 ## Enable Guest Heartbeat in Instances
 
 Instance-level detection requires the instance image to have the `masakari-instancemonitor`
-XAVS Guest Agent or a compatible heartbeat mechanism installed. The XAVS Guest Agent includes a VSS provider for Windows application-consistent snapshots. Check whether the agent is running inside an instance:
+Ironcore Guest Agent or a compatible heartbeat mechanism installed. The Ironcore Guest Agent includes a VSS provider for Windows application-consistent snapshots. Check whether the agent is running inside an instance:
 
-```bash title="Verify XAVS Guest Agent inside instance (SSH)"
+```bash title="Verify Ironcore Guest Agent inside instance (SSH)"
 systemctl status masakari-processmonitor
 ```
 
 <Tip>
-  For instances using the standard Xloud images, the guest heartbeat is enabled by default.
+  For instances using the standard Polystack images, the guest heartbeat is enabled by default.
   For custom images, install the `python3-masakari` package and enable the
   `masakari-processmonitor` service at boot.
 </Tip>

@@ -1,6 +1,6 @@
 ---
 title: "Instance Tagging"
-description: "Add, edit, and delete user-defined tags on Xloud Compute instances. Use tags to organize instances, drive automation, and filter inventory through the CLI and APIs."
+description: "Add, edit, and delete user-defined tags on Polystack Compute instances. Use tags to organize instances, drive automation, and filter inventory through the CLI and APIs."
 sidebarTitle: "Instance Tagging"
 ---
 
@@ -16,7 +16,7 @@ across reboots, snapshots, migrations, and ownership changes.
 <iframe
   className="w-full aspect-video rounded-xl"
   src="https://www.youtube.com/embed/eXIcQ4Djp6Q?list=PLZUll47Vmx_LL4_kaKK4Mb30B3Zh_ORii"
-  title="How to Add, Edit, and Delete Instance Tags on Xloud"
+  title="How to Add, Edit, and Delete Instance Tags on Polystack"
   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
   allowFullScreen
 ></iframe>
@@ -241,13 +241,13 @@ need true `key=value` pairs — for example, `env=production`, `team=payments`,
 `cost-center=R&D-12` — so they can branch automation, dashboards, or RBAC
 rules on the *value* of a key rather than scanning a flat list.
 
-Today on Xloud:
+Today on Polystack:
 
 | Path | What you get |
 |------|--------------|
 | **Dashboard (Modify Instance Tags)** | Plain strings only. By convention you can write `env=production` as a single string and split on `=` in your tooling, but the platform stores it as one opaque label. |
 | **CLI** | True key-value pairs are supported via the `--property` flag, which writes server metadata. Available today. |
-| **Dashboard (XCONNECT v2)** | A dedicated **Custom Metadata** editor for instances is on the roadmap for XCONNECT v2 — the next-generation Xloud Dashboard. It will surface the same key-value metadata as a first-class form on every instance row, so you will not need the CLI for this. |
+| **Dashboard (XCONNECT v2)** | A dedicated **Custom Metadata** editor for instances is on the roadmap for XCONNECT v2 — the next-generation Polystack Dashboard. It will surface the same key-value metadata as a first-class form on every instance row, so you will not need the CLI for this. |
 
 <Note>
   Server metadata and instance tags are two different stores under the hood.
@@ -299,7 +299,7 @@ openstack server unset --property env <INSTANCE_ID>
 
 ## Where You Can Use Tags
 
-Tags are not exclusive to instances. The Xloud Platform attaches the same
+Tags are not exclusive to instances. The Polystack Platform attaches the same
 flat-string tag concept to several resource types so you can apply the
 same naming convention across the whole cluster.
 
@@ -374,7 +374,7 @@ the grouping key.
 | **Backup scheduling** | Tag a VM with `backup-daily` or `backup-weekly`; the backup runner targets the tag. |
 
 <Note>
-  The Xloud Dashboard does not currently expose a tag filter in its instance
+  The Polystack Dashboard does not currently expose a tag filter in its instance
   search bar. For ad-hoc filtering inside the Dashboard, use the column-picker
   to display the **Tags** column and search by name, then visually scan the
   tags. For programmatic inventory queries, use the CLI flags above.

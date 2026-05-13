@@ -1,6 +1,6 @@
 ---
 title: "Load Balancer Admin Troubleshooting"
-description: "Diagnose and resolve platform-level Xloud Load Balancer issues — service outages, appliance provisioning failures, and performance degradation."
+description: "Diagnose and resolve platform-level Polystack Load Balancer issues — service outages, appliance provisioning failures, and performance degradation."
 sidebarTitle: "Troubleshooting"
 ---
 
@@ -44,7 +44,7 @@ degradation.
 
     **Resolution**: Restart services via XDeploy:
     ```bash title="Restart load balancer services"
-    xavs-ansible deploy --tags octavia
+    ironcore-ansible deploy --tags octavia
     ```
   </Accordion>
 

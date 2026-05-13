@@ -1,12 +1,12 @@
 ---
 title: "Manage Stacks"
-description: "Create, update, suspend, resume, and delete Xloud Orchestration stacks. Covers stack outputs, nested stacks, and update behavior through the Dashboard and CLI."
+description: "Create, update, suspend, resume, and delete Polystack Orchestration stacks. Covers stack outputs, nested stacks, and update behavior through the Dashboard and CLI."
 sidebarTitle: "Stacks"
 ---
 
 ## Overview
 
-Xloud Orchestration manages the complete lifecycle of infrastructure stacks. After initial
+Polystack Orchestration manages the complete lifecycle of infrastructure stacks. After initial
 creation, a stack can be updated with a revised template or new parameter values, suspended
 to release compute and network resources, resumed when needed, and eventually deleted to
 clean up all associated resources in a single operation.
@@ -168,7 +168,7 @@ other runtime data.
 ## Nested Stacks
 
 A nested stack is a stack created as a resource within a parent stack using the
-`Xloud::Orchestration::Stack` resource type. Nesting enables modular template design
+`Polystack::Orchestration::Stack` resource type. Nesting enables modular template design
 — common patterns such as networking tiers, database clusters, or load balancer
 configurations can be extracted into reusable child templates.
 
@@ -176,7 +176,7 @@ configurations can be extracted into reusable child templates.
 resources:
 
   network_tier:
-    type: Xloud::Orchestration::Stack
+    type: Polystack::Orchestration::Stack
     properties:
       template: { get_file: network-template.yaml }
       parameters:
@@ -184,7 +184,7 @@ resources:
         external_network: { get_param: external_network }
 
   app_tier:
-    type: Xloud::Orchestration::Stack
+    type: Polystack::Orchestration::Stack
     depends_on: [network_tier]
     properties:
       template: { get_file: app-template.yaml }

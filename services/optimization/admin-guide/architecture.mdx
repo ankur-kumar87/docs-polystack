@@ -1,12 +1,12 @@
 ---
 title: "Optimization Architecture"
-description: "Understand the Xloud Optimization architecture — Decision Engine, strategy plugins, data collectors, Planner, and Applier component roles and."
+description: "Understand the Polystack Optimization architecture — Decision Engine, strategy plugins, data collectors, Planner, and Applier component roles and."
 sidebarTitle: "Architecture"
 ---
 
 ## Overview
 
-The Xloud Optimization is composed of three collaborating services: the API and
+The Polystack Optimization is composed of three collaborating services: the API and
 Decision Engine (analysis), the Planner (action plan generation), and the Applier (execution).
 Understanding the architecture helps administrators tune the system, diagnose failures,
 and integrate custom data sources or strategies.
@@ -41,7 +41,7 @@ graph TD
     subgraph Execution
         APP[Applier]
         WF[Workflow Engine<br/>Taskflow]
-        NOVA[Xloud Compute API<br/>Live Migration]
+        NOVA[Polystack Compute API<br/>Live Migration]
     end
 
     DS1 -->|Metrics| DE
@@ -118,7 +118,7 @@ sequenceDiagram
     participant DE as Decision Engine
     participant DB as Watcher DB
     participant APP as Applier
-    participant NOVA as Xloud Compute
+    participant NOVA as Polystack Compute
 
     OP->>API: Create audit (goal: consolidation)
     API->>DB: Store audit (state: PENDING)
@@ -140,7 +140,7 @@ sequenceDiagram
 ## Service Configuration File
 
 ```bash title="Configuration file location"
-cat /etc/xavs/watcher/watcher.conf
+cat /etc/ironcore/watcher/watcher.conf
 ```
 
 Key sections:
@@ -150,7 +150,7 @@ Key sections:
 | `[DEFAULT]` | Service identity, RPC transport, action plan expiry |
 | `[watcher_cluster_data_model_collectors]` | Data source configuration |
 | `[watcher_strategies.*]` | Per-strategy tuning parameters |
-| `[keystone_authtoken]` | Xloud Identity authentication |
+| `[keystone_authtoken]` | Polystack Identity authentication |
 | `[database]` | Database connection |
 
 ---

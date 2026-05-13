@@ -1,6 +1,6 @@
 ---
 title: "Data Sources"
-description: "Configure Xloud Optimization data sources — connect Prometheus, Telemetry, and the Compute API to enable metric-backed optimization strategies."
+description: "Configure Polystack Optimization data sources — connect Prometheus, Telemetry, and the Compute API to enable metric-backed optimization strategies."
 sidebarTitle: "Data Sources"
 ---
 
@@ -57,7 +57,7 @@ print('Compute collector loaded successfully')
 
         Add the following in the **Code Editor** (center panel):
 
-        ```ini title="/etc/xavs/config/watcher/watcher.conf"
+        ```ini title="/etc/ironcore/config/watcher/watcher.conf"
         [watcher_cluster_data_model_collectors.prometheus]
         enabled = True
         host = 10.0.1.71
@@ -79,7 +79,7 @@ print('Compute collector loaded successfully')
   <Tab title="CLI" icon="terminal">
     Edit the configuration file directly:
 
-    ```ini title="/etc/xavs/watcher/watcher.conf"
+    ```ini title="/etc/ironcore/watcher/watcher.conf"
     [watcher_cluster_data_model_collectors.prometheus]
     enabled = True
     host = 10.0.1.71
@@ -120,12 +120,12 @@ print('Compute collector loaded successfully')
 
 ## Telemetry Data Source
 
-Telemetry integration requires the Xloud Telemetry service (Ceilometer) to be deployed
+Telemetry integration requires the Polystack Telemetry service (Ceilometer) to be deployed
 and collecting per-instance metrics.
 
 <AccordionGroup>
   <Accordion title="Configuration" icon="settings" defaultOpen>
-    ```ini title="/etc/xavs/watcher/watcher.conf"
+    ```ini title="/etc/ironcore/watcher/watcher.conf"
     [collector]
     collector_plugins = compute, ceilometer
 

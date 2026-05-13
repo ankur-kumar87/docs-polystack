@@ -1,6 +1,6 @@
 ---
 title: "Key Manager Backend Configuration"
-description: "Configure Barbican secret store backends for Xloud Key Manager — Simple Crypto, PKCS#11 HSM, KMIP, HashiCorp Vault, Dogtag KRA, and multi-backend deployments."
+description: "Configure Barbican secret store backends for Polystack Key Manager — Simple Crypto, PKCS#11 HSM, KMIP, HashiCorp Vault, Dogtag KRA, and multi-backend deployments."
 sidebarTitle: "Backend Configuration"
 ---
 
@@ -8,7 +8,7 @@ import AdminWarning from '/snippets/admin-warning.mdx';
 
 ## Overview
 
-The Key Manager (Barbican) secret store backend determines how secret payloads are encrypted and where ciphertext is stored. Xloud Key Manager supports five backend types — from a software-only AES plugin for development, to hardware HSMs, external KMIP servers, HashiCorp Vault, and Dogtag KRA for enterprise deployments. Configuration is managed through XDeploy; changing the backend after secrets exist requires a migration operation.
+The Key Manager (Barbican) secret store backend determines how secret payloads are encrypted and where ciphertext is stored. Polystack Key Manager supports five backend types — from a software-only AES plugin for development, to hardware HSMs, external KMIP servers, HashiCorp Vault, and Dogtag KRA for enterprise deployments. Configuration is managed through XDeploy; changing the backend after secrets exist requires a migration operation.
 
 <AdminWarning />
 
@@ -239,7 +239,7 @@ secret_store_plugin = vault_plugin
 ## Apply Backend Configuration
 
 ```bash title="Deploy Key Manager configuration via XDeploy"
-xavs-ansible deploy -t barbican
+ironcore-ansible deploy -t barbican
 ```
 
 ```bash title="Verify the service is healthy after deployment"

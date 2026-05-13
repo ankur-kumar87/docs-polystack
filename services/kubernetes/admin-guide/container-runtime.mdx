@@ -1,13 +1,13 @@
 ---
 title: "Container Runtime"
-description: "Configure the container runtime for Xloud K8SaaS cluster templates — containerd recommendations, deprecated Docker support, and runtime configuration labels."
+description: "Configure the container runtime for Polystack K8SaaS cluster templates — containerd recommendations, deprecated Docker support, and runtime configuration labels."
 sidebarTitle: "Container Runtime"
 ---
 
 ## Overview
 
 The container runtime is specified in the cluster template and determines how container
-images are pulled, started, and managed on cluster nodes. Xloud K8SaaS supports
+images are pulled, started, and managed on cluster nodes. Polystack K8SaaS supports
 `containerd` as the recommended runtime for all Kubernetes versions 1.24 and above.
 Docker runtime support was removed from Kubernetes upstream in version 1.24.
 
@@ -71,7 +71,7 @@ template using the `insecure_registry` label:
 openstack coe cluster template create k8s-internal-registry \
   --coe kubernetes \
   --labels container_runtime=containerd \
-  --labels insecure_registry=registry.xloud.local:5000 \
+  --labels insecure_registry=registry.polystack.local:5000 \
   ...
 ```
 

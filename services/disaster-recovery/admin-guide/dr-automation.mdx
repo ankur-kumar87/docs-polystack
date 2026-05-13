@@ -99,7 +99,7 @@ Scripts receive the following environment variables from the XDR runtime:
       ip=$(echo "$XDR_RECOVERY_METADATA" | jq -r ".resources[\"$id\"].ip")
       hostname=$(echo "$XDR_RECOVERY_METADATA" | jq -r ".resources[\"$id\"].hostname")
 
-      nsupdate -k /etc/xavs/dns.key <<EOF
+      nsupdate -k /etc/ironcore/dns.key <<EOF
     server 10.0.1.71
     update delete ${hostname}.internal A
     update add ${hostname}.internal 60 A ${ip}

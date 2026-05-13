@@ -1,18 +1,18 @@
 ---
 title: "Hypervisor Configuration"
-description: "Configure the native hypervisor driver for Xloud Compute. Covers image formats, CPU modes, backing storage, nested virtualization, and performance tuning."
+description: "Configure the native hypervisor driver for Polystack Compute. Covers image formats, CPU modes, backing storage, nested virtualization, and performance tuning."
 sidebarTitle: "Hypervisor"
 ---
 
 ## Overview
 
-Xloud Compute uses a native hypervisor as its default virtualization layer, managed through the libvirt driver. The native hypervisor provides hardware-assisted virtualization on x86, ARM, and POWER architectures, delivering near-bare-metal performance for virtual machine workloads.
+Polystack Compute uses a native hypervisor as its default virtualization layer, managed through the libvirt driver. The native hypervisor provides hardware-assisted virtualization on x86, ARM, and POWER architectures, delivering near-bare-metal performance for virtual machine workloads.
 
-The libvirt driver translates Xloud Compute API requests into hypervisor operations on each compute node. Understanding these configuration options helps you tune workload placement, CPU topology, storage performance, and security posture.
+The libvirt driver translates Polystack Compute API requests into hypervisor operations on each compute node. Understanding these configuration options helps you tune workload placement, CPU topology, storage performance, and security posture.
 
 <Note>
   **Prerequisites**
-  - Administrator access to the Xloud platform and XDeploy
+  - Administrator access to the Polystack platform and XDeploy
   - Compute nodes running XOS with `libvirt` and `qemu-kvm` installed
   - Verify hardware virtualization support: `grep -o 'vmx\|svm' /proc/cpuinfo | head -1`
 </Note>
@@ -21,7 +21,7 @@ The libvirt driver translates Xloud Compute API requests into hypervisor operati
 
 ## Supported Image Formats
 
-The following disk image formats are supported by the native hypervisor driver. The format is detected automatically from the image metadata stored in the Xloud Image Service.
+The following disk image formats are supported by the native hypervisor driver. The format is detected automatically from the image metadata stored in the Polystack Image Service.
 
 | Format | Name | Description | Recommended Use |
 |--------|------|-------------|-----------------|
@@ -31,7 +31,7 @@ The following disk image formats are supported by the native hypervisor driver. 
 | `vmdk` | VMware Disk | VMware-compatible format. Supported for import/migration scenarios. | VM migrations from VMware environments |
 
 <Tip>
-  For production deployments using XSDS (distributed storage) as the storage backend, use `raw` format images. The distributed storage layer handles copy-on-write natively, making qcow2 overhead unnecessary and counterproductive.
+  For production deployments using Software-Defined-Storage (distributed storage) as the storage backend, use `raw` format images. The distributed storage layer handles copy-on-write natively, making qcow2 overhead unnecessary and counterproductive.
 </Tip>
 
 ---
@@ -40,7 +40,7 @@ The following disk image formats are supported by the native hypervisor driver. 
 
 <Tabs>
   <Tab title="x86 / x86_64" icon="microchip">
-    x86 is the primary supported architecture for Xloud Compute.
+    x86 is the primary supported architecture for Polystack Compute.
 
     **CPU Requirements**
     - Intel VT-x (`vmx` flag in `/proc/cpuinfo`) or AMD-V (`svm` flag)
@@ -104,13 +104,13 @@ The hypervisor driver supports multiple backing storage configurations for insta
 | **QCOW** (local) | qcow2 files on compute node local storage | Simple setup, copy-on-write snapshots | No live migration, no fault tolerance |
 | **Flat** (raw local) | Raw image files on compute node local storage | Maximum local I/O performance | No live migration, no fault tolerance |
 | **LVM** | Logical volumes on compute node volume groups | Better I/O than file-backed, thin provisioning | Complex setup, no live migration |
-| **RBD** (XSDS) | Distributed block device via network | Live migration, fault tolerance, snapshots | Requires XSDS distributed storage cluster |
+| **RBD** (Software-Defined-Storage) | Distributed block device via network | Live migration, fault tolerance, snapshots | Requires Software-Defined-Storage distributed storage cluster |
 
 <Warning>
   Local storage backends (QCOW, Flat, LVM) do not support live migration. Use RBD-backed storage when live migration between compute nodes is required.
 </Warning>
 
-The storage backend is configured per compute node in the Nova configuration, managed by XDeploy via the xavs-ansible deployment playbooks.
+The storage backend is configured per compute node in the Nova configuration, managed by XDeploy via the ironcore-ansible deployment playbooks.
 
 ---
 
@@ -133,7 +133,7 @@ The CPU mode controls how CPU features and topology are presented to virtual mac
 
 CPU mode is set in the Nova compute configuration, which XDeploy manages via `globals.d` overrides:
 
-```yaml title="/etc/xavs/globals.d/_50_compute.yml"
+```yaml title="/etc/ironcore/globals.d/_50_compute.yml"
 nova_cpu_mode: "custom"
 nova_cpu_model: "Cascadelake-Server-noTSX"
 ```
@@ -141,7 +141,7 @@ nova_cpu_model: "Cascadelake-Server-noTSX"
 Apply the change with:
 
 ```bash title="Apply compute configuration"
-xavs-ansible deploy -t nova
+ironcore-ansible deploy -t nova
 ```
 
 ---
@@ -226,7 +226,7 @@ Configure huge page memory backing for memory-intensive or NUMA-sensitive worklo
     Configure and execute live migrations between compute nodes
   </Card>
   <Card title="Compute Architecture" icon="layers" href="/services/compute/architecture" color="#197560">
-    Understand the full Xloud Compute architecture and service components
+    Understand the full Polystack Compute architecture and service components
   </Card>
   <Card title="Security Hardening" icon="shield" href="/services/compute/security-hardening" color="#197560">
     Hypervisor-level security configuration and CIS compliance hardening
@@ -260,13 +260,13 @@ Configure huge page memory backing for memory-intensive or NUMA-sensitive worklo
     nova_cpu_mode: "custom"
     nova_cpu_model: "Cascadelake-Server-noTSX"
     ```
-    Apply with `xavs-ansible deploy -t nova` on all nodes, then retry the migration.
+    Apply with `ironcore-ansible deploy -t nova` on all nodes, then retry the migration.
   </Accordion>
 
   <Accordion title="Poor disk I/O performance on RBD-backed instances" icon="hard-drive">
-    **Cause**: qcow2 format images are being used with XSDS distributed storage, adding unnecessary copy-on-write overhead.
+    **Cause**: qcow2 format images are being used with Software-Defined-Storage distributed storage, adding unnecessary copy-on-write overhead.
 
-    **Resolution**: Use `raw` format for all images on XSDS-backed deployments. Convert existing images:
+    **Resolution**: Use `raw` format for all images on Software-Defined-Storage-backed deployments. Convert existing images:
     ```bash title="Convert qcow2 to raw"
     openstack image create \
       --disk-format raw \
@@ -293,7 +293,7 @@ Configure huge page memory backing for memory-intensive or NUMA-sensitive worklo
     sudo systemctl status libvirtd
     sudo journalctl -u libvirtd -n 50
     ```
-    Common causes include AppArmor policy conflicts and missing QEMU binaries. Review the journal output for the specific error and consult the Xloud support portal.
+    Common causes include AppArmor policy conflicts and missing QEMU binaries. Review the journal output for the specific error and consult the Polystack support portal.
   </Accordion>
 </AccordionGroup>
 
@@ -301,9 +301,9 @@ Configure huge page memory backing for memory-intensive or NUMA-sensitive worklo
 
 ## Heterogeneous Hardware Support
 
-<Info>**Xloud-Developed** — Heterogeneous hardware support is a core capability of XAVS / XPCI.</Info>
+<Info>**Polystack-Developed** — Heterogeneous hardware support is a core capability of Ironcore / XPCI.</Info>
 
-Xloud supports mixing different hardware configurations within a single cluster -- no hardware homogeneity required.
+Polystack supports mixing different hardware configurations within a single cluster -- no hardware homogeneity required.
 
 <CardGroup cols={2}>
   <Card title="Mixed Node Types" icon="server">
@@ -336,9 +336,9 @@ Xloud supports mixing different hardware configurations within a single cluster 
     Set up and execute live migrations across compute nodes
   </Card>
   <Card title="Compute Admin Guide" href="/services/compute/admin-guide" color="#197560">
-    Full administrator reference for the Xloud Compute service
+    Full administrator reference for the Polystack Compute service
   </Card>
-  <Card title="XAVS Product" href="/products/xavs" color="#197560">
-    Learn about the full XAVS Advanced Virtualization Suite
+  <Card title="Ironcore Product" href="/products/ironcore" color="#197560">
+    Learn about the full Ironcore Advanced Virtualization Suite
   </Card>
 </CardGroup>

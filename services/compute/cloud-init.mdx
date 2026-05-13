@@ -6,11 +6,11 @@ sidebarTitle: "Cloud-init"
 
 ## Overview
 
-Xloud Compute supports automatic execution of customer-supplied scripts
+Polystack Compute supports automatic execution of customer-supplied scripts
 at virtual machine launch time and at any later point during the
 machine's lifecycle. The mechanism is the industry-standard **cloud-init**
 agent on Linux guests and **Cloudbase-Init** on Windows guests — both
-consume the same Xloud metadata service so the same launch flow works
+consume the same Polystack metadata service so the same launch flow works
 for every supported OS.
 
 <Info>
@@ -30,8 +30,8 @@ for every supported OS.
 <Note>
   **Prerequisites**
   - A guest image with `cloud-init` (Linux) or `Cloudbase-Init` (Windows)
-    pre-installed. The Xloud public image catalog ships with both.
-  - A network or metadata route from the instance to the Xloud metadata
+    pre-installed. The Polystack public image catalog ships with both.
+  - A network or metadata route from the instance to the Polystack metadata
     service (link-local `169.254.169.254` over the management network is
     enabled by default).
   - For post-provisioning execution: SSH (Linux) or WinRM (Windows)
@@ -164,7 +164,7 @@ apt-get install -y nginx
 systemctl enable --now nginx
 
 # Drop a marker file so monitoring can confirm bootstrap completed
-echo "$(date -u +%FT%TZ) cloud-init bootstrap complete" > /var/log/xloud-bootstrap.done
+echo "$(date -u +%FT%TZ) cloud-init bootstrap complete" > /var/log/polystack-bootstrap.done
 ```
 
 ### cloud-config YAML — declarative bootstrap
@@ -185,10 +185,10 @@ users:
     sudo: "ALL=(ALL) NOPASSWD:ALL"
     shell: /bin/bash
     ssh_authorized_keys:
-      - ssh-ed25519 AAAA... ops@xloud
+      - ssh-ed25519 AAAA... ops@polystack
 
 write_files:
-  - path: /etc/xloud/site.conf
+  - path: /etc/polystack/site.conf
     permissions: "0644"
     content: |
       backend = production
@@ -196,10 +196,10 @@ write_files:
 
 runcmd:
   - systemctl enable --now nginx
-  - curl -fsSL https://repo.xloud.tech/setup.sh | bash
-  - echo "bootstrap-done" > /var/log/xloud-bootstrap.done
+  - curl -fsSL https://repo.polystack.tech/setup.sh | bash
+  - echo "bootstrap-done" > /var/log/polystack-bootstrap.done
 
-final_message: "Xloud bootstrap finished after $UPTIME seconds"
+final_message: "Polystack bootstrap finished after $UPTIME seconds"
 ```
 
 <Tip>
@@ -224,11 +224,11 @@ Install-WindowsFeature -Name Web-Server -IncludeManagementTools
 
 # Replace the default page so health checks see the right banner
 Set-Content -Path C:\inetpub\wwwroot\index.html `
-  -Value "<h1>Xloud-managed IIS host</h1>" -Encoding UTF8
+  -Value "<h1>Polystack-managed IIS host</h1>" -Encoding UTF8
 
 # Disk-level marker the monitoring agent picks up
 $now = Get-Date -Format "yyyy-MM-ddTHH:mm:ssZ"
-"$now Xloud bootstrap complete" | Out-File C:\xloud-bootstrap.done -Encoding UTF8
+"$now Polystack bootstrap complete" | Out-File C:\polystack-bootstrap.done -Encoding UTF8
 ```
 
 <Note>
@@ -244,7 +244,7 @@ $now = Get-Date -Format "yyyy-MM-ddTHH:mm:ssZ"
 @echo off
 nslookup %COMPUTERNAME%.corp.local
 nltest /dsregdns
-echo Xloud bootstrap complete > C:\xloud-bootstrap.done
+echo Polystack bootstrap complete > C:\polystack-bootstrap.done
 ```
 
 ### cloud-config on Windows — restricted subset
@@ -275,7 +275,7 @@ runcmd:
 ## Running Scripts on Provisioned or Discovered Instances
 
 For operational workflows that fire **after** a VM has been provisioned
-— or on instances that were imported into Xloud through migration or
+— or on instances that were imported into Polystack through migration or
 discovery — the same scripting mechanism is available. Choose the path
 that fits your security and connectivity model.
 
@@ -308,17 +308,17 @@ that fits your security and connectivity model.
       tasks:
         - name: Rotate the deploy key
           ansible.builtin.shell: |
-            sudo /opt/xloud/rotate-key.sh
+            sudo /opt/polystack/rotate-key.sh
           when: ansible_os_family != "Windows"
 
         - name: Rotate the deploy key on Windows hosts
           ansible.windows.win_powershell:
-            script: C:\Program Files\Xloud\rotate-key.ps1
+            script: C:\Program Files\Polystack\rotate-key.ps1
           when: ansible_os_family == "Windows"
     ```
 
-    XAVS Deployment Automation already includes the inventory plugin
-    that pulls instance lists straight from Xloud, so a fresh
+    Ironcore Deployment Automation already includes the inventory plugin
+    that pulls instance lists straight from Polystack, so a fresh
     `ansible-playbook` run picks up newly-launched VMs without manual
     inventory editing.
   </Accordion>
@@ -380,7 +380,7 @@ that fits your security and connectivity model.
     or uninstalled. Boot a fresh VM from the same image, run
     `which cloud-init` (Linux) or check for the **Cloudbase-Init**
     service in `services.msc` (Windows). If absent, rebuild the image
-    or pick one from the Xloud public catalog.
+    or pick one from the Polystack public catalog.
   </Accordion>
   <Accordion title="The script ran but failed silently">
     Cloud-init swallows non-zero exit codes from the user script by
@@ -420,13 +420,13 @@ that fits your security and connectivity model.
   as Administrator on Windows. Anyone with `compute:create_server`
   permission can submit it.
 - **Do not embed secrets in user-data.** The metadata service is reachable
-  by every process inside the guest. Use Xloud Key Management for
+  by every process inside the guest. Use Polystack Key Management for
   secrets and fetch them at runtime over an authenticated channel.
 - **Network reachability of the metadata service.** Restrict the
   metadata route in tenant security groups when an instance is moved
   to a hardened production segment — cloud-init will not need it
   after first boot.
-- **Audit script content.** XAVS Deployment Automation's `--check`
+- **Audit script content.** Ironcore Deployment Automation's `--check`
   mode renders the playbook diff before execution. Use it for any
   multi-host operational workflow.
 

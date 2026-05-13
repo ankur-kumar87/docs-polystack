@@ -1,16 +1,16 @@
 ---
 title: "API Security"
-description: "Secure the Xloud API layer with token authentication, application credentials, rate limiting, CORS, RBAC policy enforcement, and mutual TLS between services."
+description: "Secure the Polystack API layer with token authentication, application credentials, rate limiting, CORS, RBAC policy enforcement, and mutual TLS between services."
 sidebarTitle: "API Security"
 ---
 
 ## Overview
 
-All Xloud platform services expose REST APIs secured by Xloud Identity (Keystone). Authentication is token-based with configurable expiry, and the platform enforces authorization through a role-based access control (RBAC) policy engine. This page covers the full API security stack: authentication flows, application credentials, and rate limiting. It also covers audit logging, CORS configuration, and service-to-service mutual TLS.
+All Polystack platform services expose REST APIs secured by Polystack Identity (Keystone). Authentication is token-based with configurable expiry, and the platform enforces authorization through a role-based access control (RBAC) policy engine. This page covers the full API security stack: authentication flows, application credentials, and rate limiting. It also covers audit logging, CORS configuration, and service-to-service mutual TLS.
 
 <Note>
   **Prerequisites**
-  - An active Xloud account with the `member` or `admin` role
+  - An active Polystack account with the `member` or `admin` role
   - CLI tools installed: `openstack` CLI ([setup guide](/cli-setup))
   - For application credentials: access to **Project → Identity → Application Credentials**
 </Note>
@@ -19,12 +19,12 @@ All Xloud platform services expose REST APIs secured by Xloud Identity (Keystone
 
 ## Token-Based Authentication
 
-All API requests require a valid token issued by Xloud Identity. Tokens are scoped to a project and carry the user's role assignments for that project.
+All API requests require a valid token issued by Polystack Identity. Tokens are scoped to a project and carry the user's role assignments for that project.
 
 ```mermaid
 sequenceDiagram
     participant Client
-    participant Keystone as Xloud Identity
+    participant Keystone as Polystack Identity
     participant NovaAPI as Service API
     Client->>Keystone: POST /v3/auth/tokens (credentials)
     Keystone-->>Client: X-Subject-Token header
@@ -86,7 +86,7 @@ sequenceDiagram
     ```
   </Tab>
   <Tab title="Dashboard" icon="gauge">
-    The Xloud Dashboard handles token acquisition automatically at login. Session tokens are stored server-side and refreshed transparently.
+    The Polystack Dashboard handles token acquisition automatically at login. Session tokens are stored server-side and refreshed transparently.
 
     To inspect the active session token:
     1. Navigate to **Project → API Access**.
@@ -163,7 +163,7 @@ Application credentials allow automation scripts and CI/CD pipelines to authenti
 
 ## RBAC Policy Enforcement
 
-Xloud enforces access control using oslo.policy rules. Every API operation checks the caller's token against the service's policy file before executing.
+Polystack enforces access control using oslo.policy rules. Every API operation checks the caller's token against the service's policy file before executing.
 
 ### Default Role Hierarchy
 
@@ -183,12 +183,12 @@ docker exec nova_api cat /etc/nova/policy.yaml 2>/dev/null || \
 ```
 
 ```yaml title="Example: restrict live migration to system-admin only"
-# /etc/xavs/nova-api/policy.yaml
+# /etc/ironcore/nova-api/policy.yaml
 "os_compute_api:os-migrate-server:migrate_live": "role:admin and system_scope:all"
 ```
 
 <Info>
-  Xloud uses the standard RBAC model. Custom policy overrides should be placed in service-specific policy files and deployed via the XAVS config overlay mechanism. Do not modify policy files directly inside containers — changes are lost on restart.
+  Polystack uses the standard RBAC model. Custom policy overrides should be placed in service-specific policy files and deployed via the Ironcore config overlay mechanism. Do not modify policy files directly inside containers — changes are lost on restart.
 </Info>
 
 ---
@@ -205,7 +205,7 @@ Rate limiting protects the platform from abuse and ensures fair resource allocat
 | Image upload | 10 / hour | Yes |
 
 ```yaml title="Configure compute rate limits"
-# /etc/xavs/globals.d/_60_rate_limits.yml
+# /etc/ironcore/globals.d/_60_rate_limits.yml
 nova_api_rate_limits: |
   (POST, "*", .*, 50, MINUTE);
   (GET, "*", .*, 300, MINUTE)
@@ -218,7 +218,7 @@ nova_api_rate_limits: |
 Cross-Origin Resource Sharing (CORS) controls which origins can make browser-based API requests. Configure allowed origins to match your Dashboard and any custom web applications.
 
 ```yaml title="Restrict CORS origins"
-# /etc/xavs/globals.d/_60_cors.yml
+# /etc/ironcore/globals.d/_60_cors.yml
 keystone_cors_allowed_origin: "https://connect.<your-domain>"
 nova_cors_allowed_origin: "https://connect.<your-domain>"
 neutron_cors_allowed_origin: "https://connect.<your-domain>"

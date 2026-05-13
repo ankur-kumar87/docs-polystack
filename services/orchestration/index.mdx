@@ -1,18 +1,18 @@
 ---
 title: "Orchestration"
-description: "Template-based infrastructure orchestration for Xloud Cloud Platform. Define, deploy, and manage cloud resources as code using declarative orchestration."
+description: "Template-based infrastructure orchestration for Polystack Cloud Platform. Define, deploy, and manage cloud resources as code using declarative orchestration."
 icon: "workflow"
 sidebarTitle: "Orchestration"
 mode: "wide"
 ---
 
 Define and deploy cloud infrastructure as code using declarative templates.
-Xloud Orchestration enables repeatable, version-controlled provisioning of entire
+Polystack Orchestration enables repeatable, version-controlled provisioning of entire
 application stacks — compute, networking, storage, and scaling policies — from a
 single template file.
 
-<Card title="XAVS — Advanced Virtualization Solutions" icon="external-link" href="https://xloud.tech/xavs" color="#197560" horizontal>
-  Product details on xloud.tech
+<Card title="Ironcore — Advanced Virtualization Solutions" icon="external-link" href="https://polystack.tech/ironcore" color="#197560" horizontal>
+  Product details on polystack.tech
 </Card>
 
 ---
@@ -78,10 +78,10 @@ graph TD
     U([User / Dashboard]) -->|Submit template| API[Orchestration API<br/>:8004]
     API -->|Parse & validate| ENG[Orchestration Engine]
     ENG -->|Resolve dependencies| DEPS[Dependency Graph]
-    DEPS -->|Provision resources| COMPUTE[Xloud Compute]
-    DEPS -->|Provision resources| NET[Xloud Networking]
-    DEPS -->|Provision resources| STORE[Xloud Block Storage]
-    DEPS -->|Provision resources| ID[Xloud Identity]
+    DEPS -->|Provision resources| COMPUTE[Polystack Compute]
+    DEPS -->|Provision resources| NET[Polystack Networking]
+    DEPS -->|Provision resources| STORE[Polystack Block Storage]
+    DEPS -->|Provision resources| ID[Polystack Identity]
     COMPUTE & NET & STORE & ID -->|Report status| ENG
     ENG -->|Stack status| API
     API -->|Stack output| U
@@ -95,16 +95,16 @@ graph TD
 <p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Related Services</p>
 
 <CardGroup cols={4}>
-  <Card title="Xloud Compute" icon="server" href="/services/compute" color="#197560">
+  <Card title="Polystack Compute" icon="server" href="/services/compute" color="#197560">
     Virtual machine instances provisioned and managed by orchestration stacks
   </Card>
-  <Card title="Xloud Block Storage" icon="hard-drive" href="/services/storage/index" color="#197560">
+  <Card title="Polystack Block Storage" icon="hard-drive" href="/services/storage/index" color="#197560">
     Persistent volumes created and attached through orchestration templates
   </Card>
-  <Card title="Xloud Networking" icon="network" href="/services/networking/index" color="#197560">
+  <Card title="Polystack Networking" icon="network" href="/services/networking/index" color="#197560">
     Networks, subnets, routers, and floating IPs defined in stack templates
   </Card>
-  <Card title="Xloud Load Balancer" icon="combine" href="/services/load-balancer" color="#197560">
+  <Card title="Polystack Load Balancer" icon="combine" href="/services/load-balancer" color="#197560">
     Load balancer resources for auto-scaling groups in orchestration stacks
   </Card>
 </CardGroup>

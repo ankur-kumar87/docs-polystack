@@ -1,17 +1,17 @@
 ---
 title: "Network Security"
-description: "Enforce network security with stateful security groups, FWaaS, port security, anti-spoofing, VLAN/VXLAN segmentation, and VPN as a Service on Xloud."
+description: "Enforce network security with stateful security groups, FWaaS, port security, anti-spoofing, VLAN/VXLAN segmentation, and VPN as a Service on Polystack."
 sidebarTitle: "Network Security"
 ---
 
 ## Overview
 
-Xloud Networking enforces security at the network plane without requiring agents inside your virtual machines. Stateful security groups operate at the virtual switch level, and FWaaS policies apply at the virtual router. Port security prevents spoofing attacks, and VLAN/VXLAN segmentation isolates tenant traffic at the data plane. This agentless model provides consistent enforcement regardless of guest OS configuration.
+Polystack Networking enforces security at the network plane without requiring agents inside your virtual machines. Stateful security groups operate at the virtual switch level, and FWaaS policies apply at the virtual router. Port security prevents spoofing attacks, and VLAN/VXLAN segmentation isolates tenant traffic at the data plane. This agentless model provides consistent enforcement regardless of guest OS configuration.
 
 <Note>
   **Prerequisites**
-  - An active Xloud project with at least one network and subnet
-  - `member` or `admin` role in Xloud Identity
+  - An active Polystack project with at least one network and subnet
+  - `member` or `admin` role in Polystack Identity
   - For FWaaS: XPCI license with `enable_neutron_fwaas: "yes"` in XDeploy configuration
   - For VPNaaS: `enable_neutron_vpnaas: "yes"` in XDeploy configuration
 </Note>
@@ -225,7 +225,7 @@ openstack subnet create \
 
 ## DDoS Protection
 
-Xloud Networking provides rate limiting at the port and router levels to mitigate volumetric attacks:
+Polystack Networking provides rate limiting at the port and router levels to mitigate volumetric attacks:
 
 ```bash title="Apply QoS bandwidth limit to a port"
 openstack qos policy create ddos-protection

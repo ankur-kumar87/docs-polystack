@@ -16,10 +16,10 @@ them.
 ## Platform Prerequisites
 
 <Steps titleSize="h3">
-  <Step title="XMS is enabled on the Xloud platform" icon="check">
-    The Migration panel must be visible in the Xloud Dashboard and the `xms`
+  <Step title="XMS is enabled on the Polystack platform" icon="check">
+    The Migration panel must be visible in the Polystack Dashboard and the `xms`
     CLI subcommand must be installed on operator workstations. If neither is
-    available, XMS is not enabled on the deployment — contact Xloud support.
+    available, XMS is not enabled on the deployment — contact Polystack support.
   </Step>
   <Step title="Identity service is healthy" icon="key">
     XMS validates every API call against the platform identity service. If
@@ -37,7 +37,7 @@ them.
 
 ## Project Prerequisites
 
-Each target Xloud project that will receive migrated workloads needs:
+Each target Polystack project that will receive migrated workloads needs:
 
 | Requirement | Why |
 |-------------|-----|
@@ -79,7 +79,7 @@ same transport library and pipeline apply — the only differences are:
 | Requirement | Why |
 |-------------|-----|
 | **VMware Tools installed (recommended)** | Exposes guest OS, hostname, and IP to discovery. Not a migration blocker when absent |
-| **Supported guest OS** | Guest must be in the Xloud guest catalog — see [Preflight Assessment](/services/migration/user-guide/preflight) |
+| **Supported guest OS** | Guest must be in the Polystack guest catalog — see [Preflight Assessment](/services/migration/user-guide/preflight) |
 | **Clean boot loader** | XMS repairs drivers and the boot loader for platform-specific changes, but it does not fix a pre-existing broken boot loader |
 | **CBT enabled (warm only)** | Warm migration requires Changed Block Tracking on the source |
 
@@ -89,7 +89,7 @@ same transport library and pipeline apply — the only differences are:
 
 The operator installing or maintaining XMS typically needs:
 
-- Administrative role on the Xloud platform (for installing, updating, and
+- Administrative role on the Polystack platform (for installing, updating, and
   scaling XMS)
 - Read or admin role on every target project that will receive migrations
 - Credentials to register source environments (either shared service
@@ -107,7 +107,7 @@ Use this checklist before onboarding a new source:
     - [ ] Identity service reachable and healthy
     - [ ] Block storage reachable and healthy
     - [ ] Compute reachable and healthy
-    - [ ] XMS visible in the Xloud Dashboard
+    - [ ] XMS visible in the Polystack Dashboard
     - [ ] `xms` CLI installed and authenticated
   </Accordion>
   <Accordion title="Target project" icon="folder">

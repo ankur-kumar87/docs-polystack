@@ -1,19 +1,19 @@
 ---
 title: "Performance"
-description: "Optimize XSDS storage performance using storage tiering, deduplication, compression, and read caching for your workload's I/O profile."
+description: "Optimize Software-Defined-Storage storage performance using storage tiering, deduplication, compression, and read caching for your workload's I/O profile."
 sidebarTitle: "Performance"
 ---
 
 ## Overview
 
-XSDS provides several performance optimization features that can be configured
+Software-Defined-Storage provides several performance optimization features that can be configured
 independently or combined to match your workload's I/O requirements. Understanding
 how each feature works helps you select the right combination without unnecessary
 overhead.
 
 <Note>
   **Prerequisites**
-  - An active Xloud account with project member access
+  - An active Polystack account with project member access
   - Storage tiering, deduplication, and caching are configured at the pool level by
     an administrator — contact your storage administrator to enable these features. Your administrator can configure this through [XDeploy](/deployment).
 </Note>
@@ -22,7 +22,7 @@ overhead.
 
 ## Storage Tiering
 
-XSDS supports multiple storage device classes within a single cluster. Administrators
+Software-Defined-Storage supports multiple storage device classes within a single cluster. Administrators
 configure volume types that map to specific device classes, allowing you to direct
 each workload to the appropriate media tier.
 
@@ -40,7 +40,7 @@ each workload to the appropriate media tier.
         openstack volume type list
         ```
 
-        Volume types prefixed with `ceph-` correspond to XSDS-backed tiers.
+        Volume types prefixed with `ceph-` correspond to Software-Defined-Storage-backed tiers.
       </Step>
       <Step title="Create a volume on the target tier" icon="plus">
         ```bash title="Create an NVMe-tier volume"
@@ -60,10 +60,10 @@ each workload to the appropriate media tier.
     </Steps>
   </Tab>
   <Tab title="Automatic Tiering" icon="zap">
-    Xloud can automate tiering based on access patterns — hot data migrates to faster
+    Polystack can automate tiering based on access patterns — hot data migrates to faster
     media automatically while cold data moves to higher-capacity, lower-cost tiers.
 
-    Automatic tiering is managed through the [Xloud Resource Optimizer](/services/optimization/user-guide).
+    Automatic tiering is managed through the [Polystack Resource Optimizer](/services/optimization/user-guide).
     The optimizer monitors access patterns and issues migration recommendations that
     can be applied manually or executed automatically.
 
@@ -161,7 +161,7 @@ Measure the effective I/O performance of your storage configuration:
 
 <Tabs>
   <Tab title="Basic I/O Test" icon="terminal">
-    From inside a Xloud Compute instance with a volume attached:
+    From inside a Polystack Compute instance with a volume attached:
 
     ```bash title="Sequential write throughput (1 GB test)"
     dd if=/dev/zero of=/dev/vdb bs=1M count=1024 oflag=direct
@@ -208,7 +208,7 @@ Measure the effective I/O performance of your storage configuration:
   <Card title="Data Protection" href="/services/sds/user-guide/data-protection" color="#197560">
     Configure replication and erasure coding for durability
   </Card>
-  <Card title="XSDS Admin — Storage Tiers" href="/services/sds/admin-guide/storage-tiers" color="#197560">
+  <Card title="Software-Defined-Storage Admin — Storage Tiers" href="/services/sds/admin-guide/storage-tiers" color="#197560">
     Configure multi-tier storage pools and device class rules (administrator)
   </Card>
   <Card title="Resource Optimizer" href="/services/optimization/user-guide" color="#197560">

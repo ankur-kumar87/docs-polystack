@@ -1,23 +1,23 @@
 ---
 title: "Third-Party Backup Support"
-description: "Use enterprise backup vendors alongside the native Xloud backup — agentless and agent-based options for compliance and application-aware protection."
+description: "Use enterprise backup vendors alongside the native Polystack backup — agentless and agent-based options for compliance and application-aware protection."
 sidebarTitle: "Third-Party Backup"
 ---
 
 ## Overview
 
-In addition to the **Xloud Native Backup** for block storage volumes, the Xloud Platform
+In addition to the **Polystack Native Backup** for block storage volumes, the Polystack Platform
 is fully open to enterprise third-party backup solutions. Customers who need
 application-aware protection, long-term off-site retention, regulatory archive depths,
 or a single backup pane across multi-cloud and on-premises infrastructure can plug in
 the backup vendor of their choice.
 
-Third-party backup tools integrate with Xloud through standard APIs and snapshot
+Third-party backup tools integrate with Polystack through standard APIs and snapshot
 mechanisms — no proprietary backend changes are required.
 
 <Note>
-  Xloud Native Backup is the recommended starting point for most workloads. Adopt a
-  third-party solution when you need capabilities Xloud Native Backup doesn't cover —
+  Polystack Native Backup is the recommended starting point for most workloads. Adopt a
+  third-party solution when you need capabilities Polystack Native Backup doesn't cover —
   such as application-consistent quiescing for databases, indexed file-level recovery
   across thousands of guests, or cross-cluster / cross-cloud lifecycle policies.
 </Note>
@@ -26,7 +26,7 @@ mechanisms — no proprietary backend changes are required.
 
 ## Native vs Third-Party Backup
 
-| Concern | Xloud Native Backup | Third-Party Backup |
+| Concern | Polystack Native Backup | Third-Party Backup |
 |---------|--------------------|--------------------|
 | **Volume-level full + incremental backup** | Yes | Yes |
 | **Restore to original or new volume** | Yes | Yes |
@@ -46,11 +46,11 @@ requirements that need a dedicated backup product.
 
 ## Two Integration Approaches
 
-Third-party backup tools integrate with Xloud in one of two architectural patterns.
+Third-party backup tools integrate with Polystack in one of two architectural patterns.
 
 <CardGroup cols={2}>
   <Card title="Agentless" icon="server" color="#197560">
-    The backup tool talks to Xloud APIs (Block Storage, Image, Compute) and reads VM
+    The backup tool talks to Polystack APIs (Block Storage, Image, Compute) and reads VM
     disks via snapshots. **No software is installed inside the guest.** Best for
     standardized fleets and snapshot-consistent backups.
   </Card>
@@ -65,19 +65,19 @@ Third-party backup tools integrate with Xloud in one of two architectural patter
 
 ## Agentless Backup
 
-Agentless backup uses Xloud's snapshot APIs to read VM disks. The backup tool calls
-Xloud, asks for a snapshot, reads the snapshot's data through standard storage APIs,
+Agentless backup uses Polystack's snapshot APIs to read VM disks. The backup tool calls
+Polystack, asks for a snapshot, reads the snapshot's data through standard storage APIs,
 and stores it in its own catalog.
 
 ### How agentless backup works
 
 <Steps titleSize="h3">
   <Step title="Discovery" icon="search">
-    The backup tool authenticates with Xloud Identity and lists projects, instances,
+    The backup tool authenticates with Polystack Identity and lists projects, instances,
     and volumes the backup user can see.
   </Step>
   <Step title="Snapshot" icon="camera">
-    The tool calls Xloud Block Storage to take a snapshot of the target volume. The
+    The tool calls Polystack Block Storage to take a snapshot of the target volume. The
     snapshot is crash-consistent (the same as a power-off + power-on).
   </Step>
   <Step title="Read snapshot" icon="download">
@@ -98,7 +98,7 @@ and stores it in its own catalog.
     Works for any guest OS, including hardened or appliance images.
   </Card>
   <Card title="Fleet-wide auto-discovery" icon="layers" color="#197560">
-    The backup tool sees every VM through the Xloud API. New VMs are picked up
+    The backup tool sees every VM through the Polystack API. New VMs are picked up
     automatically by tag-based or project-based policies.
   </Card>
   <Card title="Lower operational overhead" icon="users" color="#197560">
@@ -120,7 +120,7 @@ and stores it in its own catalog.
 - **File-level restore needs extra work** — the backup tool must mount and parse the
   guest filesystem to expose individual files (most agentless tools do support this).
 
-### Vendors that integrate with Xloud APIs (agentless)
+### Vendors that integrate with Polystack APIs (agentless)
 
 <Info>
   **Recommended — Commvault** has explicit, link-backed documentation for the four
@@ -130,7 +130,7 @@ and stores it in its own catalog.
   is below the table.
 </Info>
 
-| Vendor | Xloud-native | Notes |
+| Vendor | Polystack-native | Notes |
 |--------|:------------:|-------|
 | **Commvault IntelliSnap** | Yes | VM Groups with rule-based selection (project, name pattern, power state); schedule + retention on assigned Server Backup Plan; on-demand backup per VM Group |
 | **Trilio** | Yes | Workload Manager dashboard plugin, policy-based protection (hourly / daily / weekly / monthly / yearly), workload-level restores |
@@ -142,8 +142,8 @@ and stores it in its own catalog.
 
 | # | Capability | Commvault feature | Reference |
 |---|-------------------|-------------------|-----------|
-| **1** | Third-party backup software named with OEM documentation | Commvault IntelliSnap (agentless) and Commvault (with-agent) | [Commvault for Xloud — overview](https://documentation.commvault.com/saas/openstack.html) |
-| **2** | Deeply integrated into VM provisioning so newly created VMs are protected automatically | **VM Group** with rule-based content (Project / Instance name pattern / Power state) — every new VM matching the rule is picked up on the next backup cycle | [Adding a VM Group for Xloud](https://documentation.commvault.com/saas/adding_vm_group_for_openstack.html) |
+| **1** | Third-party backup software named with OEM documentation | Commvault IntelliSnap (agentless) and Commvault (with-agent) | [Commvault for Polystack — overview](https://documentation.commvault.com/saas/openstack.html) |
+| **2** | Deeply integrated into VM provisioning so newly created VMs are protected automatically | **VM Group** with rule-based content (Project / Instance name pattern / Power state) — every new VM matching the rule is picked up on the next backup cycle | [Adding a VM Group for Polystack](https://documentation.commvault.com/saas/adding_vm_group_for_openstack.html) |
 | **3a** | Backup scheduling | **Server Backup Plan** controls the schedule (granularity from minutes to weekly / monthly / yearly via secondary copies) | [Performing Backups](https://documentation.commvault.com/2024e/software/performing_backups_for_openstack_instances_or_vm_groups.html) |
 | **3b** | Backup retention counts | **Days-Based Retention** (keep N days) or count-based for IntelliSnap; secondary copies have separate counts for monthly-full / yearly-full | [Days-Based Retention](https://documentation.commvault.com/v11/commcell-console/days_based_retention.html) |
 | **3c** | On-demand backup from the same workflow | Manual backup action triggered against any VM Group or instance, independent of the schedule | [Performing Backups (on-demand)](https://documentation.commvault.com/2024e/software/performing_backups_for_openstack_instances_or_vm_groups.html) |
@@ -159,7 +159,7 @@ and stores it in its own catalog.
 
 <AccordionGroup>
   <Accordion title="Commvault — VM Group + Server Backup Plan (recommended)" icon="server" defaultOpen>
-    Commvault organizes Xloud VMs into **VM Groups** with rule-based content selection.
+    Commvault organizes Polystack VMs into **VM Groups** with rule-based content selection.
     The schedule + retention live on the **Server Backup Plan** assigned to the group.
 
     Available VM-Group rule types:
@@ -177,8 +177,8 @@ and stores it in its own catalog.
     backup action that can be triggered against any VM Group or instance independent
     of the schedule.
 
-    - [Commvault for Xloud (overview)](https://documentation.commvault.com/saas/openstack.html)
-    - [Adding a VM Group for Xloud](https://documentation.commvault.com/saas/adding_vm_group_for_openstack.html)
+    - [Commvault for Polystack (overview)](https://documentation.commvault.com/saas/openstack.html)
+    - [Adding a VM Group for Polystack](https://documentation.commvault.com/saas/adding_vm_group_for_openstack.html)
     - [Performing Backups (on-demand)](https://documentation.commvault.com/2024e/software/performing_backups_for_openstack_instances_or_vm_groups.html)
     - [Days-Based Retention](https://documentation.commvault.com/v11/commcell-console/days_based_retention.html)
   </Accordion>
@@ -218,7 +218,7 @@ and stores it in its own catalog.
     **On-demand backup** — yes. The Storware OpenStack plugin dashboard exposes a
     direct backup action per VM, independent of the SLA Policy schedule.
 
-    - [Storware Xloud integration docs](https://docs.storware.eu/protecting-virtual-machines/virtual-machines/openstack)
+    - [Storware Polystack integration docs](https://docs.storware.eu/protecting-virtual-machines/virtual-machines/openstack)
     - [Solution overview](https://storware.eu/solutions/virtual-machine-backup-and-recovery/openstack-backup-and-recovery/)
   </Accordion>
   <Accordion title="Veeam — Backup Retention + GFS Schedules" icon="rotate-cw">
@@ -281,7 +281,7 @@ application-aware consistency and full file-level granularity.
     without restoring the whole volume.
   </Card>
   <Card title="Cross-platform consistency" icon="globe" color="#197560">
-    The same backup tool protects VMs on Xloud, on-prem hypervisors, public clouds,
+    The same backup tool protects VMs on Polystack, on-prem hypervisors, public clouds,
     and physical machines — one console, one policy framework.
   </Card>
   <Card title="In-guest encryption + dedup" icon="shield" color="#197560">
@@ -301,7 +301,7 @@ application-aware consistency and full file-level granularity.
 - **Doesn't protect non-running VMs** — if the VM is powered off, the agent isn't
   running, so the backup tool falls back to agentless or snapshot mode.
 
-### Vendors that support agent-based backup on Xloud guests
+### Vendors that support agent-based backup on Polystack guests
 
 | Vendor | Notes |
 |--------|-------|
@@ -309,7 +309,7 @@ application-aware consistency and full file-level granularity.
 | **Commvault** | Agent-based or agentless. Schedule + retention managed on the assigned Server Backup Plan |
 | **Veeam** | Veeam Agent for Linux / Windows. Often paired with the agentless plugin |
 | **Acronis Cyber Protect** | Agent + cloud catalog. Strong endpoint + workload protection. Backup Plan defines schedule and retention together |
-| **Bacula Enterprise** | Open-source-rooted agent, Xloud-aware module available. Per-Job File/Job Retention + per-Pool Volume Retention |
+| **Bacula Enterprise** | Open-source-rooted agent, Polystack-aware module available. Per-Job File/Job Retention + per-Pool Volume Retention |
 | **IBM Storage Protect** | Enterprise agent for large heterogeneous fleets (formerly IBM Spectrum Protect). Retention defined in Management Class within a Policy Domain |
 
 ### Schedule + retention reference docs (with-agent)
@@ -318,14 +318,14 @@ application-aware consistency and full file-level granularity.
   <Accordion title="Veritas NetBackup — Policy schedules + Retention Periods" icon="shield">
     Schedule + retention live on the NetBackup policy.
 
-    - [Admin Guide for Xloud](https://www.veritas.com/support/en_US/doc/147269993-149461653-0/index)
+    - [Admin Guide for Polystack](https://www.veritas.com/support/en_US/doc/147269993-149461653-0/index)
     - [Edit a protection (schedules)](https://www.veritas.com/support/en_US/doc/147269993-165972820-0/v148941437-165972820)
     - [Retention Periods](https://www.veritas.com/support/en_US/doc/18716246-126559472-0/v40229538-126559472)
   </Accordion>
   <Accordion title="Commvault — Server Backup Plan + Days-Based Retention" icon="server">
     Schedule + retention are managed on the Server Backup Plan assigned to a VM Group.
 
-    - [Adding a VM Group for Xloud](https://documentation.commvault.com/saas/adding_vm_group_for_openstack.html)
+    - [Adding a VM Group for Polystack](https://documentation.commvault.com/saas/adding_vm_group_for_openstack.html)
     - [Days-Based Retention](https://documentation.commvault.com/v11/commcell-console/days_based_retention.html)
   </Accordion>
   <Accordion title="Veeam — Backup Retention + Retention Policies" icon="rotate-cw">
@@ -344,7 +344,7 @@ application-aware consistency and full file-level granularity.
 
     - [Schedules and Retentions](https://docs.baculasystems.com/BEPlanningAndPreparation/BackupPolicy/SchedulesAndRetentions/index.html)
     - [Retention Period Configuration](https://docs.baculasystems.com/BEPlanningAndPreparation/BackupPolicy/Configuration/RetentionPeriod/index.html)
-    - [Xloud Backup & Restore Strategies](https://docs.baculasystems.com/BEDedicatedBackupSolutions/Virtualization/Hypervisors/openstack/BackupAndRestoreStrategies/index.html)
+    - [Polystack Backup & Restore Strategies](https://docs.baculasystems.com/BEDedicatedBackupSolutions/Virtualization/Hypervisors/openstack/BackupAndRestoreStrategies/index.html)
   </Accordion>
   <Accordion title="IBM Storage Protect — Policy Domain + Management Class" icon="database">
     Retention is defined in a **Management Class** within a **Policy Domain**.
@@ -397,7 +397,7 @@ backup method per workload class via policy, not per-tool.
     these frameworks.
   </Accordion>
   <Accordion title="Multi-cluster, multi-cloud fleet under one console" icon="globe">
-    **Pick agentless** for the Xloud side and use the same vendor's connectors
+    **Pick agentless** for the Polystack side and use the same vendor's connectors
     for AWS / Azure / GCP / on-prem. Veeam, Commvault, Cohesity, Trilio, and Veritas
     all support multi-cloud.
   </Accordion>
@@ -409,17 +409,17 @@ backup method per workload class via policy, not per-tool.
 
 <Steps titleSize="h3">
   <Step title="Provision a backup service account" icon="user">
-    Create a dedicated user in Xloud Identity with read access to all projects you
+    Create a dedicated user in Polystack Identity with read access to all projects you
     want backed up. Grant the minimum roles required by the vendor (typically
     `member` plus `volume:create_snapshot` on Block Storage).
   </Step>
-  <Step title="Open Xloud APIs to the backup server" icon="network">
-    Ensure the backup tool can reach Xloud's Identity, Compute, Block Storage, and
+  <Step title="Open Polystack APIs to the backup server" icon="network">
+    Ensure the backup tool can reach Polystack's Identity, Compute, Block Storage, and
     Image API endpoints. Open required network paths, configure TLS trust, and (for
     agent-based mode) ensure guest VMs can reach the backup server on its data port.
   </Step>
-  <Step title="Configure the vendor's Xloud connector" icon="plug">
-    Each vendor ships an Xloud connector module. Point it at your Xloud Identity
+  <Step title="Configure the vendor's Polystack connector" icon="plug">
+    Each vendor ships an Polystack connector module. Point it at your Polystack Identity
     endpoint, supply the service account credentials, and select the projects to
     discover.
 
@@ -449,9 +449,9 @@ backup method per workload class via policy, not per-tool.
 
 ---
 
-## What Xloud Provides for Backup Vendors
+## What Polystack Provides for Backup Vendors
 
-Xloud exposes the standard cloud APIs that every modern backup vendor expects:
+Polystack exposes the standard cloud APIs that every modern backup vendor expects:
 
 | API | Used for |
 |-----|----------|
@@ -461,12 +461,12 @@ Xloud exposes the standard cloud APIs that every modern backup vendor expects:
 | **Image** | List images, create/delete snapshot-type images |
 | **Object Storage** | Direct backup target for native and many third-party tools |
 
-For low-level integration, Xloud also exposes:
+For low-level integration, Polystack also exposes:
 
 - **File-level read of snapshots** through the [File-Level Restore](/services/storage/file-level-restore)
   service — useful for backup tools that want to verify snapshot contents or build
   a file index.
-- **Standard storage protocols** — RBD for storage running on XSDS, NFS, iSCSI, and
+- **Standard storage protocols** — RBD for storage running on Software-Defined-Storage, NFS, iSCSI, and
   Fibre Channel for external arrays — so backup tools that prefer direct storage
   access can also integrate.
 
@@ -475,7 +475,7 @@ For low-level integration, Xloud also exposes:
 ## Related Topics
 
 <CardGroup cols={3}>
-  <Card title="Xloud Native Backup" href="/services/storage/backups" color="#197560">
+  <Card title="Polystack Native Backup" href="/services/storage/backups" color="#197560">
     Volume backup with full + incremental modes — the built-in option
   </Card>
   <Card title="File-Level Restore" href="/services/storage/file-level-restore" color="#197560">

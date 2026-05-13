@@ -1,15 +1,15 @@
 ---
 title: "Kubernetes (K8SaaS) Architecture"
-description: "Understand the Xloud K8SaaS architecture — component roles, provisioning flow, infrastructure dependencies, and Conductor lifecycle management."
+description: "Understand the Polystack K8SaaS architecture — component roles, provisioning flow, infrastructure dependencies, and Conductor lifecycle management."
 sidebarTitle: "Architecture"
 ---
 
 ## Overview
 
-Xloud Kubernetes as a Service (K8SaaS) automates the full lifecycle of Kubernetes clusters
-on top of Xloud infrastructure services. The platform is built around a Conductor that
+Polystack Kubernetes as a Service (K8SaaS) automates the full lifecycle of Kubernetes clusters
+on top of Polystack infrastructure services. The platform is built around a Conductor that
 orchestrates cluster create, update, delete, and upgrade operations by composing calls to
-Compute, Load Balancer, DNS, and Networking services through Xloud Orchestration templates.
+Compute, Load Balancer, DNS, and Networking services through Polystack Orchestration templates.
 
 <Warning>
   This guide requires administrator privileges. Misconfiguring the cluster driver or
@@ -29,14 +29,14 @@ graph TD
     end
 
     subgraph Provisioning
-        ORCH[Xloud Orchestration<br/>Heat Templates]
+        ORCH[Polystack Orchestration<br/>Heat Templates]
     end
 
     subgraph Infrastructure
-        COMPUTE[Xloud Compute<br/>VM instances]
-        LB[Xloud Load Balancer<br/>Master API VIPs]
-        DNS[Xloud DNS<br/>Cluster endpoints]
-        NET[Xloud Networking<br/>Tenant subnets]
+        COMPUTE[Polystack Compute<br/>VM instances]
+        LB[Polystack Load Balancer<br/>Master API VIPs]
+        DNS[Polystack DNS<br/>Cluster endpoints]
+        NET[Polystack Networking<br/>Tenant subnets]
     end
 
     subgraph Cluster
@@ -100,8 +100,8 @@ sequenceDiagram
     participant User
     participant API as K8SaaS API
     participant COND as Conductor
-    participant ORCH as Xloud Orchestration
-    participant COMPUTE as Xloud Compute
+    participant ORCH as Polystack Orchestration
+    participant COMPUTE as Polystack Compute
 
     User->>API: POST /v1/clusters
     API->>DB: Store cluster record (status: CREATE_IN_PROGRESS)
@@ -120,13 +120,13 @@ sequenceDiagram
 
 | Service | Role | Minimum Version |
 |---------|------|----------------|
-| Xloud Compute | VM instances for master and worker nodes | 2025.1 |
-| Xloud Orchestration | Stack management for cluster resources | 2025.1 |
-| Xloud Load Balancer | API server VIP and Kubernetes service LBs | 2025.1 |
-| Xloud Networking | Tenant subnet allocation for cluster nodes | 2025.1 |
-| Xloud DNS | Endpoint records for ingress and services | Optional |
-| Xloud Block Storage | Persistent volume claims for stateful workloads | 2025.1 |
-| Xloud Key Management | Cluster CA private key storage (optional) | Optional |
+| Polystack Compute | VM instances for master and worker nodes | 2025.1 |
+| Polystack Orchestration | Stack management for cluster resources | 2025.1 |
+| Polystack Load Balancer | API server VIP and Kubernetes service LBs | 2025.1 |
+| Polystack Networking | Tenant subnet allocation for cluster nodes | 2025.1 |
+| Polystack DNS | Endpoint records for ingress and services | Optional |
+| Polystack Block Storage | Persistent volume claims for stateful workloads | 2025.1 |
+| Polystack Key Management | Cluster CA private key storage (optional) | Optional |
 
 ---
 

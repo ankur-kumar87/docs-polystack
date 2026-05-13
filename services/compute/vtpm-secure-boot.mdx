@@ -12,17 +12,17 @@ against bootloader tampering, unlock BitLocker / LUKS disk encryption, and satis
 hardware requirements for modern guest operating systems such as Windows 11.
 
 <Warning>
-  **Both vTPM and Secure Boot require the Xloud Key Management service (Xloud KMS)** to
-  be enabled on the cluster. When Xloud KMS is not available, both checkboxes are
+  **Both vTPM and Secure Boot require the Polystack Key Management service (Polystack KMS)** to
+  be enabled on the cluster. When Polystack KMS is not available, both checkboxes are
   disabled in the launch wizard with the hint *"Key management service is not enabled.
   Ask your administrator to enable it before using vTPM or Secure Boot."*
 </Warning>
 
 <Note>
   **Prerequisites**
-  - An active image in the Xloud Image Service (UEFI-capable for Secure Boot)
+  - An active image in the Polystack Image Service (UEFI-capable for Secure Boot)
   - A flavor appropriate for your workload
-  - **Xloud KMS** enabled on the cluster
+  - **Polystack KMS** enabled on the cluster
   - For Secure Boot: a guest image that ships signed bootloaders and kernel modules
 </Note>
 
@@ -33,7 +33,7 @@ hardware requirements for modern guest operating systems such as Windows 11.
 <iframe
   className="w-full aspect-video rounded-xl"
   src="https://www.youtube.com/embed/q75rpH0iwvs"
-  title="How to Enable vTPM and Secure Boot on Xloud"
+  title="How to Enable vTPM and Secure Boot on Polystack"
   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
   allowFullScreen
 ></iframe>
@@ -48,7 +48,7 @@ Both settings live in the **Create Instance** wizard at:
 
 <Steps titleSize="h3">
   <Step title="Start Create Instance" icon="server">
-    From the Xloud Dashboard, go to **Compute → Instances** and click **Create Instance**.
+    From the Polystack Dashboard, go to **Compute → Instances** and click **Create Instance**.
   </Step>
   <Step title="Complete Base Config and Network Config" icon="network">
     Pick the image or boot source, flavor, and networks in the first two wizard steps.
@@ -61,7 +61,7 @@ Both settings live in the **Create Instance** wizard at:
 </Steps>
 
 <Info>
-  If Xloud KMS is disabled, both the **Virtual TPM** and **Secure Boot** checkboxes are
+  If Polystack KMS is disabled, both the **Virtual TPM** and **Secure Boot** checkboxes are
   grayed out. Contact your administrator and point them at the **Key Manager** service
   setup.
 </Info>
@@ -73,7 +73,7 @@ Both settings live in the **Create Instance** wizard at:
 A Virtual TPM emulates a hardware Trusted Platform Module inside the instance. It enables
 measured boot, stores disk-encryption keys securely (BitLocker, LUKS with TPM unsealing),
 and satisfies TPM-based attestation requirements. The per-instance TPM state is protected
-by a key managed by Xloud KMS.
+by a key managed by Polystack KMS.
 
 ### Enabling vTPM
 
@@ -137,7 +137,7 @@ by a key managed by Xloud KMS.
 
 Secure Boot is a UEFI firmware feature that prevents unsigned bootloaders, kernels, and
 drivers from loading — shutting down rootkits and bootkits at the earliest stage of the
-boot process. Xloud stores the per-instance Secure Boot variables in Xloud KMS so they
+boot process. Polystack stores the per-instance Secure Boot variables in Polystack KMS so they
 persist across reboots and live migrations.
 
 ### Enabling Secure Boot
@@ -206,13 +206,13 @@ with measured boot.
 
 ## Live Migration Compatibility
 
-Both vTPM state and Secure Boot variables are protected by a key managed by Xloud KMS
+Both vTPM state and Secure Boot variables are protected by a key managed by Polystack KMS
 and are transferred between hypervisors during **live migration** with no operator
 intervention. You can move a vTPM-enabled Windows 11 or hardened Linux VM between
 compute hosts without shutting it down and without re-registering the TPM inside the
 guest.
 
-<Info>**Xloud-Developed** — Live migration of vTPM-enabled instances with automatic key transfer is developed by Xloud and ships with XAVS / XPCI.</Info>
+<Info>**Polystack-Developed** — Live migration of vTPM-enabled instances with automatic key transfer is developed by Polystack and ships with Ironcore / XPCI.</Info>
 
 ---
 
@@ -235,7 +235,7 @@ launching.
 
 <AccordionGroup>
   <Accordion title="The vTPM or Secure Boot checkbox is grayed out" icon="circle-x">
-    Xloud KMS is not enabled on the cluster. Ask your administrator to enable the Key
+    Polystack KMS is not enabled on the cluster. Ask your administrator to enable the Key
     Manager service in XDeploy, then refresh the wizard.
   </Accordion>
   <Accordion title="Instance fails to start with Secure Boot = Required" icon="triangle-alert">
@@ -247,8 +247,8 @@ launching.
     create a new instance with vTPM ticked, or migrate the workload.
   </Accordion>
   <Accordion title="BitLocker or LUKS cannot unseal the key after migration" icon="lock">
-    Xloud transfers the encrypted vTPM state with the instance. If unsealing fails,
-    verify Xloud KMS is healthy on both source and destination hosts and that the
+    Polystack transfers the encrypted vTPM state with the instance. If unsealing fails,
+    verify Polystack KMS is healthy on both source and destination hosts and that the
     instance's TPM secret still exists in the key manager.
   </Accordion>
 </AccordionGroup>
@@ -265,6 +265,6 @@ launching.
     Additional hypervisor-level hardening for sensitive workloads
   </Card>
   <Card title="Key Manager" href="/services/key-manager" color="#197560">
-    Xloud KMS setup and secret lifecycle
+    Polystack KMS setup and secret lifecycle
   </Card>
 </CardGroup>

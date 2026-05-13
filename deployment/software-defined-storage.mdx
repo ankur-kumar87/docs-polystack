@@ -1,24 +1,24 @@
 ---
-title: "XSDS Storage"
+title: "Software-Defined-Storage Storage"
 description: "Deploy and manage distributed storage for block, object, and file services"
 icon: "database"
-sidebarTitle: "XSDS Storage"
+sidebarTitle: "Software-Defined-Storage Storage"
 ---
 
-XSDS manages the distributed storage cluster that provides block storage (virtual machine disks), object storage (S3-compatible), and file storage (shared filesystems). Data is replicated across multiple nodes for reliability and high availability. This tool handles bootstrapping the initial storage cluster, configuring storage tiers by media type, editing the cluster configuration file, and viewing deployment logs.
+Software-Defined-Storage manages the distributed storage cluster that provides block storage (virtual machine disks), object storage (S3-compatible), and file storage (shared filesystems). Data is replicated across multiple nodes for reliability and high availability. This tool handles bootstrapping the initial storage cluster, configuring storage tiers by media type, editing the cluster configuration file, and viewing deployment logs.
 
 <Note>
   **Prerequisites**
-  - Hosts configured with **XSDS-Bootstrap** and **XSDS** roles in [Hosts](/deployment/hosts)
+  - Hosts configured with **Software-Defined-Storage-Bootstrap** and **Software-Defined-Storage** roles in [Hosts](/deployment/hosts)
   - Dedicated storage disks available on at least one node (separate from the root filesystem)
   - Network connectivity between all storage nodes on the storage network plane
 </Note>
 
 ---
 
-## XSDS Tabs
+## Software-Defined-Storage Tabs
 
-The XSDS module is organized into four tabs, each covering a distinct aspect of storage cluster management.
+The Software-Defined-Storage module is organized into four tabs, each covering a distinct aspect of storage cluster management.
 
 <Tabs>
   <Tab title="Bootstrap Configuration" icon="play">
@@ -30,7 +30,7 @@ The XSDS module is organized into four tabs, each covering a distinct aspect of 
 
     | Field | Description |
     |-------|-------------|
-    | **XSDS Container Image** | Select the storage daemon container image version from the dropdown. The available images are loaded from the local Docker registry. |
+    | **Software-Defined-Storage Container Image** | Select the storage daemon container image version from the dropdown. The available images are loaded from the local Docker registry. |
 
     ---
 
@@ -146,16 +146,16 @@ The XSDS module is organized into four tabs, each covering a distinct aspect of 
   </Tab>
 
   <Tab title="Logs" icon="clock">
-    The Logs tab displays deployment and operation logs for all XSDS activities --- bootstrap commands, tier detection, configuration changes, and error output.
+    The Logs tab displays deployment and operation logs for all Software-Defined-Storage activities --- bootstrap commands, tier detection, configuration changes, and error output.
 
     | Column | Description |
     |--------|-------------|
     | **Timestamp** | Date and time of each log entry |
-    | **Operation** | The XSDS operation that generated the log (bootstrap, tier detection, configuration save) |
+    | **Operation** | The Software-Defined-Storage operation that generated the log (bootstrap, tier detection, configuration save) |
     | **Output** | Command output, status messages, and any error details |
 
     <Info>
-      Review the Logs tab after every XSDS operation to confirm success. Bootstrap operations stream output in real time. If an operation fails, the error details displayed here are the primary diagnostic resource.
+      Review the Logs tab after every Software-Defined-Storage operation to confirm success. Bootstrap operations stream output in real time. If an operation fails, the error details displayed here are the primary diagnostic resource.
     </Info>
   </Tab>
 </Tabs>
@@ -164,7 +164,7 @@ The XSDS module is organized into four tabs, each covering a distinct aspect of 
 
 ## Validation
 
-After configuring XSDS, verify that the storage cluster is operational:
+After configuring Software-Defined-Storage, verify that the storage cluster is operational:
 
 <Steps titleSize="h3">
   <Step title="Verify Bootstrap Completion" icon="circle-check">

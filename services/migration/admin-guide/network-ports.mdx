@@ -1,6 +1,6 @@
 ---
 title: "Network Ports"
-description: "Network paths and ports that must be reachable between XMS, source environments, Xloud services, and target guests."
+description: "Network paths and ports that must be reachable between XMS, source environments, Polystack services, and target guests."
 sidebarTitle: "Network Ports"
 ---
 
@@ -20,10 +20,10 @@ open.
 |--------|------------|------|---------|-----------|
 | XMS | vCenter or ESXi | 443 | vSphere API and disk transport negotiation | Egress |
 | XMS | ESXi host | 902 | Disk transport data stream | Egress |
-| XMS | Xloud Identity | 5000 | Token validation | Egress |
-| XMS | Xloud Block Storage | 8776 | Volume create and write | Egress |
-| XMS | Xloud Compute | 8774 | Instance create and attach | Egress |
-| XMS | Xloud Networking | 9696 | Network mapping validation | Egress |
+| XMS | Polystack Identity | 5000 | Token validation | Egress |
+| XMS | Polystack Block Storage | 8776 | Volume create and write | Egress |
+| XMS | Polystack Compute | 8774 | Instance create and attach | Egress |
+| XMS | Polystack Networking | 9696 | Network mapping validation | Egress |
 | Dashboard / CLI | XMS API | 443 | User-facing API | Egress |
 
 <Note>
@@ -71,9 +71,9 @@ host that owns the source VM's datastore. This connection is NFC
 
 ---
 
-## XMS ↔ Xloud Services
+## XMS ↔ Polystack Services
 
-XMS acts as an Xloud tenant on behalf of every migration. It makes standard
+XMS acts as an Polystack tenant on behalf of every migration. It makes standard
 API calls against:
 
 - **Identity** for token validation on every inbound and outbound request
@@ -82,7 +82,7 @@ API calls against:
 - **Networking** to validate the network mapping chosen at submit time
 
 These calls happen over the platform's internal service network. Operators
-who run XMS alongside the rest of the Xloud platform typically do not need
+who run XMS alongside the rest of the Polystack platform typically do not need
 to make any new firewall changes for this path.
 
 ---
@@ -90,7 +90,7 @@ to make any new firewall changes for this path.
 ## Operator Access
 
 Operators reach the XMS API through the platform's public endpoint — the
-same endpoint used for the rest of the Xloud Dashboard and CLI. The
+same endpoint used for the rest of the Polystack Dashboard and CLI. The
 Migration panel is served by the existing Dashboard web service, and the
 `xms` CLI calls the XMS API over the public endpoint.
 
@@ -98,9 +98,9 @@ Migration panel is served by the existing Dashboard web service, and the
 
 ## Egress From the Target Instance
 
-After a migration completes, the target Xloud instance is a normal compute
+After a migration completes, the target Polystack instance is a normal compute
 instance. XMS does not inject any agent or open any extra port on the target
-guest — standard Xloud network security group rules apply for egress,
+guest — standard Polystack network security group rules apply for egress,
 ingress, and management access.
 
 ---
@@ -114,12 +114,12 @@ ingress, and management access.
   <Step title="Open egress to ESXi hosts for disk transport" icon="hard-drive">
     Allow TCP/902 from XMS to every ESXi host that may own source VM storage.
   </Step>
-  <Step title="Verify internal Xloud service traffic" icon="check">
+  <Step title="Verify internal Polystack service traffic" icon="check">
     No change required — XMS communicates with Identity, Block Storage,
     Compute, and Networking over the existing platform service network.
   </Step>
   <Step title="Verify target instance traffic" icon="shield">
-    No change required — standard Xloud security group rules apply to the
+    No change required — standard Polystack security group rules apply to the
     migrated instance.
   </Step>
 </Steps>

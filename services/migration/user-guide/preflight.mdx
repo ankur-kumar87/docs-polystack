@@ -1,6 +1,6 @@
 ---
 title: "Preflight Assessment"
-description: "Validate a discovered workload against the Xloud compatibility rules before submitting a migration — OS support, firmware, disk layout, and driver readiness."
+description: "Validate a discovered workload against the Polystack compatibility rules before submitting a migration — OS support, firmware, disk layout, and driver readiness."
 sidebarTitle: "Preflight Assessment"
 ---
 
@@ -32,7 +32,7 @@ layout too complex — while you still have time to fix them on the source.
         **Preflight Selected**. You can preflight a single VM or an entire wave.
       </Step>
       <Step title="Start the assessment" icon="clipboard-check">
-        XMS inspects each VM through the vSphere API and applies the Xloud
+        XMS inspects each VM through the vSphere API and applies the Polystack
         compatibility ruleset. The scan is read-only and completes in seconds
         for most workloads.
       </Step>
@@ -79,8 +79,8 @@ more individual checks that roll up into a category score.
 |-------|-------------|
 | **Firmware type** | BIOS and UEFI are both supported. Secure Boot state is recorded for post-migration validation. |
 | **Hardware version** | vSphere hardware versions are checked against the supported range for the installed disk transport libraries. |
-| **Guest OS family** | The reported guest OS is matched against the supported Xloud guest catalog. |
-| **Resource shape** | vCPU count and memory are sanity-checked against project quotas in the target Xloud project. |
+| **Guest OS family** | The reported guest OS is matched against the supported Polystack guest catalog. |
+| **Resource shape** | vCPU count and memory are sanity-checked against project quotas in the target Polystack project. |
 
 ### Storage
 
@@ -94,7 +94,7 @@ more individual checks that roll up into a category score.
 
 | Check | Description |
 |-------|-------------|
-| **Adapter count** | Each source adapter must map to a target Xloud network. |
+| **Adapter count** | Each source adapter must map to a target Polystack network. |
 | **Port group names** | Port group names are captured for the later network mapping step. |
 | **MAC preservation** | The option to preserve MACs is flagged as informational — a network mapping with conflicting MACs will be rejected at submit time. |
 
@@ -119,7 +119,7 @@ more individual checks that roll up into a category score.
 
 | Blocker | Root Cause | Fix |
 |---------|------------|-----|
-| **Unsupported guest OS** | The guest ID returned by vSphere does not match the Xloud guest catalog | Upgrade or reinstall the guest OS to a supported version before migrating |
+| **Unsupported guest OS** | The guest ID returned by vSphere does not match the Polystack guest catalog | Upgrade or reinstall the guest OS to a supported version before migrating |
 | **Raw Device Mappings** | A disk is mapped directly to a LUN on the source | Convert the RDM to a VMFS-backed disk before migration |
 | **Shared disks** | Two VMs share the same VMDK | Un-share or take an online copy before migration |
 | **CBT not enabled (warm)** | Change tracking has never been turned on | Enable CBT from preflight — XMS will write the config change through the vSphere API |

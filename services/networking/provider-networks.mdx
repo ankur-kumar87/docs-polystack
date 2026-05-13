@@ -1,6 +1,6 @@
 ---
 title: "Provider Networks"
-description: "Configure VLAN, flat, and VXLAN provider networks in Xloud. Map physical network interfaces to tenant segmentation types for data center integration."
+description: "Configure VLAN, flat, and VXLAN provider networks in Polystack. Map physical network interfaces to tenant segmentation types for data center integration."
 sidebarTitle: "Provider Networks"
 ---
 
@@ -58,7 +58,7 @@ via XDeploy. These settings apply to all cluster nodes.
       </Step>
       <Step title="Apply the configuration" icon="play">
         Click **Save and Deploy**. XDeploy applies the settings to all cluster nodes
-        via xavs-ansible.
+        via ironcore-ansible.
 
         <Warning>
           Modifying bridge mappings on a running cluster briefly interrupts networking
@@ -157,7 +157,7 @@ openstack network delete provider-vlan100
 | Flat | None | N/A — 1 per physical interface | Untagged — use only for management networks |
 
 <Info>
-  VXLAN tenant networks are the default type in Xloud deployments. They require no
+  VXLAN tenant networks are the default type in Polystack deployments. They require no
   switch configuration and scale to tens of thousands of isolated tenant networks.
   VLAN is recommended when direct integration with physical data center switching is required.
 </Info>

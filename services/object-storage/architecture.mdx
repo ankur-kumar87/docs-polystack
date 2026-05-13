@@ -1,16 +1,16 @@
 ---
 title: "Object Storage Architecture"
-description: "Understand the Xloud Object Storage cluster topology — proxy tier, storage tier, consistent hash ring mechanics, S3 API middleware, and data flow for all."
+description: "Understand the Polystack Object Storage cluster topology — proxy tier, storage tier, consistent hash ring mechanics, S3 API middleware, and data flow for all."
 sidebarTitle: "Architecture"
 ---
 
 ## Overview
 
-Xloud Object Storage uses a three-tier, fully distributed architecture. Proxy nodes handle all API requests and authentication. Storage nodes persist object data on local drives. The consistent hash ring maps every object to its target storage locations without a central metadata server. This design eliminates single points of failure and enables horizontal scaling of each tier independently.
+Polystack Object Storage uses a three-tier, fully distributed architecture. Proxy nodes handle all API requests and authentication. Storage nodes persist object data on local drives. The consistent hash ring maps every object to its target storage locations without a central metadata server. This design eliminates single points of failure and enables horizontal scaling of each tier independently.
 
 <Note>
   **Prerequisites**
-  - Familiarity with Xloud Object Storage [storage policies](/services/object-storage/storage-policies)
+  - Familiarity with Polystack Object Storage [storage policies](/services/object-storage/storage-policies)
   - Admin access to review cluster topology
 </Note>
 

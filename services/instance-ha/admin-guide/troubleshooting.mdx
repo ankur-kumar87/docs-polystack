@@ -6,7 +6,7 @@ sidebarTitle: "Troubleshooting"
 
 ## Overview
 
-This guide covers administrator-level troubleshooting for Xloud Instance HA — from
+This guide covers administrator-level troubleshooting for Polystack Instance HA — from
 service startup failures to notification processing issues and capacity-related recovery
 failures. For user-facing issues such as individual instance recovery failures, see the
 [Instance HA User Troubleshooting](/services/instance-ha/user-guide/troubleshooting) guide.
@@ -111,7 +111,7 @@ failures. For user-facing issues such as individual instance recovery failures, 
 
     Test SSH connectivity:
     ```bash title="Test SSH connection"
-    ssh -i /etc/xavs/instance-ha/id_rsa root@<compute-host> hostname
+    ssh -i /etc/ironcore/instance-ha/id_rsa root@<compute-host> hostname
     ```
 
     Confirm firewall rules permit UDP 623 (IPMI) and TCP 22 (SSH) from the
@@ -134,7 +134,7 @@ failures. For user-facing issues such as individual instance recovery failures, 
     |-------------|-------|-----|
     | `OperationalError: (pymysql)` | Database unreachable | Check DB connection string and service status |
     | `Unauthorized: The request you have made requires authentication` | Invalid Identity credentials | Rotate service account password |
-    | `ConfigFileNotFound` | Missing config file | Verify `/etc/xavs/instance-ha/instance-ha.conf` exists |
+    | `ConfigFileNotFound` | Missing config file | Verify `/etc/ironcore/instance-ha/instance-ha.conf` exists |
     | `ImportError: No module named` | Missing Python dependency | Reinstall the Instance HA container image |
   </Accordion>
 

@@ -6,7 +6,7 @@ sidebarTitle: "CLI Reference"
 
 ## Overview
 
-The `xms` CLI is a command-line client for the Xloud Migration Suite. It
+The `xms` CLI is a command-line client for the Polystack Migration Suite. It
 mirrors the Dashboard Migration panel: every action you can take in the UI
 is available as a CLI command, and every object you can inspect in the UI is
 available as a structured CLI response.
@@ -16,7 +16,7 @@ from CI, or integrate XMS with your own automation.
 
 <Note>
   The CLI authenticates against the platform identity service with the same
-  credentials you use for the Xloud Dashboard. Project scope is resolved
+  credentials you use for the Polystack Dashboard. Project scope is resolved
   from the authenticated token.
 </Note>
 
@@ -259,9 +259,9 @@ xms migration submit \
 | `--source` | Registered source name |
 | `--vm` | Source VM name |
 | `--kind` | `cold` or `warm` |
-| `--target-project` | Target Xloud project |
+| `--target-project` | Target Polystack project |
 | `--target-name` | Optional — instance name in the target project |
-| `--flavor` | Xloud flavor for the target instance |
+| `--flavor` | Polystack flavor for the target instance |
 | `--volume-type` | Target volume type |
 | `--availability-zone` | Optional — pin the target to a zone |
 | `--network-map` | Source to target network mapping, can be repeated |

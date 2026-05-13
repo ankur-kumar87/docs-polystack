@@ -1,6 +1,6 @@
 ---
 title: "Identity Security Hardening"
-description: "Enforce MFA, rotate Fernet keys, audit role assignments, and apply security best practices for Xloud Identity."
+description: "Enforce MFA, rotate Fernet keys, audit role assignments, and apply security best practices for Polystack Identity."
 sidebarTitle: "Security"
 ---
 
@@ -8,7 +8,7 @@ import AdminWarning from '/snippets/admin-warning.mdx';
 
 ## Overview
 
-Xloud Identity is the authentication and authorization backbone for the entire platform.
+Polystack Identity is the authentication and authorization backbone for the entire platform.
 Hardening this service reduces the blast radius of credential compromise, limits lateral
 movement across projects, and ensures audit trails are maintained. This guide covers the
 complete security hardening checklist for production Identity deployments.
@@ -46,13 +46,13 @@ complete security hardening checklist for production Identity deployments.
 
 Enforce MFA for all accounts with the `admin` role by configuring an auth rules policy:
 
-```yaml title="/etc/xavs/keystone/policy.yaml — enforce MFA for admin token issuance"
+```yaml title="/etc/ironcore/keystone/policy.yaml — enforce MFA for admin token issuance"
 "identity:get_auth_token": "rule:admin_required and (rule:mfa_enabled or not role:admin)"
 ```
 
 After applying, admin accounts without MFA enrolled cannot issue tokens:
 ```bash title="Apply MFA enforcement policy"
-xavs-ansible deploy --tags keystone
+ironcore-ansible deploy --tags keystone
 ```
 
 <Warning>
@@ -79,7 +79,7 @@ xavs-ansible deploy --tags keystone
     ```
     Deploy to activate:
     ```bash title="Apply rotation configuration"
-    xavs-ansible deploy --tags keystone
+    ironcore-ansible deploy --tags keystone
     ```
   </Step>
   <Step title="Verify rotation is running" icon="circle-check">
@@ -136,8 +136,8 @@ openstack role assignment list \
     Ensure all Identity API endpoints use TLS with certificates from a trusted CA:
     ```yaml title="XDeploy globals: TLS configuration"
     kolla_enable_tls_external: "yes"
-    kolla_external_tls_cert: /etc/xavs/certs/external.crt
-    kolla_external_tls_key: /etc/xavs/certs/external.key
+    kolla_external_tls_cert: /etc/ironcore/certs/external.crt
+    kolla_external_tls_key: /etc/ironcore/certs/external.key
     ```
   </Accordion>
 </AccordionGroup>

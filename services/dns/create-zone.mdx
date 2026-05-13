@@ -1,6 +1,6 @@
 ---
 title: "Create a DNS Zone"
-description: "Provision authoritative DNS zones in Xloud DNS using the Dashboard or CLI. Configure primary and secondary zone types with TTL, email, and master server."
+description: "Provision authoritative DNS zones in Polystack DNS using the Dashboard or CLI. Configure primary and secondary zone types with TTL, email, and master server."
 sidebarTitle: "Create a Zone"
 ---
 
@@ -9,7 +9,7 @@ import PrerequisitesAuth from '/snippets/prerequisites-auth.mdx';
 <iframe
   className="w-full aspect-video rounded-xl"
   src="https://www.youtube.com/embed/jircMR5UVC8"
-  title="How to Create DNS Zones and Record Sets on Xloud"
+  title="How to Create DNS Zones and Record Sets on Polystack"
   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
   allowFullScreen
 ></iframe>
@@ -17,7 +17,7 @@ import PrerequisitesAuth from '/snippets/prerequisites-auth.mdx';
 ## Overview
 
 A DNS zone is the authoritative domain boundary that contains all record sets for a
-given domain (e.g., `example.com.`). Creating a zone in Xloud DNS registers that domain
+given domain (e.g., `example.com.`). Creating a zone in Polystack DNS registers that domain
 with the platform's nameservers and makes it available for record management.
 
 Zones are **project-scoped** — each zone belongs to the project that created it. Users
@@ -65,7 +65,7 @@ in other projects cannot see or modify your zones unless access is explicitly sh
 
         | Type | Description |
         |------|-------------|
-        | **Primary** | Controlled by Xloud DNS — you manage the records directly |
+        | **Primary** | Controlled by Polystack DNS — you manage the records directly |
         | **Secondary** | Slaved from another DNS server — records are pulled via zone transfer |
 
         The form fields change dynamically based on your selection.
@@ -104,7 +104,7 @@ in other projects cannot see or modify your zones unless access is explicitly sh
         | Duplicates | Not allowed — each IP must be unique |
 
         <Note>
-          The master servers must allow zone transfers (AXFR) to the Xloud DNS
+          The master servers must allow zone transfers (AXFR) to the Polystack DNS
           nameservers. Configure the allow-transfer ACL on your primary DNS server
           before creating the secondary zone.
         </Note>

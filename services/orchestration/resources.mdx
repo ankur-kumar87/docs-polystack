@@ -1,18 +1,18 @@
 ---
 title: "Resource Types"
-description: "Reference for all Xloud Orchestration resource types — compute, networking, storage, identity, and orchestration primitives with definition examples."
+description: "Reference for all Polystack Orchestration resource types — compute, networking, storage, identity, and orchestration primitives with definition examples."
 sidebarTitle: "Resources"
 ---
 
 ## Overview
 
-Xloud Orchestration supports over 100 built-in resource types covering the full range
+Polystack Orchestration supports over 100 built-in resource types covering the full range
 of cloud infrastructure. Each resource type maps to a specific cloud service API. The
 Orchestration engine provisions resources in dependency order and tracks their lifecycle
 as part of the parent stack.
 
 <Note>
-  Resource type names use the `Xloud::Service::ResourceType` convention. Available
+  Resource type names use the `Polystack::Service::ResourceType` convention. Available
   resource types depend on the services enabled in your cluster.
 </Note>
 
@@ -22,11 +22,11 @@ as part of the parent stack.
 
 | Category | Service | Common Resource Types |
 |----------|---------|----------------------|
-| **Compute** | Xloud Compute | Server, KeyPair, ServerGroup |
-| **Networking** | Xloud Networking | Net, Subnet, Router, RouterInterface, FloatingIP, SecurityGroup, Port |
-| **Storage** | Xloud Block Storage | Volume, VolumeAttachment |
-| **Identity** | Xloud Identity | Project, User, Role |
-| **Orchestration** | Xloud Orchestration | Stack, WaitCondition, AutoScalingGroup, ScalingPolicy |
+| **Compute** | Polystack Compute | Server, KeyPair, ServerGroup |
+| **Networking** | Polystack Networking | Net, Subnet, Router, RouterInterface, FloatingIP, SecurityGroup, Port |
+| **Storage** | Polystack Block Storage | Volume, VolumeAttachment |
+| **Identity** | Polystack Identity | Project, User, Role |
+| **Orchestration** | Polystack Orchestration | Stack, WaitCondition, AutoScalingGroup, ScalingPolicy |
 
 ---
 
@@ -37,7 +37,7 @@ Every resource follows this structure:
 ```yaml title="resource-structure.yaml"
 resources:
   logical_resource_name:
-    type: Xloud::Service::ResourceType    # Required
+    type: Polystack::Service::ResourceType    # Required
     depends_on:                           # Optional — explicit ordering
       - other_resource_name
     condition: my_condition               # Optional — conditional creation
@@ -59,12 +59,12 @@ that cannot be expressed through property references.
 ```yaml title="explicit-dependency.yaml"
 resources:
   network:
-    type: Xloud::Networking::Net
+    type: Polystack::Networking::Net
     properties:
       name: app-network
 
   subnet:
-    type: Xloud::Networking::Subnet
+    type: Polystack::Networking::Subnet
     depends_on: [network]               # Wait for network before creating subnet
     properties:
       network_id: { get_resource: network }
@@ -77,12 +77,12 @@ resources:
 
 <AccordionGroup>
   <Accordion title="Compute Resources" icon="server">
-    ### Xloud::Compute::Server
+    ### Polystack::Compute::Server
 
     ```yaml title="compute-server.yaml"
     resources:
       web_server:
-        type: Xloud::Compute::Server
+        type: Polystack::Compute::Server
         properties:
           name: web-server
           image: { get_param: image }
@@ -99,12 +99,12 @@ resources:
             systemctl enable --now nginx
     ```
 
-    ### Xloud::Compute::KeyPair
+    ### Polystack::Compute::KeyPair
 
     ```yaml title="keypair.yaml"
     resources:
       deploy_key:
-        type: Xloud::Compute::KeyPair
+        type: Polystack::Compute::KeyPair
         properties:
           name: deploy-key
           save_private_key: true   # Private key returned as stack output
@@ -114,12 +114,12 @@ resources:
         value: { get_attr: [deploy_key, private_key] }
     ```
 
-    ### Xloud::Compute::ServerGroup
+    ### Polystack::Compute::ServerGroup
 
     ```yaml title="server-group.yaml"
     resources:
       anti_affinity_group:
-        type: Xloud::Compute::ServerGroup
+        type: Polystack::Compute::ServerGroup
         properties:
           name: web-anti-affinity
           policies:
@@ -128,23 +128,23 @@ resources:
   </Accordion>
 
   <Accordion title="Networking Resources" icon="network">
-    ### Xloud::Networking::Net
+    ### Polystack::Networking::Net
 
     ```yaml title="network.yaml"
     resources:
       app_network:
-        type: Xloud::Networking::Net
+        type: Polystack::Networking::Net
         properties:
           name: app-network
           admin_state_up: true
     ```
 
-    ### Xloud::Networking::Subnet
+    ### Polystack::Networking::Subnet
 
     ```yaml title="subnet.yaml"
     resources:
       app_subnet:
-        type: Xloud::Networking::Subnet
+        type: Polystack::Networking::Subnet
         properties:
           name: app-subnet
           network_id: { get_resource: app_network }
@@ -156,46 +156,46 @@ resources:
           enable_dhcp: true
     ```
 
-    ### Xloud::Networking::Router and RouterInterface
+    ### Polystack::Networking::Router and RouterInterface
 
     ```yaml title="router.yaml"
     resources:
       router:
-        type: Xloud::Networking::Router
+        type: Polystack::Networking::Router
         properties:
           name: app-router
           external_gateway_info:
             network: { get_param: external_network }
 
       router_interface:
-        type: Xloud::Networking::RouterInterface
+        type: Polystack::Networking::RouterInterface
         properties:
           router_id: { get_resource: router }
           subnet_id: { get_resource: app_subnet }
     ```
 
-    ### Xloud::Networking::FloatingIP
+    ### Polystack::Networking::FloatingIP
 
     ```yaml title="floating-ip.yaml"
     resources:
       floating_ip:
-        type: Xloud::Networking::FloatingIP
+        type: Polystack::Networking::FloatingIP
         properties:
           floating_network: { get_param: external_network }
 
       floating_ip_assoc:
-        type: Xloud::Networking::FloatingIPAssociation
+        type: Polystack::Networking::FloatingIPAssociation
         properties:
           floatingip_id: { get_resource: floating_ip }
           port_id: { get_attr: [web_server, addresses, app-network, 0, port] }
     ```
 
-    ### Xloud::Networking::SecurityGroup
+    ### Polystack::Networking::SecurityGroup
 
     ```yaml title="security-group.yaml"
     resources:
       web_sg:
-        type: Xloud::Networking::SecurityGroup
+        type: Polystack::Networking::SecurityGroup
         properties:
           name: web-security-group
           description: Allow HTTP, HTTPS, and SSH
@@ -216,12 +216,12 @@ resources:
   </Accordion>
 
   <Accordion title="Storage Resources" icon="hard-drive">
-    ### Xloud::BlockStorage::Volume
+    ### Polystack::BlockStorage::Volume
 
     ```yaml title="volume.yaml"
     resources:
       data_volume:
-        type: Xloud::BlockStorage::Volume
+        type: Polystack::BlockStorage::Volume
         properties:
           name: app-data
           size: 100          # GB
@@ -229,12 +229,12 @@ resources:
           description: Application data volume
     ```
 
-    ### Xloud::BlockStorage::VolumeAttachment
+    ### Polystack::BlockStorage::VolumeAttachment
 
     ```yaml title="volume-attachment.yaml"
     resources:
       data_volume_attach:
-        type: Xloud::BlockStorage::VolumeAttachment
+        type: Polystack::BlockStorage::VolumeAttachment
         properties:
           instance_uuid: { get_resource: web_server }
           volume_id: { get_resource: data_volume }
@@ -243,24 +243,24 @@ resources:
   </Accordion>
 
   <Accordion title="Identity Resources" icon="fingerprint">
-    ### Xloud::Identity::Project
+    ### Polystack::Identity::Project
 
     ```yaml title="project.yaml"
     resources:
       app_project:
-        type: Xloud::Identity::Project
+        type: Polystack::Identity::Project
         properties:
           name: my-app-project
           description: Project for the application team
           enabled: true
     ```
 
-    ### Xloud::Identity::User
+    ### Polystack::Identity::User
 
     ```yaml title="user.yaml"
     resources:
       svc_user:
-        type: Xloud::Identity::User
+        type: Polystack::Identity::User
         properties:
           name: svc-deployer
           password: { get_param: svc_password }
@@ -270,12 +270,12 @@ resources:
   </Accordion>
 
   <Accordion title="Orchestration Resources" icon="workflow">
-    ### Xloud::Orchestration::Stack (Nested Stack)
+    ### Polystack::Orchestration::Stack (Nested Stack)
 
     ```yaml title="nested-stack.yaml"
     resources:
       database_tier:
-        type: Xloud::Orchestration::Stack
+        type: Polystack::Orchestration::Stack
         properties:
           template: { get_file: database-stack.yaml }
           parameters:
@@ -283,7 +283,7 @@ resources:
             network: { get_resource: app_network }
     ```
 
-    ### Xloud::Orchestration::WaitCondition
+    ### Polystack::Orchestration::WaitCondition
 
     Use `WaitCondition` to pause stack creation until an external signal is received
     (e.g., after cloud-init completes application installation):
@@ -291,10 +291,10 @@ resources:
     ```yaml title="wait-condition.yaml"
     resources:
       wait_handle:
-        type: Xloud::Orchestration::WaitConditionHandle
+        type: Polystack::Orchestration::WaitConditionHandle
 
       app_ready:
-        type: Xloud::Orchestration::WaitCondition
+        type: Polystack::Orchestration::WaitCondition
         depends_on: [app_server]
         properties:
           handle: { get_resource: wait_handle }
@@ -302,7 +302,7 @@ resources:
           count: 1
 
       app_server:
-        type: Xloud::Compute::Server
+        type: Polystack::Compute::Server
         properties:
           user_data:
             str_replace:

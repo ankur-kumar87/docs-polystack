@@ -104,7 +104,7 @@ it records each resource transition with timestamps and error messages.
 
     | Error Message | Resolution |
     |---------------|-----------|
-    | `Unknown type: Xloud::Compute::Serverr` | Check for typos in resource type names — type names are case-sensitive |
+    | `Unknown type: Polystack::Compute::Serverr` | Check for typos in resource type names — type names are case-sensitive |
     | `Property X is not supported` | Check the property name against the resource type documentation |
     | `Parameter X not found` | A `get_param` references a parameter that is not defined in the `parameters` section |
     | `Circular dependency detected` | A `depends_on` or `get_resource` chain creates a cycle — draw the dependency graph to identify the loop |
@@ -150,7 +150,7 @@ it records each resource transition with timestamps and error messages.
 
     ```bash title="List nested stacks"
     openstack stack resource list my-parent-stack
-    # Find the Xloud::Orchestration::Stack resource, then:
+    # Find the Polystack::Orchestration::Stack resource, then:
     openstack stack show <child-stack-id>
     ```
 

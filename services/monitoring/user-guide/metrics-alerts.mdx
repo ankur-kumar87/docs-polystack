@@ -13,7 +13,7 @@ and troubleshooting alert rules.
 
 <Note>
   **Prerequisites**
-  - An active Xloud account with project access
+  - An active Polystack account with project access
   - At least one notification channel configured (see [Alert Rules Advanced](/services/monitoring/user-guide/alert-rules))
 </Note>
 
@@ -33,7 +33,7 @@ and troubleshooting alert rules.
         | Field | Description |
         |-------|-------------|
         | **Name** | Descriptive label for the rule (e.g., `high-cpu-utilization`) |
-        | **Metric** | The time-series metric to evaluate (e.g., `xloud_compute_cpu_utilization`) |
+        | **Metric** | The time-series metric to evaluate (e.g., `polystack_compute_cpu_utilization`) |
         | **Condition** | Threshold operator: `>`, `<`, `>=`, `<=`, or `== NaN` |
         | **Threshold** | Numeric value that triggers the alert |
         | **Evaluation Period** | Duration the condition must persist before firing (e.g., 5 minutes) |
@@ -65,7 +65,7 @@ and troubleshooting alert rules.
 
         ```yaml title="alert-cpu-high.yaml"
         name: high-cpu-utilization
-        metric: xloud_compute_cpu_utilization
+        metric: polystack_compute_cpu_utilization
         condition: ">"
         threshold: 90
         evaluation_period: 5m
@@ -133,10 +133,10 @@ and troubleshooting alert rules.
 
 | Alert | Metric | Condition | Threshold | Evaluation Period |
 |-------|--------|-----------|-----------|------------------|
-| High CPU | `xloud_compute_cpu_utilization` | `>` | 90% | 5m |
-| Low memory | `xloud_compute_memory_free_pct` | `<` | 10% | 5m |
-| High disk I/O latency | `xloud_storage_osd_apply_latency_ms` | `>` | 20ms | 10m |
-| Pool capacity warning | `xloud_storage_pool_used_pct` | `>` | 70% | 15m |
+| High CPU | `polystack_compute_cpu_utilization` | `>` | 90% | 5m |
+| Low memory | `polystack_compute_memory_free_pct` | `<` | 10% | 5m |
+| High disk I/O latency | `polystack_storage_osd_apply_latency_ms` | `>` | 20ms | 10m |
+| Pool capacity warning | `polystack_storage_pool_used_pct` | `>` | 70% | 15m |
 | Host unreachable | `up{job="node_exporter"}` | `==` | 0 | 2m |
 | Replication lag | `xdr_replication_lag_seconds` | `>` | RPO target | 5m |
 

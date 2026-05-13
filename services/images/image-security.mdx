@@ -1,6 +1,6 @@
 ---
 title: "Image Service Security"
-description: "Configure image signing, property protections, and public image access controls for Xloud Image Service."
+description: "Configure image signing, property protections, and public image access controls for Polystack Image Service."
 sidebarTitle: "Security"
 ---
 
@@ -8,7 +8,7 @@ import AdminWarning from '/snippets/admin-warning.mdx';
 
 ## Overview
 
-The Xloud Image Service security configuration covers three areas: image signature
+The Polystack Image Service security configuration covers three areas: image signature
 verification (preventing tampered images from being launched), property protections
 (preventing unauthorized modification of critical metadata fields), and public image
 access controls (restricting who can publish images to the global catalog).
@@ -19,13 +19,13 @@ access controls (restricting who can publish images to the global catalog).
 
 ## Image Signing and Verification
 
-Xloud Image Service supports image signature verification using certificates stored in
-Xloud Key Management. When enabled, the compute service verifies the image signature
+Polystack Image Service supports image signature verification using certificates stored in
+Polystack Key Management. When enabled, the compute service verifies the image signature
 before launching an instance, preventing tampered images from being used.
 
 <Steps titleSize="h3">
   <Step title="Generate a signing key and certificate" icon="key">
-    Store the certificate in Xloud Key Management:
+    Store the certificate in Polystack Key Management:
     ```bash title="Create a certificate container in Key Management"
     openstack secret store \
       --name image-signing-cert \
@@ -54,7 +54,7 @@ before launching an instance, preventing tampered images from being used.
     ```
     Deploy after configuring:
     ```bash title="Apply compute configuration"
-    xavs-ansible deploy --tags nova
+    ironcore-ansible deploy --tags nova
     ```
     <Check>
       The compute service now rejects instances launched from images with invalid or
@@ -77,14 +77,14 @@ properties — such as signature fields or hardware requirements — after uploa
 
 <Steps titleSize="h3">
   <Step title="Create the property protections configuration" icon="file-code">
-    ```ini title="/etc/xavs/glance/property-protections.conf"
+    ```ini title="/etc/ironcore/glance/property-protections.conf"
     [x-image-meta-property-img_signature]
     create = admin
     read = @
     update = admin
     delete = admin
 
-    [x-image-meta-property-xloud_base_image]
+    [x-image-meta-property-polystack_base_image]
     create = admin
     read = @
     update = admin
@@ -99,7 +99,7 @@ properties — such as signature fields or hardware requirements — after uploa
   </Step>
   <Step title="Apply the configuration" icon="upload">
     ```bash title="Redeploy glance configuration"
-    xavs-ansible deploy --tags glance
+    ironcore-ansible deploy --tags glance
     ```
     <Check>Property protections are active. Non-admin users cannot modify protected properties.</Check>
   </Step>
@@ -118,7 +118,7 @@ openstack registered limit list | grep publicize
 ```
 
 If the policy needs tightening, add an override:
-```yaml title="/etc/xavs/glance/policy.yaml — restrict public image creation"
+```yaml title="/etc/ironcore/glance/policy.yaml — restrict public image creation"
 "publicize_image": "role:admin"
 "deactivate_image": "role:admin"
 "reactivate_image": "role:admin"
@@ -126,7 +126,7 @@ If the policy needs tightening, add an override:
 
 Apply:
 ```bash title="Apply policy override"
-xavs-ansible deploy --tags glance
+ironcore-ansible deploy --tags glance
 ```
 
 ---
@@ -140,7 +140,7 @@ xavs-ansible deploy --tags glance
   </Accordion>
   <Accordion title="Property protections configured" icon="lock">
     Confirm that signature-related properties (`img_signature*`) and platform properties
-    (`xloud_base_image`, `hw_firmware_type`) require admin to modify.
+    (`polystack_base_image`, `hw_firmware_type`) require admin to modify.
   </Accordion>
   <Accordion title="Public image access restricted to admins" icon="eye">
     Verify that non-admin users cannot set images to `public` visibility.

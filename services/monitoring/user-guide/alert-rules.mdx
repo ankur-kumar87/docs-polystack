@@ -13,7 +13,7 @@ is already firing, and escalation policies.
 
 <Note>
   **Prerequisites**
-  - An active Xloud account with project access
+  - An active Polystack account with project access
   - At least one notification channel configured
     (see [XIMP Admin — Alert Channels](/services/monitoring/admin-guide/alert-channels))
 </Note>
@@ -33,9 +33,9 @@ Combine multiple conditions in a single rule using AND/OR logic:
 
     | Field | Value |
     |-------|-------|
-    | **Condition A** | `xloud_compute_cpu_utilization > 85` |
+    | **Condition A** | `polystack_compute_cpu_utilization > 85` |
     | **Operator** | `AND` |
-    | **Condition B** | `xloud_compute_memory_free_pct < 15` |
+    | **Condition B** | `polystack_compute_memory_free_pct < 15` |
 
     This rule fires only when both CPU is above 85% AND available memory is below
     15% — reducing false positives from transient CPU spikes.
@@ -46,10 +46,10 @@ Combine multiple conditions in a single rule using AND/OR logic:
     severity: critical
     evaluation_period: 5m
     conditions:
-      - metric: xloud_compute_cpu_utilization
+      - metric: polystack_compute_cpu_utilization
         condition: ">"
         threshold: 85
-      - metric: xloud_compute_memory_free_pct
+      - metric: polystack_compute_memory_free_pct
         condition: "<"
         threshold: 15
     logic: AND

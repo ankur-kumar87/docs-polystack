@@ -127,7 +127,7 @@ reliable DR strategy with predictable RTO.
 | Mode | How It Works | RPO Accuracy | Overhead |
 |------|-------------|-------------|---------|
 | **Crash-consistent** | Replicates data as written — like a power failure at the recovery point | May require fsck on recovery; databases may need recovery | Minimal |
-| **Application-consistent** | Coordinates with the XAVS Guest Agent to quiesce writes before snapshot (includes VSS provider for Windows) | Application-clean recovery point; no database recovery needed | XAVS Guest Agent round-trip per snapshot interval |
+| **Application-consistent** | Coordinates with the Ironcore Guest Agent to quiesce writes before snapshot (includes VSS provider for Windows) | Application-clean recovery point; no database recovery needed | Ironcore Guest Agent round-trip per snapshot interval |
 
 <Tip>
   Use application-consistent mode for databases and transactional workloads.

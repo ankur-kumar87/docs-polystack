@@ -1,6 +1,6 @@
 ---
 title: "Policy Management"
-description: "Customize RBAC policies to control which roles can perform each API operation across Xloud services. Create custom roles and map them to service-level."
+description: "Customize RBAC policies to control which roles can perform each API operation across Polystack services. Create custom roles and map them to service-level."
 sidebarTitle: "Policy Management"
 ---
 
@@ -8,7 +8,7 @@ import AdminWarning from '/snippets/admin-warning.mdx';
 
 ## Overview
 
-Xloud services enforce role-based access control through **policy files**. Each service has a `policy.yaml` (or `policy.json`) file that maps API operations to role requirements. The default policies follow the principle of least privilege — `admin` gets full access, `member` gets project-scoped CRUD, and `reader` gets read-only access. This guide covers viewing default policies, creating custom roles, writing per-service overrides, and applying changes safely.
+Polystack services enforce role-based access control through **policy files**. Each service has a `policy.yaml` (or `policy.json`) file that maps API operations to role requirements. The default policies follow the principle of least privilege — `admin` gets full access, `member` gets project-scoped CRUD, and `reader` gets read-only access. This guide covers viewing default policies, creating custom roles, writing per-service overrides, and applying changes safely.
 
 <AdminWarning />
 
@@ -16,7 +16,7 @@ Xloud services enforce role-based access control through **policy files**. Each 
 
 ## Default Policy Overview
 
-Xloud ships with three built-in roles and a set of default policies enforced across all services:
+Polystack ships with three built-in roles and a set of default policies enforced across all services:
 
 | Role | Typical Policy Permissions |
 |------|---------------------------|
@@ -34,20 +34,20 @@ The `admin` role implies `member`, which implies `reader` — so each role inher
 
 ## Policy File Locations
 
-Each Xloud service reads its policy file from inside its container. Overrides are placed in `/etc/xavs/<service>/` on the host and deployed by XDeploy:
+Each Polystack service reads its policy file from inside its container. Overrides are placed in `/etc/ironcore/<service>/` on the host and deployed by XDeploy:
 
 | Service | Policy Override Path | Container Path |
 |---------|---------------------|----------------|
-| **Compute** (Nova) | `/etc/xavs/nova/policy.yaml` | `/etc/nova/policy.yaml` |
-| **Block Storage** (Cinder) | `/etc/xavs/cinder/policy.yaml` | `/etc/cinder/policy.yaml` |
-| **Networking** (Neutron) | `/etc/xavs/neutron/policy.yaml` | `/etc/neutron/policy.yaml` |
-| **Image** (Glance) | `/etc/xavs/glance/policy.yaml` | `/etc/glance/policy.yaml` |
-| **Identity** (Keystone) | `/etc/xavs/keystone/policy.yaml` | `/etc/keystone/policy.yaml` |
-| **Orchestration** (Heat) | `/etc/xavs/heat/policy.yaml` | `/etc/heat/policy.yaml` |
-| **Object Storage** (Swift) | `/etc/xavs/swift/policy.yaml` | `/etc/swift/policy.yaml` |
-| **DNS** (Designate) | `/etc/xavs/designate/policy.yaml` | `/etc/designate/policy.yaml` |
-| **Key Manager** (Barbican) | `/etc/xavs/barbican/policy.yaml` | `/etc/barbican/policy.yaml` |
-| **Load Balancer** (Octavia) | `/etc/xavs/octavia/policy.yaml` | `/etc/octavia/policy.yaml` |
+| **Compute** (Nova) | `/etc/ironcore/nova/policy.yaml` | `/etc/nova/policy.yaml` |
+| **Block Storage** (Cinder) | `/etc/ironcore/cinder/policy.yaml` | `/etc/cinder/policy.yaml` |
+| **Networking** (Neutron) | `/etc/ironcore/neutron/policy.yaml` | `/etc/neutron/policy.yaml` |
+| **Image** (Glance) | `/etc/ironcore/glance/policy.yaml` | `/etc/glance/policy.yaml` |
+| **Identity** (Keystone) | `/etc/ironcore/keystone/policy.yaml` | `/etc/keystone/policy.yaml` |
+| **Orchestration** (Heat) | `/etc/ironcore/heat/policy.yaml` | `/etc/heat/policy.yaml` |
+| **Object Storage** (Swift) | `/etc/ironcore/swift/policy.yaml` | `/etc/swift/policy.yaml` |
+| **DNS** (Designate) | `/etc/ironcore/designate/policy.yaml` | `/etc/designate/policy.yaml` |
+| **Key Manager** (Barbican) | `/etc/ironcore/barbican/policy.yaml` | `/etc/barbican/policy.yaml` |
+| **Load Balancer** (Octavia) | `/etc/ironcore/octavia/policy.yaml` | `/etc/octavia/policy.yaml` |
 
 <Tip>
   Start with an empty override file and add only the rules you need to change. All other rules fall back to the service's built-in defaults.
@@ -88,14 +88,14 @@ Custom roles are names you create in Keystone. They have **no permissions by def
     ```
   </Step>
   <Step title="Write the policy override file" icon="file-code">
-    Create `/etc/xavs/<service>/policy.yaml` with only the rules you want to change:
+    Create `/etc/ironcore/<service>/policy.yaml` with only the rules you want to change:
 
-    ```yaml title="/etc/xavs/nova/policy.yaml — allow network-operator to list servers"
+    ```yaml title="/etc/ironcore/nova/policy.yaml — allow network-operator to list servers"
     "os_compute_api:servers:index": "role:network-operator or role:member"
     "os_compute_api:servers:detail": "role:network-operator or role:member"
     ```
 
-    ```yaml title="/etc/xavs/neutron/policy.yaml — allow network-operator to manage ports"
+    ```yaml title="/etc/ironcore/neutron/policy.yaml — allow network-operator to manage ports"
     "create_port": "role:network-operator or role:admin"
     "update_port": "role:network-operator or role:admin"
     "delete_port": "role:network-operator or role:admin"
@@ -104,8 +104,8 @@ Custom roles are names you create in Keystone. They have **no permissions by def
   </Step>
   <Step title="Apply the policy changes via XDeploy" icon="upload">
     ```bash title="Redeploy the affected service"
-    xavs-ansible deploy --tags nova
-    xavs-ansible deploy --tags neutron
+    ironcore-ansible deploy --tags nova
+    ironcore-ansible deploy --tags neutron
     ```
 
     <Check>The new policy is active. Test with a user holding the custom role to verify enforcement.</Check>
@@ -181,7 +181,7 @@ Custom roles are names you create in Keystone. They have **no permissions by def
 
 <Tabs>
   <Tab title="Compute (Nova)" icon="server">
-    ```yaml title="/etc/xavs/nova/policy.yaml"
+    ```yaml title="/etc/ironcore/nova/policy.yaml"
     # Restrict flavor creation and deletion to admins only
     "os_compute_api:os-flavor-manage:create": "role:admin"
     "os_compute_api:os-flavor-manage:delete": "role:admin"
@@ -197,7 +197,7 @@ Custom roles are names you create in Keystone. They have **no permissions by def
     ```
   </Tab>
   <Tab title="Networking (Neutron)" icon="network">
-    ```yaml title="/etc/xavs/neutron/policy.yaml"
+    ```yaml title="/etc/ironcore/neutron/policy.yaml"
     # Allow a 'network-operator' role to manage routers
     "create_router": "role:network-operator or role:admin"
     "update_router": "role:network-operator or role:admin"
@@ -212,7 +212,7 @@ Custom roles are names you create in Keystone. They have **no permissions by def
     ```
   </Tab>
   <Tab title="Block Storage (Cinder)" icon="hard-drive">
-    ```yaml title="/etc/xavs/cinder/policy.yaml"
+    ```yaml title="/etc/ironcore/cinder/policy.yaml"
     # Restrict volume type creation to admins
     "volume_extension:types_manage": "role:admin"
 
@@ -225,7 +225,7 @@ Custom roles are names you create in Keystone. They have **no permissions by def
     ```
   </Tab>
   <Tab title="Image (Glance)" icon="image">
-    ```yaml title="/etc/xavs/glance/policy.yaml"
+    ```yaml title="/etc/ironcore/glance/policy.yaml"
     # Restrict image deletion to image owner or admin
     "delete_image": "rule:image_owner or role:admin"
 
@@ -237,7 +237,7 @@ Custom roles are names you create in Keystone. They have **no permissions by def
     ```
   </Tab>
   <Tab title="Identity (Keystone)" icon="fingerprint">
-    ```yaml title="/etc/xavs/keystone/policy.yaml"
+    ```yaml title="/etc/ironcore/keystone/policy.yaml"
     # Allow a 'domain-admin' role to manage users within a domain
     "identity:list_users": "rule:cloud_admin or rule:domain_admin"
     "identity:create_user": "rule:cloud_admin or rule:domain_admin"
@@ -273,7 +273,7 @@ docker exec neutron_server \
 ```
 
 ```bash title="Check current policy file for a service"
-cat /etc/xavs/nova/policy.yaml 2>/dev/null || echo "No override — using defaults"
+cat /etc/ironcore/nova/policy.yaml 2>/dev/null || echo "No override — using defaults"
 ```
 </CodeGroup>
 
@@ -285,8 +285,8 @@ Regularly review and verify policy configurations across all services:
 
 <CodeGroup>
 ```bash title="List all policy overrides for a service"
-cat /etc/xavs/nova/policy.yaml
-cat /etc/xavs/neutron/policy.yaml
+cat /etc/ironcore/nova/policy.yaml
+cat /etc/ironcore/neutron/policy.yaml
 ```
 
 ```bash title="Test policy as a non-admin user"

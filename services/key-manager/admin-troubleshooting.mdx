@@ -1,6 +1,6 @@
 ---
 title: "Key Manager Admin Troubleshooting"
-description: "Diagnose and resolve platform-level Xloud Key Manager issues — backend connectivity failures, pending certificate orders, ACL propagation delays, and."
+description: "Diagnose and resolve platform-level Polystack Key Manager issues — backend connectivity failures, pending certificate orders, ACL propagation delays, and."
 sidebarTitle: "Troubleshooting"
 ---
 
@@ -48,7 +48,7 @@ docker logs barbican-api --tail 100
 
     | Backend | Check | Resolution |
     |---------|-------|------------|
-    | `simple_crypto` | Master key file readable | `ls -la /etc/xavs/key-manager/kek.conf` |
+    | `simple_crypto` | Master key file readable | `ls -la /etc/ironcore/key-manager/kek.conf` |
     | `pkcs11` | HSM online and partition accessible | Verify HSM dashboard status |
     | `kmip` | Network to KMIP server on port 5696 | `nc -zv <kmip-host> 5696` |
   </Accordion>

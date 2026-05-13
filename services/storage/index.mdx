@@ -1,15 +1,15 @@
 ---
 title: "Block Storage"
-description: "Persistent block storage volumes for Xloud Compute instances."
+description: "Persistent block storage volumes for Polystack Compute instances."
 icon: "hard-drive"
 sidebarTitle: "Block Storage"
 mode: "wide"
 ---
 
-Durable, high-performance block storage volumes that attach to your Xloud Compute instances and persist independently of instance lifecycle.
+Durable, high-performance block storage volumes that attach to your Polystack Compute instances and persist independently of instance lifecycle.
 
-<Card title="XSDS — Software-Defined Storage" icon="external-link" href="https://xloud.tech/ceph" color="#197560" horizontal>
-  Product details, hardware compatibility, and datasheet on xloud.tech
+<Card title="Software-Defined-Storage — Software-Defined Storage" icon="external-link" href="https://polystack.tech/ceph" color="#197560" horizontal>
+  Product details, hardware compatibility, and datasheet on polystack.tech
 </Card>
 
 ---
@@ -26,7 +26,7 @@ Durable, high-performance block storage volumes that attach to your Xloud Comput
   <Card title="CLI Reference" icon="terminal" href="/services/storage/cli-reference" color="#197560">
     `openstack volume` commands for creating, managing, and querying volumes and snapshots from the command line.
   </Card>
-  <Card title="XSDS Product Page" icon="external-link" href="https://xloud.tech/ceph" color="#197560">
+  <Card title="Software-Defined-Storage Product Page" icon="external-link" href="https://polystack.tech/ceph" color="#197560">
     Distributed storage architecture, supported hardware, performance benchmarks, and licensing information.
   </Card>
 </CardGroup>
@@ -49,7 +49,7 @@ Durable, high-performance block storage volumes that attach to your Xloud Comput
     NVMe, SSD, and HDD-backed volume types with defined IOPS and throughput guarantees for every workload class.
   </Card>
   <Card title="Volume Encryption" icon="lock" href="/services/storage/encryption" color="#197560">
-    Transparent at-rest encryption backed by the Xloud Key Management service — no application changes required.
+    Transparent at-rest encryption backed by the Polystack Key Management service — no application changes required.
   </Card>
   <Card title="Cross-Project Transfers" icon="arrow-right-arrow-left" href="/services/storage/volume-transfers" color="#197560">
     Transfer volume ownership between projects with a secure token-based handoff workflow.
@@ -61,13 +61,13 @@ Durable, high-performance block storage volumes that attach to your Xloud Comput
 <p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Related Services</p>
 
 <CardGroup cols={3}>
-  <Card title="Xloud Compute" icon="server" href="/services/compute" color="#197560">
+  <Card title="Polystack Compute" icon="server" href="/services/compute" color="#197560">
     Virtual machine instances that consume block storage volumes as persistent disks
   </Card>
-  <Card title="Xloud Networking" icon="network" color="#197560">
+  <Card title="Polystack Networking" icon="network" color="#197560">
     Virtual networks and floating IPs used alongside compute and storage resources
   </Card>
-  <Card title="Xloud Distributed Storage" icon="database" href="https://xloud.tech/ceph" color="#197560">
+  <Card title="Polystack Distributed Storage" icon="database" href="https://polystack.tech/ceph" color="#197560">
     The distributed storage backend that powers block, object, and file storage
   </Card>
 </CardGroup>

@@ -1,29 +1,29 @@
 ---
 title: "Extended RBAC"
-description: "Fine-grained role-based access control for Xloud Platform — privileges, custom roles, tag conditions, and per-action enforcement on every Dashboard action."
+description: "Fine-grained role-based access control for Polystack Platform — privileges, custom roles, tag conditions, and per-action enforcement on every Dashboard action."
 sidebarTitle: "Extended RBAC"
 ---
 
 ## Overview
 
-**Xloud Extended RBAC** is the per-action access control layer of the Xloud Platform.
-It builds on the platform's existing identity and policy stack (Xloud Identity tokens,
+**Polystack Extended RBAC** is the per-action access control layer of the Polystack Platform.
+It builds on the platform's existing identity and policy stack (Polystack Identity tokens,
 project scoping, service-level role policy) and adds a **privilege catalog** so cloud
 operators can construct custom roles that grant or deny **specific Dashboard actions**.
 Each grant can optionally be scoped to a tag condition — for example, *"this role can
 act on instances tagged `env=staging` only"*.
 
 <Info>
-  **Xloud-Developed** — Extended RBAC is developed by Xloud and ships as part of the
-  Xloud Platform identity layer. It is an addition to (not a replacement for) the
+  **Polystack-Developed** — Extended RBAC is developed by Polystack and ships as part of the
+  Polystack Platform identity layer. It is an addition to (not a replacement for) the
   standard role and policy stack.
 </Info>
 
 <Note>
   **Prerequisites**
-  - An administrator account on the Xloud Dashboard with the `rbac_admin` privilege
+  - An administrator account on the Polystack Dashboard with the `rbac_admin` privilege
     (or the built-in `admin` role)
-  - The Xloud Platform identity layer enabled (default on every cluster)
+  - The Polystack Platform identity layer enabled (default on every cluster)
   - The RBAC gateway enabled in **XDEPLOY → Configuration** for cluster-wide
     enforcement on every direct platform service API call
 </Note>
@@ -35,7 +35,7 @@ act on instances tagged `env=staging` only"*.
 <iframe
   className="w-full aspect-video rounded-xl"
   src="https://www.youtube.com/embed/1usSEDeZDWw"
-  title="How to Edit Permissions on a Custom Role with Extended RBAC on Xloud"
+  title="How to Edit Permissions on a Custom Role with Extended RBAC on Polystack"
   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
   allowFullScreen
 ></iframe>
@@ -66,7 +66,7 @@ Extended RBAC is one layer in a five-layer access stack:
 
 | Level | What it controls | Configuration surface |
 |-------|-----------------|----------------------|
-| **1. Authentication** | Who can sign in (password, TOTP MFA, federation) | Xloud Identity, [User Center](/services/dashboard/user-guide/user-center) |
+| **1. Authentication** | Who can sign in (password, TOTP MFA, federation) | Polystack Identity, [User Center](/services/dashboard/user-guide/user-center) |
 | **2. Project membership and roles** | Project membership and Identity-side roles | [Identity → Roles](/services/identity/roles), [Identity → Users](/services/identity/users) |
 | **3. Service-level policy** | Per-service `policy.yaml` rules | [Policy Management](/services/identity/policy-management) |
 | **4. Extended RBAC privileges** | Per-Dashboard-action allow / deny rules with optional tag scoping | This page |
@@ -82,7 +82,7 @@ Extended RBAC's management surface is always active — privileges, custom roles
 conditions, and the audit log are available from the Dashboard out of the box. The
 **RBAC gateway** is the additional switch that decides whether Extended RBAC
 enforces every direct platform service API call cluster-wide, or only the calls
-that go through the Xloud Dashboard's extension APIs.
+that go through the Polystack Dashboard's extension APIs.
 
 The gateway is enabled through **XDEPLOY** — there is no other supported
 configuration path.
@@ -147,7 +147,7 @@ tag-conditioned.
     Each item is independently grantable. Console, Create Instance, and Delete are
     three separate privileges — they are not bundled.
 
-    **Script execution endpoints** — Xloud has no general "exec arbitrary command
+    **Script execution endpoints** — Polystack has no general "exec arbitrary command
     on a running VM" endpoint. Script execution flows through two distinct Compute
     API endpoints, each gated by its own privilege:
 
@@ -245,7 +245,7 @@ tag-conditioned.
 </AccordionGroup>
 
 <Info>
-  Some Xloud-developed actions (Clone, Convert to Template, Adjust Resources, Browse
+  Some Polystack-developed actions (Clone, Convert to Template, Adjust Resources, Browse
   Files, Rollback, Reset MFA, Sign Certificate, Bulk Live Migrate) are gated **only**
   by Extended RBAC. For these actions Extended RBAC is the sole enforcement layer,
   even when the cluster gateway is off.
@@ -268,9 +268,9 @@ single place where roles are created, deleted, and assigned to users.
 | Column / action | What it does |
 |-----------------|--------------|
 | **Type** column | Tags each role as **Custom** (blue) or **System** (grey). Custom roles are editable on the RBAC Permissions page; System roles are read-only |
-| **Create Role** (primary) | Opens the create-role wizard. The role is created in Xloud Identity AND a matching Custom-role record is created in Extended RBAC — there is no separate step |
+| **Create Role** (primary) | Opens the create-role wizard. The role is created in Polystack Identity AND a matching Custom-role record is created in Extended RBAC — there is no separate step |
 | **Edit** (row) | Edit name and description |
-| **Delete** (row) | Removes the role from both Xloud Identity and Extended RBAC in one transaction. Disabled for System roles |
+| **Delete** (row) | Removes the role from both Polystack Identity and Extended RBAC in one transaction. Disabled for System roles |
 | **Edit Permissions** (row) | Jumps to the RBAC Permissions page pre-filled for that role. Disabled for System roles with a tooltip *"System roles cannot be edited"* |
 | **Manage Users** | Existing flow — assign or remove the role on a per-user basis |
 
@@ -480,7 +480,7 @@ restarting any service.
 
 <CardGroup cols={3}>
   <Card title="Roles" href="/services/identity/roles" color="#197560">
-    Manage Xloud Identity roles — create, assign, implied-roles
+    Manage Polystack Identity roles — create, assign, implied-roles
   </Card>
   <Card title="Policy Management" href="/services/identity/policy-management" color="#197560">
     Service-level policy YAML hardening

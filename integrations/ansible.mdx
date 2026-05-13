@@ -1,24 +1,24 @@
 ---
 title: "Ansible Integration"
-description: "Automate instance configuration, patch management, compliance enforcement, and operational workflows on Xloud using Ansible modules and dynamic inventory."
+description: "Automate instance configuration, patch management, compliance enforcement, and operational workflows on Polystack using Ansible modules and dynamic inventory."
 sidebarTitle: "Ansible"
 ---
 
 ## Overview
 
-Ansible integrates with Xloud through two complementary mechanisms: the `openstack.cloud`
+Ansible integrates with Polystack through two complementary mechanisms: the `openstack.cloud`
 collection for infrastructure automation, and SSH/WinRM-based playbooks for instance
 configuration. Ansible operates agentlessly — no software is installed on your managed instances
 beyond a working SSH daemon and Python interpreter.
 
-The Xloud dynamic inventory plugin sources instance metadata directly from the compute API,
+The Polystack dynamic inventory plugin sources instance metadata directly from the compute API,
 automatically organizing hosts by project, availability zone, image, and custom metadata tags.
 
 <Note>
   **Prerequisites**
   - Ansible 2.12 or later installed
   - `openstack.cloud` collection: `ansible-galaxy collection install openstack.cloud`
-  - Xloud application credentials or `openrc` file sourced in the shell
+  - Polystack application credentials or `openrc` file sourced in the shell
   - `openstacksdk` Python library: `pip install openstacksdk`
 </Note>
 
@@ -26,7 +26,7 @@ automatically organizing hosts by project, availability zone, image, and custom 
 
 ## Dynamic Inventory
 
-The `openstack.cloud.openstack` inventory plugin generates a live host list from the Xloud
+The `openstack.cloud.openstack` inventory plugin generates a live host list from the Polystack
 compute API. Hosts are grouped by instance metadata, eliminating the need to maintain static
 inventory files.
 
@@ -216,9 +216,9 @@ Apply CIS baseline hardening to Linux instances:
         state: restarted
 ```
 
-### Infrastructure Management via Xloud Modules
+### Infrastructure Management via Polystack Modules
 
-Create and manage Xloud resources directly from playbooks:
+Create and manage Polystack resources directly from playbooks:
 
 ```yaml title="playbooks/provision.yml"
 ---
@@ -269,7 +269,7 @@ Create and manage Xloud resources directly from playbooks:
 ## Credential Management
 
 <Tip>
-  Store secrets used in playbooks in Xloud Key Manager (Barbican) or HashiCorp Vault.
+  Store secrets used in playbooks in Polystack Key Manager (Barbican) or HashiCorp Vault.
   Retrieve them at runtime using the `community.general.hashi_vault` or
   `openstack.cloud.identity_user` lookup plugins rather than hardcoding in vars files.
 </Tip>
@@ -292,7 +292,7 @@ ansible-playbook -i inventory/openstack.yml playbooks/bootstrap.yml \
 
 <Steps titleSize="h3">
   <Step title="Source credentials" icon="key">
-    ```bash title="Load Xloud credentials"
+    ```bash title="Load Polystack credentials"
     source admin-openrc.sh
     ```
   </Step>
@@ -332,7 +332,7 @@ ansible-playbook -i inventory/openstack.yml playbooks/bootstrap.yml \
     Deploy Wazuh agents using Ansible playbooks for SIEM and compliance monitoring
   </Card>
   <Card title="Key Manager" href="/services/key-manager/store-secrets" color="#197560">
-    Store playbook secrets in Xloud Key Manager for secure credential retrieval
+    Store playbook secrets in Polystack Key Manager for secure credential retrieval
   </Card>
   <Card title="Auto-Scaling" href="/services/orchestration/autoscaling" color="#197560">
     Bootstrap auto-scaled instances using Ansible cloud-init integration

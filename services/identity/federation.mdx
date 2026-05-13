@@ -1,6 +1,6 @@
 ---
 title: "Identity Federation"
-description: "Configure SAML 2.0 and OpenID Connect federation for enterprise single sign-on with Xloud Identity."
+description: "Configure SAML 2.0 and OpenID Connect federation for enterprise single sign-on with Polystack Identity."
 sidebarTitle: "Federation"
 ---
 
@@ -8,10 +8,10 @@ import AdminWarning from '/snippets/admin-warning.mdx';
 
 ## Overview
 
-Federation allows enterprise users to authenticate with Xloud using their existing
-corporate identity provider (IdP) — no separate Xloud password required. Xloud Identity
+Federation allows enterprise users to authenticate with Polystack using their existing
+corporate identity provider (IdP) — no separate Polystack password required. Polystack Identity
 supports SAML 2.0 and OpenID Connect (OIDC) protocols. Users authenticate at the IdP
-and receive Xloud tokens mapped from their IdP attributes, inheriting project membership
+and receive Polystack tokens mapped from their IdP attributes, inheriting project membership
 and roles through attribute mapping rules.
 
 <AdminWarning />
@@ -23,7 +23,7 @@ and roles through attribute mapping rules.
 ```mermaid
 sequenceDiagram
     participant U as User (Browser/CLI)
-    participant I as Xloud Identity
+    participant I as Polystack Identity
     participant IDP as Corporate IdP (SAML/OIDC)
     U->>I: Request token (federation protocol)
     I-->>U: Redirect to IdP
@@ -31,7 +31,7 @@ sequenceDiagram
     IDP-->>U: SAML assertion / OIDC token
     U->>I: Submit assertion/token
     I->>I: Apply mapping rules
-    I-->>U: Xloud token + service catalog
+    I-->>U: Polystack token + service catalog
 ```
 
 ---
@@ -39,8 +39,8 @@ sequenceDiagram
 ## SAML 2.0 Setup
 
 <Steps titleSize="h3">
-  <Step title="Register Xloud as SP in your IdP" icon="building">
-    Provide your IdP with the Xloud SAML SP metadata URL:
+  <Step title="Register Polystack as SP in your IdP" icon="building">
+    Provide your IdP with the Polystack SAML SP metadata URL:
     ```
     https://api.<your-domain>:5000/v3/OS-FEDERATION/identity_providers/<IDP_ID>/protocols/saml2/auth
     ```
@@ -48,7 +48,7 @@ sequenceDiagram
     - `ADFS_LOGIN` or `mail` — the user's login name
     - `memberOf` — group membership for role mapping
   </Step>
-  <Step title="Register the IdP in Xloud" icon="plus">
+  <Step title="Register the IdP in Polystack" icon="plus">
     ```bash title="Create identity provider"
     openstack identity provider create \
       --remote-id https://idp.example.com/sso/saml \
@@ -57,14 +57,14 @@ sequenceDiagram
     ```
   </Step>
   <Step title="Create attribute mapping rules" icon="route">
-    Mapping rules translate IdP attributes into Xloud group memberships:
+    Mapping rules translate IdP attributes into Polystack group memberships:
 
     ```json title="mapping-rules.json"
     [
       {
         "local": [
           {"user": {"name": "{0}", "domain": {"name": "Default"}}},
-          {"group": {"id": "<XLOUD_GROUP_ID>"}}
+          {"group": {"id": "<POLYSTACK_GROUP_ID>"}}
         ],
         "remote": [
           {"type": "ADFS_LOGIN"},
@@ -98,13 +98,13 @@ sequenceDiagram
 ## OpenID Connect Setup
 
 <Steps titleSize="h3">
-  <Step title="Register Xloud as OIDC client in your IdP" icon="building">
+  <Step title="Register Polystack as OIDC client in your IdP" icon="building">
     Register a new application in your OIDC provider (Keycloak, Azure AD, Okta):
     - **Redirect URI**: `https://api.<your-domain>:5000/v3/OS-FEDERATION/identity_providers/<IDP_ID>/protocols/openid/auth/callback`
     - **Grant type**: Authorization Code
     - **Scopes**: `openid`, `profile`, `email`, `groups`
   </Step>
-  <Step title="Register the OIDC IdP in Xloud" icon="plus">
+  <Step title="Register the OIDC IdP in Polystack" icon="plus">
     ```bash title="Create OIDC identity provider"
     openstack identity provider create \
       --remote-id https://accounts.google.com \
@@ -118,11 +118,11 @@ sequenceDiagram
       {
         "local": [
           {"user": {"name": "{0}"}},
-          {"group": {"id": "<XLOUD_GROUP_ID>"}}
+          {"group": {"id": "<POLYSTACK_GROUP_ID>"}}
         ],
         "remote": [
           {"type": "email"},
-          {"type": "groups", "any_one_of": ["xloud-admins@example.com"]}
+          {"type": "groups", "any_one_of": ["polystack-admins@example.com"]}
         ]
       }
     ]
@@ -149,8 +149,8 @@ sequenceDiagram
 
 | Mapping Field | Description |
 |--------------|-------------|
-| `local.user.name` | Maps to the Xloud username for the federated session |
-| `local.group.id` | Assigns the user to an Xloud group (inherits group's role assignments) |
+| `local.user.name` | Maps to the Polystack username for the federated session |
+| `local.group.id` | Assigns the user to an Polystack group (inherits group's role assignments) |
 | `remote.type` | The IdP attribute name to match |
 | `remote.any_one_of` | User must belong to at least one of these values |
 | `remote.not_any_of` | User must not belong to any of these values |

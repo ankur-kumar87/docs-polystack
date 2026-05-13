@@ -1,6 +1,6 @@
 ---
 title: "Image Storage Backends"
-description: "Configure Xloud Distributed Storage (RBD), file store, Swift, S3, VMware datastore, Cinder, or HTTP as the Xloud Image Service backend."
+description: "Configure Polystack Distributed Storage (RBD), file store, Swift, S3, VMware datastore, Cinder, or HTTP as the Polystack Image Service backend."
 sidebarTitle: "Storage Backends"
 ---
 
@@ -8,7 +8,7 @@ import AdminWarning from '/snippets/admin-warning.mdx';
 
 ## Overview
 
-The Xloud Image Service stores image data in a pluggable storage backend. The selection of backend affects availability, performance, and instance launch times. Multiple backends can be registered simultaneously — administrators select which backend stores each image at upload time. This guide covers configuration of all supported backends via XDeploy globals.
+The Polystack Image Service stores image data in a pluggable storage backend. The selection of backend affects availability, performance, and instance launch times. Multiple backends can be registered simultaneously — administrators select which backend stores each image at upload time. This guide covers configuration of all supported backends via XDeploy globals.
 
 <AdminWarning />
 
@@ -20,7 +20,7 @@ The Xloud Image Service stores image data in a pluggable storage backend. The se
 |---------|----------|----|-------|
 | **Distributed Storage (RBD)** | Production — fast clones, no single point of failure | Yes | Recommended for all multi-node deployments |
 | **File Store** | Single-node or development deployments | No | Default backend; not HA |
-| **Xloud Object Storage (Swift)** | Scalable distributed image storage | Yes | Suitable when Swift is already deployed |
+| **Polystack Object Storage (Swift)** | Scalable distributed image storage | Yes | Suitable when Swift is already deployed |
 | **S3-Compatible** | AWS S3 or S3-compatible object stores | Yes | Works with AWS, Ceph RGW, MinIO, Dell ECS |
 | **VMware Datastore** | VMware vSphere integration environments | Yes | Stores images directly in vSphere datastores |
 | **Cinder (Block Storage)** | Block storage as image store | Yes | Volumes used as image backing devices |
@@ -28,9 +28,9 @@ The Xloud Image Service stores image data in a pluggable storage backend. The se
 
 ---
 
-## Xloud Distributed Storage (RBD) — Recommended
+## Polystack Distributed Storage (RBD) — Recommended
 
-RBD (RADOS Block Device) is the recommended backend for high-availability multi-node deployments. Images are stored as RBD objects in the Xloud Distributed Storage cluster, providing built-in redundancy and copy-on-write clones for fast instance launches.
+RBD (RADOS Block Device) is the recommended backend for high-availability multi-node deployments. Images are stored as RBD objects in the Polystack Distributed Storage cluster, providing built-in redundancy and copy-on-write clones for fast instance launches.
 
 <Steps titleSize="h3">
   <Step title="Configure RBD backend in XDeploy globals" icon="settings">
@@ -43,7 +43,7 @@ RBD (RADOS Block Device) is the recommended backend for high-availability multi-
   </Step>
   <Step title="Deploy the configuration" icon="upload">
     ```bash title="Apply glance configuration"
-    xavs-ansible deploy --tags glance
+    ironcore-ansible deploy --tags glance
     ```
   </Step>
   <Step title="Verify the images pool exists" icon="circle-check">
@@ -91,7 +91,7 @@ chown 42424:42424 /mnt/glance_images/
 Apply the configuration:
 
 ```bash title="Apply glance configuration"
-xavs-ansible reconfigure --tags glance
+ironcore-ansible reconfigure --tags glance
 ```
 
 <Warning>
@@ -102,9 +102,9 @@ xavs-ansible reconfigure --tags glance
 
 ---
 
-## Xloud Object Storage (Swift)
+## Polystack Object Storage (Swift)
 
-Images can be stored in Xloud Object Storage (Swift) containers. This backend is suitable when Object Storage is already deployed and disk-to-disk copy overhead is acceptable.
+Images can be stored in Polystack Object Storage (Swift) containers. This backend is suitable when Object Storage is already deployed and disk-to-disk copy overhead is acceptable.
 
 ```yaml title="Swift storage backend configuration"
 glance_backend_swift: "yes"

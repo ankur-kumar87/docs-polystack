@@ -1,6 +1,6 @@
 ---
 title: "Image Properties"
-description: "Set hardware requirements, OS metadata, and scheduler hints on Xloud images to control instance launch behavior."
+description: "Set hardware requirements, OS metadata, and scheduler hints on Polystack images to control instance launch behavior."
 sidebarTitle: "Image Properties"
 ---
 
@@ -24,7 +24,7 @@ launch failures from under-resourced flavors.
 | Property Key | Example Value | Purpose |
 |-------------|--------------|---------|
 | `os_type` | `linux` | Informs the hypervisor of the guest OS family |
-| `os_distro` | `ubuntu` | OS distribution for XAVS Guest Agent configuration |
+| `os_distro` | `ubuntu` | OS distribution for Ironcore Guest Agent configuration |
 | `os_version` | `24.04` | OS version string |
 | `hw_machine_type` | `q35` | Sets the emulated chipset (q35 for UEFI, i440fx for legacy BIOS) |
 | `hw_firmware_type` | `uefi` | Boot firmware — `uefi` or `bios` |
@@ -164,7 +164,7 @@ Any `--property key=value` pair is valid. Properties not recognized by the hyper
 openstack image set \
   --property os_lifecycle=lts \
   --property os_support_until=2029-04-30 \
-  --property xloud_base_image=true \
+  --property polystack_base_image=true \
   --property os_security_patch_date=2026-03-01 \
   --property data_classification=public \
   --property compliance=pci-dss \
@@ -175,7 +175,7 @@ openstack image set \
 |--------------------|--------------|---------|
 | `os_lifecycle` | `lts`, `standard`, `eol` | OS support status |
 | `os_support_until` | `2029-04-30` | End-of-support date for filtering |
-| `xloud_base_image` | `true` | Marks Xloud-maintained base images |
+| `polystack_base_image` | `true` | Marks Polystack-maintained base images |
 | `os_security_patch_date` | `2026-03-01` | Last security patch applied |
 | `data_classification` | `public`, `confidential` | Data handling tag |
 | `compliance` | `pci-dss`, `hipaa`, `iso27001` | Regulatory compliance designation |

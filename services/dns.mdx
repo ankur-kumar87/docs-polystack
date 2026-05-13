@@ -1,6 +1,6 @@
 ---
 title: "DNS Service"
-description: "Manage DNS zones and records for your Xloud private cloud with Xloud DNS — authoritative DNS-as-a-service for zones, record sets, and reverse DNS."
+description: "Manage DNS zones and records for your Polystack private cloud with Polystack DNS — authoritative DNS-as-a-service for zones, record sets, and reverse DNS."
 icon: "globe"
 sidebarTitle: "DNS"
 mode: "wide"
@@ -8,13 +8,13 @@ mode: "wide"
 
 Authoritative DNS management for your private cloud — create zones, manage records, and automate reverse DNS for all your services.
 
-<Card title="Xloud DNS — DNS-as-a-Service" icon="globe" href="https://xloud.tech/xavs" color="#197560" horizontal>
-  Product details and datasheet on xloud.tech
+<Card title="Polystack DNS — DNS-as-a-Service" icon="globe" href="https://polystack.tech/ironcore" color="#197560" horizontal>
+  Product details and datasheet on polystack.tech
 </Card>
 
 ---
 
-<p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Xloud DNS Service</p>
+<p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Polystack DNS Service</p>
 
 <CardGroup cols={2}>
   <Card title="User Guide" icon="book-open" href="/services/dns/user-guide" color="#197560">
@@ -62,7 +62,7 @@ Authoritative DNS management for your private cloud — create zones, manage rec
 
 | Component | Description |
 |-----------|-------------|
-| Zone | An authoritative DNS domain (e.g., `example.com.`) managed by the Xloud DNS service |
+| Zone | An authoritative DNS domain (e.g., `example.com.`) managed by the Polystack DNS service |
 | Record Set | A collection of DNS records sharing the same name and type within a zone |
 | Nameserver | The authoritative resolvers designated to serve records for a zone |
 | Pool | A group of DNS backend servers that handle zone data for a set of zones |
@@ -74,22 +74,22 @@ Authoritative DNS management for your private cloud — create zones, manage rec
 <p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Related Services</p>
 
 <CardGroup cols={3}>
-  <Card title="Xloud Load Balancer" icon="combine" href="/services/load-balancer" color="#197560">
+  <Card title="Polystack Load Balancer" icon="combine" href="/services/load-balancer" color="#197560">
     Map DNS names to load balancer VIP addresses for service endpoints
   </Card>
-  <Card title="Xloud Compute" icon="server" href="/services/compute" color="#197560">
+  <Card title="Polystack Compute" icon="server" href="/services/compute" color="#197560">
     Register compute instance hostnames in DNS zones automatically
   </Card>
-  <Card title="Xloud Networking" icon="network" href="/services/compute" color="#197560">
+  <Card title="Polystack Networking" icon="network" href="/services/compute" color="#197560">
     Floating IPs and fixed IPs referenced in DNS A and PTR records
   </Card>
-  <Card title="Xloud Identity" icon="fingerprint" href="/cli-setup" color="#197560">
+  <Card title="Polystack Identity" icon="fingerprint" href="/cli-setup" color="#197560">
     RBAC policies governing zone and record management permissions
   </Card>
-  <Card title="Xloud Key Manager" icon="lock" href="/services/key-manager" color="#197560">
+  <Card title="Polystack Key Manager" icon="lock" href="/services/key-manager" color="#197560">
     Store DNSSEC signing keys for zone integrity validation
   </Card>
-  <Card title="Xloud Object Storage" icon="box" href="/services/object-storage" color="#197560">
+  <Card title="Polystack Object Storage" icon="box" href="/services/object-storage" color="#197560">
     Archive zone export files and DNS audit logs for compliance
   </Card>
 </CardGroup>

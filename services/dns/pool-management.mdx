@@ -1,6 +1,6 @@
 ---
 title: "DNS Pool Management"
-description: "Manage Xloud DNS nameserver pools — configure pool attributes for zone scheduling, monitor nameserver health, and add or remove nameservers from pools."
+description: "Manage Polystack DNS nameserver pools — configure pool attributes for zone scheduling, monitor nameserver health, and add or remove nameservers from pools."
 sidebarTitle: "Pool Management"
 ---
 
@@ -92,7 +92,7 @@ adding a nameserver:
   <Step title="Deploy the configuration">
     Apply the updated configuration:
     ```bash title="Deploy DNS service configuration"
-    xavs-ansible deploy -t dns
+    ironcore-ansible deploy -t dns
     ```
   </Step>
   <Step title="Verify the new nameserver receives zone data">

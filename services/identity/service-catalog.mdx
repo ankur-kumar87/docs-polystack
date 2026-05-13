@@ -1,6 +1,6 @@
 ---
 title: "Service Catalog"
-description: "Manage endpoint registration for all Xloud services across regions and interface types in Xloud Identity."
+description: "Manage endpoint registration for all Polystack services across regions and interface types in Polystack Identity."
 sidebarTitle: "Service Catalog"
 ---
 
@@ -8,7 +8,7 @@ import AdminWarning from '/snippets/admin-warning.mdx';
 
 ## Overview
 
-The service catalog registers every Xloud service endpoint so clients can discover the
+The service catalog registers every Polystack service endpoint so clients can discover the
 correct API URL for each service and region. It is included in every authentication token
 response, enabling the `openstack` CLI and Dashboard to route requests correctly without
 hard-coded URLs. Each catalog entry includes the service type, endpoint interface
@@ -22,7 +22,7 @@ hard-coded URLs. Each catalog entry includes the service type, endpoint interfac
 
 | Concept | Description |
 |---------|-------------|
-| **Service** | A registered Xloud service (compute, image, block-storage, network, etc.) |
+| **Service** | A registered Polystack service (compute, image, block-storage, network, etc.) |
 | **Endpoint** | A URL for a specific service, interface type, and region combination |
 | **Interface** | `public` (external clients), `internal` (service-to-service), or `admin` (administrative operations) |
 | **Region** | Logical grouping for geographically or administratively separate deployments |

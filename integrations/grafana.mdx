@@ -1,12 +1,12 @@
 ---
 title: "Grafana Dashboards"
-description: "Configure Grafana data sources for Prometheus and Xloud services, import pre-built operational dashboards, and build custom visualizations for compute, storage, and networking."
+description: "Configure Grafana data sources for Prometheus and Polystack services, import pre-built operational dashboards, and build custom visualizations for compute, storage, and networking."
 sidebarTitle: "Grafana"
 ---
 
 ## Overview
 
-Grafana connects to Prometheus and other Xloud data sources to provide operational dashboards
+Grafana connects to Prometheus and other Polystack data sources to provide operational dashboards
 for infrastructure metrics, service health, storage utilization, and network performance.
 Grafana is included in the XIMP monitoring stack and is pre-configured with a Prometheus
 data source pointing to the cluster's Prometheus instance.
@@ -33,7 +33,7 @@ data source pointing to the cluster's Prometheus instance.
       <Step title="Configure connection" icon="settings">
         | Field | Value | Description |
         |-------|-------|-------------|
-        | Name | `Xloud Prometheus` | Display name in dashboard queries |
+        | Name | `Polystack Prometheus` | Display name in dashboard queries |
         | URL | `http://10.0.1.71:9090` | Prometheus server address |
         | Scrape interval | `15s` | Must match `global.scrape_interval` in prometheus.yml |
         | HTTP Method | `POST` | Required for long queries |
@@ -56,7 +56,7 @@ data source pointing to the cluster's Prometheus instance.
     curl -X POST http://admin:$GRAFANA_PASS@localhost:3000/api/datasources \
       -H "Content-Type: application/json" \
       -d '{
-        "name": "Xloud Prometheus",
+        "name": "Polystack Prometheus",
         "type": "prometheus",
         "url": "http://10.0.1.71:9090",
         "access": "proxy",
@@ -89,7 +89,7 @@ including CPU, memory, disk I/O, network throughput, and system load.
         **Import via grafana.com** field and click **Load**.
       </Step>
       <Step title="Select data source" icon="database">
-        Select **Xloud Prometheus** from the data source dropdown. Set the dashboard
+        Select **Polystack Prometheus** from the data source dropdown. Set the dashboard
         name and folder, then click **Import**.
       </Step>
     </Steps>
@@ -155,7 +155,7 @@ Track the current size of Orchestration auto-scaling groups using a time series 
 
 ```promql title="Auto-scaling group size query"
 # Requires the Heat exporter or custom metric pushed from Orchestration stack outputs
-xloud_asg_current_size{stack="web-asg-stack"}
+polystack_asg_current_size{stack="web-asg-stack"}
 ```
 
 <Tip>

@@ -1,6 +1,6 @@
 ---
 title: "Snapshots"
-description: "Create, manage, and restore XSDS volume snapshots for point-in-time recovery, data cloning, and pre-maintenance protection."
+description: "Create, manage, and restore Software-Defined-Storage volume snapshots for point-in-time recovery, data cloning, and pre-maintenance protection."
 sidebarTitle: "Snapshots"
 ---
 
@@ -13,7 +13,7 @@ pre-populated with the same data.
 
 <Note>
   **Prerequisites**
-  - An active Xloud account with project member access
+  - An active Polystack account with project member access
   - Source volume must exist and be accessible
   - Sufficient snapshot quota in your project (check with your administrator)
 </Note>
@@ -187,7 +187,7 @@ pre-populated with the same data.
 
 <AccordionGroup>
   <Accordion title="Crash-consistent snapshots" icon="hard-drive">
-    By default, XSDS snapshots are crash-consistent — they capture the on-disk state
+    By default, Software-Defined-Storage snapshots are crash-consistent — they capture the on-disk state
     at the moment of the snapshot request. This is equivalent to pulling the power cord
     from the machine and is safe for most file systems (ext4, XFS) that use journaling
     for recovery.

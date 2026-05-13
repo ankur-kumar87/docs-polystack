@@ -1,6 +1,6 @@
 ---
 title: "Authentication Backends"
-description: "Configure SQL, LDAP, SAML 2.0, and OpenID Connect authentication drivers for Xloud Identity."
+description: "Configure SQL, LDAP, SAML 2.0, and OpenID Connect authentication drivers for Polystack Identity."
 sidebarTitle: "Auth Backends"
 ---
 
@@ -8,7 +8,7 @@ import AdminWarning from '/snippets/admin-warning.mdx';
 
 ## Overview
 
-Xloud Identity supports multiple authentication drivers that can be combined within the
+Polystack Identity supports multiple authentication drivers that can be combined within the
 same deployment. Each domain can use a different backend, allowing you to integrate
 enterprise LDAP directories or federated identity providers alongside local SQL accounts.
 
@@ -45,9 +45,9 @@ openstack --os-cloud admin domain show Default -f json | grep -i driver
 
 ## LDAP Integration
 
-LDAP integration sources users and groups from an external directory. Xloud Identity
+LDAP integration sources users and groups from an external directory. Polystack Identity
 connects in read-only mode — user creation and password changes must happen in the
-directory, not in Xloud.
+directory, not in Polystack.
 
 <Steps titleSize="h3">
   <Step title="Configure LDAP in XDeploy globals" icon="settings">
@@ -56,7 +56,7 @@ directory, not in Xloud.
     ```yaml title="LDAP configuration in deployment globals"
     keystone_ldap:
       url: ldap://ldap.example.com
-      user: cn=xloud-svc,dc=example,dc=com
+      user: cn=polystack-svc,dc=example,dc=com
       password: "{{ ldap_bind_password }}"
       suffix: dc=example,dc=com
       user_tree_dn: ou=Users,dc=example,dc=com
@@ -71,14 +71,14 @@ directory, not in Xloud.
   </Step>
   <Step title="Deploy the configuration" icon="upload">
     ```bash title="Apply LDAP configuration"
-    xavs-ansible deploy --tags keystone
+    ironcore-ansible deploy --tags keystone
     ```
   </Step>
   <Step title="Verify LDAP connectivity" icon="circle-check">
     Test the LDAP connection from the Identity API node:
     ```bash title="Test LDAP connectivity"
     ldapsearch -x -H ldap://ldap.example.com \
-      -D "cn=xloud-svc,dc=example,dc=com" \
+      -D "cn=polystack-svc,dc=example,dc=com" \
       -w "$LDAP_PASSWORD" \
       -b "ou=Users,dc=example,dc=com" \
       "(sAMAccountName=alice)"
@@ -89,7 +89,7 @@ directory, not in Xloud.
 
 <Warning>
   LDAP integration is read-only. User management (password resets, account creation)
-  must be performed in the directory, not through the Xloud Dashboard or CLI.
+  must be performed in the directory, not through the Polystack Dashboard or CLI.
 </Warning>
 
 ---
@@ -97,16 +97,16 @@ directory, not in Xloud.
 ## SAML 2.0 Federation
 
 SAML 2.0 federation enables SSO with corporate identity providers. Users authenticate
-at the IdP and receive Xloud tokens without a local password.
+at the IdP and receive Polystack tokens without a local password.
 
 <Steps titleSize="h3">
   <Step title="Configure the identity provider in your IdP" icon="building">
-    Register Xloud as a service provider in your IdP. Provide the Xloud SAML metadata URL:
+    Register Polystack as a service provider in your IdP. Provide the Polystack SAML metadata URL:
     ```
     https://api.<your-domain>:5000/v3/OS-FEDERATION/identity_providers/<IDP_ID>/protocols/saml2/auth
     ```
   </Step>
-  <Step title="Register the IdP in Xloud" icon="plus">
+  <Step title="Register the IdP in Polystack" icon="plus">
     ```bash title="Create identity provider"
     openstack identity provider create \
       --remote-id https://idp.example.com/sso/saml \
@@ -114,7 +114,7 @@ at the IdP and receive Xloud tokens without a local password.
     ```
   </Step>
   <Step title="Create attribute mapping" icon="route">
-    Define how IdP attributes map to Xloud groups and projects:
+    Define how IdP attributes map to Polystack groups and projects:
     ```bash title="Create mapping rules"
     openstack mapping create \
       --rules mapping-rules.json \
@@ -127,11 +127,11 @@ at the IdP and receive Xloud tokens without a local password.
       {
         "local": [
           {"user": {"name": "{0}"}},
-          {"group": {"id": "<XLOUD_GROUP_ID>"}}
+          {"group": {"id": "<POLYSTACK_GROUP_ID>"}}
         ],
         "remote": [
           {"type": "ADFS_LOGIN"},
-          {"type": "memberOf", "any_one_of": ["CN=xloud-users,OU=Groups,DC=example,DC=com"]}
+          {"type": "memberOf", "any_one_of": ["CN=polystack-users,OU=Groups,DC=example,DC=com"]}
         ]
       }
     ]

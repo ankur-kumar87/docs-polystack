@@ -1,6 +1,6 @@
 ---
 title: "Network Security Hardening"
-description: "Harden Xloud Networking with port security, anti-spoofing, allowed address pairs, and default security group hardening for production environments."
+description: "Harden Polystack Networking with port security, anti-spoofing, allowed address pairs, and default security group hardening for production environments."
 sidebarTitle: "Security Hardening"
 ---
 
@@ -9,7 +9,7 @@ import CliAuth from '/snippets/cli-auth.mdx';
 
 ## Overview
 
-Xloud Networking enforces several layers of security at the virtual port level — MAC and
+Polystack Networking enforces several layers of security at the virtual port level — MAC and
 IP anti-spoofing, stateful security groups, and port security policies. This guide covers
 administrator-level hardening steps to strengthen these controls for production
 deployments.
@@ -97,7 +97,7 @@ openstack port show <port-id> -f json | grep allowed_address_pairs
 
 ## Default Security Group Hardening
 
-The default security group Xloud Networking creates for each project allows all egress
+The default security group Polystack Networking creates for each project allows all egress
 traffic and all inbound traffic from members of the same group. For production
 environments, harden this group by removing the permissive inbound rule.
 

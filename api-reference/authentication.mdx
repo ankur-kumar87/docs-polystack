@@ -1,16 +1,16 @@
 ---
 title: "API Authentication"
-description: "Authenticate with the Xloud API using password tokens, application credentials, and scoped tokens. Includes token lifecycle management and CLI examples."
+description: "Authenticate with the Polystack API using password tokens, application credentials, and scoped tokens. Includes token lifecycle management and CLI examples."
 sidebarTitle: "Authentication"
 ---
 
 ## Overview
 
-All Xloud API requests require a valid bearer token in the `X-Auth-Token` request header. The Identity service (Keystone) issues tokens upon successful authentication. Tokens are time-limited, project-scoped, and carry the role assignments of the authenticated user.
+All Polystack API requests require a valid bearer token in the `X-Auth-Token` request header. The Identity service (Keystone) issues tokens upon successful authentication. Tokens are time-limited, project-scoped, and carry the role assignments of the authenticated user.
 
 <Note>
   **Prerequisites**
-  - An active Xloud account
+  - An active Polystack account
   - Project name, username, and password (or application credential ID and secret)
   - Identity endpoint: `https://api.<your-domain>/identity/v3`
 </Note>
@@ -114,7 +114,7 @@ Application credentials allow services and automation scripts to authenticate wi
   <Tab title="Dashboard" icon="gauge">
     <Steps titleSize="h3">
       <Step title="Navigate to Application Credentials" icon="compass">
-        Log in to the **Xloud Dashboard** (`https://connect.<your-domain>`) and navigate to
+        Log in to the **Polystack Dashboard** (`https://connect.<your-domain>`) and navigate to
         **Project → Identity → Application Credentials**. Click **Create Application Credential**.
       </Step>
       <Step title="Configure the credential" icon="settings">
@@ -132,9 +132,9 @@ Application credentials allow services and automation scripts to authenticate wi
       </Step>
       <Step title="Download the clouds.yaml" icon="download">
         Click **Download clouds.yaml** to get a ready-to-use configuration file for the
-        Xloud CLI and Python SDK.
+        Polystack CLI and Python SDK.
 
-        <Check>The `clouds.yaml` file is saved to your local machine and can be placed at `~/.config/xloud/clouds.yaml`.</Check>
+        <Check>The `clouds.yaml` file is saved to your local machine and can be placed at `~/.config/polystack/clouds.yaml`.</Check>
       </Step>
     </Steps>
   </Tab>
@@ -268,7 +268,7 @@ export OS_PROJECT_DOMAIN_NAME=Default
 export OS_IDENTITY_API_VERSION=3
 ```
 
-Download the OpenRC file from **Xloud Dashboard → Project → API Access → Download OpenStack RC File**.
+Download the OpenRC file from **Polystack Dashboard → Project → API Access → Download OpenStack RC File**.
 
 ---
 

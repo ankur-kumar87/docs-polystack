@@ -1,6 +1,6 @@
 ---
 title: "Instance HA Security"
-description: "Secure Xloud Instance HA deployments — RBAC policy enforcement, service account credential management, IPMI credential handling, and audit logging."
+description: "Secure Polystack Instance HA deployments — RBAC policy enforcement, service account credential management, IPMI credential handling, and audit logging."
 sidebarTitle: "Security"
 ---
 
@@ -41,7 +41,7 @@ To restrict segment creation and deletion to cloud administrators only, verify t
 default policy rules are not overridden in your deployment:
 
 ```bash title="Check policy overrides"
-cat /etc/xavs/instance-ha/policy.yaml
+cat /etc/ironcore/instance-ha/policy.yaml
 ```
 
 If the file does not exist or is empty, the built-in defaults apply. The built-in
@@ -51,7 +51,7 @@ defaults correctly restrict destructive operations to the `admin` role.
 
 ## Service Account Credentials
 
-Instance HA authenticates to Xloud Identity and the Compute API using a dedicated
+Instance HA authenticates to Polystack Identity and the Compute API using a dedicated
 `masakari` service account. Manage these credentials securely.
 
 <AccordionGroup>
@@ -69,7 +69,7 @@ Instance HA authenticates to Xloud Identity and the Compute API using a dedicate
       </Step>
       <Step title="Update the configuration file" icon="file">
         ```bash title="Edit configuration"
-        vi /etc/xavs/instance-ha/instance-ha.conf
+        vi /etc/ironcore/instance-ha/instance-ha.conf
         ```
 
         Update the `[keystone_authtoken]` section:
@@ -93,8 +93,8 @@ Instance HA authenticates to Xloud Identity and the Compute API using a dedicate
 
     | Service | Role | Purpose |
     |---------|------|---------|
-    | Xloud Compute | `admin` | Initiate evacuations, query host state |
-    | Xloud Identity | `service` | Authenticate API tokens |
+    | Polystack Compute | `admin` | Initiate evacuations, query host state |
+    | Polystack Identity | `service` | Authenticate API tokens |
 
     Do not grant broader roles than required. The `admin` role on Compute is necessary
     for evacuation operations and cannot be reduced.
@@ -123,13 +123,13 @@ column. These credentials grant physical access to compute hardware.
     Debug logging may write `control_attributes` contents (including IPMI passwords)
     to log files. Ensure debug logging is disabled:
 
-    ```ini title="/etc/xavs/instance-ha/instance-ha.conf"
+    ```ini title="/etc/ironcore/instance-ha/instance-ha.conf"
     [DEFAULT]
     debug = False
     ```
 
     ```bash title="Verify debug is disabled"
-    grep -i debug /etc/xavs/instance-ha/instance-ha.conf
+    grep -i debug /etc/ironcore/instance-ha/instance-ha.conf
     ```
 
     <Warning>
@@ -138,7 +138,7 @@ column. These credentials grant physical access to compute hardware.
     </Warning>
   </Accordion>
   <Accordion title="Key Management integration (advanced)" icon="key">
-    For the highest security posture, manage IPMI credentials using Xloud Key Management
+    For the highest security posture, manage IPMI credentials using Polystack Key Management
     (Barbican) and inject them into Instance HA via a custom notification driver that
     fetches credentials at runtime rather than storing them in the database.
 

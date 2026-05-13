@@ -1,16 +1,16 @@
 ---
 title: "Security Hardening Guide"
-description: "Step-by-step pre-deployment security hardening for Xloud Platform — OS hardening, SSH configuration, service minimization, database and message queue hardening."
+description: "Step-by-step pre-deployment security hardening for Polystack Platform — OS hardening, SSH configuration, service minimization, database and message queue hardening."
 sidebarTitle: "Hardening Guide"
 ---
 
 ## Overview
 
-This guide provides a structured hardening walkthrough for Xloud Platform nodes. Apply these controls before the first production deployment. The checklist at the end of this page provides a verification reference for compliance audits.
+This guide provides a structured hardening walkthrough for Polystack Platform nodes. Apply these controls before the first production deployment. The checklist at the end of this page provides a verification reference for compliance audits.
 
-Hardening operates at four levels: the host operating system (XOS), the Xloud platform services, supporting infrastructure components (database, message queue), and the metadata service.
+Hardening operates at four levels: the host operating system (XOS), the Polystack platform services, supporting infrastructure components (database, message queue), and the metadata service.
 
-<Info>**Xloud-Developed** — XAVS ships with automated hardening roles that enforce CIS benchmarks out of the box. Automated controls include SSH hardening and allowlisting, audit logging configuration, Docker security benchmarks, and AppArmor profile enforcement. These roles run during initial deployment and can be re-applied at any time via `xavs-ansible reconfigure --tags hardening`.</Info>
+<Info>**Polystack-Developed** — Ironcore ships with automated hardening roles that enforce CIS benchmarks out of the box. Automated controls include SSH hardening and allowlisting, audit logging configuration, Docker security benchmarks, and AppArmor profile enforcement. These roles run during initial deployment and can be re-applied at any time via `ironcore-ansible reconfigure --tags hardening`.</Info>
 
 <Note>
   **Prerequisites**
@@ -49,7 +49,7 @@ Hardening operates at four levels: the host operating system (XOS), the Xloud pl
     systemctl restart sshd
     ```
 
-    <Check>Verify: `ssh root@<node>` is rejected. Key-based login as the `xloud` user succeeds.</Check>
+    <Check>Verify: `ssh root@<node>` is rejected. Key-based login as the `polystack` user succeeds.</Check>
   </Step>
   <Step title="Enable automatic security updates" icon="rotate-cw">
     Configure unattended upgrades for security patches:
@@ -187,21 +187,21 @@ Hardening operates at four levels: the host operating system (XOS), the Xloud pl
   </Step>
   <Step title="Set file permission baselines" icon="file-lock">
     ```bash title="Restrict sensitive configuration files"
-    chmod 600 /etc/xavs/passwords.yml
-    chmod 750 /etc/xavs/
-    find /etc/xavs/certificates/ -type f -name "*.key" -exec chmod 600 {} \;
+    chmod 600 /etc/ironcore/passwords.yml
+    chmod 750 /etc/ironcore/
+    find /etc/ironcore/certificates/ -type f -name "*.key" -exec chmod 600 {} \;
     ```
   </Step>
   <Step title="Harden the metadata service" icon="server">
     The instance metadata service is accessible at `169.254.169.254` from all VMs. Enable the shared secret to prevent unauthorized cross-tenant metadata access:
 
-    ```yaml title="/etc/xavs/globals.d/_60_metadata.yml"
+    ```yaml title="/etc/ironcore/globals.d/_60_metadata.yml"
     neutron_metadata_proxy_shared_secret: "<generate with: openssl rand -hex 32>"
     nova_metadata_enabled: "yes"
     ```
 
     ```bash title="Deploy metadata hardening"
-    xavs-ansible reconfigure --tags nova,neutron
+    ironcore-ansible reconfigure --tags nova,neutron
     ```
   </Step>
   <Step title="Configure audit daemon (auditd)" icon="list">
@@ -214,7 +214,7 @@ Hardening operates at four levels: the host operating system (XOS), the Xloud pl
     # Monitor file permission changes on sensitive paths
     -w /etc/passwd -p wa -k identity
     -w /etc/shadow -p wa -k identity
-    -w /etc/xavs/passwords.yml -p rwa -k xavs-passwords
+    -w /etc/ironcore/passwords.yml -p rwa -k ironcore-passwords
     # Monitor network configuration changes
     -a always,exit -F arch=b64 -S sethostname -S setdomainname -k network-config
     EOF
@@ -246,7 +246,7 @@ Hardening operates at four levels: the host operating system (XOS), the Xloud pl
     ```
   </Step>
   <Step title="Enable binary log encryption" icon="database">
-    ```yaml title="/etc/xavs/globals.d/_60_db_security.yml"
+    ```yaml title="/etc/ironcore/globals.d/_60_db_security.yml"
     mariadb_enable_binlog: "yes"
     mariadb_binlog_format: "ROW"
     mariadb_expire_logs_days: "7"
@@ -260,13 +260,13 @@ Hardening operates at four levels: the host operating system (XOS), the Xloud pl
 
 <Steps titleSize="h3">
   <Step title="Enable RabbitMQ TLS" icon="lock">
-    ```yaml title="/etc/xavs/globals.d/_60_rabbitmq.yml"
+    ```yaml title="/etc/ironcore/globals.d/_60_rabbitmq.yml"
     rabbitmq_enable_tls: "yes"
     rabbitmq_management_enabled: "yes"
     ```
   </Step>
   <Step title="Remove default guest account" icon="user-x">
-    The `guest` account in RabbitMQ is restricted to `localhost` by default in the Xloud deployment. Verify it is not accessible remotely:
+    The `guest` account in RabbitMQ is restricted to `localhost` by default in the Polystack deployment. Verify it is not accessible remotely:
 
     ```bash title="Verify guest user restrictions"
     docker exec rabbitmq rabbitmqctl list_users
@@ -299,10 +299,10 @@ Use this checklist to verify hardening is complete before going to production.
 | OS | AppArmor enforcing | `aa-status --json \| python3 -c "import sys,json; d=json.load(sys.stdin); print(len(d.get('enforce',[])))"` |
 | Services | Unused services disabled | `systemctl list-units --state=active --type=service` |
 | TLS | External TLS active | `openssl s_client -connect <vip>:443 \| openssl x509 -noout -enddate` |
-| TLS | Internal TLS active | `grep "enable_tls_internal" /etc/xavs/globals.d/_60_tls.yml` |
-| Certs | Certificate not expired | `openssl x509 -in /etc/xavs/certificates/haproxy.crt -noout -enddate` |
-| Permissions | Passwords files restricted | `stat -c "%a %U %G" /etc/xavs/passwords.yml` |
-| Metadata | Shared secret set | `grep "neutron_metadata_proxy_shared_secret" /etc/xavs/globals.d/` |
+| TLS | Internal TLS active | `grep "enable_tls_internal" /etc/ironcore/globals.d/_60_tls.yml` |
+| Certs | Certificate not expired | `openssl x509 -in /etc/ironcore/certificates/haproxy.crt -noout -enddate` |
+| Permissions | Passwords files restricted | `stat -c "%a %U %G" /etc/ironcore/passwords.yml` |
+| Metadata | Shared secret set | `grep "neutron_metadata_proxy_shared_secret" /etc/ironcore/globals.d/` |
 | Database | No anonymous users | `docker exec mariadb mysql -e "SELECT user,host FROM mysql.user WHERE user=''"` |
 | Audit | auditd running | `systemctl is-active auditd` |
 | Audit | Audit rules loaded | `auditctl -l \| wc -l` |

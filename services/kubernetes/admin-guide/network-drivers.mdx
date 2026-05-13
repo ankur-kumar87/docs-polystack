@@ -1,6 +1,6 @@
 ---
 title: "Network Drivers"
-description: "Configure Xloud K8SaaS network drivers (CNI plugins) — choose between Calico and Flannel, understand NetworkPolicy support, and plan for production."
+description: "Configure Polystack K8SaaS network drivers (CNI plugins) — choose between Calico and Flannel, understand NetworkPolicy support, and plan for production."
 sidebarTitle: "Network Drivers"
 ---
 
@@ -8,7 +8,7 @@ sidebarTitle: "Network Drivers"
 
 The network driver (CNI plugin) determines how Pod-to-Pod and Pod-to-Service networking
 works within Kubernetes clusters. The driver is selected in the cluster template and
-cannot be changed after cluster deployment. Xloud K8SaaS supports two drivers: Calico
+cannot be changed after cluster deployment. Polystack K8SaaS supports two drivers: Calico
 for production workloads requiring NetworkPolicy enforcement, and Flannel for simplified
 development environments.
 
@@ -30,7 +30,7 @@ development environments.
 
 ## Calico Configuration
 
-Calico is the recommended CNI for production Xloud K8SaaS clusters. It supports
+Calico is the recommended CNI for production Polystack K8SaaS clusters. It supports
 Kubernetes NetworkPolicy resources and provides BGP-based native routing for optimal
 performance in datacenter environments.
 

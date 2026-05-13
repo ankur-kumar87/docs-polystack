@@ -1,6 +1,6 @@
 ---
 title: "Strategy Configuration"
-description: "Configure Xloud Optimization strategy plugins — tune thresholds, periods, and metrics for each optimization strategy to match your cluster topology."
+description: "Configure Polystack Optimization strategy plugins — tune thresholds, periods, and metrics for each optimization strategy to match your cluster topology."
 sidebarTitle: "Strategy Configuration"
 ---
 
@@ -60,7 +60,7 @@ Set platform defaults that apply to all audits which do not override specific pa
 
         Add the following in the **Code Editor** (center panel):
 
-        ```ini title="/etc/xavs/config/watcher/watcher.conf"
+        ```ini title="/etc/ironcore/config/watcher/watcher.conf"
         [watcher_strategies.server_consolidation]
         threshold = 0.2
         period = 3600
@@ -86,7 +86,7 @@ Set platform defaults that apply to all audits which do not override specific pa
   <Tab title="CLI" icon="terminal">
     Edit the configuration file directly:
 
-    ```ini title="/etc/xavs/watcher/watcher.conf"
+    ```ini title="/etc/ironcore/watcher/watcher.conf"
     [watcher_strategies.server_consolidation]
     threshold = 0.2
     period = 3600
@@ -143,9 +143,9 @@ openstack watcher strategy list
 
 ---
 
-## Xloud Production Enhancements
+## Polystack Production Enhancements
 
-<Info>**Xloud-Developed** — These enhancements ship with XAVS and are active on all Optimization strategies.</Info>
+<Info>**Polystack-Developed** — These enhancements ship with Ironcore and are active on all Optimization strategies.</Info>
 
 ### Server Group Awareness
 

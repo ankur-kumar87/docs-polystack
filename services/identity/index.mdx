@@ -1,6 +1,6 @@
 ---
 title: "Identity & Access"
-description: "Authentication, authorization, and access management for Xloud Cloud Platform."
+description: "Authentication, authorization, and access management for Polystack Cloud Platform."
 icon: "fingerprint"
 sidebarTitle: "Identity & Access"
 mode: "wide"
@@ -10,21 +10,21 @@ import VersionBadge from '/snippets/version-badge.mdx';
 
 <p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Overview</p>
 
-Xloud Identity is the authentication and authorization backbone of the Xloud Cloud Platform.
-Every API request, Dashboard login, and CLI command is validated against Xloud Identity before
+Polystack Identity is the authentication and authorization backbone of the Polystack Cloud Platform.
+Every API request, Dashboard login, and CLI command is validated against Polystack Identity before
 any resource operation proceeds. It manages the complete access control lifecycle — from
 issuing scoped tokens to enforcing fine-grained role-based policies across every service.
 
 <Note>
   **Prerequisites**
-  - An active Xloud account with admin or project-member privileges
-  - Access to the **Xloud Dashboard** (`https://connect.<your-domain>`) or `openstack` CLI
+  - An active Polystack account with admin or project-member privileges
+  - Access to the **Polystack Dashboard** (`https://connect.<your-domain>`) or `openstack` CLI
   - For administration tasks: XDeploy access and admin credentials
 </Note>
 
 ---
 
-<p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>What Xloud Identity Provides</p>
+<p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>What Polystack Identity Provides</p>
 
 <CardGroup cols={3}>
   <Card title="Authentication" icon="key" href="/services/identity/auth-backends" color="#197560">
@@ -48,7 +48,7 @@ issuing scoped tokens to enforcing fine-grained role-based policies across every
     accounts — without exposing user passwords.
   </Card>
   <Card title="Service Catalog" icon="list" href="/services/identity/service-catalog" color="#197560">
-    Centralized registry of all Xloud service endpoints, enabling clients to discover
+    Centralized registry of all Polystack service endpoints, enabling clients to discover
     the correct API address for each region and interface.
   </Card>
 </CardGroup>
@@ -74,8 +74,8 @@ issuing scoped tokens to enforcing fine-grained role-based policies across every
 ```mermaid
 sequenceDiagram
     participant U as User / Service
-    participant I as Xloud Identity
-    participant S as Xloud Service (e.g. Compute)
+    participant I as Polystack Identity
+    participant S as Polystack Service (e.g. Compute)
     U->>I: POST /v3/auth/tokens (credentials + scope)
     I-->>U: X-Subject-Token + catalog
     U->>S: API Request + X-Auth-Token header
@@ -100,10 +100,10 @@ Every token carries a <Tooltip tip="The project or domain context in which the t
     hardening for production deployments.
   </Card>
   <Card title="Authentication & CLI" icon="terminal" href="/services/identity/cli-reference" color="#197560">
-    Source credentials, configure the `openstack` CLI, and authenticate to the Xloud
+    Source credentials, configure the `openstack` CLI, and authenticate to the Polystack
     Dashboard.
   </Card>
   <Card title="Compute Service" icon="server" href="/services/compute" color="#197560">
-    Learn how Xloud Identity tokens authorize access to compute resources and instances.
+    Learn how Polystack Identity tokens authorize access to compute resources and instances.
   </Card>
 </CardGroup>

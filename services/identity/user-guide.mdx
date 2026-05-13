@@ -1,13 +1,13 @@
 ---
 title: "Identity User Guide"
-description: "Manage projects, users, roles, and authentication credentials in Xloud Cloud Platform."
+description: "Manage projects, users, roles, and authentication credentials in Polystack Cloud Platform."
 sidebarTitle: "User Guide"
 mode: "wide"
 ---
 
 <p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Overview</p>
 
-Xloud Identity lets you control who can access your cloud environment and what they are permitted
+Polystack Identity lets you control who can access your cloud environment and what they are permitted
 to do. Use the guides below to manage projects, users, application credentials, and
 multi-factor authentication from the Dashboard or CLI.
 
@@ -43,10 +43,10 @@ multi-factor authentication from the Dashboard or CLI.
     | **Group** | Within a domain | A collection of users. Role assignments on a group apply to all members. |
     | **Role** | Assignment | Named permission set. Common roles: `admin`, `member`, `reader`. |
     | **Token** | Session | A scoped, time-limited bearer credential issued after successful authentication. |
-    | **Service Catalog** | Token payload | Lists every Xloud service endpoint available to the authenticated user in the current scope. |
+    | **Service Catalog** | Token payload | Lists every Polystack service endpoint available to the authenticated user in the current scope. |
   </Accordion>
   <Accordion title="Role Hierarchy" icon="shield">
-    Xloud Identity ships with three built-in roles:
+    Polystack Identity ships with three built-in roles:
 
     | Role | Capability |
     |------|-----------|
@@ -67,7 +67,7 @@ multi-factor authentication from the Dashboard or CLI.
 
 <CardGroup cols={4}>
   <Card title="Identity Admin Guide" icon="settings" href="/services/identity/admin-guide" color="#197560">
-    Configure LDAP, federation, token policies, and security hardening for your Xloud Identity deployment.
+    Configure LDAP, federation, token policies, and security hardening for your Polystack Identity deployment.
   </Card>
   <Card title="Authentication & CLI" icon="terminal" href="/cli-setup" color="#197560">
     Source credentials and configure the `openstack` CLI for your environment.

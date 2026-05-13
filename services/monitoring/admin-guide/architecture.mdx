@@ -44,8 +44,8 @@ resource allocation for the monitoring platform itself.
   </Tab>
   <Tab title="CLI" icon="terminal">
     Configure monitoring services by editing configuration files directly at
-    `/etc/xavs/config/prometheus/`, `/etc/xavs/config/grafana/`, and
-    `/etc/xavs/config/opensearch/`. See the individual component guides for
+    `/etc/ironcore/config/prometheus/`, `/etc/ironcore/config/grafana/`, and
+    `/etc/ironcore/config/opensearch/`. See the individual component guides for
     detailed parameters.
   </Tab>
 </Tabs>
@@ -58,7 +58,7 @@ resource allocation for the monitoring platform itself.
 graph TD
     subgraph Sources
         A["Infrastructure Nodes\n(Compute, Storage, Network)"]
-        B["Virtual Machines\n(XAVS Guest Agent)"]
+        B["Virtual Machines\n(Ironcore Guest Agent)"]
         C["Applications\n(Metrics Endpoints)"]
         D["Network Devices\n(Flow Export)"]
     end

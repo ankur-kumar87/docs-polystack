@@ -13,7 +13,7 @@ and baseline normal network behavior.
 
 <Note>
   **Prerequisites**
-  - An active Xloud account with project access
+  - An active Polystack account with project access
   - Network flow collection configured by your administrator
     (see [XIMP Admin — Agent Configuration](/services/monitoring/admin-guide/agent-config))
 </Note>
@@ -116,7 +116,7 @@ Alert on network conditions that indicate problems or security events:
 
     | Field | Value |
     |-------|-------|
-    | **Metric** | `xloud_network_interface_rx_bytes` |
+    | **Metric** | `polystack_network_interface_rx_bytes` |
     | **Condition** | `>` |
     | **Threshold** | 900000000 (900 MB/s — 90% of 1 GbE) |
     | **Evaluation Period** | 5 minutes |
@@ -125,7 +125,7 @@ Alert on network conditions that indicate problems or security events:
   <Tab title="Packet Loss Alert" icon="circle-x">
     ```yaml title="alert-packet-loss.yaml"
     name: high-packet-loss
-    metric: xloud_network_packet_loss_pct
+    metric: polystack_network_packet_loss_pct
     condition: ">"
     threshold: 1
     evaluation_period: 5m

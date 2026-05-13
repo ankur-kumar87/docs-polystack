@@ -1,6 +1,6 @@
 ---
 title: "Failover Segments"
-description: "Create and manage Xloud Instance HA failover segments — configure recovery methods, register compute hosts, and designate reserved standby nodes."
+description: "Create and manage Polystack Instance HA failover segments — configure recovery methods, register compute hosts, and designate reserved standby nodes."
 sidebarTitle: "Failover Segments"
 ---
 
@@ -19,7 +19,7 @@ automatic recovery.
 
 <Note>
   **Prerequisites**
-  - Administrator role in Xloud Identity
+  - Administrator role in Polystack Identity
   - Compute hosts registered and reachable
   - Instance HA service deployed via XDeploy
 </Note>
@@ -142,7 +142,7 @@ automatic recovery.
     ```bash title="Register a compute host"
     openstack segment host create \
       --type COMPUTE \
-      --control_attributes '{"host": "compute-01.xloud.local"}' \
+      --control_attributes '{"host": "compute-01.polystack.local"}' \
       --on_maintenance False \
       --reserved False \
       <segment-uuid>

@@ -1,6 +1,6 @@
 ---
 title: "Image Cache"
-description: "Configure the Xloud Image Service cache to reduce instance launch times by storing frequently-used images locally on compute nodes."
+description: "Configure the Polystack Image Service cache to reduce instance launch times by storing frequently-used images locally on compute nodes."
 sidebarTitle: "Image Cache"
 ---
 
@@ -37,7 +37,7 @@ glance_cache_prefetcher_delay: 300      # 5 minutes
 
 Deploy after configuring:
 ```bash title="Apply image cache configuration"
-xavs-ansible deploy --tags glance
+ironcore-ansible deploy --tags glance
 ```
 
 ---
@@ -125,7 +125,7 @@ docker exec glance_api glance-cache-manage list-queued
     local cache — typically 10-50x faster than fetching from the storage backend.
   </Accordion>
   <Accordion title="Limited benefit: RBD-to-RBD cloning" icon="database">
-    When both the Image Service and Block Storage use Xloud Distributed Storage (RBD),
+    When both the Image Service and Block Storage use Polystack Distributed Storage (RBD),
     instance launches use zero-copy RBD clones. This already achieves near-instantaneous
     boot times regardless of image size — the image cache provides minimal additional
     benefit in this configuration.

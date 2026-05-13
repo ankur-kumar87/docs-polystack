@@ -1,24 +1,24 @@
 ---
 title: "Cold Migration"
-description: "Power off a source VMware virtual machine and migrate it to Xloud in a single pass — the simplest migration path for workloads that tolerate a maintenance window."
+description: "Power off a source VMware virtual machine and migrate it to Polystack in a single pass — the simplest migration path for workloads that tolerate a maintenance window."
 sidebarTitle: "Cold Migration"
 ---
 
 ## Overview
 
-Cold migration is the simplest way to move a workload from VMware to Xloud.
+Cold migration is the simplest way to move a workload from VMware to Polystack.
 The source VM is powered off, all disks are exported through the vSphere API,
-written into Xloud Block Storage volumes, converted for Xloud drivers, and
-the migrated instance is started in the target Xloud project. The source VM
+written into Polystack Block Storage volumes, converted for Polystack drivers, and
+the migrated instance is started in the target Polystack project. The source VM
 remains in the source environment (powered off) until you confirm the
 migration succeeded.
 
 <Note>
   **Prerequisites**
   - A discovered workload that has passed [preflight assessment](/services/migration/user-guide/preflight)
-  - A target Xloud project with sufficient quota for the compute, memory, and
+  - A target Polystack project with sufficient quota for the compute, memory, and
     volume footprint of the migrated VM
-  - A target Xloud network that can host the migrated VM's NICs
+  - A target Polystack network that can host the migrated VM's NICs
   - An acceptable maintenance window — the source VM will be powered off for
     the duration of the migration
 </Note>
@@ -46,9 +46,9 @@ graph LR
 | **Queued** | The job is accepted and waits for an available worker slot |
 | **Export** | Source VM is powered off; disks are streamed over the vSphere API |
 | **Inspect** | Guest OS family, firmware, and disk layout are detected |
-| **Write Volume** | A new Xloud Block Storage volume is created and disk data is written directly into it |
+| **Write Volume** | A new Polystack Block Storage volume is created and disk data is written directly into it |
 | **Guest Fixes** | VirtIO drivers are injected, the boot loader is repaired, and hypervisor-specific tooling is removed |
-| **Finalize** | The volume is marked bootable, metadata is attached, and the target Xloud instance is prepared |
+| **Finalize** | The volume is marked bootable, metadata is attached, and the target Polystack instance is prepared |
 | **Completed** | The target instance is created and ready to launch |
 
 ---
@@ -69,14 +69,14 @@ graph LR
       <Step title="Choose target project and quota" icon="folder">
         | Field | Description |
         |-------|-------------|
-        | **Target Project** | Xloud project to receive the migrated instance |
+        | **Target Project** | Polystack project to receive the migrated instance |
         | **Instance Name** | Name in the target project (defaults to the source VM name) |
-        | **Flavor** | Xloud flavor that matches or exceeds the source vCPU and memory |
+        | **Flavor** | Polystack flavor that matches or exceeds the source vCPU and memory |
         | **Volume Type** | Target storage tier for the migrated volumes |
         | **Availability Zone** | Optional — pin the instance to a specific zone |
       </Step>
       <Step title="Map networks" icon="network">
-        For each source NIC, pick a target Xloud network and subnet. You can
+        For each source NIC, pick a target Polystack network and subnet. You can
         optionally request the same MAC address on the target network, subject
         to network policy.
 
@@ -93,9 +93,9 @@ graph LR
       <Step title="Watch live progress" icon="activity">
         The **Migrations** tab updates live with per-stage progress, bytes
         transferred, and an event stream. A completed job shows a link to
-        the newly created Xloud instance.
+        the newly created Polystack instance.
 
-        <Check>Job status reaches **Completed** and the target instance is visible in the Xloud Dashboard.</Check>
+        <Check>Job status reaches **Completed** and the target instance is visible in the Polystack Dashboard.</Check>
       </Step>
     </Steps>
   </Tab>
@@ -133,13 +133,13 @@ graph LR
   <Card title="After Migration" icon="shield" color="#197560">
     The source VM remains powered off in its source environment. XMS does
     not delete it — you choose when to decommission the source after you
-    have validated the migrated instance on Xloud.
+    have validated the migrated instance on Polystack.
   </Card>
 </CardGroup>
 
 <Warning>
   Do **not** power the source VM back on after cutover if the target instance
-  has already booted on Xloud. The two VMs share identity (hostname, MAC,
+  has already booted on Polystack. The two VMs share identity (hostname, MAC,
   disk UUIDs) and running both simultaneously can cause network and
   storage-level conflicts.
 </Warning>

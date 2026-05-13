@@ -7,7 +7,7 @@ sidebarTitle: "Troubleshooting"
 ## Overview
 
 Migration is a pipeline that touches a source hypervisor API, a storage
-back-end, a guest operating system, and an Xloud project. A failure at any
+back-end, a guest operating system, and an Polystack project. A failure at any
 stage produces an event on the failed job. This page maps the most common
 symptoms to the underlying cause and the fix.
 
@@ -111,7 +111,7 @@ symptoms to the underlying cause and the fix.
     **Symptom**: Preflight blocks a VM with an "unsupported guest OS" check.
 
     **Cause**: The guest identifier returned by vSphere does not match the
-    Xloud guest catalog — either the guest is truly unsupported or the guest
+    Polystack guest catalog — either the guest is truly unsupported or the guest
     identifier has not been updated after an OS upgrade on the source.
 
     **Fix**:
@@ -332,7 +332,7 @@ opening a support request:
   </Step>
   <Step title="Target project and quota" icon="folder">
     Record the target project, flavor, volume type, and any quota warnings
-    visible in the Xloud Dashboard at the time of failure.
+    visible in the Polystack Dashboard at the time of failure.
   </Step>
 </Steps>
 

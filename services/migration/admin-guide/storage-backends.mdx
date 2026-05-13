@@ -1,14 +1,14 @@
 ---
 title: "Storage Back-ends"
-description: "How XMS writes migrated disk data into Xloud Block Storage and the supported back-end configurations."
+description: "How XMS writes migrated disk data into Polystack Block Storage and the supported back-end configurations."
 sidebarTitle: "Storage Back-ends"
 ---
 
 ## Overview
 
-Every migration writes source disk data into Xloud Block Storage. XMS does
+Every migration writes source disk data into Polystack Block Storage. XMS does
 not manage storage directly — it uses the platform's block storage API, so
-any back-end that Xloud Block Storage supports is usable as a migration
+any back-end that Polystack Block Storage supports is usable as a migration
 target. This page covers how the write path works and how to choose a
 target back-end per migration.
 
@@ -21,7 +21,7 @@ At a high level, the write path is the same for cold and warm migrations:
 ```mermaid
 graph LR
     S[Source VM disk] --> X[Migration Worker]
-    X -->|Block Storage API| BS[Xloud Block Storage]
+    X -->|Block Storage API| BS[Polystack Block Storage]
     BS --> V[Target Volume]
 ```
 
@@ -37,7 +37,7 @@ graph LR
 Because the target volume is created through the block storage API, it
 behaves exactly like any other volume — it counts against the project's
 volume quota, respects the volume type's QoS settings, and can be
-snapshotted, backed up, or restored by the standard Xloud tooling.
+snapshotted, backed up, or restored by the standard Polystack tooling.
 
 ---
 
@@ -62,7 +62,7 @@ determines:
 
 ## Multi-Back-end Clusters
 
-If your Xloud platform has more than one storage back-end, you can direct
+If your Polystack platform has more than one storage back-end, you can direct
 migrations to any of them by publishing a volume type per back-end. Common
 layouts:
 
@@ -79,7 +79,7 @@ layouts:
   <Card title="Zone-Pinned" icon="map-pin" color="#197560">
     Availability-zone-pinned volume types let users pin a migration to a
     specific zone — useful for application-level affinity with existing
-    Xloud workloads.
+    Polystack workloads.
   </Card>
   <Card title="Encrypted" icon="lock" color="#197560">
     Encryption-enabled volume types automatically encrypt migrated volumes
@@ -126,12 +126,12 @@ new volumes or new snapshots.
 
 ## Snapshot and Backup
 
-Because the target volume is a native Xloud block storage volume, you can:
+Because the target volume is a native Polystack block storage volume, you can:
 
 - Snapshot it through the standard snapshot API once the migration is done
-- Back it up through Xloud Block Storage backup if your deployment supports
+- Back it up through Polystack Block Storage backup if your deployment supports
   cross-backend backup
-- Use it as the source for Xloud Disaster Recovery protection plans
+- Use it as the source for Polystack Disaster Recovery protection plans
 
 Most operators configure a post-migration snapshot automatically to give
 the workload owner a rollback point immediately after cutover.
@@ -145,7 +145,7 @@ the workload owner a rollback point immediately after cutover.
     Size XMS for concurrent migrations and multi-wave campaigns
   </Card>
   <Card title="Block Storage" href="/services/storage/index" color="#197560">
-    Xloud Block Storage user guide and operator reference
+    Polystack Block Storage user guide and operator reference
   </Card>
   <Card title="Disaster Recovery" href="/services/disaster-recovery" color="#197560">
     Add migrated volumes to disaster recovery protection plans

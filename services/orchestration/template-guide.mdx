@@ -15,8 +15,8 @@ different environments without modification.
 <Note>
   **Prerequisites**
   - Familiarity with YAML syntax
-  - Access to the Xloud Orchestration service in your project
-  - `xloud` CLI installed for template validation
+  - Access to the Polystack Orchestration service in your project
+  - `polystack` CLI installed for template validation
 </Note>
 
 ---
@@ -26,7 +26,7 @@ different environments without modification.
 Every orchestration template has up to six top-level sections:
 
 ```yaml title="template-skeleton.yaml"
-xloud_template_version: "2025-10-15"   # Required — template format version
+polystack_template_version: "2025-10-15"   # Required — template format version
 
 description: >                          # Optional — human-readable description
   Brief summary of what this template deploys.
@@ -46,7 +46,7 @@ conditions:                             # Optional — conditional resource crea
 
 resources:                              # Required — cloud objects to create
   my_instance:
-    type: Xloud::Compute::Server
+    type: Polystack::Compute::Server
     properties:
       name: { get_param: instance_name }
 
@@ -58,7 +58,7 @@ outputs:                                # Optional — values returned after cre
 
 | Section | Required | Purpose |
 |---------|----------|---------|
-| `xloud_template_version` | Yes | Specifies the template format version |
+| `polystack_template_version` | Yes | Specifies the template format version |
 | `description` | No | Human-readable summary shown in the Dashboard |
 | `parameter_groups` | No | Groups parameters into labeled sections in the Dashboard UI |
 | `parameters` | No | Defines input variables that customize the template at runtime |
@@ -134,7 +134,7 @@ and a set of properties.
 resources:
 
   web_server:
-    type: Xloud::Compute::Server
+    type: Polystack::Compute::Server
     depends_on: [web_network_port]        # Explicit dependency
     deletion_policy: Retain               # Retain | Snapshot | Delete (default)
     update_policy:
@@ -180,27 +180,27 @@ resources:
 
   # get_param — retrieve a parameter value
   my_instance:
-    type: Xloud::Compute::Server
+    type: Polystack::Compute::Server
     properties:
       flavor: { get_param: flavor }
 
   # get_resource — reference another resource's ID
   volume_attachment:
-    type: Xloud::BlockStorage::VolumeAttachment
+    type: Polystack::BlockStorage::VolumeAttachment
     properties:
       instance_uuid: { get_resource: my_instance }
       volume_id: { get_resource: my_volume }
 
   # get_attr — retrieve a resource attribute
   floating_ip_assoc:
-    type: Xloud::Networking::FloatingIPAssociation
+    type: Polystack::Networking::FloatingIPAssociation
     properties:
       floatingip_id: { get_resource: my_floating_ip }
       port_id: { get_attr: [my_instance, addresses, default, 0, port] }
 
   # str_replace — build a user_data script from parameters
   bootstrap_instance:
-    type: Xloud::Compute::Server
+    type: Polystack::Compute::Server
     properties:
       user_data:
         str_replace:
@@ -234,14 +234,14 @@ resources:
 
   # Always created
   app_server:
-    type: Xloud::Compute::Server
+    type: Polystack::Compute::Server
     properties:
       flavor: { if: [is_production, m1.large, m1.small] }
       image: { get_param: image }
 
   # Only created in production
   monitoring_agent:
-    type: Xloud::Compute::Server
+    type: Polystack::Compute::Server
     condition: is_production
     properties:
       flavor: m1.small

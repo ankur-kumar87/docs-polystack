@@ -59,7 +59,7 @@ and managing the namespace organization of collected metrics.
     |-------|-------------|
     | **URL** | Full endpoint URL (e.g., `http://10.0.1.71:9399/metrics`) |
     | **Scrape Interval** | How often to collect (default: `30s`) |
-    | **Labels** | Key-value metadata tags for the target (e.g., `service=xloud-filefs`) |
+    | **Labels** | Key-value metadata tags for the target (e.g., `service=polystack-filefs`) |
     | **TLS Config** | CA certificate path for HTTPS endpoints |
     | **Auth** | Basic auth credentials or bearer token for secured endpoints |
   </Tab>
@@ -68,7 +68,7 @@ and managing the namespace organization of collected metrics.
     ximp target add \
       --url http://10.0.1.71:9399/metrics \
       --interval 30s \
-      --label service=xloud-filefs \
+      --label service=polystack-filefs \
       --label host=xd1
     ```
 
@@ -96,11 +96,11 @@ rules and dashboard queries:
 
 | Namespace | Source | Example Metrics |
 |-----------|--------|----------------|
-| `xloud_compute` | Compute node agents | `cpu_utilization`, `memory_used_bytes` |
-| `xloud_storage` | XSDS cluster | `pool_used_bytes`, `osd_latency_ms` |
-| `xloud_network` | Network agents | `interface_rx_bytes`, `packet_loss_pct` |
-| `xloud_vm` | XAVS Guest Agent | `vm_cpu_usage`, `vm_memory_rss` |
-| `xloud_filefs` | File FS service | `requests_total`, `guestfs_handles_active` |
+| `polystack_compute` | Compute node agents | `cpu_utilization`, `memory_used_bytes` |
+| `polystack_storage` | Software-Defined-Storage cluster | `pool_used_bytes`, `osd_latency_ms` |
+| `polystack_network` | Network agents | `interface_rx_bytes`, `packet_loss_pct` |
+| `polystack_vm` | Ironcore Guest Agent | `vm_cpu_usage`, `vm_memory_rss` |
+| `polystack_filefs` | File FS service | `requests_total`, `guestfs_handles_active` |
 | `xdr` | Disaster recovery agent | `replication_lag_seconds`, `site_health` |
 
 ---
@@ -114,7 +114,7 @@ security groups or firewall rules to permit:
 |--------|-------------|------|----------|
 | XIMP collector IP | Target node | Configured scrape port | TCP |
 | XIMP collector IP | 9100 (node exporter default) | All nodes | TCP |
-| XIMP collector IP | 9283 (XSDS metrics) | Storage nodes | TCP |
+| XIMP collector IP | 9283 (Software-Defined-Storage metrics) | Storage nodes | TCP |
 
 <Note>
   XIMP collector IPs are listed under **Monitor Center > Monitoring** (Collectors, admin view).

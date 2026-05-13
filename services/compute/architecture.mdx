@@ -1,6 +1,6 @@
 ---
 title: "Compute Service Architecture"
-description: "Understand how Xloud Compute components interact — API, Scheduler, Conductor, Compute Agent, and Placement — to deliver virtual machine lifecycle management."
+description: "Understand how Polystack Compute components interact — API, Scheduler, Conductor, Compute Agent, and Placement — to deliver virtual machine lifecycle management."
 sidebarTitle: "Architecture"
 ---
 
@@ -8,7 +8,7 @@ import AdminWarning from '/snippets/admin-warning.mdx';
 
 ## Overview
 
-Xloud Compute follows a distributed, service-oriented architecture. API requests enter
+Polystack Compute follows a distributed, service-oriented architecture. API requests enter
 through a central API tier, are routed through the Scheduler and Placement services to
 select the optimal host, and are executed by Compute Agents running on every hypervisor
 node. Each agent communicates directly with the local hypervisor to manage instance
@@ -20,7 +20,7 @@ lifecycle operations — creation, power state, migration, and console access.
 
 ## Service Topology
 
-The diagram below illustrates how requests flow from the end user through the Xloud
+The diagram below illustrates how requests flow from the end user through the Polystack
 Compute control plane to the hypervisor layer.
 
 ```mermaid
@@ -74,12 +74,12 @@ cluster.
 
 | Service | Expected State | Managed By |
 |---------|---------------|-----------|
-| `nova-api` | Running, listening on `:8774` | XDeploy / XAVS |
-| `placement-api` | Running, listening on `:8778` | XDeploy / XAVS |
-| `nova-scheduler` | Running | XDeploy / XAVS |
-| `nova-conductor` | Running | XDeploy / XAVS |
-| `nova-compute` | Running on every hypervisor node | XDeploy / XAVS |
-| `nova-novncproxy` | Running, listening on `:6080` | XDeploy / XAVS |
+| `nova-api` | Running, listening on `:8774` | XDeploy / Ironcore |
+| `placement-api` | Running, listening on `:8778` | XDeploy / Ironcore |
+| `nova-scheduler` | Running | XDeploy / Ironcore |
+| `nova-conductor` | Running | XDeploy / Ironcore |
+| `nova-compute` | Running on every hypervisor node | XDeploy / Ironcore |
+| `nova-novncproxy` | Running, listening on `:6080` | XDeploy / Ironcore |
 
 <Tabs>
   <Tab title="XDeploy" icon="server">

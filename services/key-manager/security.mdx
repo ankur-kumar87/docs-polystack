@@ -1,6 +1,6 @@
 ---
 title: "Key Manager Security"
-description: "Harden Xloud Key Manager — protect master encryption keys, configure HSM access controls, audit secret access logs, enforce expiration policies, and."
+description: "Harden Polystack Key Manager — protect master encryption keys, configure HSM access controls, audit secret access logs, enforce expiration policies, and."
 sidebarTitle: "Security"
 ---
 
@@ -29,7 +29,7 @@ secrets used across your entire platform. This guide covers the key hardening ar
     - Rotate the master key annually — plan a maintenance window for the re-encryption operation
 
     ```bash title="Verify master key file permissions"
-    ls -la /etc/xavs/key-manager/kek.conf
+    ls -la /etc/ironcore/key-manager/kek.conf
     # Expected: -r-------- key-manager:key-manager
     ```
   </Accordion>

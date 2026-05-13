@@ -1,12 +1,12 @@
 ---
 title: "Terraform Integration"
-description: "Use the Terraform provider for Xloud to provision and manage compute instances, networks, volumes, and stacks as infrastructure-as-code."
+description: "Use the Terraform provider for Polystack to provision and manage compute instances, networks, volumes, and stacks as infrastructure-as-code."
 sidebarTitle: "Terraform"
 ---
 
 ## Overview
 
-The Terraform provider for Xloud uses the OpenStack provider (`hashicorp/openstack`) to manage
+The Terraform provider for Polystack uses the OpenStack provider (`hashicorp/openstack`) to manage
 compute, networking, storage, and identity resources. You store infrastructure definitions in
 version-controlled `.tf` files, enabling repeatable deployments, drift detection, and change
 review workflows via standard CI/CD tooling.
@@ -14,7 +14,7 @@ review workflows via standard CI/CD tooling.
 <Note>
   **Prerequisites**
   - Terraform 1.3 or later installed ([terraform.io](https://terraform.io))
-  - Xloud application credentials or an `openrc` file from the Dashboard
+  - Polystack application credentials or an `openrc` file from the Dashboard
   - Network and security group resources created in your project (or managed via Terraform)
 </Note>
 
@@ -27,7 +27,7 @@ review workflows via standard CI/CD tooling.
     Source your credentials file before running Terraform commands. The provider reads
     standard `OS_*` environment variables:
 
-    ```bash title="Load Xloud credentials"
+    ```bash title="Load Polystack credentials"
     source admin-openrc.sh
     ```
 
@@ -192,7 +192,7 @@ output "public_ip" {
 <Tabs>
   <Tab title="Remote State (Recommended)" icon="database">
     Store Terraform state remotely to enable collaboration and prevent state file conflicts.
-    Use an S3-compatible backend pointed at Xloud Object Storage:
+    Use an S3-compatible backend pointed at Polystack Object Storage:
 
     ```hcl title="backend.tf"
     terraform {

@@ -1,6 +1,6 @@
 ---
 title: "Orchestration Security"
-description: "Secure the Xloud Orchestration service — stack domain users, trust-based authorization, policy configuration, and template injection prevention."
+description: "Secure the Polystack Orchestration service — stack domain users, trust-based authorization, policy configuration, and template injection prevention."
 sidebarTitle: "Security"
 ---
 
@@ -8,7 +8,7 @@ import AdminWarning from '/snippets/admin-warning.mdx';
 
 ## Overview
 
-Xloud Orchestration introduces unique security considerations beyond standard service
+Polystack Orchestration introduces unique security considerations beyond standard service
 policies. Templates can create users, assign roles, and invoke webhooks on behalf of
 the submitting user — making trust delegation and template validation critical security
 controls. This page covers the stack domain model, trust-based authorization,
@@ -30,7 +30,7 @@ Instead, it creates a short-lived stack domain user scoped to the stack's projec
 ```mermaid
 graph TD
     U[User] -->|Submit stack| API[Orchestration API]
-    API -->|Create trust| TRUST[Trust in Xloud Identity]
+    API -->|Create trust| TRUST[Trust in Polystack Identity]
     API -->|Create domain user| DU[Stack Domain User<br/>heat-domain]
     STACK[Stack Resources] -->|Signal via webhook| API
     API -->|Validate using| DU
@@ -51,12 +51,12 @@ graph TD
 
 ## Trust-Based Authorization
 
-Xloud Orchestration uses Xloud Identity <Tooltip tip="A trust allows one user (trustor) to delegate a subset of their roles to another entity (trustee) for a specific project.">trusts</Tooltip>
+Polystack Orchestration uses Polystack Identity <Tooltip tip="A trust allows one user (trustor) to delegate a subset of their roles to another entity (trustee) for a specific project.">trusts</Tooltip>
 to delegate the submitting user's permissions to the engine for resource provisioning.
 
 ### How Trusts Work
 
-1. When a stack is submitted, the engine requests a trust from Xloud Identity.
+1. When a stack is submitted, the engine requests a trust from Polystack Identity.
 2. The trust grants the engine the submitting user's roles within the stack's project.
 3. The engine uses the trust to authenticate when calling compute, networking, and
    storage APIs on behalf of the stack.
@@ -114,7 +114,7 @@ stacks:create_with_nested:
 ```
 
 Policies are applied via XDeploy configuration overrides in
-`/etc/xavs/orchestration/policy.yaml`.
+`/etc/ironcore/orchestration/policy.yaml`.
 
 ---
 
@@ -167,7 +167,7 @@ all resource types are expected before deploying.
   <Card title="Admin Troubleshooting" href="/services/orchestration/admin-troubleshooting" color="#197560">
     Resolve stack domain and authorization failures
   </Card>
-  <Card title="Xloud Identity" href="/services/identity/index" color="#197560">
-    Manage domains, trusts, and role assignments in Xloud Identity
+  <Card title="Polystack Identity" href="/services/identity/index" color="#197560">
+    Manage domains, trusts, and role assignments in Polystack Identity
   </Card>
 </CardGroup>

@@ -1,6 +1,6 @@
 ---
 title: "Identity Service Architecture"
-description: "Understand the Xloud Identity service topology, component roles, and the authentication data flow across a distributed deployment."
+description: "Understand the Polystack Identity service topology, component roles, and the authentication data flow across a distributed deployment."
 sidebarTitle: "Architecture"
 ---
 
@@ -8,8 +8,8 @@ import AdminWarning from '/snippets/admin-warning.mdx';
 
 ## Overview
 
-Xloud Identity runs as a distributed service with API endpoints fronted by HAProxy. The
-token validation path is on every service's critical path — all Xloud services call the
+Polystack Identity runs as a distributed service with API endpoints fronted by HAProxy. The
+token validation path is on every service's critical path — all Polystack services call the
 Identity API to validate incoming requests. Understanding the architecture is essential
 for sizing, high availability planning, and troubleshooting.
 

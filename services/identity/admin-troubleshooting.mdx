@@ -35,8 +35,8 @@ service catalog misconfigurations, and system-scope permission errors.
     ```
 
     Compare timestamps across nodes. If keys are inconsistent, force a rotation:
-    ```bash title="Force key rotation via xavs-ansible"
-    xavs-ansible deploy --tags keystone-fernet-rotate
+    ```bash title="Force key rotation via ironcore-ansible"
+    ironcore-ansible deploy --tags keystone-fernet-rotate
     ```
 
     **Resolution**: After rotation, verify validation works:
@@ -61,7 +61,7 @@ service catalog misconfigurations, and system-scope permission errors.
 
     **Resolution**: Restart the Identity service via XDeploy if containers are stopped:
     ```bash title="Restart Identity containers"
-    xavs-ansible deploy --tags keystone
+    ironcore-ansible deploy --tags keystone
     ```
   </Accordion>
 </AccordionGroup>
@@ -78,7 +78,7 @@ service catalog misconfigurations, and system-scope permission errors.
     **Diagnose**: Test the LDAP connection from the Identity API node:
     ```bash title="Test LDAP connectivity"
     ldapsearch -x -H ldap://ldap.example.com \
-      -D "cn=xloud-svc,dc=example,dc=com" \
+      -D "cn=polystack-svc,dc=example,dc=com" \
       -w "$LDAP_PASSWORD" \
       -b "ou=Users,dc=example,dc=com" \
       "(sAMAccountName=alice)"

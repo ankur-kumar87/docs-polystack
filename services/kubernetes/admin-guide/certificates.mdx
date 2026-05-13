@@ -1,6 +1,6 @@
 ---
 title: "Certificate Management"
-description: "Manage Xloud K8SaaS cluster certificate authorities — view cluster CAs, rotate certificates, and handle post-rotation kubeconfig refresh for project users."
+description: "Manage Polystack K8SaaS cluster certificate authorities — view cluster CAs, rotate certificates, and handle post-rotation kubeconfig refresh for project users."
 sidebarTitle: "Certificates"
 ---
 
@@ -130,13 +130,13 @@ done
 
 ---
 
-## Xloud Key Management Integration
+## Polystack Key Management Integration
 
-For the highest security posture, store cluster CA private keys in Xloud Key Management
+For the highest security posture, store cluster CA private keys in Polystack Key Management
 rather than in the K8SaaS database.
 
 <Note>
-  Xloud Key Management must be deployed and the `magnum` service account must have the
+  Polystack Key Management must be deployed and the `magnum` service account must have the
   `creator` role on the Key Management service before enabling this integration.
 </Note>
 
@@ -147,7 +147,7 @@ rather than in the K8SaaS database.
         Navigate to **XDeploy → Configuration** and select the **Advance Features** tab.
       </Step>
       <Step title="Enable KMS" icon="toggle-left">
-        Set **Enable KMS** to **Yes**. This deploys the Xloud Key Management service
+        Set **Enable KMS** to **Yes**. This deploys the Polystack Key Management service
         and configures service account integration.
       </Step>
       <Step title="Set certificate manager type" icon="key">
@@ -165,12 +165,12 @@ rather than in the K8SaaS database.
         Navigate to **XDeploy → Operations** and run a **Reconfigure** for the
         Kubernetes and Key Management services.
 
-        <Check>K8SaaS is configured to store CA private keys in Xloud Key Management.</Check>
+        <Check>K8SaaS is configured to store CA private keys in Polystack Key Management.</Check>
       </Step>
     </Steps>
   </Tab>
   <Tab title="CLI" icon="terminal">
-    ```ini title="/etc/xavs/kubernetes/kubernetes.conf"
+    ```ini title="/etc/ironcore/kubernetes/kubernetes.conf"
     [certificate]
     cert_manager_type = barbican
     ```
@@ -196,6 +196,6 @@ rather than in the K8SaaS database.
     Advise users on refreshing kubeconfigs after upgrades and CA rotations.
   </Card>
   <Card title="Key Manager" href="/services/key-manager" color="#197560">
-    Configure Xloud Key Management for secure CA private key storage.
+    Configure Polystack Key Management for secure CA private key storage.
   </Card>
 </CardGroup>

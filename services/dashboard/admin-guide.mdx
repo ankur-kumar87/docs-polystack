@@ -1,13 +1,13 @@
 ---
 title: "Dashboard Admin Guide"
-description: "Administer the Xloud Dashboard — manage projects, users, flavors, quotas, and platform resources through the Skyline admin view."
+description: "Administer the Polystack Dashboard — manage projects, users, flavors, quotas, and platform resources through the Skyline admin view."
 sidebarTitle: "Admin Guide"
 mode: "wide"
 ---
 
 ## Overview
 
-The Xloud Dashboard admin view provides platform-wide management capabilities.
+The Polystack Dashboard admin view provides platform-wide management capabilities.
 Administrators can manage projects and users, configure flavors and quotas, monitor
 infrastructure health, and administer all cloud services from a single interface.
 
@@ -77,14 +77,14 @@ interface itself.
     </Steps>
   </Tab>
   <Tab title="CLI" icon="terminal">
-    Dashboard configuration files are located at `/etc/xavs/config/skyline/`.
+    Dashboard configuration files are located at `/etc/ironcore/config/skyline/`.
     The Skyline API server configuration includes:
 
     - `skyline.yaml` — API server settings, database, secret key
     - `gunicorn.py` — WSGI server configuration
     - `nginx.conf` — Reverse proxy and static file serving
 
-    After editing configuration files, run `xavs-ansible reconfigure -t skyline`
+    After editing configuration files, run `ironcore-ansible reconfigure -t skyline`
     to apply changes.
   </Tab>
 </Tabs>

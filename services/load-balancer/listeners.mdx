@@ -1,6 +1,6 @@
 ---
 title: "Load Balancer Listeners"
-description: "Add and configure HTTP, HTTPS, TCP, and UDP listeners on Xloud Load Balancers for multi-protocol traffic handling."
+description: "Add and configure HTTP, HTTPS, TCP, and UDP listeners on Polystack Load Balancers for multi-protocol traffic handling."
 sidebarTitle: "Listeners"
 ---
 
@@ -46,7 +46,7 @@ the same load balancer VIP. Each listener routes traffic to its own default pool
         | **Protocol** | Select from supported protocols above |
         | **Protocol Port** | Port on which the listener accepts connections |
         | **Connection Limit** | Maximum concurrent connections (-1 for unlimited) |
-        | **Default TLS Container** | For TERMINATED_HTTPS — select the certificate from Xloud Key Manager |
+        | **Default TLS Container** | For TERMINATED_HTTPS — select the certificate from Polystack Key Manager |
       </Step>
       <Step title="Associate a pool" icon="users">
         After creating the listener, associate it with a backend pool. Select an existing
@@ -92,7 +92,7 @@ HTTP to backend members — reducing CPU overhead on application servers.
 
 <Steps titleSize="h3">
   <Step title="Store certificate in Key Manager" icon="lock">
-    Store your TLS certificate and private key in Xloud Key Management:
+    Store your TLS certificate and private key in Polystack Key Management:
     ```bash title="Create secret container with certificate and key"
     openstack secret store \
       --name tls-cert \

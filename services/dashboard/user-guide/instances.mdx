@@ -1,6 +1,6 @@
 ---
 title: "Manage Instances"
-description: "Launch, monitor, scale, snapshot, and control compute instances through the Xloud Dashboard. Covers every action exposed on the Instances page."
+description: "Launch, monitor, scale, snapshot, and control compute instances through the Polystack Dashboard. Covers every action exposed on the Instances page."
 sidebarTitle: "Instances"
 ---
 
@@ -133,15 +133,15 @@ When viewing instances through the admin view (visible to users with the
 
 ## Auto-Discovery of Instances Launched Outside the Dashboard
 
-The Xloud Platform's compute layer keeps a single source of truth for every
-running virtual machine. Whether an instance was launched through the Xloud
+The Polystack Platform's compute layer keeps a single source of truth for every
+running virtual machine. Whether an instance was launched through the Polystack
 Dashboard, through XCONNECT, or through any external client (`openstack server
 create`, Terraform, Ansible, Heat stack, custom script using the SDK), the
 instance appears in **Compute → Instances** automatically.
 
 | Where the VM came from | Visible in Compute → Instances? |
 |------------------------|:--------------------------------:|
-| Xloud Dashboard — Create Instance wizard | Yes |
+| Polystack Dashboard — Create Instance wizard | Yes |
 | XCONNECT | Yes |
 | `openstack server create` from the CLI | Yes |
 | Terraform `openstack_compute_instance_v2` | Yes |
@@ -150,7 +150,7 @@ instance appears in **Compute → Instances** automatically.
 | Custom SDK script (Python / Go / JavaScript) | Yes |
 
 **How it works** — every compute host added to the cluster through XDEPLOY runs
-the Xloud compute agent, which reports every VM running on the hypervisor back
+the Polystack compute agent, which reports every VM running on the hypervisor back
 to the platform's central state. The Dashboard reads from that central state, so
 it always reflects what is actually running on the cluster — there is no
 separate "import" or "register VM" step needed for instances launched outside

@@ -1,6 +1,6 @@
 ---
-title: "XSDS Administration Guide"
-description: "Deploy and operate Xloud Software-Defined Storage clusters — pool management, CRUSH maps, storage tiers, encryption, capacity planning, and maintenance."
+title: "Software-Defined-Storage Administration Guide"
+description: "Deploy and operate Polystack Software-Defined Storage clusters — pool management, CRUSH maps, storage tiers, encryption, capacity planning, and maintenance."
 sidebarTitle: "Admin Guide"
 mode: "wide"
 ---
@@ -9,8 +9,8 @@ import AdminWarning from '/snippets/admin-warning.mdx';
 
 <p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Overview</p>
 
-As an XSDS administrator, you are responsible for deploying and operating the distributed
-storage cluster that underpins block, object, and file storage for all Xloud tenants.
+As an Software-Defined-Storage administrator, you are responsible for deploying and operating the distributed
+storage cluster that underpins block, object, and file storage for all Polystack tenants.
 This guide covers cluster architecture, pool and CRUSH map management, storage tier
 configuration, capacity planning, encryption, monitoring, and common operational procedures.
 
@@ -39,7 +39,7 @@ configuration, capacity planning, encryption, monitoring, and common operational
   </Card>
   <Card title="Storage Tiers" icon="layers" href="/services/sds/admin-guide/storage-tiers" color="#197560">
     Configure multi-tier storage with NVMe, SSD, and HDD device classes. Generate
-    volume types and Cinder backends via the XSDS Storage Design System.
+    volume types and Cinder backends via the Software-Defined-Storage Storage Design System.
   </Card>
   <Card title="Capacity Planning" icon="trending-up" href="/services/sds/admin-guide/capacity-planning" color="#197560">
     Monitor utilization, plan expansion, and maintain minimum capacity headroom to
@@ -64,7 +64,7 @@ configuration, capacity planning, encryption, monitoring, and common operational
 <p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Next Steps</p>
 
 <CardGroup cols={4}>
-  <Card title="XSDS User Guide" icon="book-open" href="/services/sds/user-guide" color="#197560">
+  <Card title="Software-Defined-Storage User Guide" icon="book-open" href="/services/sds/user-guide" color="#197560">
     How tenants consume block, object, and file storage from the cluster
   </Card>
   <Card title="Block Storage Admin Guide" icon="hard-drive" href="/services/storage/admin-guide" color="#197560">
@@ -74,6 +74,6 @@ configuration, capacity planning, encryption, monitoring, and common operational
     Configure XIMP to monitor cluster health, OSD status, and capacity metrics
   </Card>
   <Card title="Disaster Recovery Admin Guide" icon="rotate-ccw" href="/services/disaster-recovery/admin-guide" color="#197560">
-    Configure XSDS-backed replication for the XDR disaster recovery service
+    Configure Software-Defined-Storage-backed replication for the XDR disaster recovery service
   </Card>
 </CardGroup>

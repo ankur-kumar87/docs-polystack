@@ -1,6 +1,6 @@
 ---
 title: "Reverse DNS Configuration"
-description: "Configure PTR records for IPv4 and IPv6 addresses in Xloud DNS using the Dashboard or CLI. Set and unset domain name pointers for mail servers and audit."
+description: "Configure PTR records for IPv4 and IPv6 addresses in Polystack DNS using the Dashboard or CLI. Set and unset domain name pointers for mail servers and audit."
 sidebarTitle: "Reverse DNS"
 ---
 
@@ -27,11 +27,11 @@ sequenceDiagram
     participant Client
     participant Resolver
     participant ReverseZone as Reverse Zone (in-addr.arpa.)
-    participant DNS as Xloud DNS
+    participant DNS as Polystack DNS
 
     Client->>Resolver: Lookup PTR for 192.168.1.10
     Resolver->>ReverseZone: Query 10.1.168.192.in-addr.arpa.
-    ReverseZone->>DNS: Delegate to Xloud nameservers
+    ReverseZone->>DNS: Delegate to Polystack nameservers
     DNS-->>Resolver: mail.example.com.
     Resolver-->>Client: mail.example.com.
 ```

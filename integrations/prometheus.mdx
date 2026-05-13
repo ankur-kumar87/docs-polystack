@@ -1,19 +1,19 @@
 ---
 title: "Prometheus Integration"
-description: "Configure Prometheus to scrape metrics from Xloud services and instances, set up service discovery, define alert rules, and wire Alertmanager webhooks into Orchestration scaling policies."
+description: "Configure Prometheus to scrape metrics from Polystack services and instances, set up service discovery, define alert rules, and wire Alertmanager webhooks into Orchestration scaling policies."
 sidebarTitle: "Prometheus"
 ---
 
 ## Overview
 
-Prometheus is the primary metrics backend for Xloud environments. It collects time-series
+Prometheus is the primary metrics backend for Polystack environments. It collects time-series
 metrics from compute nodes, storage clusters, and deployed services through scrape targets
 and service discovery. Alertmanager receives rule evaluation results from Prometheus and
-routes alert notifications — including webhook signals that trigger Xloud Orchestration
+routes alert notifications — including webhook signals that trigger Polystack Orchestration
 auto-scaling policies.
 
 Prometheus replaces legacy telemetry stacks (Ceilometer/Aodh) for metric collection and
-alarm-based scaling in Xloud deployments.
+alarm-based scaling in Polystack deployments.
 
 <Note>
   **Prerequisites**
@@ -80,14 +80,14 @@ scrape_configs:
       - targets: ["10.0.1.71:9095"]
 ```
 
-### Service Discovery via Xloud API
+### Service Discovery via Polystack API
 
 Use the `openstack_sd_configs` scrape configuration to automatically discover instances
 by project and assign labels from instance metadata:
 
 ```yaml title="scrape-config-discovery.yml"
 scrape_configs:
-  - job_name: "xloud_instances"
+  - job_name: "polystack_instances"
     openstack_sd_configs:
       - identity_endpoint: "https://api.<your-domain>:5000/v3"
         username: "prometheus"
@@ -185,7 +185,7 @@ groups:
 
 ### Auto-Scaling Alert Rules
 
-Wire these alert rules into Alertmanager webhook receivers to drive Xloud Orchestration
+Wire these alert rules into Alertmanager webhook receivers to drive Polystack Orchestration
 scaling policies:
 
 ```yaml title="/etc/prometheus/rules/autoscaling.yml"
@@ -250,8 +250,8 @@ receivers:
   - name: "default"
     email_configs:
       - to: "ops@example.com"
-        from: "alertmanager@xloud.tech"
-        smarthost: "smtp.xloud.tech:587"
+        from: "alertmanager@polystack.tech"
+        smarthost: "smtp.polystack.tech:587"
 
   - name: "web-scale-out"
     webhook_configs:
@@ -266,8 +266,8 @@ receivers:
   - name: "ops-critical"
     email_configs:
       - to: "oncall@example.com"
-        from: "alertmanager@xloud.tech"
-        smarthost: "smtp.xloud.tech:587"
+        from: "alertmanager@polystack.tech"
+        smarthost: "smtp.polystack.tech:587"
 
 inhibit_rules:
   - source_match:

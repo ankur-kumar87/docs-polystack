@@ -1,17 +1,17 @@
 ---
 title: "Data Security"
-description: "Encrypt block volumes with LUKS, protect object storage at rest and in transit, manage encryption keys with Xloud Key Management, and configure secure deletion."
+description: "Encrypt block volumes with LUKS, protect object storage at rest and in transit, manage encryption keys with Polystack Key Management, and configure secure deletion."
 sidebarTitle: "Data Security"
 ---
 
 ## Overview
 
-Xloud protects data at every stage: in transit between services, at rest on storage backends, and during backup operations. Volume encryption uses LUKS with keys managed exclusively by Xloud Key Management (Barbican). Object storage supports server-side encryption. This page covers configuration for all data protection mechanisms available in the platform.
+Polystack protects data at every stage: in transit between services, at rest on storage backends, and during backup operations. Volume encryption uses LUKS with keys managed exclusively by Polystack Key Management (Barbican). Object storage supports server-side encryption. This page covers configuration for all data protection mechanisms available in the platform.
 
 <Note>
   **Prerequisites**
-  - Administrator role in Xloud Identity
-  - Xloud Key Management enabled (`enable_barbican: "yes"` in XDeploy configuration)
+  - Administrator role in Polystack Identity
+  - Polystack Key Management enabled (`enable_barbican: "yes"` in XDeploy configuration)
   - For encrypted volumes: an encrypted volume type configured in Block Storage
   - For object storage encryption: access to the object storage admin API
 </Note>
@@ -33,7 +33,7 @@ graph TD
 
 | Layer | Mechanism | Key Storage |
 |-------|-----------|-------------|
-| Block volume (LUKS) | AES-256-XTS | Xloud Key Management |
+| Block volume (LUKS) | AES-256-XTS | Polystack Key Management |
 | Ceph OSD at rest | AES-256-GCM | Ceph key management daemon |
 | Object storage SSE | AES-256-CBC | Per-object or per-bucket keys |
 | Database | MariaDB TDE or encrypted tablespace | External KMS |
@@ -45,7 +45,7 @@ graph TD
 
 <Badge color="green" size="sm" shape="pill">GA</Badge>
 
-LUKS encryption wraps every I/O operation at the compute host before data reaches the storage network. The compute host fetches the encryption key from Xloud Key Management at volume attachment time and never writes it to disk.
+LUKS encryption wraps every I/O operation at the compute host before data reaches the storage network. The compute host fetches the encryption key from Polystack Key Management at volume attachment time and never writes it to disk.
 
 ### Create an Encrypted Volume Type
 
@@ -68,7 +68,7 @@ LUKS encryption wraps every I/O operation at the compute host before data reache
         <Check>The volume type now shows **Encrypted: Yes** in the type list.</Check>
       </Step>
       <Step title="Create an encrypted volume" icon="plus">
-        Navigate to **Project → Volumes → Create Volume** and select the encrypted type. The platform generates a unique encryption key in Xloud Key Management and associates it with the volume.
+        Navigate to **Project → Volumes → Create Volume** and select the encrypted type. The platform generates a unique encryption key in Polystack Key Management and associates it with the volume.
 
         <Warning>Once a volume is created with encryption enabled, the encryption cannot be removed without creating a new unencrypted volume and migrating the data. Plan your volume type strategy before provisioning production volumes.</Warning>
       </Step>
@@ -107,7 +107,7 @@ LUKS encryption wraps every I/O operation at the compute host before data reache
 
 ## Key Management Integration (Barbican)
 
-Xloud Key Management stores, rotates, and controls access to all encryption keys. Each encrypted volume has a unique key. Key access is audited and can be restricted by ACL.
+Polystack Key Management stores, rotates, and controls access to all encryption keys. Each encrypted volume has a unique key. Key access is audited and can be restricted by ACL.
 
 ### Key Operations
 
@@ -161,7 +161,7 @@ NEW_KEY=$(openstack secret store \
 openstack volume migrate <volume-id> --host <new-host-with-new-key>
 ```
 
-<Tip>Key rotation requires migrating the volume. Schedule rotations during maintenance windows. Xloud Key Management retains old keys until explicitly deleted to support rollback scenarios.</Tip>
+<Tip>Key rotation requires migrating the volume. Schedule rotations during maintenance windows. Polystack Key Management retains old keys until explicitly deleted to support rollback scenarios.</Tip>
 
 ---
 
@@ -172,7 +172,7 @@ Object storage encryption protects data at rest in the object store. Two modes a
 | Mode | Description | Key Location |
 |------|-------------|--------------|
 | SSE-C | Customer-provided key sent per request | Client-managed |
-| SSE-KMS | Keys managed by Xloud Key Management | Platform-managed |
+| SSE-KMS | Keys managed by Polystack Key Management | Platform-managed |
 
 ```bash title="Upload object with SSE-C encryption"
 # Generate a 256-bit key
@@ -210,7 +210,7 @@ openstack volume backup show db-vol-backup-20251201 \
 ```
 
 <Warning>
-  Backup keys are tied to the same Xloud Key Management secret as the source volume. If the source volume's encryption key is deleted, the backup becomes permanently unreadable. Do not delete keys for volumes that have active backups.
+  Backup keys are tied to the same Polystack Key Management secret as the source volume. If the source volume's encryption key is deleted, the backup becomes permanently unreadable. Do not delete keys for volumes that have active backups.
 </Warning>
 
 ---
@@ -259,7 +259,7 @@ openstack volume delete <volume-id>
 
 <CardGroup cols={2}>
   <Card title="Key Manager Service" href="/services/key-manager/store-secrets" color="#197560">
-    Detailed guide for storing and managing secrets in Xloud Key Management
+    Detailed guide for storing and managing secrets in Polystack Key Management
   </Card>
   <Card title="Volume Encryption (Admin)" href="/services/storage/encryption" color="#197560">
     Administrative guide for volume encryption and volume type management

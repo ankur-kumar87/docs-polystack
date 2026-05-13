@@ -9,7 +9,7 @@ import CliAuth from '/snippets/cli-auth.mdx';
 
 ## Overview
 
-This guide covers service-level troubleshooting for Xloud Block Storage administrators. It addresses issues with the volume service, scheduler, backend connectivity, and data operations that are not visible to or resolvable by end users.
+This guide covers service-level troubleshooting for Polystack Block Storage administrators. It addresses issues with the volume service, scheduler, backend connectivity, and data operations that are not visible to or resolvable by end users.
 
 <AdminWarning />
 
@@ -17,7 +17,7 @@ This guide covers service-level troubleshooting for Xloud Block Storage administ
   **Before troubleshooting**
   - Authenticate with admin credentials: `source openrc.sh`
   - Access service logs via XDeploy for detailed error messages
-  - For critical production issues, contact [Xloud Support](mailto:support@xloud.tech)
+  - For critical production issues, contact [Polystack Support](mailto:support@polystack.tech)
     with the affected volume IDs and log excerpts
 </Note>
 
@@ -116,7 +116,7 @@ All services should show `state = up` and `status = enabled`. Any service showin
     1. Verify storage cluster health from the storage administration interface.
     2. Verify the authentication keyring file is present on the volume service node:
        ```bash title="Check keyring file (on storage node)"
-       ls -la /etc/ceph/ceph.client.xloud-volume.keyring
+       ls -la /etc/ceph/ceph.client.polystack-volume.keyring
        ```
     3. Verify the pool name matches the configured backend:
        ```bash title="List storage pools"
@@ -259,7 +259,7 @@ openstack volume set --state available <volume-id>
   <Card title="Architecture" href="/services/storage/architecture" color="#197560">
     Understand service components to narrow down failure domains
   </Card>
-  <Card title="Contact Support" href="mailto:support@xloud.tech" color="#197560">
+  <Card title="Contact Support" href="mailto:support@polystack.tech" color="#197560">
     Open a support ticket for unresolved production issues
   </Card>
 </CardGroup>

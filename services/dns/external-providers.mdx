@@ -1,6 +1,6 @@
 ---
 title: "External DNS Providers"
-description: "Configure Xloud DNS as a Service against external authoritative DNS backends — what's actively tested upstream, what's in tree but untested, and how to integrate enterprise DDI platforms."
+description: "Configure Polystack DNS as a Service against external authoritative DNS backends — what's actively tested upstream, what's in tree but untested, and how to integrate enterprise DDI platforms."
 sidebarTitle: "External Providers"
 ---
 
@@ -9,7 +9,7 @@ import CliAuth from '/snippets/cli-auth.mdx';
 
 ## Overview
 
-Xloud DNS as a Service uses Designate to manage DNS zones and records on behalf
+Polystack DNS as a Service uses Designate to manage DNS zones and records on behalf
 of tenants. Designate has a pluggable backend architecture: the Designate
 control plane handles tenant zones, while a backend driver propagates each
 change to the external authoritative DNS server.
@@ -121,9 +121,9 @@ specific pools based on project or zone type.
 
 ## Backend Configuration (CI-tested backends)
 
-All backend configuration lives in `designate.conf`. In XAVS deployments, this
+All backend configuration lives in `designate.conf`. In Ironcore deployments, this
 file is managed by Ansible — set parameters via XDeploy globals and run
-`xavs-ansible deploy --tags designate` to apply changes.
+`ironcore-ansible deploy --tags designate` to apply changes.
 
 <AccordionGroup>
   <Accordion title="BIND9 — RFC 2136 dynamic updates" icon="globe">

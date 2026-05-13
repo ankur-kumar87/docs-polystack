@@ -1,6 +1,6 @@
 ---
 title: "Capacity Planning"
-description: "Monitor XSDS cluster utilization, maintain safe capacity headroom, and plan storage expansion before capacity constraints impact performance or availability."
+description: "Monitor Software-Defined-Storage cluster utilization, maintain safe capacity headroom, and plan storage expansion before capacity constraints impact performance or availability."
 sidebarTitle: "Capacity Planning"
 ---
 
@@ -8,7 +8,7 @@ import AdminWarning from '/snippets/admin-warning.mdx';
 
 ## Overview
 
-Maintaining adequate free capacity in an XSDS cluster is critical for both performance
+Maintaining adequate free capacity in an Software-Defined-Storage cluster is critical for both performance
 and data safety. At high utilization, the cluster cannot complete recovery operations
 after OSD failures, and I/O performance degrades significantly. This page covers
 monitoring, thresholds, and expansion procedures.
@@ -163,12 +163,12 @@ critical thresholds:
 
 | Alert | Threshold | XIMP Metric |
 |-------|----------|------------|
-| Capacity Warning | Pool used > 70% | `xloud_storage_pool_used_pct` |
-| Capacity Critical | Pool used > 80% | `xloud_storage_pool_used_pct` |
-| OSD Near Full | OSD used > 85% | `xloud_storage_osd_used_pct` |
+| Capacity Warning | Pool used > 70% | `polystack_storage_pool_used_pct` |
+| Capacity Critical | Pool used > 80% | `polystack_storage_pool_used_pct` |
+| OSD Near Full | OSD used > 85% | `polystack_storage_osd_used_pct` |
 
 Navigate to **Monitoring → Alerting → Alert Rules** in the XIMP portal and create
-rules sourcing from the `xloud_storage` metric namespace.
+rules sourcing from the `polystack_storage` metric namespace.
 
 ---
 

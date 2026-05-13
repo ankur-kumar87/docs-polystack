@@ -1,6 +1,6 @@
 ---
 title: "Image Requirements"
-description: "Requirements and compatibility checklist for virtual machine images to work correctly with Xloud Compute."
+description: "Requirements and compatibility checklist for virtual machine images to work correctly with Polystack Compute."
 sidebarTitle: "Requirements"
 ---
 
@@ -8,7 +8,7 @@ import PrerequisitesAuth from '/snippets/prerequisites-auth.mdx';
 
 ## Overview
 
-Xloud Compute relies on image-side configuration to inject SSH keys, assign hostnames,
+Polystack Compute relies on image-side configuration to inject SSH keys, assign hostnames,
 configure network interfaces, and deliver user data at instance launch. Images that do
 not meet these requirements will fail to boot correctly, be unreachable over SSH, or
 require manual reconfiguration after launch.
@@ -94,7 +94,7 @@ Cloud-init runs during the first boot of every new instance and handles:
 
 ## SSH Access
 
-Xloud injects the selected keypair's public key into the instance's authorized keys file
+Polystack injects the selected keypair's public key into the instance's authorized keys file
 via cloud-init. Ensure the image is configured correctly for key-based authentication.
 
 <Steps titleSize="h3">
@@ -128,7 +128,7 @@ via cloud-init. Ensure the image is configured correctly for key-based authentic
 
 <AccordionGroup>
   <Accordion title="Use a single root partition" icon="hard-drive" defaultOpen>
-    Xloud Compute resizes the root disk to the flavor's allocated size at launch. A single
+    Polystack Compute resizes the root disk to the flavor's allocated size at launch. A single
     root partition (`/`) is the simplest layout and works reliably with cloud-growpart.
 
     Avoid:
@@ -156,7 +156,7 @@ via cloud-init. Ensure the image is configured correctly for key-based authentic
 ## Network Configuration
 
 <Note>
-  Images must be configured to obtain IP addresses via DHCP. Xloud assigns instance IP
+  Images must be configured to obtain IP addresses via DHCP. Polystack assigns instance IP
   addresses through its DHCP service. Static IP configuration in the image causes network
   conflicts and prevents proper instance addressing.
 </Note>
@@ -212,7 +212,7 @@ adding the serial console to the kernel command line.
 
 ## Validation
 
-Verify your image meets all requirements before uploading to Xloud.
+Verify your image meets all requirements before uploading to Polystack.
 
 <AccordionGroup>
   <Accordion title="Pre-upload checklist" icon="list-checks" defaultOpen>
@@ -262,6 +262,6 @@ Verify your image meets all requirements before uploading to Xloud.
     Convert VMDK, VHD, or RAW images to the recommended QCOW2 format.
   </Card>
   <Card title="Upload an Image" href="/services/images/upload-image" color="#197560">
-    Upload a compatible image to the Xloud Image Service.
+    Upload a compatible image to the Polystack Image Service.
   </Card>
 </CardGroup>

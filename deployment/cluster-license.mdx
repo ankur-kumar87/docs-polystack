@@ -11,7 +11,7 @@ The Cluster License activates your deployed cloud infrastructure. It collects ha
   **Prerequisites**
   - Cloud infrastructure deployed and operational via [Operations](/deployment/operations)
   - All cluster nodes accessible via SSH from the management node
-  - Access to [license.xloud.tech](https://license.xloud.tech) for license file submission
+  - Access to [license.polystack.tech](https://license.polystack.tech) for license file submission
 </Note>
 
 <Warning>
@@ -76,7 +76,7 @@ The License Dashboard presents two panels: an overview of the current license st
     </Tip>
   </Step>
   <Step title="Submit Request" icon="upload">
-    Upload the `.xlic` request file to [license.xloud.tech](https://license.xloud.tech). After validation, you receive a signed license file in return.
+    Upload the `.xlic` request file to [license.polystack.tech](https://license.polystack.tech). After validation, you receive a signed license file in return.
 
     <Info>
       License processing is typically immediate for existing customers with active support agreements. New customers may require manual approval.
@@ -98,7 +98,7 @@ The License Dashboard presents two panels: an overview of the current license st
 
 ## License Features
 
-The license controls which features are available in the Xloud Dashboard and enforces node count limits. Without a valid license, the cloud infrastructure runs with restricted functionality.
+The license controls which features are available in the Polystack Dashboard and enforces node count limits. Without a valid license, the cloud infrastructure runs with restricted functionality.
 
 | Aspect | Licensed | Unlicensed |
 |--------|----------|-----------|
@@ -119,7 +119,7 @@ The license controls which features are available in the Xloud Dashboard and enf
   <Accordion title="Verification fails after hardware replacement" icon="alert-triangle">
     **Cause**: The hardware fingerprint of the replacement node does not match the original fingerprint in the signed license.
 
-    **Resolution**: Generate a new license request that includes the updated hardware fingerprint. Upload the new request to [license.xloud.tech](https://license.xloud.tech) and install the new signed license file.
+    **Resolution**: Generate a new license request that includes the updated hardware fingerprint. Upload the new request to [license.polystack.tech](https://license.polystack.tech) and install the new signed license file.
   </Accordion>
   <Accordion title="License upload rejected with signature error" icon="alert-triangle">
     **Cause**: The `.xlic` file was corrupted during download or transfer, or the file was modified after signing.

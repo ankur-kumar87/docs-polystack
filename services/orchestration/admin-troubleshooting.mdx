@@ -1,6 +1,6 @@
 ---
 title: "Orchestration Admin Troubleshooting"
-description: "Diagnose and resolve Xloud Orchestration service-level issues — engine failures, API errors, stack domain problems, and resource plugin faults."
+description: "Diagnose and resolve Polystack Orchestration service-level issues — engine failures, API errors, stack domain problems, and resource plugin faults."
 sidebarTitle: "Troubleshooting"
 ---
 
@@ -30,7 +30,7 @@ service log files and `openstack orchestration service list` as primary diagnost
     openstack orchestration service list
     ```
 
-    ```bash title="Check engine container logs (XDeploy/XAVS deployment)"
+    ```bash title="Check engine container logs (XDeploy/Ironcore deployment)"
     docker logs heat_engine --tail=100
     ```
 
@@ -111,10 +111,10 @@ service log files and `openstack orchestration service list` as primary diagnost
 
     | Cause | Resolution |
     |-------|-----------|
-    | `heat` domain does not exist | Re-run `xavs-ansible deploy -t heat` to recreate the domain |
+    | `heat` domain does not exist | Re-run `ironcore-ansible deploy -t heat` to recreate the domain |
     | Stack domain admin password incorrect | Update `heat_domain_admin_password` in `passwords.yml` and redeploy |
     | `stack_domain_admin` setting missing from `heat.conf` | Verify XDeploy configuration and redeploy |
-    | Xloud Identity service unreachable from engine | Check network connectivity between the engine container and port 5000 |
+    | Polystack Identity service unreachable from engine | Check network connectivity between the engine container and port 5000 |
   </Accordion>
 
   <Accordion title="Resource plugin fails to load or raises errors" icon="puzzle-x">
@@ -127,7 +127,7 @@ service log files and `openstack orchestration service list` as primary diagnost
     ```
 
     ```bash title="Show resource type schema"
-    openstack orchestration resource type show Xloud::Compute::Server
+    openstack orchestration resource type show Polystack::Compute::Server
     ```
 
     ```bash title="Check engine log for plugin errors"
@@ -138,7 +138,7 @@ service log files and `openstack orchestration service list` as primary diagnost
 
     | Cause | Resolution |
     |-------|-----------|
-    | Dependent service not enabled | Some resource types require specific services. `Xloud::Networking::FloatingIP` requires networking; verify the service is enabled |
+    | Dependent service not enabled | Some resource types require specific services. `Polystack::Networking::FloatingIP` requires networking; verify the service is enabled |
     | Plugin version mismatch after upgrade | Restart the engine after upgrades: `docker restart heat_engine` |
     | Custom plugin missing | If using custom resource plugins, verify the plugin file exists in the engine's plugin directory and has correct permissions |
   </Accordion>
@@ -167,7 +167,7 @@ service log files and `openstack orchestration service list` as primary diagnost
 
     Apply changes by updating globals and redeploying:
     ```bash title="Redeploy with new settings"
-    xavs-ansible deploy -t heat
+    ironcore-ansible deploy -t heat
     ```
   </Accordion>
 </AccordionGroup>

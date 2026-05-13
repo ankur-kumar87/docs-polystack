@@ -26,7 +26,7 @@ Administrators create and optionally share policies; project users apply them to
 
 ## QoS Rule Types
 
-Xloud Networking supports four QoS rule types. Multiple rules of different types can be combined within a single policy.
+Polystack Networking supports four QoS rule types. Multiple rules of different types can be combined within a single policy.
 
 | Rule Type | CLI `--type` | Direction | Hardware Required | Description |
 |-----------|-------------|-----------|-------------------|-------------|
@@ -339,7 +339,7 @@ Confirm QoS enforcement is active after applying a policy:
     allowance without impacting the sustained throughput commitment.
   </Card>
   <Card title="Monitor with XIMP" icon="activity" color="#197560">
-    Use Xloud XIMP to track port-level throughput in real time and confirm QoS policies
+    Use Polystack XIMP to track port-level throughput in real time and confirm QoS policies
     are enforcing expected limits under production load.
   </Card>
 </CardGroup>
@@ -354,7 +354,7 @@ Confirm QoS enforcement is active after applying a policy:
 
     **Resolution**: In XDeploy, navigate to **Networking → Plugins** and enable the QoS plugin. Redeploy the networking service:
     ```bash title="Redeploy networking service"
-    xavs-ansible deploy -t neutron
+    ironcore-ansible deploy -t neutron
     ```
     Restart the L2 agent on all compute nodes after the plugin is enabled.
   </Accordion>

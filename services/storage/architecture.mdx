@@ -1,6 +1,6 @@
 ---
 title: "Block Storage Service Architecture"
-description: "Understand the Xloud Block Storage service architecture, principal components, message flow, and backend driver model for production deployments."
+description: "Understand the Polystack Block Storage service architecture, principal components, message flow, and backend driver model for production deployments."
 sidebarTitle: "Architecture"
 ---
 
@@ -8,7 +8,7 @@ import AdminWarning from '/snippets/admin-warning.mdx';
 
 ## Overview
 
-Xloud Block Storage delivers persistent block volumes to compute instances through a distributed service architecture. The service separates its API layer, scheduling logic, and backend drivers — enabling flexible backend configurations, horizontal scaling, and multi-backend deployments where different hardware tiers serve distinct workload categories.
+Polystack Block Storage delivers persistent block volumes to compute instances through a distributed service architecture. The service separates its API layer, scheduling logic, and backend drivers — enabling flexible backend configurations, horizontal scaling, and multi-backend deployments where different hardware tiers serve distinct workload categories.
 
 <AdminWarning />
 
@@ -94,7 +94,7 @@ sequenceDiagram
 
 ## Backend Driver Model
 
-The backend driver is the component that communicates with the physical or virtual storage system. Xloud Block Storage supports multiple drivers that can be active simultaneously:
+The backend driver is the component that communicates with the physical or virtual storage system. Polystack Block Storage supports multiple drivers that can be active simultaneously:
 
 | Backend Driver | Type | HA | Production Ready |
 |---------------|------|----|-----------------|
@@ -112,7 +112,7 @@ The backend driver is the component that communicates with the physical or virtu
 
 ## Multi-Backend Deployment
 
-Xloud Block Storage supports multiple concurrent backends. The scheduler filters backends
+Polystack Block Storage supports multiple concurrent backends. The scheduler filters backends
 using configurable filters and selects the optimal backend using a weighting algorithm:
 
 | Filter | Purpose |

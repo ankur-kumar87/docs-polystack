@@ -1,25 +1,25 @@
 ---
 title: "Infrastructure Security"
-description: "Configure TLS for all Xloud platform services, manage certificates, harden service endpoints, and secure HAProxy termination for internal and external traffic."
+description: "Configure TLS for all Polystack platform services, manage certificates, harden service endpoints, and secure HAProxy termination for internal and external traffic."
 sidebarTitle: "Infrastructure"
 ---
 
 ## Overview
 
-Xloud platform services communicate over encrypted channels by default. TLS protects your API endpoints, inter-service traffic, database connections, and message queue channels. This page covers certificate provisioning and TLS configuration at the internal and external layers. It also covers HAProxy termination and endpoint hardening for production deployments.
+Polystack platform services communicate over encrypted channels by default. TLS protects your API endpoints, inter-service traffic, database connections, and message queue channels. This page covers certificate provisioning and TLS configuration at the internal and external layers. It also covers HAProxy termination and endpoint hardening for production deployments.
 
 <Note>
   **Prerequisites**
   - XDeploy access with administrator privileges
   - SSL/TLS certificates (CA-signed, self-signed, or Let's Encrypt)
-  - Access to the XDeploy configuration interface or `/etc/xavs/globals.d/` on the bootstrap node
+  - Access to the XDeploy configuration interface or `/etc/ironcore/globals.d/` on the bootstrap node
 </Note>
 
 ---
 
 ## TLS Architecture
 
-Xloud separates TLS configuration into three independent scopes:
+Polystack separates TLS configuration into three independent scopes:
 
 | Scope | Description | Applies To |
 |-------|-------------|------------|
@@ -66,7 +66,7 @@ graph LR
       <Step title="Configure Certificate Source" icon="certificate">
         Select the certificate source for external TLS:
 
-        - **Self-signed**: Xloud generates certificates automatically using the internal CA
+        - **Self-signed**: Polystack generates certificates automatically using the internal CA
         - **CA-signed**: Upload your organization's certificate and private key
         - **Let's Encrypt**: Provide a domain name and contact email for automatic provisioning
 
@@ -85,7 +85,7 @@ graph LR
         Create or edit the TLS configuration file:
 
         ```bash title="Create TLS configuration"
-        cat > /etc/xavs/globals.d/_60_tls.yml << 'EOF'
+        cat > /etc/ironcore/globals.d/_60_tls.yml << 'EOF'
         kolla_enable_tls_external: "yes"
         kolla_enable_tls_internal: "yes"
         kolla_enable_tls_backend: "yes"
@@ -96,28 +96,28 @@ graph LR
         For CA-signed certificates, place your files in the correct locations:
 
         ```bash title="Install CA-signed certificate"
-        # Copy certificate and key to XAVS certificates directory
-        cp your-cert.crt /etc/xavs/certificates/haproxy.crt
-        cp your-key.key  /etc/xavs/certificates/haproxy.key
-        cp your-ca.crt   /etc/xavs/certificates/ca/xloud-ca.crt
-        chmod 600 /etc/xavs/certificates/haproxy.key
+        # Copy certificate and key to Ironcore certificates directory
+        cp your-cert.crt /etc/ironcore/certificates/haproxy.crt
+        cp your-key.key  /etc/ironcore/certificates/haproxy.key
+        cp your-ca.crt   /etc/ironcore/certificates/ca/polystack-ca.crt
+        chmod 600 /etc/ironcore/certificates/haproxy.key
         ```
 
         For self-signed certificates, run the certificate generation utility:
 
         ```bash title="Generate self-signed certificates"
-        xavs-ansible certificates
+        ironcore-ansible certificates
         ```
       </Step>
       <Step title="Deploy TLS configuration" icon="play">
         ```bash title="Deploy with TLS enabled"
-        xavs-ansible deploy --tags haproxy,certificates
+        ironcore-ansible deploy --tags haproxy,certificates
         ```
 
         After the initial certificate deployment, reconfigure all services:
 
         ```bash title="Reconfigure all services"
-        xavs-ansible reconfigure
+        ironcore-ansible reconfigure
         ```
 
         <Check>All service endpoints respond on HTTPS. Run `openssl s_client -connect <VIP>:443` to verify certificate validity.</Check>
@@ -132,10 +132,10 @@ graph LR
 
 ### Self-Signed Certificates
 
-Xloud uses an internal CA to generate self-signed certificates for all services. You must distribute the CA certificate to all clients that communicate with the platform.
+Polystack uses an internal CA to generate self-signed certificates for all services. You must distribute the CA certificate to all clients that communicate with the platform.
 
 ```bash title="Export internal CA certificate"
-cat /etc/xavs/certificates/ca/xloud-ca.crt
+cat /etc/ironcore/certificates/ca/polystack-ca.crt
 ```
 
 Import this CA certificate into your browser, operating system trust store, or client configuration to avoid certificate validation errors.
@@ -157,10 +157,10 @@ Import this CA certificate into your browser, operating system trust store, or c
   </Step>
   <Step title="Install the signed certificate" icon="circle-check">
     ```bash title="Install certificate files"
-    cp haproxy.crt      /etc/xavs/certificates/haproxy.crt
-    cp haproxy.key      /etc/xavs/certificates/haproxy.key
-    cp ca-chain.crt     /etc/xavs/certificates/ca/xloud-ca.crt
-    xavs-ansible deploy --tags haproxy
+    cp haproxy.crt      /etc/ironcore/certificates/haproxy.crt
+    cp haproxy.key      /etc/ironcore/certificates/haproxy.key
+    cp ca-chain.crt     /etc/ironcore/certificates/ca/polystack-ca.crt
+    ironcore-ansible deploy --tags haproxy
     ```
   </Step>
 </Steps>
@@ -172,7 +172,7 @@ Import this CA certificate into your browser, operating system trust store, or c
 </Warning>
 
 ```bash title="Check certificate expiration"
-openssl x509 -in /etc/xavs/certificates/haproxy.crt -noout -enddate
+openssl x509 -in /etc/ironcore/certificates/haproxy.crt -noout -enddate
 ```
 
 ---
@@ -195,9 +195,9 @@ The default configuration uses TLS termination for external traffic and re-encry
 
 <AccordionGroup>
   <Accordion title="Disable unused API versions" icon="code">
-    Restrict API endpoints to the minimum required versions. For Xloud Compute, disable legacy v2.0 and enforce v2.1:
+    Restrict API endpoints to the minimum required versions. For Polystack Compute, disable legacy v2.0 and enforce v2.1:
 
-    ```yaml title="/etc/xavs/globals.d/_60_endpoint_hardening.yml"
+    ```yaml title="/etc/ironcore/globals.d/_60_endpoint_hardening.yml"
     nova_api_enabled_apis: "osapi_compute,metadata"
     ```
   </Accordion>
