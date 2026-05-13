@@ -246,7 +246,7 @@ Confirm the VPN tunnel is established and operational:
 ## Troubleshooting
 
 <AccordionGroup>
-  <Accordion title="Connection stuck in DOWN status" icon="circle-x">
+  <Accordion title="Connection stuck in DOWN status" icon="circle-xmark">
     **Cause**: The remote peer is unreachable or IKE/IPsec parameters do not match.
 
     **Resolution**:
@@ -255,7 +255,7 @@ Confirm the VPN tunnel is established and operational:
     - Check that the pre-shared key is identical on both endpoints
     - Verify security group rules allow UDP ports 500 and 4500 (IKE/NAT-T) and IP protocol 50 (ESP)
   </Accordion>
-  <Accordion title="Tunnel established but no traffic flows" icon="wifi-off">
+  <Accordion title="Tunnel established but no traffic flows" icon="ban">
     **Cause**: Endpoint group CIDRs do not match between the local and remote configurations.
 
     **Resolution**:

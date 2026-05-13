@@ -43,7 +43,7 @@ ceph log last 100
 ## Common Issues
 
 <AccordionGroup>
-  <Accordion title="HEALTH_WARN: too few PGs" icon="layers">
+  <Accordion title="HEALTH_WARN: too few PGs" icon="layer-group">
     **Cause**: A pool has fewer placement groups than recommended for its current
     data volume. Under-provisioned PGs cause I/O imbalance across OSDs.
 
@@ -117,7 +117,7 @@ ceph log last 100
     ```
   </Accordion>
 
-  <Accordion title="PG inconsistent" icon="circle-x">
+  <Accordion title="PG inconsistent" icon="circle-xmark">
     **Cause**: Data inconsistency detected between OSD replicas during scrubbing.
     This may indicate a hardware error (bad disk sector, bit flip).
 

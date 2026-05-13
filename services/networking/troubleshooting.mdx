@@ -41,7 +41,7 @@ openstack server show my-instance -f json | grep -E "addresses|security_groups"
 ## Common Issues
 
 <AccordionGroup>
-  <Accordion title="Instance has no network connectivity" icon="wifi-off">
+  <Accordion title="Instance has no network connectivity" icon="ban">
     **Cause**: Missing router interface, DHCP failure, or security group blocking traffic.
 
     **Resolution**:
@@ -119,7 +119,7 @@ openstack server show my-instance -f json | grep -E "addresses|security_groups"
        agent service. See the [Network Agent Management](/services/networking/network-agents) guide.
   </Accordion>
 
-  <Accordion title="MTU mismatch causing packet fragmentation" icon="split">
+  <Accordion title="MTU mismatch causing packet fragmentation" icon="arrows-split-up-and-left">
     **Cause**: VXLAN encapsulation adds a 50-byte overhead. If instances use the default
     MTU of 1500, large packets are fragmented silently, degrading throughput and causing
     application-level timeouts.

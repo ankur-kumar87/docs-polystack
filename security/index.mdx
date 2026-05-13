@@ -17,7 +17,7 @@ The sections below cover every security domain: infrastructure TLS, VM isolation
 ## Polystack SIEM — Unified Security Operations
 
 <CardGroup cols={1}>
-  <Card title="Polystack SIEM" icon="shield-alert" href="/security/polystack-siem" color="#bf9667">
+  <Card title="Polystack SIEM" icon="shield-halved" href="/security/polystack-siem" color="#bf9667">
     The integrated Security Information and Event Management layer — Wazuh (HIDS), Lynis
     (auditing), and OpenSCAP (compliance) unified in the **Security Posture** and
     **Alerts** pages in Monitor Center. Start here for a single-pane view of the entire
@@ -33,7 +33,7 @@ The sections below cover every security domain: infrastructure TLS, VM isolation
   <Card title="Infrastructure Security" icon="server" href="/security/infrastructure" color="#bf9667">
     TLS configuration for all platform services, certificate management, HAProxy termination, and endpoint hardening.
   </Card>
-  <Card title="Hardening Guide" icon="shield-check" href="/security/hardening-guide" color="#bf9667">
+  <Card title="Hardening Guide" icon="shield-halved" href="/security/hardening-guide" color="#bf9667">
     Pre-deployment OS hardening, service minimization, database and message queue hardening, and a step-by-step checklist.
   </Card>
 </CardGroup>
@@ -43,10 +43,10 @@ The sections below cover every security domain: infrastructure TLS, VM isolation
 <p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Virtual Machine Security</p>
 
 <CardGroup cols={2}>
-  <Card title="VM Security" icon="cpu" href="/security/vm-security" color="#bf9667">
+  <Card title="VM Security" icon="microchip" href="/security/vm-security" color="#bf9667">
     Hypervisor isolation, security groups, vTPM, encrypted volumes, Secure Boot, anti-affinity, and live migration TLS.
   </Card>
-  <Card title="Network Security" icon="network" href="/security/network-security" color="#bf9667">
+  <Card title="Network Security" icon="network-wired" href="/security/network-security" color="#bf9667">
     Security groups, FWaaS, port security, anti-spoofing, VLAN/VXLAN segmentation, and VPN as a Service.
   </Card>
 </CardGroup>
@@ -85,10 +85,10 @@ These three scanners run in parallel inside Polystack SIEM. Their combined resul
 the **Security Posture** and **Alerts** pages in the Dashboard's Monitor Center.
 
 <CardGroup cols={3}>
-  <Card title="Wazuh" icon="shield-alert" href="/security/wazuh" color="#bf9667">
+  <Card title="Wazuh" icon="shield-halved" href="/security/wazuh" color="#bf9667">
     Host intrusion detection, file integrity monitoring, vulnerability assessment, and compliance reporting — deployed across all VMs.
   </Card>
-  <Card title="Lynis" icon="list-checks" href="/security/lynis" color="#bf9667">
+  <Card title="Lynis" icon="list-check" href="/security/lynis" color="#bf9667">
     OS security auditing with a hardening index score, actionable remediation suggestions, and fleet-wide sweep support.
   </Card>
   <Card title="OpenSCAP" icon="clipboard-check" href="/security/openscap" color="#bf9667">
@@ -129,28 +129,28 @@ The following security capabilities are built into the Polystack platform and de
   <Card title="Triple Compliance Scanning" icon="clipboard-list" color="#bf9667">
     Three independent scanners running in parallel: SCA benchmarks, system audit, and SCAP profiles. CIS Level 1 and Level 2 benchmarks included.
   </Card>
-  <Card title="OS Hardening (CIS Benchmark)" icon="shield-check" color="#bf9667">
+  <Card title="OS Hardening (CIS Benchmark)" icon="shield-halved" color="#bf9667">
     Automated CIS benchmark hardening: SSH controls, audit logging, Docker security benchmarks, AppArmor profiles, and SSH allowlisting.
   </Card>
-  <Card title="Security Operations Dashboard" icon="layout-dashboard" color="#bf9667">
+  <Card title="Security Operations Dashboard" icon="gauge" color="#bf9667">
     Auto-deployed monitoring dashboard with panels for agent status, API health, credential recovery events, certificate expiry, scan results, and cluster health.
   </Card>
   <Card title="Self-Healing Credentials" icon="key" color="#bf9667">
     Three-layer automated credential recovery: post-deployment enforcement, periodic watchdog (5-minute intervals), and filesystem guardian (10-minute intervals). Recovery time under 5 minutes with zero human intervention.
   </Card>
-  <Card title="Active Response" icon="shield-alert" color="#bf9667">
+  <Card title="Active Response" icon="shield-halved" color="#bf9667">
     Automated threat response: firewall blocking, host denial, and account disabling on SSH brute force detection.
   </Card>
   <Card title="Certificate Expiry Monitoring" icon="calendar-clock" color="#bf9667">
     Automated certificate lifecycle monitoring with 30-day warning and 7-day critical alerts across all platform services.
   </Card>
-  <Card title="Custom Detection Rules" icon="scan-search" color="#bf9667">
+  <Card title="Custom Detection Rules" icon="magnifying-glass" color="#bf9667">
     Platform-specific detection rules for container lifecycle events including start, stop, crash, and resource limit triggers.
   </Card>
   <Card title="Default Alert Rules" icon="bell" color="#bf9667">
     12 pre-configured alert rules across 4 groups: node alerts (disk, memory, CPU), service alerts, storage alerts, and infrastructure alerts.
   </Card>
-  <Card title="SBOM CI Pipeline" icon="package-search" color="#bf9667">
+  <Card title="SBOM CI Pipeline" icon="box" color="#bf9667">
     Supply chain security: container image vulnerability scanning, software bill of materials generation (SPDX and CycloneDX formats), and cryptographic image signing.
   </Card>
 </CardGroup>
@@ -169,7 +169,7 @@ The following security capabilities are built into the Polystack platform and de
   <Card title="Encrypt Volumes" icon="hard-drive" href="/security/data-security#volume-encryption" color="#bf9667">
     Enable LUKS encryption for block storage
   </Card>
-  <Card title="Hardening Checklist" icon="list-checks" href="/security/hardening-guide#checklist" color="#bf9667">
+  <Card title="Hardening Checklist" icon="list-check" href="/security/hardening-guide#checklist" color="#bf9667">
     Pre-deployment security verification
   </Card>
 </CardGroup>

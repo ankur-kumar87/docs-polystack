@@ -35,7 +35,7 @@ issues such as service outages or nameserver synchronization failures, see the
       the DNS worker may be unable to reach the backend nameserver pool.
   </Accordion>
 
-  <Accordion title="Record set not resolving after creation" icon="search">
+  <Accordion title="Record set not resolving after creation" icon="magnifying-glass">
     **Cause**: DNS propagation is still in progress, or the client resolver is caching a
     negative (NXDOMAIN) response from before the record was created.
 
@@ -73,7 +73,7 @@ issues such as service outages or nameserver synchronization failures, see the
     is configured correctly for the `in-addr.arpa.` or `ip6.arpa.` parent zone.
   </Accordion>
 
-  <Accordion title="CNAME conflict with existing records" icon="triangle-alert">
+  <Accordion title="CNAME conflict with existing records" icon="triangle-exclamation">
     **Cause**: A CNAME cannot coexist with other record types at the same name. If an
     A or MX record already exists at the target name, the CNAME creation fails.
 
@@ -88,7 +88,7 @@ issues such as service outages or nameserver synchronization failures, see the
       contact your administrator about ALIAS record support for root domain aliases.
   </Accordion>
 
-  <Accordion title="Record changes not propagating to all clients" icon="refresh-cw">
+  <Accordion title="Record changes not propagating to all clients" icon="arrows-rotate">
     **Cause**: Different clients are hitting different resolvers with different cache states,
     or the zone's SOA serial number has not been incremented.
 
@@ -107,7 +107,7 @@ issues such as service outages or nameserver synchronization failures, see the
       Wait for the zone's TTL, or contact your administrator to verify nameserver sync.
   </Accordion>
 
-  <Accordion title="Cannot delete a zone — delete returns 400 or 409" icon="trash-2">
+  <Accordion title="Cannot delete a zone — delete returns 400 or 409" icon="trash">
     **Cause**: The zone contains record sets that must be removed first, or a transfer
     request for this zone is pending.
 

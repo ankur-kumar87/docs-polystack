@@ -24,7 +24,7 @@ and appliances. This network must be isolated from tenant and provider networks 
 prevent unauthorized appliance access.
 
 <Steps titleSize="h3">
-  <Step title="Assign a dedicated management network" icon="network">
+  <Step title="Assign a dedicated management network" icon="network-wired">
     The management network should use a non-routable CIDR not reachable from tenant
     networks or the internet. Configure in the deployment console globals:
     ```yaml title="Load balancer management network"
@@ -128,7 +128,7 @@ ironcore-ansible deploy --tags octavia
 ## Security Checklist
 
 <AccordionGroup>
-  <Accordion title="Management network isolated" icon="network" defaultOpen>
+  <Accordion title="Management network isolated" icon="network-wired" defaultOpen>
     Verify the management network CIDR is not reachable from tenant instances or external networks.
   </Accordion>
   <Accordion title="Appliance certificates valid" icon="shield">
@@ -138,7 +138,7 @@ ironcore-ansible deploy --tags octavia
     All projects have explicit quota limits set — none are using unlimited defaults
     in a multi-tenant environment.
   </Accordion>
-  <Accordion title="Access logs forwarded" icon="file-text">
+  <Accordion title="Access logs forwarded" icon="file-lines">
     Access logs are configured and flowing to the centralized logging platform.
     Verify by creating a test load balancer and checking for log entries.
   </Accordion>

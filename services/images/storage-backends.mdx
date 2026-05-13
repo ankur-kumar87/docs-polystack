@@ -33,7 +33,7 @@ The Polystack Image Service stores image data in a pluggable storage backend. Th
 RBD (RADOS Block Device) is the recommended backend for high-availability multi-node deployments. Images are stored as RBD objects in the Polystack Distributed Storage cluster, providing built-in redundancy and copy-on-write clones for fast instance launches.
 
 <Steps titleSize="h3">
-  <Step title="Configure RBD backend in the deployment console globals" icon="settings">
+  <Step title="Configure RBD backend in the deployment console globals" icon="gear">
     ```yaml title="RBD storage backend configuration"
     glance_backend_ceph: "yes"
     glance_backend_file: "no"

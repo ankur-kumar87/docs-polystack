@@ -40,12 +40,12 @@ be documented and reviewed.
         ```
         Output should show `"port_security_enabled": true`.
       </Step>
-      <Step title="Check per-port security" icon="search">
+      <Step title="Check per-port security" icon="magnifying-glass">
         ```bash title="Check port security on specific port"
         openstack port show <port-id> -f json | grep port_security_enabled
         ```
       </Step>
-      <Step title="Disable port security for network appliances (exceptional)" icon="settings">
+      <Step title="Disable port security for network appliances (exceptional)" icon="gear">
         In rare cases, network appliances that use multiple source IPs (virtual firewalls,
         load balancers, NAT devices) require port security to be disabled on their specific port:
 
@@ -109,11 +109,11 @@ environments, harden this group by removing the permissive inbound rule.
         openstack security group rule list default --ingress
         ```
       </Step>
-      <Step title="Identify the permissive same-group rule" icon="search">
+      <Step title="Identify the permissive same-group rule" icon="magnifying-glass">
         Look for a rule with `Remote Security Group: default` and no protocol restriction.
         This rule allows all traffic from instances in the same group.
       </Step>
-      <Step title="Remove the permissive rule" icon="trash-2">
+      <Step title="Remove the permissive rule" icon="trash">
         ```bash title="Delete the permissive rule"
         openstack security group rule delete <rule-id>
         ```

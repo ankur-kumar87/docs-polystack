@@ -59,7 +59,7 @@ Cloud-init runs during the first boot of every new instance and handles:
         apt-get update && apt-get install -y cloud-init cloud-utils cloud-initramfs-growroot
         ```
       </Step>
-      <Step title="Clean the cloud-init state" icon="trash-2">
+      <Step title="Clean the cloud-init state" icon="trash">
         Remove any cached instance data before capturing the image:
         ```bash title="Reset cloud-init state"
         cloud-init clean --logs --seed
@@ -75,12 +75,12 @@ Cloud-init runs during the first boot of every new instance and handles:
         dnf install -y cloud-init cloud-utils-growpart gdisk
         ```
       </Step>
-      <Step title="Enable cloud-init services" icon="zap">
+      <Step title="Enable cloud-init services" icon="bolt">
         ```bash title="Enable required systemd services"
         systemctl enable cloud-init-local cloud-init cloud-config cloud-final
         ```
       </Step>
-      <Step title="Clean the cloud-init state" icon="trash-2">
+      <Step title="Clean the cloud-init state" icon="trash">
         ```bash title="Reset cloud-init state"
         cloud-init clean --logs --seed
         ```
@@ -162,7 +162,7 @@ via cloud-init. Ensure the image is configured correctly for key-based authentic
 </Note>
 
 <Steps titleSize="h3">
-  <Step title="Configure DHCP on all interfaces" icon="network">
+  <Step title="Configure DHCP on all interfaces" icon="network-wired">
     Ensure the primary network interface is set to DHCP. For cloud-init-managed images,
     `cloud-init` handles network configuration automatically via the metadata service.
 
@@ -189,13 +189,13 @@ adding the serial console to the kernel command line.
 <Tabs>
   <Tab title="GRUB 2 (most Linux distributions)" icon="terminal">
     <Steps titleSize="h3">
-      <Step title="Edit GRUB default configuration" icon="edit">
+      <Step title="Edit GRUB default configuration" icon="pen-to-square">
         Edit `/etc/default/grub` and add the serial console parameters:
         ```text title="/etc/default/grub"
         GRUB_CMDLINE_LINUX="console=tty0 console=ttyS0,115200n8"
         ```
       </Step>
-      <Step title="Regenerate GRUB configuration" icon="refresh-cw">
+      <Step title="Regenerate GRUB configuration" icon="arrows-rotate">
         ```bash title="Regenerate GRUB (Debian/Ubuntu)"
         update-grub
         ```
@@ -215,7 +215,7 @@ adding the serial console to the kernel command line.
 Verify your image meets all requirements before uploading to Polystack.
 
 <AccordionGroup>
-  <Accordion title="Pre-upload checklist" icon="list-checks" defaultOpen>
+  <Accordion title="Pre-upload checklist" icon="list-check" defaultOpen>
     Run this checklist on the image before capturing or uploading:
 
     - [ ] `cloud-init --version` returns version 22.4 or later

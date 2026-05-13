@@ -21,7 +21,7 @@ failures. For user-facing issues such as individual instance recovery failures, 
 ## Common Issues
 
 <AccordionGroup>
-  <Accordion title="Notification received but no recovery triggered" icon="bell-off">
+  <Accordion title="Notification received but no recovery triggered" icon="bell-slash">
     **Cause**: The segment may be disabled, or the failed host is not registered in
     any segment. Also occurs if the engine is not running.
 
@@ -74,7 +74,7 @@ failures. For user-facing issues such as individual instance recovery failures, 
     ```
   </Accordion>
 
-  <Accordion title="Instances stuck in UNKNOWN state after evacuation" icon="circle-help">
+  <Accordion title="Instances stuck in UNKNOWN state after evacuation" icon="circle-question">
     **Cause**: The compute database still associates the instance with the failed host.
     The evacuation may have been partially completed.
 
@@ -118,7 +118,7 @@ failures. For user-facing issues such as individual instance recovery failures, 
     Instance HA controller to all monitored hosts.
   </Accordion>
 
-  <Accordion title="Engine fails to start" icon="circle-alert">
+  <Accordion title="Engine fails to start" icon="circle-exclamation">
     **Cause**: Database connectivity failure, Identity authentication error, or a
     configuration file syntax error.
 

@@ -23,7 +23,7 @@ my host footprint" or "fix noisy-neighbor complaints" — into concrete migratio
 ## Available Goals
 
 <CardGroup cols={2}>
-  <Card title="Server Consolidation" icon="layers" color="#bf9667">
+  <Card title="Server Consolidation" icon="layer-group" color="#bf9667">
     Migrate workloads from underutilized hosts to consolidate the active footprint.
     Idle hosts can enter low-power states after workloads are moved off.
   </Card>
@@ -35,15 +35,15 @@ my host footprint" or "fix noisy-neighbor complaints" — into concrete migratio
     Identify instances with erratic CPU or memory consumption and migrate them to
     hosts where they achieve consistent, stable performance.
   </Card>
-  <Card title="Energy Savings" icon="zap" color="#bf9667">
+  <Card title="Energy Savings" icon="bolt" color="#bf9667">
     Consolidate workloads to the minimum number of hosts during off-peak periods,
     enabling idle nodes to reduce power draw.
   </Card>
-  <Card title="Zone Rebalancing" icon="network" color="#bf9667">
+  <Card title="Zone Rebalancing" icon="network-wired" color="#bf9667">
     Evenly redistribute workloads across availability zones after recovery events
     or uneven initial placement.
   </Card>
-  <Card title="Noisy Neighbor Mitigation" icon="volume-x" color="#bf9667">
+  <Card title="Noisy Neighbor Mitigation" icon="volume-xmark" color="#bf9667">
     Detect instances causing CPU or memory contention and isolate them from
     co-located workloads to restore performance for affected instances.
   </Card>
@@ -69,7 +69,7 @@ my host footprint" or "fix noisy-neighbor complaints" — into concrete migratio
 Choose the goal that matches the problem you are solving:
 
 <AccordionGroup>
-  <Accordion title="My cluster has too many active hosts" icon="layers" defaultOpen>
+  <Accordion title="My cluster has too many active hosts" icon="layer-group" defaultOpen>
     Use **Server Consolidation** (`server_consolidation`). The strategy identifies hosts
     running below the utilization threshold (default: 20%) and generates migrations that
     pack those workloads onto fewer hosts.
@@ -89,11 +89,11 @@ Choose the goal that matches the problem you are solving:
 
     Requires Prometheus with temperature sensor metrics configured as a data source.
   </Accordion>
-  <Accordion title="After a failover, zones are imbalanced" icon="network">
+  <Accordion title="After a failover, zones are imbalanced" icon="network-wired">
     Use **Zone Rebalancing** (`zone_migration`). The strategy redistributes instances
     evenly across availability zones without requiring external metric data.
   </Accordion>
-  <Accordion title="Guests are complaining about noisy neighbors" icon="volume-x">
+  <Accordion title="Guests are complaining about noisy neighbors" icon="volume-xmark">
     Use **Noisy Neighbor** (`noisy_neighbor`). The strategy detects instance pairs with
     high CPU contention co-located on the same host and separates them.
 

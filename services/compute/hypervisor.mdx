@@ -61,7 +61,7 @@ The following disk image formats are supported by the native hypervisor driver. 
 
     <Check>Both `vmx` or `svm` flag and IOMMU should be present for full feature support.</Check>
   </Tab>
-  <Tab title="ARM / AArch64" icon="cpu">
+  <Tab title="ARM / AArch64" icon="microchip">
     ARM 64-bit (AArch64) is supported for compute nodes running compatible hardware.
 
     **CPU Requirements**
@@ -77,7 +77,7 @@ The following disk image formats are supported by the native hypervisor driver. 
       Not all ARM platforms support all hypervisor features. Verify your hardware's EL2 support before deploying production workloads.
     </Warning>
   </Tab>
-  <Tab title="POWER / ppc64le" icon="zap">
+  <Tab title="POWER / ppc64le" icon="bolt">
     IBM POWER (ppc64le) is supported with the native hypervisor driver for POWER.
 
     **CPU Requirements**
@@ -174,7 +174,7 @@ Nested virtualization allows virtual machines to run their own hypervisors (e.g.
     ```
     <Check>Output should be `Y` or `1` confirming nested virtualization is enabled.</Check>
   </Step>
-  <Step title="Set CPU mode to host-passthrough" icon="settings">
+  <Step title="Set CPU mode to host-passthrough" icon="gear">
     Nested VMs require the host CPU feature flags to be visible inside the VM. Set `cpu_mode = host-passthrough` in the Nova configuration, or use `host-model` if cross-node migration is needed.
 
     ```yaml title="globals.d override for nested virtualization"
@@ -219,13 +219,13 @@ Configure huge page memory backing for memory-intensive or NUMA-sensitive worklo
 ## Capabilities
 
 <CardGroup cols={2}>
-  <Card title="Advanced Features" icon="wand" href="/services/compute/advanced-features" color="#bf9667">
+  <Card title="Advanced Features" icon="wand-magic-sparkles" href="/services/compute/advanced-features" color="#bf9667">
     CPU pinning, huge pages, NUMA topology, GPU passthrough, and SR-IOV configuration
   </Card>
-  <Card title="Live Migration" icon="arrow-right-left" href="/services/compute/live-migration" color="#bf9667">
+  <Card title="Live Migration" icon="right-left" href="/services/compute/live-migration" color="#bf9667">
     Configure and execute live migrations between compute nodes
   </Card>
-  <Card title="Compute Architecture" icon="layers" href="/services/compute/architecture" color="#bf9667">
+  <Card title="Compute Architecture" icon="layer-group" href="/services/compute/architecture" color="#bf9667">
     Understand the full Polystack Compute architecture and service components
   </Card>
   <Card title="Security Hardening" icon="shield" href="/services/compute/security-hardening" color="#bf9667">
@@ -238,7 +238,7 @@ Configure huge page memory backing for memory-intensive or NUMA-sensitive worklo
 ## Troubleshooting
 
 <AccordionGroup>
-  <Accordion title="VMs fail to start: hypervisor not available" icon="triangle-alert">
+  <Accordion title="VMs fail to start: hypervisor not available" icon="triangle-exclamation">
     **Cause**: Hardware virtualization is disabled in BIOS or the hypervisor kernel module is not loaded.
 
     **Resolution**:
@@ -252,7 +252,7 @@ Configure huge page memory backing for memory-intensive or NUMA-sensitive worklo
     If the module fails to load, enable VT-x/AMD-V in the server BIOS and reboot.
   </Accordion>
 
-  <Accordion title="Live migration fails: 'guest CPU doesn't match specification'" icon="arrow-right-left">
+  <Accordion title="Live migration fails: 'guest CPU doesn't match specification'" icon="right-left">
     **Cause**: The source and destination compute nodes have incompatible CPU models. This commonly occurs in mixed-CPU clusters when `host-model` or `host-passthrough` is used.
 
     **Resolution**: Switch to `custom` CPU mode with a common baseline:
@@ -276,7 +276,7 @@ Configure huge page memory backing for memory-intensive or NUMA-sensitive worklo
     ```
   </Accordion>
 
-  <Accordion title="Nested VMs fail to start inside a guest" icon="boxes">
+  <Accordion title="Nested VMs fail to start inside a guest" icon="boxes-stacked">
     **Cause**: The host compute node does not have nested virtualization enabled, or the CPU mode does not expose virtualization feature flags to the guest.
 
     **Resolution**:

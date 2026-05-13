@@ -42,7 +42,7 @@ outside the deployment console management.
 
     <Check>Agent shows `ACTIVE` and last-seen timestamp is within the scrape interval.</Check>
   </Step>
-  <Step title="Configure custom scrape targets" icon="settings">
+  <Step title="Configure custom scrape targets" icon="gear">
     If the node runs application-specific metric endpoints (e.g., a database exporter),
     add them as additional scrape targets:
 
@@ -79,7 +79,7 @@ For nodes not managed by the deployment console, install and configure the agent
 
     Store the token securely — it cannot be retrieved after the command completes.
   </Step>
-  <Step title="Configure the agent" icon="file-text">
+  <Step title="Configure the agent" icon="file-lines">
     Edit `/etc/monitoring/agent.yaml`:
 
     ```yaml title="/etc/monitoring/agent.yaml"
@@ -130,7 +130,7 @@ For nodes not managed by the deployment console, install and configure the agent
     monitoring agent token revoke <TOKEN_ID>
     ```
   </Tab>
-  <Tab title="Token Rotation" icon="refresh-cw">
+  <Tab title="Token Rotation" icon="arrows-rotate">
     Rotate agent tokens periodically (recommended: every 365 days) or immediately
     if a node is decommissioned or suspected compromised.
 
@@ -140,7 +140,7 @@ For nodes not managed by the deployment console, install and configure the agent
         monitoring agent token create --node compute-node-04 --expires 365d
         ```
       </Step>
-      <Step title="Update agent configuration" icon="settings">
+      <Step title="Update agent configuration" icon="gear">
         Update `/etc/monitoring/agent.yaml` on the node with the new token, then restart:
         ```bash title="Restart agent with new token"
         systemctl restart monitoring-agent

@@ -12,7 +12,7 @@ failure. A self-healing architecture continuously monitors and redistributes dat
 maintain durability, while multi-protocol access lets applications consume storage
 through the interface that suits them best.
 
-<Card title="Software-Defined-Storage — Software-Defined Storage" icon="external-link" href="https://polystack.tech/ceph" color="#bf9667" horizontal>
+<Card title="Software-Defined-Storage — Software-Defined Storage" icon="up-right-from-square" href="https://polystack.tech/ceph" color="#bf9667" horizontal>
   Product details, hardware compatibility matrix, performance benchmarks, and datasheet on polystack.tech
 </Card>
 
@@ -25,7 +25,7 @@ through the interface that suits them best.
     Consume block volumes, object buckets, and shared file systems from your workloads.
     Covers access methods, data protection policies, and performance configuration.
   </Card>
-  <Card title="Admin Guide" icon="settings" href="/services/sds/admin-guide" color="#bf9667">
+  <Card title="Admin Guide" icon="gear" href="/services/sds/admin-guide" color="#bf9667">
     Deploy and operate distributed storage clusters. Configure pools, CRUSH maps, storage
     tiers, encryption, and capacity planning for production environments.
   </Card>
@@ -43,15 +43,15 @@ through the interface that suits them best.
 <p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Key Capabilities</p>
 
 <CardGroup cols={2}>
-  <Card title="Unified Storage" icon="layers" href="/services/sds/user-guide/storage-types" color="#bf9667">
+  <Card title="Unified Storage" icon="layer-group" href="/services/sds/user-guide/storage-types" color="#bf9667">
     Single platform delivers block, object, and file storage — eliminating the need for
     separate storage appliances per protocol.
   </Card>
-  <Card title="Self-Healing Architecture" icon="shield-check" href="/services/sds/admin-guide/architecture" color="#bf9667">
+  <Card title="Self-Healing Architecture" icon="shield-halved" href="/services/sds/admin-guide/architecture" color="#bf9667">
     Continuous health monitoring detects failed components and automatically re-replicates
     data to restore the configured redundancy level without operator intervention.
   </Card>
-  <Card title="Petabyte Scalability" icon="trending-up" href="/services/sds/admin-guide/capacity-planning" color="#bf9667">
+  <Card title="Petabyte Scalability" icon="arrow-trend-up" href="/services/sds/admin-guide/capacity-planning" color="#bf9667">
     Scale storage capacity by adding nodes to the cluster — no downtime, no data migration,
     and no architectural limits on growth.
   </Card>
@@ -59,11 +59,11 @@ through the interface that suits them best.
     Configurable replication and erasure coding protect data across nodes, racks, and
     data center rooms. Encryption at rest secures all stored data.
   </Card>
-  <Card title="Performance Optimization" icon="zap" href="/services/sds/user-guide/performance" color="#bf9667">
+  <Card title="Performance Optimization" icon="bolt" href="/services/sds/user-guide/performance" color="#bf9667">
     Inline deduplication, compression, and intelligent caching maximize throughput and
     minimize latency. Automated tiering places hot data on faster media.
   </Card>
-  <Card title="Multi-Protocol Access" icon="network" href="/services/sds/user-guide/access-methods" color="#bf9667">
+  <Card title="Multi-Protocol Access" icon="network-wired" href="/services/sds/user-guide/access-methods" color="#bf9667">
     Native object (S3-compatible), block (RBD), and file (CephFS) interfaces alongside
     NFS and SMB gateways for legacy application compatibility.
   </Card>
@@ -86,7 +86,7 @@ through the interface that suits them best.
     S3-compatible object storage with horizontal scalability for large media libraries,
     software distribution, and static asset hosting.
   </Card>
-  <Card title="Backup & Recovery" icon="rotate-ccw" color="#bf9667">
+  <Card title="Backup & Recovery" icon="rotate-left" color="#bf9667">
     Cost-efficient backup target using erasure coding for high durability at lower raw
     capacity overhead compared to full replication.
   </Card>
@@ -103,7 +103,7 @@ through the interface that suits them best.
   <Card title="Polystack Block Storage" icon="hard-drive" href="/services/storage/index" color="#bf9667">
     Persistent block volumes backed by the Software-Defined-Storage distributed storage backend
   </Card>
-  <Card title="Disaster Recovery" icon="rotate-ccw" href="/services/disaster-recovery/index" color="#bf9667">
+  <Card title="Disaster Recovery" icon="rotate-left" href="/services/disaster-recovery/index" color="#bf9667">
     Protect workloads and data with Disaster Recovery replication and automated failover
   </Card>
 </CardGroup>

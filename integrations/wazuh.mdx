@@ -68,7 +68,7 @@ graph TD
         sudo apt-get update
         ```
       </Step>
-      <Step title="Install the agent" icon="package">
+      <Step title="Install the agent" icon="box">
         ```bash title="Install Wazuh agent"
         WAZUH_MANAGER="<wazuh-manager-ip>" \
         WAZUH_AGENT_NAME="$(hostname)" \
@@ -308,7 +308,7 @@ View compliance dashboards in the Wazuh Dashboard under **Security → Regulator
 ## Troubleshooting
 
 <AccordionGroup>
-  <Accordion title="Agent shows Disconnected in Wazuh Dashboard" icon="wifi-off">
+  <Accordion title="Agent shows Disconnected in Wazuh Dashboard" icon="ban">
     **Cause**: The agent cannot reach the Wazuh manager on TCP port 1514, or the agent
     service stopped.
 
@@ -336,7 +336,7 @@ View compliance dashboards in the Wazuh Dashboard under **Security → Regulator
     Check `/var/ossec/logs/ossec.log` on the instance for parsing errors.
   </Accordion>
 
-  <Accordion title="Bulk deployment fails on some instances" icon="circle-x">
+  <Accordion title="Bulk deployment fails on some instances" icon="circle-xmark">
     **Cause**: Package manager repository not reachable from instance (outbound internet
     blocked), or wrong OS family detected.
 

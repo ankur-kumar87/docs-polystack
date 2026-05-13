@@ -33,7 +33,7 @@ provides recommendations for common use cases.
 ## Format Details
 
 <AccordionGroup>
-  <Accordion title="QCOW2 — Recommended" icon="layers" defaultOpen>
+  <Accordion title="QCOW2 — Recommended" icon="layer-group" defaultOpen>
     QCOW2 (QEMU Copy-On-Write v2) is the default and recommended format for Polystack.
     It supports thin provisioning (only stores data that has been written), internal
     snapshots, compression, and optional AES encryption.
@@ -52,7 +52,7 @@ provides recommendations for common use cases.
     ```
   </Accordion>
 
-  <Accordion title="RAW — Maximum Performance" icon="zap">
+  <Accordion title="RAW — Maximum Performance" icon="bolt">
     RAW images are unformatted disk dumps. There is zero overhead from the format layer.
     When Polystack Distributed Storage (Ceph RBD) is the image and volume backend, RBD handles
     copy-on-write natively — making RAW the optimal format.
@@ -70,7 +70,7 @@ provides recommendations for common use cases.
     </Tip>
   </Accordion>
 
-  <Accordion title="VHD / VHDX — Hyper-V Migration" icon="arrow-right-left">
+  <Accordion title="VHD / VHDX — Hyper-V Migration" icon="right-left">
     VHD and VHDX are the native disk formats for Microsoft Hyper-V. Import them directly
     into Polystack when migrating workloads from a Hyper-V environment.
 

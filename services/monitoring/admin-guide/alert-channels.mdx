@@ -20,7 +20,7 @@ for critical alerts.
     SMTP email alerts and webhook notifications can be configured directly in the deployment console:
 
     <Steps titleSize="h3">
-      <Step title="Open Configuration" icon="settings">
+      <Step title="Open Configuration" icon="gear">
         Navigate to **the deployment console → Configuration** and select the **Monitoring** tab.
       </Step>
       <Step title="Configure alert channels" icon="bell">
@@ -34,7 +34,7 @@ for critical alerts.
         | **SMTP TLS Mode** | TLS encryption mode (STARTTLS or SSL) |
         | **Webhook URL** | Endpoint URL for Slack, Microsoft Teams, or custom webhooks |
       </Step>
-      <Step title="Test the channels" icon="flask-conical">
+      <Step title="Test the channels" icon="flask">
         Use the **Test Email** and **Test Webhook** buttons to verify delivery before
         saving. This sends a test notification to confirm connectivity and credentials.
 
@@ -73,7 +73,7 @@ for critical alerts.
       <Step title="Navigate to Alert Channels" icon="bell">
         Navigate to **Monitor Center > Monitoring** (Add Channel, admin view).
       </Step>
-      <Step title="Configure the channel" icon="settings">
+      <Step title="Configure the channel" icon="gear">
         Select the channel type and complete the required fields:
 
         | Channel Type | Required Fields |
@@ -84,7 +84,7 @@ for critical alerts.
         | **Slack** | Incoming webhook URL, target channel name |
         | **Teams** | Incoming webhook URL |
       </Step>
-      <Step title="Test the channel" icon="flask-conical">
+      <Step title="Test the channel" icon="flask">
         Click **Test** after saving to send a test notification. Verify delivery before
         assigning the channel to production alert rules.
 
@@ -136,7 +136,7 @@ Configure multi-tier escalation for critical infrastructure alerts:
   <Step title="Navigate to Escalation Policies" icon="arrow-up">
     Navigate to **Monitor Center > Monitoring** (Escalation Policies, admin view).
   </Step>
-  <Step title="Define escalation tiers" icon="layers">
+  <Step title="Define escalation tiers" icon="layer-group">
     | Tier | Trigger | Channel | Delay |
     |------|---------|---------|-------|
     | **Tier 1** | Alert fires | PagerDuty on-call | Immediate |
@@ -162,7 +162,7 @@ Configure multi-tier escalation for critical infrastructure alerts:
 ## Channel Configuration Reference
 
 <AccordionGroup>
-  <Accordion title="Email (SMTP)" icon="mail">
+  <Accordion title="Email (SMTP)" icon="envelope">
     ```yaml title="Email channel configuration"
     name: ops-email
     type: email
@@ -191,7 +191,7 @@ Configure multi-tier escalation for critical infrastructure alerts:
 
     Generate the integration key in PagerDuty under **Services → Integrations → Add Integration → Events API v2**.
   </Accordion>
-  <Accordion title="Slack" icon="message-square">
+  <Accordion title="Slack" icon="comment-dots">
     ```yaml title="Slack channel configuration"
     name: slack-ops
     type: slack

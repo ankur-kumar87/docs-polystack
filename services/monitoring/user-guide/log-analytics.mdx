@@ -25,7 +25,7 @@ anomaly detection — from a single interface.
 <Tabs>
   <Tab title="Dashboard" icon="gauge">
     <Steps titleSize="h3">
-      <Step title="Open Log Explorer" icon="search">
+      <Step title="Open Log Explorer" icon="magnifying-glass">
         Navigate to **Monitor Center > Logging** (admin view).
       </Step>
       <Step title="Search and filter" icon="filter">
@@ -80,7 +80,7 @@ anomaly detection — from a single interface.
 Create alerts that fire whenever a log entry matching a query appears.
 
 <Steps titleSize="h3">
-  <Step title="Open Log Explorer" icon="search">
+  <Step title="Open Log Explorer" icon="magnifying-glass">
     Navigate to **Monitor Center > Logging** (admin view) and build the query that
     should trigger an alert.
   </Step>
@@ -114,7 +114,7 @@ Create alerts that fire whenever a log entry matching a query appears.
 ## Useful Query Patterns
 
 <AccordionGroup>
-  <Accordion title="Find all errors in the last hour" icon="circle-x">
+  <Accordion title="Find all errors in the last hour" icon="circle-xmark">
     ```
     level:ERROR
     ```
@@ -138,7 +138,7 @@ Create alerts that fire whenever a log entry matching a query appears.
     ```
     Surfaces disk-level errors that may indicate failing storage devices.
   </Accordion>
-  <Accordion title="Network connection refused" icon="network">
+  <Accordion title="Network connection refused" icon="network-wired">
     ```
     "Connection refused" OR "ECONNREFUSED" level:ERROR
     ```

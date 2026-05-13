@@ -50,7 +50,7 @@ Hardening operates at four levels: the host operating system (Polystack OS), the
 
     <Check>Verify: `ssh root@<node>` is rejected. Key-based login as the `polystack` user succeeds.</Check>
   </Step>
-  <Step title="Enable automatic security updates" icon="rotate-cw">
+  <Step title="Enable automatic security updates" icon="rotate-right">
     Configure unattended upgrades for security patches:
 
     ```bash title="Configure unattended upgrades"
@@ -94,7 +94,7 @@ Hardening operates at four levels: the host operating system (Polystack OS), the
     ufw enable
     ```
   </Step>
-  <Step title="Disable unused kernel modules" icon="cpu">
+  <Step title="Disable unused kernel modules" icon="microchip">
     Remove attack surface by disabling kernel modules that are not required:
 
     ```bash title="Disable unused modules"
@@ -116,7 +116,7 @@ Hardening operates at four levels: the host operating system (Polystack OS), the
     EOF
     ```
   </Step>
-  <Step title="Configure kernel security parameters" icon="settings">
+  <Step title="Configure kernel security parameters" icon="gear">
     ```bash title="Apply kernel hardening via sysctl"
     cat > /etc/sysctl.d/99-hardening.conf << 'EOF'
     # Network hardening
@@ -142,7 +142,7 @@ Hardening operates at four levels: the host operating system (Polystack OS), the
     sysctl -p /etc/sysctl.d/99-hardening.conf
     ```
   </Step>
-  <Step title="Enable AppArmor enforcement" icon="shield-check">
+  <Step title="Enable AppArmor enforcement" icon="shield-halved">
     AppArmor profiles for hypervisor processes ship in enforce mode on Polystack OS. Verify and enable:
 
     ```bash title="Verify AppArmor status"
@@ -170,7 +170,7 @@ Hardening operates at four levels: the host operating system (Polystack OS), the
 ## Service Hardening
 
 <Steps titleSize="h3">
-  <Step title="Minimize running services" icon="x-circle">
+  <Step title="Minimize running services" icon="circle-xmark">
     Disable services that are not required on each node type:
 
     ```bash title="Disable unused services on control nodes"
@@ -184,7 +184,7 @@ Hardening operates at four levels: the host operating system (Polystack OS), the
     systemctl mask cups bluetooth
     ```
   </Step>
-  <Step title="Set file permission baselines" icon="file-lock">
+  <Step title="Set file permission baselines" icon="file-shield">
     ```bash title="Restrict sensitive configuration files"
     chmod 600 /etc/ironcore/passwords.yml
     chmod 750 /etc/ironcore/

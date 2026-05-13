@@ -44,7 +44,7 @@ This guide covers the most common issues encountered when working with Polystack
     <Tip>Try a different volume type or availability zone if the issue persists.</Tip>
   </Accordion>
 
-  <Accordion title="Volume in 'error' status after creation" icon="circle-x">
+  <Accordion title="Volume in 'error' status after creation" icon="circle-xmark">
     **Symptom**: Volume creation completes but status shows `error`.
 
     **Cause**: The backend driver encountered an error allocating the volume. Common
@@ -101,7 +101,7 @@ This guide covers the most common issues encountered when working with Polystack
 ## Attachment Issues
 
 <AccordionGroup>
-  <Accordion title="Cannot attach volume — availability zone mismatch" icon="triangle-alert">
+  <Accordion title="Cannot attach volume — availability zone mismatch" icon="triangle-exclamation">
     **Symptom**: Attachment fails with an error referencing availability zone.
 
     **Cause**: The volume and instance are in different availability zones. Volumes
@@ -160,7 +160,7 @@ This guide covers the most common issues encountered when working with Polystack
 ## Snapshot Issues
 
 <AccordionGroup>
-  <Accordion title="Snapshot failed or stuck in 'error' status" icon="triangle-alert">
+  <Accordion title="Snapshot failed or stuck in 'error' status" icon="triangle-exclamation">
     **Cause**: The volume was in an inconsistent state, or the backend encountered
     an error during the snapshot operation.
 
@@ -201,7 +201,7 @@ This guide covers the most common issues encountered when working with Polystack
 ## Backup Issues
 
 <AccordionGroup>
-  <Accordion title="Backup creation fails with 'backup service unavailable'" icon="circle-x">
+  <Accordion title="Backup creation fails with 'backup service unavailable'" icon="circle-xmark">
     **Cause**: The backup service is not running or is not configured for this
     environment.
 

@@ -28,7 +28,7 @@ Storage QoS (Quality of Service) specifications define performance boundaries fo
 Storage QoS specs define performance limits using key-value pairs. The specific keys supported depend on the storage backend driver.
 
 <AccordionGroup>
-  <Accordion title="Standard QoS Keys (all backends)" icon="settings" defaultOpen>
+  <Accordion title="Standard QoS Keys (all backends)" icon="gear" defaultOpen>
     | Key | Unit | Description |
     |-----|------|-------------|
     | `total_iops_sec` | IOPS | Maximum combined read + write IOPS |
@@ -73,7 +73,7 @@ Storage QoS specs define performance limits using key-value pairs. The specific 
 
     NetApp adaptive QoS adjusts limits automatically based on volume size (TB) — `expected` and `peak` IOPS/TB values are set in the ONTAP adaptive policy group.
   </Accordion>
-  <Accordion title="Pure Storage QoS Keys" icon="zap">
+  <Accordion title="Pure Storage QoS Keys" icon="bolt">
     | Key | Unit | Description |
     |-----|------|-------------|
     | `pure_qos_max_bandwidth` | bytes/s | Maximum combined read + write throughput |
@@ -93,7 +93,7 @@ Storage QoS specs define performance limits using key-value pairs. The specific 
       <Step title="Navigate to QoS Specs" icon="compass">
         Navigate to **Storage > Volume Types** (QoS Specs tab, admin view). Click **Create QoS Spec**.
       </Step>
-      <Step title="Define the spec" icon="settings">
+      <Step title="Define the spec" icon="gear">
         | Field | Value | Description |
         |-------|-------|-------------|
         | **Name** | e.g., `bronze-1000iops` | Descriptive name |
@@ -221,7 +221,7 @@ Storage QoS specs define performance limits using key-value pairs. The specific 
       --property total_bytes_sec_max=2147483648
     ```
   </Tab>
-  <Tab title="Size-Scaled QoS" icon="trending-up">
+  <Tab title="Size-Scaled QoS" icon="arrow-trend-up">
     Use `size_iops_sec` to scale IOPS proportionally with volume size — larger volumes receive more IOPS automatically.
 
     ```bash title="Create size-scaled QoS spec (10 IOPS per GB)"
@@ -327,7 +327,7 @@ openstack volume qos delete bronze-1000iops
 ## Best Practices
 
 <CardGroup cols={2}>
-  <Card title="Align with Volume Types" icon="layers" color="#bf9667">
+  <Card title="Align with Volume Types" icon="layer-group" color="#bf9667">
     Define one QoS spec per volume tier (bronze, silver, gold). Attach specs to volume
     types so QoS is automatically applied without per-volume manual steps.
   </Card>

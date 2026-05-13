@@ -39,7 +39,7 @@ that executed plans have produced lasting improvements.
         | **Created At** | Audit creation timestamp |
         | **Interval** | Scope of the audit (CLUSTER or ZONE) |
       </Step>
-      <Step title="Open an audit" icon="zoom-in">
+      <Step title="Open an audit" icon="magnifying-glass-plus">
         Click any audit to view its full detail, including:
         - The strategy that was applied
         - Any parameters that overrode the defaults
@@ -103,12 +103,12 @@ Use audit history to identify patterns that indicate structural cluster issues:
     underutilized but no plan is generated, ask your administrator to lower the
     `threshold` parameter in the strategy configuration.
   </Accordion>
-  <Accordion title="Frequent noisy-neighbor audits" icon="volume-x">
+  <Accordion title="Frequent noisy-neighbor audits" icon="volume-xmark">
     If `noisy_neighbor` audits consistently find high-contention pairs, the cluster
     may have insufficient capacity to separate contending workloads. Consider adding
     compute capacity or reviewing instance sizing.
   </Accordion>
-  <Accordion title="Plans generated but never executed" icon="pause-circle">
+  <Accordion title="Plans generated but never executed" icon="circle-pause">
     Review the action plan list for plans in `PENDING` (approved but not executed)
     or `RECOMMENDED` (not yet approved) state. Stale plans are outdated within 24 hours
     by default — run a new audit to generate a current plan.

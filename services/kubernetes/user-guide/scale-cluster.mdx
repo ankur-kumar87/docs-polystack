@@ -75,7 +75,7 @@ before reducing node count.
 <Tabs>
   <Tab title="Dashboard" icon="gauge">
     <Steps titleSize="h3">
-      <Step title="Prepare workloads" icon="shield-check">
+      <Step title="Prepare workloads" icon="shield-halved">
         Before scaling down, verify that no stateful or single-replica workloads are
         running on the nodes that will be removed. Use the Kubernetes Dashboard or
         `kubectl` to inspect current pod placement.
@@ -94,7 +94,7 @@ before reducing node count.
   </Tab>
   <Tab title="CLI" icon="terminal">
     <Steps titleSize="h3">
-      <Step title="Identify nodes to remove" icon="search">
+      <Step title="Identify nodes to remove" icon="magnifying-glass">
         ```bash title="List nodes and their workloads"
         kubectl get pods -A -o wide | grep <node-name>
         ```
@@ -139,7 +139,7 @@ before reducing node count.
 ## Best Practices
 
 <CardGroup cols={2}>
-  <Card title="Maintain Minimum Replicas" icon="layers" color="#bf9667">
+  <Card title="Maintain Minimum Replicas" icon="layer-group" color="#bf9667">
     Configure `PodDisruptionBudget` resources for stateful workloads to ensure a
     minimum number of replicas remain available during node removal.
   </Card>

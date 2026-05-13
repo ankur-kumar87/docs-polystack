@@ -115,7 +115,7 @@ pure_api_token = <api-token>
     ```
   </Accordion>
 
-  <Accordion title="Pure Storage FlashArray" icon="zap">
+  <Accordion title="Pure Storage FlashArray" icon="bolt">
     Pure Storage uses a REST API token for authentication. Both iSCSI and Fibre Channel drivers are available.
 
     ```ini title="[pure-flash] section (iSCSI)"
@@ -164,7 +164,7 @@ pure_api_token = <api-token>
     ```
   </Accordion>
 
-  <Accordion title="IBM FlashSystem" icon="cpu">
+  <Accordion title="IBM FlashSystem" icon="microchip">
     IBM FlashSystem uses the Storwize/SVC driver. The `san_clustername` must match the system name on the array.
 
     ```ini title="[ibm-flash] section"
@@ -186,7 +186,7 @@ pure_api_token = <api-token>
 After configuring a backend, create a volume type that maps to it. Tenants select the volume type when provisioning volumes to route requests to a specific backend.
 
 <Tabs>
-  <Tab title="Dashboard" icon="monitor">
+  <Tab title="Dashboard" icon="desktop">
     <Steps titleSize="h3">
       <Step title="Verify backend registration" icon="activity">
         Navigate to **Storage > Storage Backends** (admin view) and confirm the volume service
@@ -197,7 +197,7 @@ After configuring a backend, create a volume type that maps to it. Tenants selec
 
         Enter a name that communicates the backend to users — e.g., `SSD-Flash` or `Enterprise-NAS`.
       </Step>
-      <Step title="Set the backend name extra spec" icon="settings">
+      <Step title="Set the backend name extra spec" icon="gear">
         After creating the type, click **View Extra Specs** and add:
 
         | Key | Value |
@@ -288,7 +288,7 @@ cinder failover-host <cinder-volume-host> \
 ## Troubleshooting
 
 <AccordionGroup>
-  <Accordion title="Backend does not appear in pool list" icon="triangle-alert">
+  <Accordion title="Backend does not appear in pool list" icon="triangle-exclamation">
     **Cause**: The volume service failed to initialize the driver, or the backend configuration section is missing from `cinder.conf`.
 
     **Resolution**:
@@ -301,7 +301,7 @@ cinder failover-host <cinder-volume-host> \
     ```
   </Accordion>
 
-  <Accordion title="Volume creation fails with 'No valid host was found'" icon="x-circle">
+  <Accordion title="Volume creation fails with 'No valid host was found'" icon="circle-xmark">
     **Cause**: No backend matches the scheduler filters for the requested volume type, or the backend is reporting no free capacity.
 
     **Resolution**:

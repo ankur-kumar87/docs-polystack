@@ -63,7 +63,7 @@ the risk of account compromise from credential theft.
         ```
         Note the `seed` value from the output.
       </Step>
-      <Step title="Register seed in authenticator app" icon="smartphone">
+      <Step title="Register seed in authenticator app" icon="mobile">
         Import the base32-encoded seed into your authenticator app manually (use the
         "Enter setup key" option). The app begins generating 6-digit TOTP codes.
       </Step>
@@ -149,7 +149,7 @@ Once MFA is enabled, every login requires the TOTP code in addition to the passw
     and service accounts — these bypass MFA by design and provide explicit expiry and
     access rule controls.
   </Accordion>
-  <Accordion title="Plan for device loss" icon="life-buoy">
+  <Accordion title="Plan for device loss" icon="life-ring">
     Establish a recovery procedure before users lose access to their authenticator device:
     - Store backup codes in a password manager at enrollment time
     - Designate an administrator contact who can reset MFA enrollments

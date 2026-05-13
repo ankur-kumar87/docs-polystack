@@ -36,13 +36,13 @@ Storage tiering exposes different hardware performance classes as distinct volum
 ## Configure Tier Mappings
 
 <Tabs>
-  <Tab title="Web Console" icon="package">
+  <Tab title="Web Console" icon="box">
     <Steps titleSize="h3">
-      <Step title="Open Storage Tiers in the deployment console" icon="layers">
+      <Step title="Open Storage Tiers in the deployment console" icon="layer-group">
         Log in to the deployment console and navigate to **Configuration → Storage → Storage Tiers**.
         the deployment console displays the detected hardware device classes from the storage cluster.
       </Step>
-      <Step title="Configure tier mappings" icon="settings">
+      <Step title="Configure tier mappings" icon="gear">
         For each detected hardware tier, specify:
 
         | Field | Description |
@@ -145,7 +145,7 @@ When adding new hardware (e.g., NVMe drives to an existing SSD cluster):
     class. Create a dedicated pool using a CRUSH rule that targets only the new
     device class.
   </Step>
-  <Step title="Configure a new backend in the deployment console" icon="settings">
+  <Step title="Configure a new backend in the deployment console" icon="gear">
     Add a new backend entry in the deployment console pointing to the new pool. Deploy the configuration
     to register the new backend with the volume service.
   </Step>

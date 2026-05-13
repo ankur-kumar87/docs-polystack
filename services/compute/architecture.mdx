@@ -121,7 +121,7 @@ Understanding the creation flow helps diagnose failures at each stage.
     The Compute API validates the request, checks quota, and creates an instance record
     in the database with status `BUILD`.
   </Step>
-  <Step title="Placement selects resources" icon="target">
+  <Step title="Placement selects resources" icon="bullseye">
     The Placement API queries resource inventories to find hosts with sufficient vCPU,
     RAM, and disk. It returns a list of allocation candidates.
   </Step>
@@ -129,7 +129,7 @@ Understanding the creation flow helps diagnose failures at each stage.
     The Scheduler applies the configured filter chain to eliminate ineligible hosts,
     then ranks remaining candidates using weighers. The top-ranked host is selected.
   </Step>
-  <Step title="Conductor orchestrates the build" icon="git-merge">
+  <Step title="Conductor orchestrates the build" icon="code-merge">
     The Conductor sends a `build_instance` RPC call to the Compute Agent on the selected
     host. It monitors progress and updates the database with state transitions.
   </Step>

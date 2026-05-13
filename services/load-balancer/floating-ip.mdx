@@ -30,7 +30,7 @@ and pool configuration.
 <Tabs>
   <Tab title="Dashboard" icon="gauge">
     <Steps titleSize="h3">
-      <Step title="Retrieve the VIP port" icon="network">
+      <Step title="Retrieve the VIP port" icon="network-wired">
         Navigate to **Network > Load Balancers**. Open your load balancer and
         note the **VIP Port ID** from the overview panel.
       </Step>
@@ -49,7 +49,7 @@ and pool configuration.
   </Tab>
   <Tab title="CLI" icon="terminal">
     <Steps titleSize="h3">
-      <Step title="Retrieve the VIP port ID" icon="search">
+      <Step title="Retrieve the VIP port ID" icon="magnifying-glass">
         ```bash title="Get VIP port ID"
         openstack loadbalancer show prod-web-lb \
           -c vip_port_id -f value
@@ -140,7 +140,7 @@ Map a domain name to the floating IP for production services:
     ```
     See the [Polystack DNS guide](/services/dns) for full DNS management instructions.
   </Tab>
-  <Tab title="External DNS" icon="network">
+  <Tab title="External DNS" icon="network-wired">
     Point your external DNS provider's A record for your domain to the floating IP address.
     DNS propagation typically takes 1–5 minutes for TTLs under 5 minutes.
   </Tab>

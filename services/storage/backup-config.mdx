@@ -290,7 +290,7 @@ The `cinder-backup` service writes volume data to a configurable backup target t
     | `storage.objects.delete` | Delete backup objects |
   </Tab>
 
-  <Tab title="GlusterFS" icon="network">
+  <Tab title="GlusterFS" icon="network-wired">
     The GlusterFS backup driver mounts a GlusterFS volume and writes backup files to it. Suitable for environments already running GlusterFS distributed storage.
 
     ```ini title="cinder.conf — GlusterFS backup backend"
@@ -369,7 +369,7 @@ openstack volume service list --service cinder-backup
       <Step title="Monitor backup status" icon="activity">
         Navigate to **Storage > Volume Backups**. The backup transitions through `creating` → `available`.
       </Step>
-      <Step title="Restore the backup" icon="rotate-ccw">
+      <Step title="Restore the backup" icon="rotate-left">
         Click the **More** dropdown and select **Restore** to restore to a new volume. Confirm the restored volume matches the original in size and status.
 
         <Check>Backup created and restored successfully — backend is operational.</Check>

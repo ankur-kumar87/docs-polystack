@@ -27,7 +27,7 @@ and troubleshooting alert rules.
       <Step title="Navigate to Alert Rules" icon="bell">
         Navigate to **Monitor Center > Monitoring** (Alerting section, admin view) and click **New Alert Rule**.
       </Step>
-      <Step title="Define the condition" icon="settings">
+      <Step title="Define the condition" icon="gear">
         Configure the alert trigger:
 
         | Field | Description |
@@ -39,7 +39,7 @@ and troubleshooting alert rules.
         | **Evaluation Period** | Duration the condition must persist before firing (e.g., 5 minutes) |
         | **Severity** | `Critical`, `Warning`, or `Info` |
       </Step>
-      <Step title="Assign a notification channel" icon="send">
+      <Step title="Assign a notification channel" icon="paper-plane">
         Under **Notifications**, select one or more configured channels (email, webhook,
         or on-call integration). Multiple channels can be assigned per rule.
 
@@ -84,7 +84,7 @@ and troubleshooting alert rules.
         monitoring alert rule show high-cpu-utilization
         ```
       </Step>
-      <Step title="Update or delete a rule" icon="settings">
+      <Step title="Update or delete a rule" icon="gear">
         ```bash title="Update rule threshold"
         monitoring alert rule update high-cpu-utilization --threshold 85
         ```

@@ -71,7 +71,7 @@ openstack router list --all-projects -f json | grep -E '"id"|"ha"|"status"'
     </Tip>
   </Accordion>
 
-  <Accordion title="VXLAN tunnel failures between compute nodes" icon="layers">
+  <Accordion title="VXLAN tunnel failures between compute nodes" icon="layer-group">
     **Cause**: MTU mismatch, firewall blocking UDP 4789, or misconfigured tunnel
     endpoint IPs.
 
@@ -94,7 +94,7 @@ openstack router list --all-projects -f json | grep -E '"id"|"ha"|"status"'
        frames with 50-byte encapsulation overhead.
   </Accordion>
 
-  <Accordion title="MTU mismatch causing application-level failures" icon="split">
+  <Accordion title="MTU mismatch causing application-level failures" icon="arrows-split-up-and-left">
     **Cause**: Tenant network MTU exceeds the physical network capacity after
     VXLAN encapsulation overhead.
 

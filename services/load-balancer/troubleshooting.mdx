@@ -43,7 +43,7 @@ This guide covers the most common issues encountered when working with Polystack
     </Tip>
   </Accordion>
 
-  <Accordion title="Load balancer in ERROR status after creation" icon="circle-x">
+  <Accordion title="Load balancer in ERROR status after creation" icon="circle-xmark">
     **Cause**: The appliance provisioning failed — common causes include exhausted
     management network DHCP pool or unavailable appliance image.
 
@@ -109,7 +109,7 @@ This guide covers the most common issues encountered when working with Polystack
 ## Traffic Issues
 
 <AccordionGroup>
-  <Accordion title="503 Service Unavailable from load balancer" icon="triangle-alert">
+  <Accordion title="503 Service Unavailable from load balancer" icon="triangle-exclamation">
     **Cause**: All pool members are DOWN or the pool is empty.
 
     **Diagnose**:
@@ -124,7 +124,7 @@ This guide covers the most common issues encountered when working with Polystack
     3. Checking security group rules allow probe traffic
   </Accordion>
 
-  <Accordion title="Uneven traffic distribution" icon="bar-chart">
+  <Accordion title="Uneven traffic distribution" icon="chart-bar">
     **Cause**: Member weights are unequal, or sticky sessions are routing traffic to
     a subset of members.
 
@@ -146,7 +146,7 @@ This guide covers the most common issues encountered when working with Polystack
 ## TLS Issues
 
 <AccordionGroup>
-  <Accordion title="TLS handshake failures on HTTPS listener" icon="shield-alert">
+  <Accordion title="TLS handshake failures on HTTPS listener" icon="shield-halved">
     **Cause**: Certificate container reference is invalid, the certificate has expired,
     or the private key does not match the certificate.
 

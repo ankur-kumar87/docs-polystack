@@ -28,7 +28,7 @@ reliable DR strategy with predictable RTO.
       <Step title="Open Recovery Plans" icon="shield">
         Navigate to **Disaster Recovery → Recovery Plans → Create Plan**.
       </Step>
-      <Step title="Define plan parameters" icon="settings">
+      <Step title="Define plan parameters" icon="gear">
         | Field | Description |
         |-------|-------------|
         | **Plan Name** | Descriptive label identifying the workload tier (e.g., `prod-database-dr`) |
@@ -40,7 +40,7 @@ reliable DR strategy with predictable RTO.
         | **Consistency Mode** | `Crash-consistent` or `Application-consistent` |
         | **Replication Mode** | `Asynchronous` or `Synchronous` |
       </Step>
-      <Step title="Add resource groups" icon="layers">
+      <Step title="Add resource groups" icon="layer-group">
         Organize protected resources into ordered recovery groups. Resources within
         a group recover in parallel; groups recover sequentially.
 
@@ -56,7 +56,7 @@ reliable DR strategy with predictable RTO.
           service errors and may require manual intervention during a real failover.
         </Tip>
       </Step>
-      <Step title="Configure automation hooks" icon="cpu">
+      <Step title="Configure automation hooks" icon="microchip">
         Add pre/post scripts to each resource group:
 
         | Hook Type | Trigger | Example Use |

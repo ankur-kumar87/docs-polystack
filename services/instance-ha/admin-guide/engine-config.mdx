@@ -178,7 +178,7 @@ docker restart masakari_engine
     before Instance HA declares them permanently failed.
   </Accordion>
 
-  <Accordion title="Faster recovery for latency-sensitive workloads" icon="zap">
+  <Accordion title="Faster recovery for latency-sensitive workloads" icon="bolt">
     Reduce retry intervals for faster recovery at the cost of increased sensitivity
     to transient network partitions:
 
@@ -194,7 +194,7 @@ docker restart masakari_engine
     </Warning>
   </Accordion>
 
-  <Accordion title="Enable recovery for instances in ERROR state" icon="circle-x">
+  <Accordion title="Enable recovery for instances in ERROR state" icon="circle-xmark">
     For environments where instances frequently enter `ERROR` state due to transient
     issues, enable recovery for error-state instances:
 

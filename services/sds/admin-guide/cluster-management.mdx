@@ -43,7 +43,7 @@ covers the most common operational tasks for Software-Defined-Storage administra
         ceph status
         ```
       </Step>
-      <Step title="Investigate warnings" icon="search">
+      <Step title="Investigate warnings" icon="magnifying-glass">
         ```bash title="Detailed health report"
         ceph health detail
         ```
@@ -73,7 +73,7 @@ covers the most common operational tasks for Software-Defined-Storage administra
 Common cluster management operations performed through the deployment console or the CLI.
 
 <Tabs>
-  <Tab title="Service Management" icon="settings">
+  <Tab title="Service Management" icon="gear">
     ```bash title="List all cluster services"
     ceph orch ls
     ```
@@ -153,7 +153,7 @@ Common cluster management operations performed through the deployment console or
       active recovery on a degraded cluster risks data loss.
     </Warning>
   </Step>
-  <Step title="Replacing a failed disk" icon="refresh-cw">
+  <Step title="Replacing a failed disk" icon="arrows-rotate">
     After physically replacing the failed disk, redeploy the OSD through the deployment console:
     1. Navigate to **the deployment console → Storage → OSDs → Replace OSD**
     2. Select the host and the new device

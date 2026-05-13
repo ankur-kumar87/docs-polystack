@@ -66,7 +66,7 @@ Volume extension increases the allocated capacity of an existing block storage v
       <Step title="Authenticate" icon="key">
         <CliAuth />
       </Step>
-      <Step title="Check current size" icon="search">
+      <Step title="Check current size" icon="magnifying-glass">
         ```bash title="Show current volume size"
         openstack volume show <volume-name-or-id> -c size -c status
         ```
@@ -124,7 +124,7 @@ additional capacity. The correct command depends on the filesystem type.
 
     <Check>XFS filesystem grown to the new volume size.</Check>
   </Tab>
-  <Tab title="LVM (logical volume)" icon="layers">
+  <Tab title="LVM (logical volume)" icon="layer-group">
     If the volume contains an LVM physical volume, resize the PV and LV separately:
 
     ```bash title="Resize physical volume"
@@ -148,7 +148,7 @@ additional capacity. The correct command depends on the filesystem type.
 ## Troubleshooting
 
 <AccordionGroup>
-  <Accordion title="Extension fails with 'Invalid volume: Volume status must be available or in-use'" icon="triangle-alert">
+  <Accordion title="Extension fails with 'Invalid volume: Volume status must be available or in-use'" icon="triangle-exclamation">
     **Cause**: The volume is in an intermediate state (`creating`, `deleting`, `error`,
     or `migrating`) that does not permit size changes.
 
@@ -169,7 +169,7 @@ additional capacity. The correct command depends on the filesystem type.
     Verify with `df -h` that the new capacity is visible.
   </Accordion>
 
-  <Accordion title="resize2fs reports 'No space left on device'" icon="circle-x">
+  <Accordion title="resize2fs reports 'No space left on device'" icon="circle-xmark">
     **Cause**: The filesystem resize is being attempted on a device that has not yet
     been extended at the block level, or the extension has not propagated to the guest.
 

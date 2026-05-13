@@ -37,7 +37,7 @@ default pool; additional pools can be used for L7 policy-based routing.
         Open your load balancer in **Network > Load Balancers** and select
         the **Pools** tab. Click **Create Pool**.
       </Step>
-      <Step title="Configure the pool" icon="settings">
+      <Step title="Configure the pool" icon="gear">
         | Field | Description |
         |-------|-------------|
         | **Name** | Pool display name |
@@ -130,7 +130,7 @@ member, enabling stateful applications to work behind the load balancer.
       --session-persistence type=HTTP_COOKIE
     ```
   </Tab>
-  <Tab title="Source IP" icon="network">
+  <Tab title="Source IP" icon="network-wired">
     Routes requests from the same client IP to the same member. Works at Layer 4 but
     breaks when clients are behind NAT with shared IP addresses:
     ```bash title="Create pool with source IP persistence"

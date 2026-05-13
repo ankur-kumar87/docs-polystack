@@ -106,7 +106,7 @@ original source volume and snapshot are unaffected.
       <Step title="Navigate to Snapshots" icon="compass">
         Navigate to **Storage > Volume Snapshots**.
       </Step>
-      <Step title="Create volume from snapshot" icon="rotate-ccw">
+      <Step title="Create volume from snapshot" icon="rotate-left">
         Click the **More** dropdown and select **Create Volume** on the desired snapshot. Configure the new
         volume name, type, and availability zone, then click **Confirm**.
 
@@ -125,7 +125,7 @@ original source volume and snapshot are unaffected.
   </Tab>
   <Tab title="CLI" icon="terminal">
     <Steps titleSize="h3">
-      <Step title="Create volume from snapshot" icon="rotate-ccw">
+      <Step title="Create volume from snapshot" icon="rotate-left">
         ```bash title="Restore snapshot to a new volume"
         openstack volume create \
           --snapshot my-snapshot-2026-03-18 \
@@ -191,7 +191,7 @@ original source volume and snapshot are unaffected.
     manual cleanup.
   </Accordion>
 
-  <Accordion title="Snapshot in 'error' status" icon="triangle-alert">
+  <Accordion title="Snapshot in 'error' status" icon="triangle-exclamation">
     **Cause**: The backend encountered an error during snapshot creation. Common causes
     include insufficient storage capacity or backend driver issues.
 

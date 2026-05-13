@@ -82,7 +82,7 @@ The gateway is enabled through **the deployment console** — there is no other 
 configuration path.
 
 <Steps titleSize="h3">
-  <Step title="Open the deployment console → Configuration" icon="settings">
+  <Step title="Open the deployment console → Configuration" icon="gear">
     From the deployment console, navigate to **Configuration**.
   </Step>
   <Step title="Enable the RBAC gateway" icon="toggle-right">
@@ -156,7 +156,7 @@ tag-conditioned.
     tag-conditioned (for example, *allow `changePassword` on `env=staging`
     instances only*).
   </Accordion>
-  <Accordion title="Compute — Snapshots, Images, Flavors, Keypairs, Server Groups, Templates" icon="layers">
+  <Accordion title="Compute — Snapshots, Images, Flavors, Keypairs, Server Groups, Templates" icon="layer-group">
     - **Instance Snapshots**: Edit, Browse Files (file-level recovery), Rollback,
       Create Instance, Create Volume, Delete
     - **Images**: Create, Edit, Browse Files, Create Instance, Create Volume, Delete;
@@ -190,7 +190,7 @@ tag-conditioned.
     **Volume Types** (admin): Create, Manage QoS, Set Provisioning, Manage Access,
     Create Encryption, Delete Encryption, Edit, Delete
   </Accordion>
-  <Accordion title="Network — Networks, Routers, Floating IPs, Security Groups, Ports, Load Balancers, DNS" icon="network">
+  <Accordion title="Network — Networks, Routers, Floating IPs, Security Groups, Ports, Load Balancers, DNS" icon="network-wired">
     - **Networks**: Create Network, Edit, Create Subnet, Delete
     - **Routers**: Create, Edit, Connect Subnet, Disconnect Subnet, Set Gateway,
       Close Gateway, Enable SNAT, Disable SNAT, Delete
@@ -219,7 +219,7 @@ tag-conditioned.
   <Accordion title="Orchestration — Stacks" icon="code">
     - **Stacks**: Create, Edit, Abandon, Delete
   </Accordion>
-  <Accordion title="Optimization (Resource Optimizer)" icon="rotate-cw">
+  <Accordion title="Optimization (Resource Optimizer)" icon="rotate-right">
     - **Audits**: Create, Delete
     - **Audit Templates**: Create, Delete
     - **Action Plans**: Start (execute the plan), Delete
@@ -231,7 +231,7 @@ tag-conditioned.
     - **Hosts**: Update, Delete
     - **Notifications**: Create, Delete
   </Accordion>
-  <Accordion title="Container Infrastructure — Clusters, Cluster Templates" icon="cpu">
+  <Accordion title="Container Infrastructure — Clusters, Cluster Templates" icon="microchip">
     - **Clusters**: Create, Delete, Get Cluster Config, Show Certificate, Sign
       Certificate, Resize, Upgrade, Launch Dashboard
     - **Cluster Templates**: Create, Edit, Create Cluster, Delete
@@ -279,7 +279,7 @@ here.
     The role selector at the top of the page lists every Custom role. System roles
     do not appear because they cannot be edited.
   </Step>
-  <Step title="Toggle privileges in the matrix" icon="grid">
+  <Step title="Toggle privileges in the matrix" icon="table-cells">
     Privileges are grouped by service (Compute, Storage, Network, Identity, Key
     Manager, Orchestration, Optimization, Instance HA, Container Infrastructure)
     and by category within each service (for example, **Instance Lifecycle**,
@@ -296,7 +296,7 @@ here.
     Conditions are reusable — one *"env=prod"* condition can be referenced by many
     grants.
   </Step>
-  <Step title="Preview Effective Rules" icon="flask-conical">
+  <Step title="Preview Effective Rules" icon="flask">
     Before saving, click **Preview Effective Rules** to simulate what a real user
     holding this role would be allowed to do against representative resources. The
     simulator runs the same enforcement engine the live request path uses.
@@ -341,7 +341,7 @@ These are example role designs you can build using the privilege matrix and tag
 conditions described above.
 
 <AccordionGroup>
-  <Accordion title="VM Power User — power on / off but cannot resize or edit" icon="power">
+  <Accordion title="VM Power User — power on / off but cannot resize or edit" icon="power-off">
     Grant `instance.start`, `instance.stop`, `instance.reboot`, `instance.suspend`,
     `instance.resume`, `instance.pause`, and `instance.unpause`. Withhold
     `instance.resize`, `instance.adjust_resources` (live resize), and
@@ -409,7 +409,7 @@ When Extended RBAC evaluates whether a request is allowed:
     The built-in `admin` role passes through unless `disable_admin_bypass` is set.
     An emergency override is available for incident response.
   </Step>
-  <Step title="Privilege lookup" icon="search">
+  <Step title="Privilege lookup" icon="magnifying-glass">
     Resolve the request to a privilege code. Unknown URLs fall through to allow
     (compatibility mode) by default; switch to fail-closed in strict deployments.
   </Step>
@@ -443,7 +443,7 @@ restarting any service.
 ## Best Practices
 
 <AccordionGroup>
-  <Accordion title="Start with built-in roles, add Custom roles only for exceptions" icon="layers">
+  <Accordion title="Start with built-in roles, add Custom roles only for exceptions" icon="layer-group">
     The built-in roles cover most cases. Reach for a Custom role when you have a
     specific exception — *"this team needs to resize but not delete"* — rather than
     rebuilding from scratch.
@@ -453,16 +453,16 @@ restarting any service.
     one Custom role per privilege scope, scoped to the relevant tag. Avoids
     combinatorial role explosion.
   </Accordion>
-  <Accordion title="Preview effective rules before you save" icon="flask-conical">
+  <Accordion title="Preview effective rules before you save" icon="flask">
     Use **Preview Effective Rules** on the RBAC Permissions page to simulate a
     role change against representative users and resources before applying it.
   </Accordion>
-  <Accordion title="Keep admin bypass on for break-glass" icon="alert-triangle">
+  <Accordion title="Keep admin bypass on for break-glass" icon="triangle-exclamation">
     Disabling admin bypass globally is rarely worth the operational risk. Audit
     the bypass log and tighten via `require_system_scope_for_admin` if your
     compliance framework requires project-scoped admin separation.
   </Accordion>
-  <Accordion title="Forward audit log to long-term storage" icon="archive">
+  <Accordion title="Forward audit log to long-term storage" icon="box-archive">
     The audit log retention defaults to one year. Forward to your SIEM or
     long-term object storage for longer compliance windows.
   </Accordion>

@@ -21,7 +21,7 @@ it records each resource transition with timestamps and error messages.
 ## Troubleshooting Reference
 
 <AccordionGroup>
-  <Accordion title="Stack stuck in CREATE_FAILED" icon="circle-x">
+  <Accordion title="Stack stuck in CREATE_FAILED" icon="circle-xmark">
     **Symptoms**: Stack creation stops and the status shows `CREATE_FAILED`. One or more
     resources show `CREATE_FAILED` in the resource list.
 
@@ -91,7 +91,7 @@ it records each resource transition with timestamps and error messages.
     </Warning>
   </Accordion>
 
-  <Accordion title="Template validation errors" icon="file-x">
+  <Accordion title="Template validation errors" icon="file">
     **Symptoms**: `openstack orchestration template validate` returns errors, or the
     Dashboard rejects the template at upload time.
 
@@ -139,7 +139,7 @@ it records each resource transition with timestamps and error messages.
     | Volume attachment fails because instance is still building | Add `depends_on: [my_instance]` to the `VolumeAttachment` resource |
   </Accordion>
 
-  <Accordion title="Nested stack errors" icon="layers">
+  <Accordion title="Nested stack errors" icon="layer-group">
     **Symptoms**: A parent stack fails or stalls because a child (nested) stack
     encounters an error.
 

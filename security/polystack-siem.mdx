@@ -19,11 +19,11 @@ the combined results in two Dashboard views:
   silences.
 
 <CardGroup cols={3}>
-  <Card title="Wazuh (HIDS)" icon="shield-alert" href="/security/wazuh" color="#bf9667">
+  <Card title="Wazuh (HIDS)" icon="shield-halved" href="/security/wazuh" color="#bf9667">
     Host intrusion detection, file integrity, vulnerability assessment, and rule-based
     threat correlation across every VM.
   </Card>
-  <Card title="Lynis" icon="list-checks" href="/security/lynis" color="#bf9667">
+  <Card title="Lynis" icon="list-check" href="/security/lynis" color="#bf9667">
     300+ on-host security audits with a hardening index score per node and prioritized
     remediation guidance.
   </Card>
@@ -102,7 +102,7 @@ across the cluster and links back to raw Wazuh, Lynis, or OpenSCAP output.
     or No volumes. Shows each attached volume with its encryption flag and size, so you
     can spot mixed-state VMs immediately.
   </Accordion>
-  <Accordion title="6. Microsegmentation" icon="network">
+  <Accordion title="6. Microsegmentation" icon="network-wired">
     Four sub-tabs for the micro-segmentation view:
     - **Security Groups** — every project security group with rule count, ingress / egress
       counts, a risk score (0-100) with color bar, risk level tag, Wide-Open flag, and
@@ -229,11 +229,11 @@ misconfiguration drift, OpenSCAP proves regulatory conformance.
 ## Tool Deep-Dives
 
 <CardGroup cols={3}>
-  <Card title="Wazuh" icon="shield-alert" href="/security/wazuh" color="#bf9667">
+  <Card title="Wazuh" icon="shield-halved" href="/security/wazuh" color="#bf9667">
     Architecture, agent deployment via Ansible or manual steps, detection rules, File
     Integrity Monitoring configuration, and the Wazuh Dashboard.
   </Card>
-  <Card title="Lynis" icon="list-checks" href="/security/lynis" color="#bf9667">
+  <Card title="Lynis" icon="list-check" href="/security/lynis" color="#bf9667">
     How the script runs, score interpretation, warnings vs suggestions, per-node and
     fleet-wide sweeps, and remediation workflows.
   </Card>
@@ -252,7 +252,7 @@ misconfiguration drift, OpenSCAP proves regulatory conformance.
     Open **Monitor Center → Security Posture → Overview**. The top-row **CIS Compliance**
     card shows the cluster-wide average across all scanned agents.
   </Accordion>
-  <Accordion title="Find out why one node's compliance score dropped" icon="trending-down">
+  <Accordion title="Find out why one node's compliance score dropped" icon="arrow-trend-down">
     In the **Compliance** tab, locate the node and click **Why?** next to its row. A modal
     lists every Lynis warning and suggestion with test IDs and remediation text.
   </Accordion>
@@ -260,15 +260,15 @@ misconfiguration drift, OpenSCAP proves regulatory conformance.
     Open the **Encryption** tab. Any instance tagged **Unencrypted** has at least one
     volume without encryption enabled.
   </Accordion>
-  <Accordion title="Find high-risk security groups" icon="triangle-alert">
+  <Accordion title="Find high-risk security groups" icon="triangle-exclamation">
     Open the **Microsegmentation → Security Groups** tab. Sort by Risk Score descending.
     Groups tagged **Wide-Open** are the most urgent to review.
   </Accordion>
-  <Accordion title="Export a snapshot for audit" icon="file-text">
+  <Accordion title="Export a snapshot for audit" icon="file-lines">
     Click **Export Report** on any Security Posture tab. The download is a timestamped CSV
     with agent, compliance, and vulnerability data for the entire cluster.
   </Accordion>
-  <Accordion title="Investigate a live Wazuh alert" icon="search">
+  <Accordion title="Investigate a live Wazuh alert" icon="magnifying-glass">
     In **Security Posture → Alerts**, expand the row to see the rule description and source
     IP. Click **Wazuh Dashboard** in the top-right to jump to the native UI for deeper
     forensic queries.
@@ -280,10 +280,10 @@ misconfiguration drift, OpenSCAP proves regulatory conformance.
 ## Next Steps
 
 <CardGroup cols={2}>
-  <Card title="Wazuh Deep Dive" icon="shield-alert" href="/security/wazuh" color="#bf9667">
+  <Card title="Wazuh Deep Dive" icon="shield-halved" href="/security/wazuh" color="#bf9667">
     Architecture, agent deployment, ruleset, File Integrity Monitoring
   </Card>
-  <Card title="Lynis Deep Dive" icon="list-checks" href="/security/lynis" color="#bf9667">
+  <Card title="Lynis Deep Dive" icon="list-check" href="/security/lynis" color="#bf9667">
     Run audits, interpret the hardening index, fleet sweeps
   </Card>
   <Card title="OpenSCAP Deep Dive" icon="clipboard-check" href="/security/openscap" color="#bf9667">

@@ -41,7 +41,7 @@ auto-generates the required pool, CRUSH rule, and block storage backend configur
 ## Configuring Tiers via the deployment console
 
 <Steps titleSize="h3">
-  <Step title="Open Storage Tiers panel" icon="layers">
+  <Step title="Open Storage Tiers panel" icon="layer-group">
     Navigate to **the deployment console → Configuration → Storage Tiers**.
 
     The panel displays detected device classes in the cluster and lets you define
@@ -95,7 +95,7 @@ For environments where the deployment console is not managing tier configuration
     ceph osd pool application enable volumes-nvme rbd
     ```
   </Tab>
-  <Tab title="Register Cinder Backend" icon="settings">
+  <Tab title="Register Cinder Backend" icon="gear">
     Add the new backend to your Cinder configuration (managed by the deployment console via
     `globals.d/_50_ceph_tiers.yml`):
 
@@ -136,7 +136,7 @@ For environments where the deployment console is not managing tier configuration
 
     The `volume_backend_name` extra spec should match the Cinder backend name.
   </Tab>
-  <Tab title="Test Volume Creation" icon="flask-conical">
+  <Tab title="Test Volume Creation" icon="flask">
     ```bash title="Create a test volume on the NVMe tier"
     openstack volume create \
       --size 10 \

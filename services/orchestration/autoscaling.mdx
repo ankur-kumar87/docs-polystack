@@ -326,7 +326,7 @@ groups:
         `scale_out_url` and `scale_in_url` — these are used as Alertmanager webhook
         receiver URLs.
       </Step>
-      <Step title="Manually trigger scale-out" icon="trending-up">
+      <Step title="Manually trigger scale-out" icon="arrow-trend-up">
         To test scaling without waiting for an alert, send an HTTP POST to the signal URL:
 
         ```bash title="Trigger scale-out via webhook"
@@ -370,7 +370,7 @@ groups:
 
         Store these URLs in your Alertmanager webhook receiver configuration.
       </Step>
-      <Step title="Trigger scale-out manually" icon="trending-up">
+      <Step title="Trigger scale-out manually" icon="arrow-trend-up">
         ```bash title="Signal scale-out"
         SCALE_OUT_URL=$(openstack stack output show web-asg-stack scale_out_url \
           -c output_value -f value)
@@ -383,7 +383,7 @@ groups:
 
         <Check>The auto-scaling group shows one additional member instance.</Check>
       </Step>
-      <Step title="Check current group size" icon="bar-chart">
+      <Step title="Check current group size" icon="chart-bar">
         ```bash title="Show current instance count"
         openstack stack output show web-asg-stack current_size -c output_value -f value
         ```
@@ -416,7 +416,7 @@ Cooldown prevents rapid successive scaling events from destabilizing your worklo
 ## Troubleshooting
 
 <AccordionGroup>
-  <Accordion title="Stack fails to create with CREATE_FAILED" icon="circle-x">
+  <Accordion title="Stack fails to create with CREATE_FAILED" icon="circle-xmark">
     **Cause**: Insufficient quota, unavailable flavor, or invalid image name.
 
     **Resolution**:
@@ -441,7 +441,7 @@ Cooldown prevents rapid successive scaling events from destabilizing your worklo
     the current URL after any stack update.
   </Accordion>
 
-  <Accordion title="Auto-scaling group does not grow beyond min_size" icon="trending-up">
+  <Accordion title="Auto-scaling group does not grow beyond min_size" icon="arrow-trend-up">
     **Cause**: Alertmanager is not reaching the signal URL, or the Prometheus alert is not
     firing.
 

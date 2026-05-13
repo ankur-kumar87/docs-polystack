@@ -67,7 +67,7 @@ failures or data source connectivity, see the
     issue.
   </Accordion>
 
-  <Accordion title="Action fails with migration error" icon="circle-x">
+  <Accordion title="Action fails with migration error" icon="circle-xmark">
     **Cause**: A live migration failed — commonly due to insufficient memory on the
     target host, a CPU model incompatibility between source and destination hosts, or
     a storage connectivity issue.
@@ -89,7 +89,7 @@ failures or data source connectivity, see the
     After resolving the root cause, create a new audit to generate a fresh plan.
   </Accordion>
 
-  <Accordion title="Action plan shows CANCELLED state" icon="x-circle">
+  <Accordion title="Action plan shows CANCELLED state" icon="circle-xmark">
     **Cause**: A previous action in the plan failed, causing the Applier to halt and
     cancel all remaining actions automatically.
 

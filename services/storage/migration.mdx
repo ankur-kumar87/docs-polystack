@@ -42,11 +42,11 @@ Volume migration copies all volume data to a different backend while preserving 
 <Tabs>
   <Tab title="Dashboard" icon="gauge">
     <Steps titleSize="h3">
-      <Step title="Locate the volume" icon="search">
+      <Step title="Locate the volume" icon="magnifying-glass">
         Navigate to
         **Storage > Volumes** (admin view). Use the search or filter to find the target volume.
       </Step>
-      <Step title="Initiate migration" icon="move">
+      <Step title="Initiate migration" icon="arrows-up-down-left-right">
         Click the **More** dropdown and select **Migrate**. Select the destination backend from the
         **Destination Host** dropdown.
 
@@ -77,12 +77,12 @@ Volume migration copies all volume data to a different backend while preserving 
         Note the host name in the format `<service>@<backend-name>#<pool>` from the
         `Host` column — use this value for the `--host` parameter.
       </Step>
-      <Step title="Check source volume location" icon="search">
+      <Step title="Check source volume location" icon="magnifying-glass">
         ```bash title="Show current backend for volume"
         openstack volume show <volume-id> -c os-vol-host-attr:host
         ```
       </Step>
-      <Step title="Initiate migration" icon="move">
+      <Step title="Initiate migration" icon="arrows-up-down-left-right">
         ```bash title="Migrate volume to new backend"
         openstack volume migrate \
           --host <destination-host> \
@@ -133,7 +133,7 @@ To retire a backend, migrate all volumes off it before decommissioning:
       cinder-volume
     ```
   </Step>
-  <Step title="Migrate all volumes" icon="move">
+  <Step title="Migrate all volumes" icon="arrows-up-down-left-right">
     Run migration for each volume listed in Step 1:
     ```bash title="Migrate each volume"
     openstack volume migrate --host <destination-host> <volume-id>

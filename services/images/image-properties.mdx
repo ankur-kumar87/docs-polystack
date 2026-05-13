@@ -40,7 +40,7 @@ launch failures from under-resourced flavors.
 <Tabs>
   <Tab title="Dashboard" icon="gauge">
     <Steps titleSize="h3">
-      <Step title="Open image details" icon="disc">
+      <Step title="Open image details" icon="compact-disc">
         Navigate to **Compute > Images** and click the image name.
       </Step>
       <Step title="Edit basic properties">
@@ -96,7 +96,7 @@ launch failures from under-resourced flavors.
           ubuntu-24.04-lts
         ```
       </Step>
-      <Step title="Verify properties were applied" icon="search">
+      <Step title="Verify properties were applied" icon="magnifying-glass">
         ```bash title="Show image properties"
         openstack image show ubuntu-24.04-lts -c properties
         ```
@@ -111,7 +111,7 @@ launch failures from under-resourced flavors.
 ## Hardware Configuration Examples
 
 <AccordionGroup>
-  <Accordion title="Modern Linux with UEFI boot" icon="settings" defaultOpen>
+  <Accordion title="Modern Linux with UEFI boot" icon="gear" defaultOpen>
     ```bash title="Ubuntu 24.04 / RHEL 9 UEFI configuration"
     openstack image set \
       --property hw_firmware_type=uefi \
@@ -122,7 +122,7 @@ launch failures from under-resourced flavors.
       ubuntu-24.04-lts
     ```
   </Accordion>
-  <Accordion title="Windows Server with VirtIO drivers" icon="app-window">
+  <Accordion title="Windows Server with VirtIO drivers" icon="window-maximize">
     ```bash title="Windows Server 2022 configuration"
     openstack image set \
       --property hw_firmware_type=uefi \

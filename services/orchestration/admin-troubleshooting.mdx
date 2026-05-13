@@ -20,7 +20,7 @@ service log files and `openstack orchestration service list` as primary diagnost
 ## Diagnostic Reference
 
 <AccordionGroup>
-  <Accordion title="Engine workers not processing stacks" icon="circle-x">
+  <Accordion title="Engine workers not processing stacks" icon="circle-xmark">
     **Symptoms**: Stacks remain in `CREATE_IN_PROGRESS` indefinitely. No events appear
     in `openstack stack event list`. `openstack orchestration service list` shows engine
     workers as `down`.
@@ -117,7 +117,7 @@ service log files and `openstack orchestration service list` as primary diagnost
     | Polystack Identity service unreachable from engine | Check network connectivity between the engine container and port 5000 |
   </Accordion>
 
-  <Accordion title="Resource plugin fails to load or raises errors" icon="puzzle-x">
+  <Accordion title="Resource plugin fails to load or raises errors" icon="puzzle-piece">
     **Symptoms**: Specific resource types consistently fail with `InvalidTemplateVersion`
     or `ResourceTypeUnavailable`. The engine log shows import errors.
 

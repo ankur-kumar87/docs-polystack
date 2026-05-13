@@ -50,10 +50,10 @@ Both settings live in the **Create Instance** wizard at:
   <Step title="Start Create Instance" icon="server">
     From the Polystack Dashboard, go to **Compute → Instances** and click **Create Instance**.
   </Step>
-  <Step title="Complete Base Config and Network Config" icon="network">
+  <Step title="Complete Base Config and Network Config" icon="network-wired">
     Pick the image or boot source, flavor, and networks in the first two wizard steps.
   </Step>
-  <Step title="Open Advanced Options in System Config" icon="settings">
+  <Step title="Open Advanced Options in System Config" icon="gear">
     In **Step 3 — System Config**, scroll down and click **Advanced Options** to expand
     the additional settings panel. **Virtual TPM** and **Secure Boot** appear as
     checkboxes near the bottom of this panel.
@@ -78,7 +78,7 @@ by a key managed by Polystack KMS.
 ### Enabling vTPM
 
 <Steps titleSize="h3">
-  <Step title="Tick Virtual TPM" icon="shield-check">
+  <Step title="Tick Virtual TPM" icon="shield-halved">
     In the Advanced Options panel, select the **Virtual TPM** checkbox
     (*"Attach a virtual TPM device to this instance"*). Two new fields appear.
   </Step>
@@ -90,7 +90,7 @@ by a key managed by Polystack KMS.
     | **TPM 2.0** | Recommended default. Required for Windows 11, modern Linux distributions |
     | **TPM 1.2** | Legacy compatibility only — older operating systems |
   </Step>
-  <Step title="Choose a vTPM Model" icon="cpu">
+  <Step title="Choose a vTPM Model" icon="microchip">
     Pick the virtual TPM hardware interface:
 
     | Option | When to use |
@@ -121,11 +121,11 @@ by a key managed by Polystack KMS.
     Linux guests can store LUKS unlock keys in the vTPM with tools like
     `clevis tpm2 bind` — no boot-time passphrase prompt.
   </Card>
-  <Card title="Measured Boot" icon="list-checks" color="#bf9667">
+  <Card title="Measured Boot" icon="list-check" color="#bf9667">
     The vTPM records a cryptographic measurement of the boot chain, enabling remote
     attestation of the guest's boot integrity.
   </Card>
-  <Card title="Windows 11 Hardware Requirements" icon="monitor" color="#bf9667">
+  <Card title="Windows 11 Hardware Requirements" icon="desktop" color="#bf9667">
     Windows 11 installation requires TPM 2.0 — vTPM satisfies this without any physical
     hardware.
   </Card>
@@ -192,7 +192,7 @@ for Windows 11, hardened Linux workloads, and any guest that uses TPM-backed dis
 with measured boot.
 
 <CardGroup cols={2}>
-  <Card title="Windows 11 hardened VM" icon="monitor" color="#bf9667">
+  <Card title="Windows 11 hardened VM" icon="desktop" color="#bf9667">
     vTPM 2.0 (tpm-crb) + Secure Boot (Required). BitLocker auto-seals keys to the vTPM
     and Secure Boot blocks unsigned drivers.
   </Card>
@@ -233,15 +233,15 @@ launching.
 ## Troubleshooting
 
 <AccordionGroup>
-  <Accordion title="The vTPM or Secure Boot checkbox is grayed out" icon="circle-x">
+  <Accordion title="The vTPM or Secure Boot checkbox is grayed out" icon="circle-xmark">
     Polystack KMS is not enabled on the cluster. Ask your administrator to enable the Key
     Manager service in the deployment console, then refresh the wizard.
   </Accordion>
-  <Accordion title="Instance fails to start with Secure Boot = Required" icon="triangle-alert">
+  <Accordion title="Instance fails to start with Secure Boot = Required" icon="triangle-exclamation">
     The image is not UEFI-capable or does not ship signed bootloaders. Either switch the
     mode to **Optional**, or rebuild the image with a UEFI-compatible distribution.
   </Accordion>
-  <Accordion title="Windows 11 installer does not detect a TPM" icon="monitor">
+  <Accordion title="Windows 11 installer does not detect a TPM" icon="desktop">
     The vTPM was not enabled at launch. You cannot add vTPM to an existing instance —
     create a new instance with vTPM ticked, or migrate the workload.
   </Accordion>

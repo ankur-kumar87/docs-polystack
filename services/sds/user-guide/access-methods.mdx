@@ -40,7 +40,7 @@ supported access methods with configuration steps for each.
         Log in to the **Polystack Dashboard** (`https://connect.<your-domain>`) and navigate to
         **Project → Volumes → Volumes**.
       </Step>
-      <Step title="Manage volumes" icon="settings">
+      <Step title="Manage volumes" icon="gear">
         From the volume list you can:
         - **Create** a new volume (click **Create Volume**)
         - **Attach/Detach** volumes to instances (via the Actions menu)
@@ -157,7 +157,7 @@ tool that supports the AWS S3 API can connect to Software-Defined-Storage withou
         In the Polystack Dashboard, navigate to **Project → Object Store → Access Keys**
         and click **Create Key**.
       </Step>
-      <Step title="Save your credentials" icon="file-text">
+      <Step title="Save your credentials" icon="file-lines">
         The Access Key ID and Secret Access Key are shown once. Store them securely
         — they cannot be retrieved after the dialog is closed.
 
@@ -244,7 +244,7 @@ tool that supports the AWS S3 API can connect to Software-Defined-Storage withou
           /mnt/shared-data
         ```
       </Step>
-      <Step title="Persist mount across reboots" icon="file-text">
+      <Step title="Persist mount across reboots" icon="file-lines">
         Add to `/etc/fstab`:
         ```bash title="/etc/fstab entry"
         <gateway-ip>:/<share-path>  /mnt/shared-data  nfs  vers=4,rw,hard,intr  0  0
@@ -254,7 +254,7 @@ tool that supports the AWS S3 API can connect to Software-Defined-Storage withou
       </Step>
     </Steps>
   </Tab>
-  <Tab title="SMB (Windows)" icon="monitor">
+  <Tab title="SMB (Windows)" icon="desktop">
     <Steps titleSize="h3">
       <Step title="Get the SMB share path" icon="folder-open">
         Navigate to **Project → Shared File Systems → Shares** and note the SMB

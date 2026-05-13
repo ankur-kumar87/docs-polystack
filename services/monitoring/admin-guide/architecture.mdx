@@ -20,7 +20,7 @@ resource allocation for the monitoring platform itself.
     Monitoring services are enabled and configured through the the deployment console Configuration panel:
 
     <Steps titleSize="h3">
-      <Step title="Open Configuration" icon="settings">
+      <Step title="Open Configuration" icon="gear">
         Navigate to **the deployment console → Configuration** and select the **Monitoring** tab.
       </Step>
       <Step title="Enable monitoring components" icon="toggle-left">
@@ -127,7 +127,7 @@ graph TD
     Default scrape interval: **30 seconds**
   </Accordion>
 
-  <Accordion title="Log Collector" icon="file-text">
+  <Accordion title="Log Collector" icon="file-lines">
     The Log Collector tails configured log file paths and forwards events to the
     Log Index. It handles:
     - Multi-line log entries (stack traces, long SQL queries)
@@ -165,7 +165,7 @@ graph TD
     - Alert Engine evaluates all rules
     - Estimated resources: 8 vCPU, 32 GB RAM, 2 TB SSD storage
   </Tab>
-  <Tab title="Scaled (Multi-Node Monitoring)" icon="layers">
+  <Tab title="Scaled (Multi-Node Monitoring)" icon="layer-group">
     For larger environments (50+ nodes) or high-cardinality metric workloads,
     distribute Monitoring services:
 

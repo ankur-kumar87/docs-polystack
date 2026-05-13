@@ -49,7 +49,7 @@ graph LR
 <Tabs>
   <Tab title="Web Console" icon="gauge">
     <Steps titleSize="h3">
-      <Step title="Open Global Configuration" icon="settings">
+      <Step title="Open Global Configuration" icon="gear">
         Log in to the deployment console and navigate to **Configuration → Global Settings**.
       </Step>
       <Step title="Enable TLS Scopes" icon="lock">
@@ -143,7 +143,7 @@ Import this CA certificate into your browser, operating system trust store, or c
 ### CA-Signed Certificates
 
 <Steps titleSize="h3">
-  <Step title="Generate a CSR" icon="file-text">
+  <Step title="Generate a CSR" icon="file-lines">
     ```bash title="Generate certificate signing request"
     openssl req -new -newkey rsa:4096 -nodes \
       -keyout haproxy.key \

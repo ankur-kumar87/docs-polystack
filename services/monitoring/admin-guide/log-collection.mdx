@@ -51,7 +51,7 @@ ingestion issues.
       </Step>
     </Steps>
   </Tab>
-  <Tab title="Configuration File" icon="file-text">
+  <Tab title="Configuration File" icon="file-lines">
     Log sources can also be defined in `/etc/monitoring/log-sources.yaml` on the managed node:
 
     ```yaml title="/etc/monitoring/log-sources.yaml"
@@ -93,7 +93,7 @@ Services that write to syslog rather than log files can forward directly to Moni
 syslog receiver.
 
 <Steps titleSize="h3">
-  <Step title="Configure rsyslog forwarding" icon="send">
+  <Step title="Configure rsyslog forwarding" icon="paper-plane">
     Add a forwarding rule to `/etc/rsyslog.d/99-monitoring.conf` on the source node:
 
     ```bash title="/etc/rsyslog.d/99-monitoring.conf"
@@ -106,7 +106,7 @@ syslog receiver.
       messages under high log volume and is not recommended for production.
     </Note>
   </Step>
-  <Step title="Reload rsyslog" icon="refresh-cw">
+  <Step title="Reload rsyslog" icon="arrows-rotate">
     ```bash title="Reload rsyslog"
     systemctl reload rsyslog
     ```

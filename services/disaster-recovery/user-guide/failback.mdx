@@ -36,7 +36,7 @@ synchronized back.
         returns to **Healthy**. Run a connectivity test from the DR site if available
         by clicking **Test Connectivity** on the site entry.
       </Step>
-      <Step title="Reverse replication" icon="refresh-cw">
+      <Step title="Reverse replication" icon="arrows-rotate">
         Select the protection plan and click **Reverse Replication**. Disaster Recovery syncs
         changed data from the DR site back to the primary site.
 
@@ -58,7 +58,7 @@ synchronized back.
         Typical failback cutover time is 10–30 minutes depending on the number of
         instances and the recovery runbook complexity.
       </Step>
-      <Step title="Execute failback" icon="rotate-ccw">
+      <Step title="Execute failback" icon="rotate-left">
         Once sync is complete and the maintenance window begins, click **Failback**.
         The runbook executes in reverse priority order:
         1. Services stop on the DR site
@@ -103,7 +103,7 @@ After failback completes, restore normal operations:
     Confirm the protection plan is replicating from the primary site back to the DR site.
     The plan should return to normal `ACTIVE` status with lag within RPO target.
   </Step>
-  <Step title="Document the incident" icon="file-text">
+  <Step title="Document the incident" icon="file-lines">
     Record the failover and failback timeline, data loss (if any), actual RTO achieved,
     and any issues encountered during the recovery. Update the DR runbook if procedures
     need to be adjusted.

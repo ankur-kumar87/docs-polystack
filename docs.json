@@ -13,7 +13,7 @@
   },
   "favicon": "/images/polystack-favicon.png",
   "icons": {
-    "library": "lucide"
+    "library": "fontawesome"
   },
   "interaction": {
     "drilldown": false

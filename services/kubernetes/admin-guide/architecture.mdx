@@ -68,7 +68,7 @@ graph TD
 
     Deployed as: `magnum_api` container on controller nodes, behind the load balancer.
   </Accordion>
-  <Accordion title="Conductor" icon="cpu">
+  <Accordion title="Conductor" icon="microchip">
     Long-running worker that executes cluster lifecycle operations. For each operation,
     it creates or updates an Orchestration stack, monitors stack progress, and updates
     cluster status in the database.
@@ -82,7 +82,7 @@ graph TD
 
     Schema includes: `cluster`, `cluster_template`, `nodegroup`, `x509keypair` tables.
   </Accordion>
-  <Accordion title="Orchestration Templates" icon="layers">
+  <Accordion title="Orchestration Templates" icon="layer-group">
     Each cluster driver (kubernetes) ships Heat templates that describe the full cluster
     resource stack: VM instances, network ports, floating IPs, security groups, LB members,
     and node bootstrap scripts.

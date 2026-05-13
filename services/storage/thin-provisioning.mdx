@@ -49,7 +49,7 @@ Polystack Block Storage supports both thin and thick provisioning models. Thin p
     </Tip>
   </Accordion>
 
-  <Accordion title="LVM — configure thin pools" icon="layers">
+  <Accordion title="LVM — configure thin pools" icon="layer-group">
     LVM uses thick provisioning by default. To enable thin provisioning, create a thin pool in the volume group before configuring Cinder, then set `lvm_type = thin` in the backend section.
 
     **Step 1: Create the thin pool**
@@ -108,7 +108,7 @@ Polystack Block Storage supports both thin and thick provisioning models. Thin p
     ```
   </Accordion>
 
-  <Accordion title="Pure Storage — thin by default" icon="zap">
+  <Accordion title="Pure Storage — thin by default" icon="bolt">
     Pure Storage FlashArray volumes are thin-provisioned by default. The array reports the provisioned size to the scheduler, not physical consumption. No additional configuration is needed.
 
     ```ini title="cinder.conf — Pure Storage thin provisioning"
@@ -148,7 +148,7 @@ reserved_percentage = 5
 ## Monitor Overcommit and Capacity
 
 <Tabs>
-  <Tab title="Dashboard" icon="monitor">
+  <Tab title="Dashboard" icon="desktop">
     Navigate to **Storage > Storage Backends** (admin view) to view backend capacity statistics. The **Free Capacity** and **Total Capacity** columns show the physical pool state reported by each backend driver.
 
     For provisioned-vs-physical overcommit visibility, use the Monitoring monitoring dashboard to track Cinder backend pool utilization over time.

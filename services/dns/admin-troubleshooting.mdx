@@ -56,7 +56,7 @@ dig @<nameserver-ip> example.com. SOA +norecurse
     files deployed by the deployment console.
   </Accordion>
 
-  <Accordion title="Zone changes not propagating to nameservers" icon="refresh-cw">
+  <Accordion title="Zone changes not propagating to nameservers" icon="arrows-rotate">
     **Cause**: The DNS worker may be unable to push updates to backend nameservers.
 
     **Resolution**:
@@ -75,7 +75,7 @@ dig @<nameserver-ip> example.com. SOA +norecurse
        while investigating
   </Accordion>
 
-  <Accordion title="Inconsistent answers from different nameservers" icon="git-branch">
+  <Accordion title="Inconsistent answers from different nameservers" icon="code-branch">
     **Cause**: Zone synchronization lag — one nameserver received the update while another
     did not.
 

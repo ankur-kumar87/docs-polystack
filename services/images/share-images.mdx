@@ -72,7 +72,7 @@ accept the share before the image becomes visible in their catalog.
       <Step title="Authenticate" icon="key">
         <CliAuth />
       </Step>
-      <Step title="Change visibility to shared" icon="share-2">
+      <Step title="Change visibility to shared" icon="share-nodes">
         ```bash title="Set image visibility to shared"
         openstack image set --shared ubuntu-24.04-lts
         ```
@@ -82,7 +82,7 @@ accept the share before the image becomes visible in their catalog.
         openstack image add project ubuntu-24.04-lts <TARGET_PROJECT_ID>
         ```
       </Step>
-      <Step title="Verify member was added" icon="search">
+      <Step title="Verify member was added" icon="magnifying-glass">
         ```bash title="List current image members"
         openstack image member list ubuntu-24.04-lts
         ```

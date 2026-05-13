@@ -25,7 +25,7 @@ complete security hardening checklist for production Identity deployments.
     an MFA enforcement rule via the Identity service policy to block admin token issuance
     without a valid TOTP factor.
   </Card>
-  <Card title="Rotate Fernet Keys" icon="rotate-cw" color="#bf9667">
+  <Card title="Rotate Fernet Keys" icon="rotate-right" color="#bf9667">
     Schedule automated key rotation every 24 hours. the deployment console includes a cron-based rotation
     playbook that synchronizes keys across all Identity API nodes simultaneously.
   </Card>
@@ -34,7 +34,7 @@ complete security hardening checklist for production Identity deployments.
     credentials with explicit expiry dates for automation pipelines instead of long-lived
     user tokens.
   </Card>
-  <Card title="Audit Role Assignments" icon="search" color="#bf9667">
+  <Card title="Audit Role Assignments" icon="magnifying-glass" color="#bf9667">
     Review role assignments quarterly. Remove the `admin` role from any account that no
     longer requires elevated access. Export full audit reports regularly.
   </Card>
@@ -72,7 +72,7 @@ ironcore-ansible deploy --tags keystone
     ```
     Expected: `600 keystone:keystone` for all key files.
   </Step>
-  <Step title="Configure automated rotation" icon="rotate-cw">
+  <Step title="Configure automated rotation" icon="rotate-right">
     ```yaml title="the deployment console globals: automated Fernet rotation"
     keystone_fernet_key_rotation: "0 */24 * * *"
     keystone_fernet_max_active_keys: 3
@@ -124,7 +124,7 @@ openstack role assignment list \
 ## Network-Level Controls
 
 <AccordionGroup>
-  <Accordion title="Restrict Identity API access" icon="network" defaultOpen>
+  <Accordion title="Restrict Identity API access" icon="network-wired" defaultOpen>
     The Identity API public endpoint (port 5000) should be accessible only from:
     - Internal cluster networks
     - VPN or bastion hosts for administrative access

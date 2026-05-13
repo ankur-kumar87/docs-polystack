@@ -49,7 +49,7 @@ Polystack Networking supports four QoS rule types. Multiple rules of different t
       <Step title="Navigate to QoS Policies" icon="compass">
         Navigate to **Network > QoS Policies** (admin view). Click **Create Policy**.
       </Step>
-      <Step title="Define the policy" icon="settings">
+      <Step title="Define the policy" icon="gear">
         | Field | Value | Description |
         |-------|-------|-------------|
         | **Name** | e.g., `10mbps-limit` | Descriptive label for the policy |
@@ -113,7 +113,7 @@ Polystack Networking supports four QoS rule types. Multiple rules of different t
         openstack port set <port-id> --qos-policy 10mbps-limit
         ```
       </Step>
-      <Step title="Apply to a network" icon="network">
+      <Step title="Apply to a network" icon="network-wired">
         ```bash title="Apply QoS policy to an entire network"
         openstack network set app-network --qos-policy 10mbps-limit
         ```
@@ -239,7 +239,7 @@ Minimum bandwidth rules provide a throughput floor — a guarantee that the port
     openstack network qos rule list 10mbps-limit
     ```
   </Tab>
-  <Tab title="Update Rules" icon="settings">
+  <Tab title="Update Rules" icon="gear">
     ```bash title="Update bandwidth limit rule"
     openstack network qos rule set 10mbps-limit <rule-id> \
       --max-kbps 20480 \
@@ -326,11 +326,11 @@ Confirm QoS enforcement is active after applying a policy:
 ## Best Practices
 
 <CardGroup cols={2}>
-  <Card title="Tiered Policy Names" icon="layers" color="#bf9667">
+  <Card title="Tiered Policy Names" icon="layer-group" color="#bf9667">
     Create named tiers — `bronze-10mbps`, `silver-100mbps`, `gold-1gbps` — and share them
     across projects for consistent, predictable service levels.
   </Card>
-  <Card title="Apply at Network Level" icon="network" color="#bf9667">
+  <Card title="Apply at Network Level" icon="network-wired" color="#bf9667">
     Apply QoS to networks for automatic inheritance. Override at the port level only
     for exceptions that need different treatment from the network default.
   </Card>
@@ -376,7 +376,7 @@ Confirm QoS enforcement is active after applying a policy:
     ```
     Remove assignments from each port, then retry the delete.
   </Accordion>
-  <Accordion title="Minimum bandwidth rule creation fails" icon="circle-x">
+  <Accordion title="Minimum bandwidth rule creation fails" icon="circle-xmark">
     **Cause**: Minimum bandwidth rules require SR-IOV hardware and a compatible backend (OVS-DPDK or SR-IOV). Standard OVS does not support minimum bandwidth enforcement.
 
     **Resolution**: Use bandwidth limit rules for maximum throughput control on standard OVS ports. Deploy SR-IOV ports for guaranteed minimum bandwidth requirements.

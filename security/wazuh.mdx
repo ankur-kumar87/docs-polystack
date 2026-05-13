@@ -48,10 +48,10 @@ graph LR
 ## Capabilities
 
 <CardGroup cols={2}>
-  <Card title="File Integrity Monitoring" icon="file-scan" color="#bf9667">
+  <Card title="File Integrity Monitoring" icon="file-magnifying-glass" color="#bf9667">
     Track every create, modify, and delete on monitored paths. Alert on unauthorized changes to `/etc/passwd`, SSH keys, cron files, and application configs.
   </Card>
-  <Card title="Intrusion Detection" icon="shield-alert" color="#bf9667">
+  <Card title="Intrusion Detection" icon="shield-halved" color="#bf9667">
     Real-time log analysis against MITRE ATT&CK-mapped rules. Detects brute-force attempts, privilege escalation, rootkits, and lateral movement.
   </Card>
   <Card title="Vulnerability Assessment" icon="bug" color="#bf9667">
@@ -81,7 +81,7 @@ graph LR
   </Tab>
   <Tab title="Linux (Manual)" icon="terminal">
     <Steps titleSize="h3">
-      <Step title="Add the Wazuh repository" icon="package">
+      <Step title="Add the Wazuh repository" icon="box">
         ```bash title="Add repository and install agent"
         curl -s https://packages.wazuh.com/key/GPG-KEY-WAZUH | gpg --dearmor \
           -o /usr/share/keyrings/wazuh.gpg
@@ -93,7 +93,7 @@ graph LR
         apt-get update && apt-get install -y wazuh-agent
         ```
       </Step>
-      <Step title="Configure the manager address" icon="settings">
+      <Step title="Configure the manager address" icon="gear">
         ```bash title="Set Wazuh Manager IP"
         sed -i 's|MANAGER_IP|<YOUR_MANAGER_IP>|g' /var/ossec/etc/ossec.conf
         ```
@@ -107,12 +107,12 @@ graph LR
       </Step>
     </Steps>
   </Tab>
-  <Tab title="Windows" icon="monitor">
+  <Tab title="Windows" icon="desktop">
     <Steps titleSize="h3">
       <Step title="Download and install the MSI" icon="download">
         Download the Wazuh Windows agent MSI from the Wazuh Manager dashboard under **Agents → Deploy new agent**.
       </Step>
-      <Step title="Install with manager address" icon="settings">
+      <Step title="Install with manager address" icon="gear">
         ```powershell title="Silent install with manager configuration"
         msiexec /i wazuh-agent.msi /q `
           WAZUH_MANAGER="<MANAGER_IP>" `

@@ -43,7 +43,7 @@ configuration failures or quota enforcement problems, refer to the
     If the image is missing, ask your administrator to upload the required image.
   </Accordion>
 
-  <Accordion title="kubectl connection refused or timeout" icon="network">
+  <Accordion title="kubectl connection refused or timeout" icon="network-wired">
     **Cause**: The cluster API server endpoint is unreachable. The master load balancer
     floating IP may not have been allocated, or a security group rule is blocking
     port 6443.
@@ -72,7 +72,7 @@ configuration failures or quota enforcement problems, refer to the
     Ensure inbound TCP port 6443 is permitted from your management network.
   </Accordion>
 
-  <Accordion title="Nodes in NotReady state" icon="circle-alert">
+  <Accordion title="Nodes in NotReady state" icon="circle-exclamation">
     **Cause**: The container network interface plugin has not initialized, the node is
     still bootstrapping, or the node has run out of resources.
 
@@ -95,7 +95,7 @@ configuration failures or quota enforcement problems, refer to the
     install correctly, the node may need to be replaced (scale down then back up).
   </Accordion>
 
-  <Accordion title="Cluster upgrade fails mid-way" icon="circle-x">
+  <Accordion title="Cluster upgrade fails mid-way" icon="circle-xmark">
     **Cause**: A node replacement failed during the rolling upgrade — commonly due to
     quota exhaustion or an image pull failure on the replacement node.
 

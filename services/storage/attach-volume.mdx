@@ -57,7 +57,7 @@ Attaching a volume connects a persistent block device to a running compute insta
       <Step title="Authenticate" icon="key">
         <CliAuth />
       </Step>
-      <Step title="Identify the instance and volume" icon="search">
+      <Step title="Identify the instance and volume" icon="magnifying-glass">
         ```bash title="List instances"
         openstack server list --column ID --column Name
         ```
@@ -95,7 +95,7 @@ Attaching a volume connects a persistent block device to a running compute insta
 After attaching a new blank volume, prepare the filesystem inside the instance:
 
 <Steps titleSize="h3">
-  <Step title="Identify the new device" icon="search">
+  <Step title="Identify the new device" icon="magnifying-glass">
     SSH into the instance and list block devices:
     ```bash title="List block devices"
     lsblk
@@ -124,7 +124,7 @@ After attaching a new blank volume, prepare the filesystem inside the instance:
     sudo mount /dev/vdb /mnt/data
     ```
   </Step>
-  <Step title="Persist the mount across reboots" icon="save">
+  <Step title="Persist the mount across reboots" icon="floppy-disk">
     Add the mount to `/etc/fstab` so it survives instance reboots:
     ```bash title="Add to /etc/fstab"
     echo '/dev/vdb /mnt/data ext4 defaults 0 2' | sudo tee -a /etc/fstab
@@ -188,7 +188,7 @@ After attaching a new blank volume, prepare the filesystem inside the instance:
         sudo umount /mnt/data
         ```
       </Step>
-      <Step title="Detach the volume" icon="unlink">
+      <Step title="Detach the volume" icon="link-slash">
         ```bash title="Detach volume from instance"
         openstack server remove volume <instance-name-or-id> <volume-name-or-id>
         ```
@@ -211,7 +211,7 @@ After attaching a new blank volume, prepare the filesystem inside the instance:
 ## Troubleshooting
 
 <AccordionGroup>
-  <Accordion title="Volume fails to attach — availability zone mismatch" icon="triangle-alert">
+  <Accordion title="Volume fails to attach — availability zone mismatch" icon="triangle-exclamation">
     **Cause**: The volume and instance are in different availability zones. Volumes can
     only be attached to instances in the same zone.
 

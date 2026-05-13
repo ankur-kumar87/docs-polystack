@@ -44,13 +44,13 @@ print('Compute collector loaded successfully')
 ## Prometheus Data Source
 
 <Tabs>
-  <Tab title="Web Console" icon="browser">
+  <Tab title="Web Console" icon="window-maximize">
     <Steps titleSize="h3">
       <Step title="Enable Prometheus Monitoring" icon="toggle-left">
         Open **the deployment console** and navigate to **Configuration**. Select the **Monitoring** tab
         and toggle **Enable Prometheus** to **Yes**.
       </Step>
-      <Step title="Configure Custom Data Source Settings (Optional)" icon="settings">
+      <Step title="Configure Custom Data Source Settings (Optional)" icon="gear">
         For advanced Prometheus configuration, navigate to **Advanced Configuration**.
         In the **Service Tree** (left panel), select **watcher**. Click **New File** or
         select an existing `watcher.conf` from the **File Browser** (right panel).
@@ -124,7 +124,7 @@ Telemetry integration requires the Polystack Telemetry service (Ceilometer) to b
 and collecting per-instance metrics.
 
 <AccordionGroup>
-  <Accordion title="Configuration" icon="settings" defaultOpen>
+  <Accordion title="Configuration" icon="gear" defaultOpen>
     ```ini title="/etc/ironcore/watcher/watcher.conf"
     [collector]
     collector_plugins = compute, ceilometer

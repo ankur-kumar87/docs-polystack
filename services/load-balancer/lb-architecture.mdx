@@ -67,14 +67,14 @@ graph TD
 ## Data Plane vs Management Plane
 
 <AccordionGroup>
-  <Accordion title="Data plane" icon="zap" defaultOpen>
+  <Accordion title="Data plane" icon="bolt" defaultOpen>
     The data plane carries production application traffic from clients to backend members.
     All data plane traffic flows through the appliance instance directly:
     - Client → Floating IP → Appliance VIP → Backend Member
     - The controller is **not** in the data path
     - Appliance failure = service interruption (use ACTIVE_STANDBY topology for HA)
   </Accordion>
-  <Accordion title="Management plane" icon="settings">
+  <Accordion title="Management plane" icon="gear">
     The management plane carries control traffic between the controller and appliances:
     - Configuration updates (new listeners, pool changes, member additions)
     - Health probe coordination
@@ -99,7 +99,7 @@ Configure the topology via a flavor profile. See [Flavor Profiles](/services/loa
 ## Deployment Considerations
 
 <AccordionGroup>
-  <Accordion title="Management network sizing" icon="network">
+  <Accordion title="Management network sizing" icon="network-wired">
     The management network must provide enough IP addresses for all appliance instances
     plus spare capacity for concurrent provisioning. Size the management network DHCP
     pool at `(max concurrent LBs) × 2 + 10` addresses.

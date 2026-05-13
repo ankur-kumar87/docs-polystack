@@ -16,7 +16,7 @@ see the [Kubernetes User Troubleshooting](/services/kubernetes/user-guide/troubl
 ## Common Issues
 
 <AccordionGroup>
-  <Accordion title="Clusters fail to create across projects" icon="circle-x">
+  <Accordion title="Clusters fail to create across projects" icon="circle-xmark">
     **Cause**: The K8SaaS Conductor cannot reach the Orchestration service, or the
     cluster template references an image or flavor that does not exist.
 
@@ -39,7 +39,7 @@ see the [Kubernetes User Troubleshooting](/services/kubernetes/user-guide/troubl
     If the image is missing, upload it and ask project teams to retry cluster creation.
   </Accordion>
 
-  <Accordion title="Heat stack in FAILED state" icon="layers">
+  <Accordion title="Heat stack in FAILED state" icon="layer-group">
     **Cause**: The Orchestration template failed during resource creation — quota
     exhaustion, a dependency failure (LB or DNS), or a template rendering error.
 
@@ -77,7 +77,7 @@ see the [Kubernetes User Troubleshooting](/services/kubernetes/user-guide/troubl
     Notify all project users to refresh their kubeconfig after the rotation completes.
   </Accordion>
 
-  <Accordion title="DELETE_FAILED — cluster cannot be removed" icon="trash-2">
+  <Accordion title="DELETE_FAILED — cluster cannot be removed" icon="trash">
     **Cause**: The underlying Heat stack has resources in a failed state that prevent
     cleanup, or a resource dependency is blocking deletion.
 
@@ -105,7 +105,7 @@ see the [Kubernetes User Troubleshooting](/services/kubernetes/user-guide/troubl
     ```
   </Accordion>
 
-  <Accordion title="Conductor not processing cluster tasks" icon="cpu">
+  <Accordion title="Conductor not processing cluster tasks" icon="microchip">
     **Cause**: The Conductor is overloaded, has lost database connectivity, or crashed
     due to an unhandled exception.
 

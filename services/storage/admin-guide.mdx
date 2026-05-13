@@ -18,7 +18,7 @@ The Polystack Block Storage service delivers persistent block volumes to compute
     Storage backends, backup configuration, and multi-backend setup are configured through the deployment console:
 
     <Steps titleSize="h3">
-      <Step title="Open Configuration" icon="settings">
+      <Step title="Open Configuration" icon="gear">
         Navigate to **the deployment console → Configuration** and select the **Storage** tab.
       </Step>
       <Step title="Select storage backend" icon="database">
@@ -26,7 +26,7 @@ The Polystack Block Storage service delivers persistent block volumes to compute
         VMware VMDK, or Pure Storage. Configure backend-specific parameters such as
         pool names, volume groups, or NFS share paths.
       </Step>
-      <Step title="Configure backups" icon="archive">
+      <Step title="Configure backups" icon="box-archive">
         Set the backup driver and target (Ceph, NFS, or object storage) in the backup
         configuration section.
       </Step>
@@ -64,7 +64,7 @@ The Polystack Block Storage service delivers persistent block volumes to compute
 For a new deployment, complete configuration in this order:
 
 <Steps titleSize="h3">
-  <Step title="Review the architecture" icon="workflow">
+  <Step title="Review the architecture" icon="diagram-project">
     Understand the service components and request flows before configuring.
     See [Service Architecture](/services/storage/architecture).
   </Step>
@@ -72,15 +72,15 @@ For a new deployment, complete configuration in this order:
     Register distributed storage (RBD), LVM, or NFS backends with the volume service.
     See [Storage Backends](/services/storage/storage-backends).
   </Step>
-  <Step title="Create volume types" icon="layers">
+  <Step title="Create volume types" icon="layer-group">
     Define storage tiers and map them to backends. Configure QoS limits.
     See [Volume Types & QoS](/services/storage/volume-types-admin).
   </Step>
-  <Step title="Configure storage tiers" icon="stack">
+  <Step title="Configure storage tiers" icon="layer-group">
     Map NVMe, SSD, and HDD hardware classes to volume types and set the default.
     See [Storage Tiers](/services/storage/storage-tiers).
   </Step>
-  <Step title="Configure the backup service" icon="archive">
+  <Step title="Configure the backup service" icon="box-archive">
     Point the backup service at an object storage or NFS target.
     See [Backup Configuration](/services/storage/backup-config).
   </Step>
@@ -99,7 +99,7 @@ For a new deployment, complete configuration in this order:
 <p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Administration Guides</p>
 
 <CardGroup cols={4}>
-  <Card title="Service Architecture" icon="workflow" href="/services/storage/architecture" color="#bf9667">
+  <Card title="Service Architecture" icon="diagram-project" href="/services/storage/architecture" color="#bf9667">
     Components, request flows, and high-availability deployment model
   </Card>
   <Card title="Storage Backends" icon="database" href="/services/storage/storage-backends" color="#bf9667">
@@ -108,16 +108,16 @@ For a new deployment, complete configuration in this order:
   <Card title="Volume Types & QoS" icon="gauge" href="/services/storage/volume-types-admin" color="#bf9667">
     Create volume types, set backend associations, and configure QoS limits
   </Card>
-  <Card title="Storage Tiers" icon="layers" href="/services/storage/storage-tiers" color="#bf9667">
+  <Card title="Storage Tiers" icon="layer-group" href="/services/storage/storage-tiers" color="#bf9667">
     Map NVMe, SSD, and HDD hardware classes to volume types
   </Card>
   <Card title="Quota Management" icon="chart-bar" href="/services/storage/quotas" color="#bf9667">
     Set global defaults and per-project storage limits
   </Card>
-  <Card title="Volume Migration" icon="move" href="/services/storage/migration" color="#bf9667">
+  <Card title="Volume Migration" icon="arrows-up-down-left-right" href="/services/storage/migration" color="#bf9667">
     Migrate volumes between backends for rebalancing or hardware retirement
   </Card>
-  <Card title="Backup Configuration" icon="archive" href="/services/storage/backup-config" color="#bf9667">
+  <Card title="Backup Configuration" icon="box-archive" href="/services/storage/backup-config" color="#bf9667">
     Configure backup drivers and targets for production data protection
   </Card>
   <Card title="Volume Encryption" icon="lock" href="/services/storage/encryption" color="#bf9667">

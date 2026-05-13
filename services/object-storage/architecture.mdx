@@ -101,14 +101,14 @@ graph TD
     - Writes metadata (content-type, custom headers) as extended file attributes
     - Generates a unique transaction ID for every operation
   </Accordion>
-  <Accordion title="Replication Engine" icon="refresh-cw">
+  <Accordion title="Replication Engine" icon="arrows-rotate">
     The replication engine runs continuously on every storage node to maintain the configured replica count:
     - **Object replicator**: Compares local partition hashes with remote nodes; pushes missing objects via rsync or direct HTTP
     - **Container replicator**: Synchronizes container database records across ring replicas
     - **Account replicator**: Synchronizes account database records
     - Replication is partition-based — the ring divides the hash space into partitions, and each partition's primary and handoff nodes are replicated to
   </Accordion>
-  <Accordion title="Background Services" icon="settings">
+  <Accordion title="Background Services" icon="gear">
     Additional background services maintain cluster health:
 
     | Service | Function |
@@ -268,7 +268,7 @@ A 3-replica policy distributes one replica per zone. A full zone failure (rack d
 ## Capacity Planning
 
 <CardGroup cols={2}>
-  <Card title="Replication Overhead" icon="layers" color="#bf9667">
+  <Card title="Replication Overhead" icon="layer-group" color="#bf9667">
     3-replica policy: usable capacity = raw capacity ÷ 3.
     For 60 TB raw storage across 10 nodes, usable capacity = 20 TB.
   </Card>
@@ -280,7 +280,7 @@ A 3-replica policy distributes one replica per zone. A full zone failure (rack d
     Replication (3×): minimum 3 nodes in 3 distinct zones.
     EC 8+4: minimum 12 nodes. EC 4+2: minimum 6 nodes.
   </Card>
-  <Card title="Ring Rebalancing" icon="refresh-cw" color="#bf9667">
+  <Card title="Ring Rebalancing" icon="arrows-rotate" color="#bf9667">
     Adding nodes triggers a ring rebalance. Set `min_part_hours` (minimum 1 hour) to limit
     partition moves per cycle and prevent rebalance storms during rapid node additions.
   </Card>

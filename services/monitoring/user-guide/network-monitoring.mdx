@@ -63,7 +63,7 @@ and baseline normal network behavior.
 ## Analyzing Traffic Anomalies
 
 <Steps titleSize="h3">
-  <Step title="Review the Anomaly Detection panel" icon="circle-x">
+  <Step title="Review the Anomaly Detection panel" icon="circle-xmark">
     Navigate to **Monitor Center > Monitoring** (Network Anomaly, admin view). Monitoring uses behavioral
     baselines to flag traffic patterns that deviate significantly from historical norms.
 
@@ -73,7 +73,7 @@ and baseline normal network behavior.
     - Anomaly type (volumetric, port scan, protocol violation, etc.)
     - Confidence score
   </Step>
-  <Step title="Drill into suspicious flows" icon="search">
+  <Step title="Drill into suspicious flows" icon="magnifying-glass">
     Click on an anomaly event to view the associated flow records. Use the Flow Table
     to examine individual connections:
 
@@ -86,7 +86,7 @@ and baseline normal network behavior.
     | **Bytes** | Total data transferred in this flow |
     | **Duration** | Flow lifetime in seconds |
   </Step>
-  <Step title="Correlate with logs" icon="file-text">
+  <Step title="Correlate with logs" icon="file-lines">
     Cross-reference suspicious traffic with log events in the Log Explorer:
 
     ```
@@ -122,7 +122,7 @@ Alert on network conditions that indicate problems or security events:
     | **Evaluation Period** | 5 minutes |
     | **Severity** | Warning |
   </Tab>
-  <Tab title="Packet Loss Alert" icon="circle-x">
+  <Tab title="Packet Loss Alert" icon="circle-xmark">
     ```yaml title="alert-packet-loss.yaml"
     name: high-packet-loss
     metric: polystack_network_packet_loss_pct

@@ -89,7 +89,7 @@ sequenceDiagram
     token validation scales horizontally without database pressure, and any Identity
     API node can validate any token as long as all nodes share the same Fernet key set.
   </Accordion>
-  <Accordion title="Fernet key synchronization" icon="rotate-cw">
+  <Accordion title="Fernet key synchronization" icon="rotate-right">
     All Identity API nodes must have identical Fernet key sets. the deployment console manages
     key distribution automatically during rotation. If nodes become out of sync,
     tokens signed by one node cannot be validated by another.

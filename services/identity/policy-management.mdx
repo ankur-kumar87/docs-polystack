@@ -71,7 +71,7 @@ Custom roles are names you create in Keystone. They have **no permissions by def
     openstack role show network-operator
     ```
   </Step>
-  <Step title="Find the policy rule names for the operations you want to allow" icon="search">
+  <Step title="Find the policy rule names for the operations you want to allow" icon="magnifying-glass">
     View the current built-in policy rules for the target service:
 
     ```bash title="Show Nova's current effective policies"
@@ -196,7 +196,7 @@ Custom roles are names you create in Keystone. They have **no permissions by def
     "os_compute_api:os-hypervisors:list": "role:reader or role:admin"
     ```
   </Tab>
-  <Tab title="Networking (Neutron)" icon="network">
+  <Tab title="Networking (Neutron)" icon="network-wired">
     ```yaml title="/etc/ironcore/neutron/policy.yaml"
     # Allow a 'network-operator' role to manage routers
     "create_router": "role:network-operator or role:admin"

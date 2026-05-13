@@ -64,7 +64,7 @@ openstack zone show <zone-name> -c attributes
     returns `SERVFAIL` or does not respond, check the DNS service worker logs for
     synchronization errors.
   </Tab>
-  <Tab title="Check SOA serial consistency" icon="refresh-cw">
+  <Tab title="Check SOA serial consistency" icon="arrows-rotate">
     All nameservers in a pool should have the same SOA serial number for a given zone:
 
     ```bash title="Check SOA serial on each nameserver"

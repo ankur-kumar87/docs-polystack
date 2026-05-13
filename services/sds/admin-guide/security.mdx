@@ -33,7 +33,7 @@ encrypted OSD is encrypted before it reaches the physical disk.
     Encryption is configured at OSD deployment time through the deployment console.
 
     <Steps titleSize="h3">
-      <Step title="Configure encryption before deployment" icon="settings">
+      <Step title="Configure encryption before deployment" icon="gear">
         Navigate to **the deployment console → Storage → OSD Deployment** and enable
         **Encrypt OSDs at deployment** before provisioning new OSDs.
 
@@ -97,7 +97,7 @@ Each service has its own key with minimum required capabilities.
     - `client.nova` — used by the compute service
     - `client.rgw.<id>` — used by object storage gateways
   </Tab>
-  <Tab title="Key Rotation" icon="refresh-cw">
+  <Tab title="Key Rotation" icon="arrows-rotate">
     Rotate cephx keys periodically or immediately after a suspected compromise:
 
     ```bash title="Rotate a cephx key"
@@ -152,7 +152,7 @@ storage replication I/O from client-facing traffic.
 | **Cluster network** | OSD-to-OSD replication, recovery, scrubbing | Internal replication traffic |
 
 <Tabs>
-  <Tab title="Recommended Setup" icon="network">
+  <Tab title="Recommended Setup" icon="network-wired">
     Separate physical interfaces or VLANs are recommended for high-throughput
     production environments:
 
@@ -168,7 +168,7 @@ storage replication I/O from client-facing traffic.
       easily saturate a shared 10 GbE link.
     </Tip>
   </Tab>
-  <Tab title="Verify Network Config" icon="settings">
+  <Tab title="Verify Network Config" icon="gear">
     ```bash title="Show cluster network configuration"
     ceph config get osd cluster_network
     ceph config get osd public_network

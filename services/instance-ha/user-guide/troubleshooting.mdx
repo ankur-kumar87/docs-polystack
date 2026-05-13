@@ -23,7 +23,7 @@ or engine misconfiguration, refer to the
 ## Common Issues
 
 <AccordionGroup>
-  <Accordion title="Instance did not recover after host failure" icon="circle-alert">
+  <Accordion title="Instance did not recover after host failure" icon="circle-exclamation">
     **Cause**: Instance HA protection may not be enabled for the instance, the compute
     host may not be registered in any segment, or the segment may be disabled.
 
@@ -50,7 +50,7 @@ or engine misconfiguration, refer to the
     </Tip>
   </Accordion>
 
-  <Accordion title="Notification status is error" icon="circle-x">
+  <Accordion title="Notification status is error" icon="circle-xmark">
     **Cause**: Automatic recovery failed. Common causes: insufficient capacity on remaining
     hosts, an instance stuck in `ERROR` state that the engine cannot recover, or a network
     issue during evacuation.
@@ -98,7 +98,7 @@ or engine misconfiguration, refer to the
     if it has genuinely stalled. Your administrator can configure this through the deployment console.
   </Accordion>
 
-  <Accordion title="Protection segment not visible in Dashboard" icon="eye-off">
+  <Accordion title="Protection segment not visible in Dashboard" icon="eye-slash">
     **Cause**: No failover segment has been created for your environment, or the segments
     that exist have not been made accessible to your project.
 
@@ -108,7 +108,7 @@ or engine misconfiguration, refer to the
     for the configuration steps.
   </Accordion>
 
-  <Accordion title="Instance shows UNKNOWN status after host failure" icon="circle-help">
+  <Accordion title="Instance shows UNKNOWN status after host failure" icon="circle-question">
     **Cause**: The compute service cannot confirm the instance state because the host
     is unreachable. This is expected immediately after a host fault is detected.
 
@@ -137,7 +137,7 @@ or engine misconfiguration, refer to the
 If automatic recovery fails, use the following procedure to restore service manually.
 
 <Steps titleSize="h3">
-  <Step title="Identify the affected instances" icon="search">
+  <Step title="Identify the affected instances" icon="magnifying-glass">
     ```bash title="Find instances on the failed host"
     openstack server list \
       --host <failed-hostname> \

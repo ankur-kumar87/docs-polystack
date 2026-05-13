@@ -152,7 +152,7 @@ print(resp.json()["server"]["id"])
 Perform operations on a running instance via the `/action` endpoint:
 
 <Tabs>
-  <Tab title="Reboot" icon="refresh-cw">
+  <Tab title="Reboot" icon="arrows-rotate">
     ```bash title="Soft reboot (graceful OS restart)"
     curl -X POST https://api.<your-domain>/compute/v2.1/servers/{id}/action \
       -H "X-Auth-Token: $OS_TOKEN" \
@@ -167,7 +167,7 @@ Perform operations on a running instance via the `/action` endpoint:
       -d '{ "reboot": { "type": "HARD" } }'
     ```
   </Tab>
-  <Tab title="Stop / Start" icon="power">
+  <Tab title="Stop / Start" icon="power-off">
     ```bash title="Stop instance (power off)"
     curl -X POST https://api.<your-domain>/compute/v2.1/servers/{id}/action \
       -H "X-Auth-Token: $OS_TOKEN" \

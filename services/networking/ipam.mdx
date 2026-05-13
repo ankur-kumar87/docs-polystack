@@ -150,9 +150,9 @@ docker exec neutron_server grep ipam_driver /etc/neutron/neutron.conf
 When an external IPAM driver is active, subnet and port creation behaves differently from the built-in driver. The IPAM system must have the IP range pre-defined before Neutron subnets are created from it.
 
 <Tabs>
-  <Tab title="Dashboard" icon="monitor">
+  <Tab title="Dashboard" icon="desktop">
     <Steps titleSize="h3">
-      <Step title="Pre-configure the network range in IPAM" icon="settings">
+      <Step title="Pre-configure the network range in IPAM" icon="gear">
         In your external IPAM system (Infoblox, Bluecat, etc.), create the network container
         for the IP range you intend to use in Polystack (e.g., `10.50.0.0/24`).
 
@@ -223,7 +223,7 @@ After deletion, verify in the IPAM system that the address is no longer reserved
 ## Troubleshooting
 
 <AccordionGroup>
-  <Accordion title="Port creation fails with 'IPAM driver error'" icon="triangle-alert">
+  <Accordion title="Port creation fails with 'IPAM driver error'" icon="triangle-exclamation">
     **Cause**: The IPAM system is unreachable or authentication failed.
 
     **Resolution**:
@@ -233,7 +233,7 @@ After deletion, verify in the IPAM system that the address is no longer reserved
     - Confirm the IP range is defined in the external IPAM system before subnet creation
   </Accordion>
 
-  <Accordion title="IP not released after port deletion" icon="x-circle">
+  <Accordion title="IP not released after port deletion" icon="circle-xmark">
     **Cause**: Network error during the IPAM release call, or the IPAM system rejected the release.
 
     **Resolution**:

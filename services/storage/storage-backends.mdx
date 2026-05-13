@@ -46,9 +46,9 @@ A storage backend is the combination of a driver and a physical storage system t
 The distributed storage driver is the recommended backend for all production deployments. It uses RADOS Block Devices backed by a Polystack Distributed Storage cluster.
 
 <Tabs>
-  <Tab title="Web Console" icon="package">
+  <Tab title="Web Console" icon="box">
     <Steps titleSize="h3">
-      <Step title="Open Block Storage configuration" icon="settings">
+      <Step title="Open Block Storage configuration" icon="gear">
         Log in to the deployment console and navigate to **Configuration → Block Storage**.
       </Step>
       <Step title="Select the distributed storage driver" icon="database">
@@ -117,7 +117,7 @@ For NetApp, Pure Storage, Dell, HPE, Hitachi, and IBM backends, configuration is
 LVM backends are suitable for development and single-node testing environments only.
 
 <Tabs>
-  <Tab title="Web Console" icon="package">
+  <Tab title="Web Console" icon="box">
     <Steps titleSize="h3">
       <Step title="Select LVM driver" icon="database">
         In the deployment console, navigate to **Configuration → Block Storage** and select
@@ -204,7 +204,7 @@ openstack volume service set \
     check service logs via the deployment console for driver initialization errors.
   </Accordion>
 
-  <Accordion title="Backend reporting zero free capacity" icon="triangle-alert">
+  <Accordion title="Backend reporting zero free capacity" icon="triangle-exclamation">
     **Cause**: The storage pool is full, or the backend driver cannot reach the storage
     cluster to report capacity.
 

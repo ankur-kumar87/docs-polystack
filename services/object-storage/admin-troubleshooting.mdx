@@ -79,7 +79,7 @@ ironcore-storage-recon --md5
     - Replace drives showing high latency or recurring I/O errors in `dmesg`
   </Accordion>
 
-  <Accordion title="Ring inconsistency between nodes" icon="git-branch">
+  <Accordion title="Ring inconsistency between nodes" icon="code-branch">
     **Cause**: The updated ring file was not distributed to all nodes after a rebalance.
 
     **Diagnosis**:
@@ -96,7 +96,7 @@ ironcore-storage-recon --md5
     Restart the object-server and replicator on the affected node after distribution.
   </Accordion>
 
-  <Accordion title="High quarantine count on a specific node" icon="shield-alert">
+  <Accordion title="High quarantine count on a specific node" icon="shield-halved">
     **Cause**: Drive failure, bit-rot, or network errors during replication causing
     data corruption detected by the auditor.
 

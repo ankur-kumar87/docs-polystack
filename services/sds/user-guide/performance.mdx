@@ -59,7 +59,7 @@ each workload to the appropriate media tier.
       </Step>
     </Steps>
   </Tab>
-  <Tab title="Automatic Tiering" icon="zap">
+  <Tab title="Automatic Tiering" icon="bolt">
     Polystack can automate tiering based on access patterns — hot data migrates to faster
     media automatically while cold data moves to higher-capacity, lower-cost tiers.
 
@@ -97,7 +97,7 @@ compressible workloads.
       storage administrator whether deduplication is active on your assigned pools.
     </Note>
   </Accordion>
-  <Accordion title="Compression" icon="minimize-2">
+  <Accordion title="Compression" icon="minimize">
     Compression applies lossless compression to stored data before writing to disk.
     Common algorithms include LZ4 (fast, lower ratio) and ZSTD (slower, better ratio).
 
@@ -122,7 +122,7 @@ to a faster media tier (typically SSD or NVMe) while the bulk of data resides on
 slower, higher-capacity devices.
 
 <Tabs>
-  <Tab title="How Caching Works" icon="zap">
+  <Tab title="How Caching Works" icon="bolt">
     When the caching tier is active:
     1. Frequently-accessed data blocks are automatically promoted from the capacity
        tier to the cache tier
@@ -138,7 +138,7 @@ slower, higher-capacity devices.
       caching provides limited benefit. Use a native SSD or NVMe-backed pool instead.
     </Tip>
   </Tab>
-  <Tab title="Enabling Caching" icon="settings">
+  <Tab title="Enabling Caching" icon="gear">
     Read caching is configured at the pool level by an administrator. Contact your
     storage administrator to enable a cache tier for your storage pool. Your administrator can configure this through the deployment console.
 

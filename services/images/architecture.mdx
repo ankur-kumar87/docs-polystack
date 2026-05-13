@@ -106,7 +106,7 @@ sequenceDiagram
     backend — RBD or Swift — to ensure images uploaded to one node are readable from
     another.
   </Accordion>
-  <Accordion title="File store limitations" icon="circle-x">
+  <Accordion title="File store limitations" icon="circle-xmark">
     The file store writes to a local directory. In a multi-node Image API deployment,
     all nodes must mount the same NFS directory. If NFS is unavailable, all image
     operations fail. Use RBD for true HA without NFS dependencies.

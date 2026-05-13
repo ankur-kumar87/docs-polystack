@@ -25,7 +25,7 @@ Every instance launch derives from an image. Treating images as immutable, versi
 - Golden images include security hardening, required packages, and licensing pre-applied
 
 <Tabs>
-  <Tab title="Dashboard" icon="monitor">
+  <Tab title="Dashboard" icon="desktop">
     <Steps titleSize="h3">
       <Step title="Upload or build the template image" icon="upload">
         Navigate to **Compute > Images** and click **Create Image**.
@@ -101,7 +101,7 @@ A catalog is the set of approved, maintained images available to projects. Admin
 ### Promote an Image to the Catalog
 
 <Tabs>
-  <Tab title="Dashboard" icon="monitor">
+  <Tab title="Dashboard" icon="desktop">
     Navigate to **Compute > Images** (admin view), find the image, click **Edit**, and set **Visibility** to `Community` or `Public`.
   </Tab>
   <Tab title="CLI" icon="terminal">
@@ -153,7 +153,7 @@ openstack image set \
 Images can be exported for use outside the platform — for migration to another environment, backup archiving, or external distribution.
 
 <Tabs>
-  <Tab title="Dashboard" icon="monitor">
+  <Tab title="Dashboard" icon="desktop">
     Navigate to **Compute > Images** (admin view), select the image, and use the CLI to download the image (`openstack image save`). The image file is downloaded in its native format (QCOW2 or RAW depending on upload format).
   </Tab>
   <Tab title="CLI" icon="terminal">
@@ -220,7 +220,7 @@ openstack image set \
 ## Sharing Images Between Projects
 
 <Tabs>
-  <Tab title="Dashboard" icon="monitor">
+  <Tab title="Dashboard" icon="desktop">
     Navigate to **Compute > Images**, click the image name, select **Manage Access**, and enter the target project ID.
 
     The target project administrator must accept the share from the **Shared Images** tab in **Compute > Images**.

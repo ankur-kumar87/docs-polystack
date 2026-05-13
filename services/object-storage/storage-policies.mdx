@@ -249,7 +249,7 @@ Polystack Object Storage exposes an S3-compatible API endpoint alongside the nat
 Polystack Object Storage integrates with external cloud object storage providers. Tenant virtual machines can access multiple object storage systems using standard CLI tools and SDKs.
 
 <AccordionGroup>
-  <Accordion title="Rclone — universal multi-cloud sync" icon="refresh-cw">
+  <Accordion title="Rclone — universal multi-cloud sync" icon="arrows-rotate">
     Rclone provides a unified interface for Polystack Object Storage, AWS S3, Google Cloud Storage, and Azure Blob Storage.
 
     ```bash title="Configure Rclone for Polystack Object Storage"
@@ -309,7 +309,7 @@ Polystack Object Storage integrates with external cloud object storage providers
     client.upload_file('myfile.tar.gz', 'my-bucket', 'backups/myfile.tar.gz')
     ```
   </Accordion>
-  <Accordion title="Glance integration — image backend" icon="disc">
+  <Accordion title="Glance integration — image backend" icon="compact-disc">
     Polystack Image Service can store VM images and snapshots directly in Object Storage, eliminating local disk requirements on the image service nodes.
 
     ```ini title="glance-api.conf — Swift backend"
@@ -373,7 +373,7 @@ Mark a policy as deprecated to prevent new containers from using it while mainta
     Use ring builder device class labels (SSD, HDD) to enforce hardware affinity.
     Never mix device classes in a single ring — it defeats the purpose of tiering.
   </Card>
-  <Card title="Set Sensible Defaults" icon="settings" color="#bf9667">
+  <Card title="Set Sensible Defaults" icon="gear" color="#bf9667">
     Configure the most common data tier as the default policy. Operators who need
     high-performance or archival storage explicitly specify the policy at container
     creation time.

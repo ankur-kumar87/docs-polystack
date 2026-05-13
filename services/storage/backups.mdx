@@ -56,7 +56,7 @@ Volume backups write a complete copy of volume data to a separate backup target 
         Navigate to
         **Storage > Volumes**.
       </Step>
-      <Step title="Create backup" icon="archive">
+      <Step title="Create backup" icon="box-archive">
         Click the **More** dropdown and select **Data Protection > Create Backup** on the target volume.
         Provide a name and select **Full Backup** from the backup mode radio buttons
         (default for the first backup). Click **Confirm**.
@@ -80,7 +80,7 @@ Volume backups write a complete copy of volume data to a separate backup target 
       <Step title="Authenticate" icon="key">
         <CliAuth />
       </Step>
-      <Step title="Create a full backup" icon="archive">
+      <Step title="Create a full backup" icon="box-archive">
         ```bash title="Create full backup"
         openstack volume backup create \
           --name weekly-full-2026-03-18 \
@@ -111,7 +111,7 @@ the last backup — significantly reducing backup time and storage usage.
 <Tabs>
   <Tab title="Dashboard" icon="gauge">
     <Steps titleSize="h3">
-      <Step title="Create incremental backup" icon="layers">
+      <Step title="Create incremental backup" icon="layer-group">
         Click the **More** dropdown and select **Data Protection > Create Backup** on the target volume.
         Provide a name and select **Increment Backup** from the backup mode
         radio buttons. Click **Confirm**.
@@ -132,7 +132,7 @@ the last backup — significantly reducing backup time and storage usage.
   </Tab>
   <Tab title="CLI" icon="terminal">
     <Steps titleSize="h3">
-      <Step title="Create incremental backup" icon="layers">
+      <Step title="Create incremental backup" icon="layer-group">
         ```bash title="Create incremental backup"
         openstack volume backup create \
           --name daily-incr-2026-03-18 \
@@ -197,7 +197,7 @@ the last backup — significantly reducing backup time and storage usage.
         openstack volume backup list
         ```
       </Step>
-      <Step title="Restore to a new volume" icon="rotate-ccw">
+      <Step title="Restore to a new volume" icon="rotate-left">
         ```bash title="Restore backup to new volume"
         openstack volume backup restore \
           --name restored-from-backup-2026-03-18 \

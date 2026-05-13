@@ -43,7 +43,7 @@ scoped to the minimum necessary privileges.
 
         Set a strong password and save it to your secrets manager.
       </Step>
-      <Step title="Restrict to service project" icon="folder-lock">
+      <Step title="Restrict to service project" icon="folder">
         Ensure the `watcher-service` user has the `admin` role **only** in the `service`
         project — not in tenant projects. This limits blast radius if the account is compromised.
       </Step>
@@ -76,16 +76,16 @@ The `watcher.conf` file contains the Applier's service account credentials. Rest
 access to this file on controller nodes and verify the authentication configuration.
 
 <Tabs>
-  <Tab title="Web Console" icon="browser">
+  <Tab title="Web Console" icon="window-maximize">
     <Steps titleSize="h3">
-      <Step title="Automatic Credential Management" icon="shield-check">
+      <Step title="Automatic Credential Management" icon="shield-halved">
         Service account credentials and authentication settings are **automatically managed**
         by the deployment console during deployment. the deployment console generates the `[keystone_authtoken]` section
         with the correct service account, endpoint URLs, and permissions.
 
         No manual configuration is required for standard deployments.
       </Step>
-      <Step title="Custom Authentication Settings (Optional)" icon="settings">
+      <Step title="Custom Authentication Settings (Optional)" icon="gear">
         For advanced troubleshooting or custom authentication configuration, navigate to
         **Advanced Configuration**. In the **Service Tree** (left panel), select **watcher**.
         Click **New File** or select an existing `watcher.conf` from the **File Browser**

@@ -28,7 +28,7 @@ backend connectivity failures or CA plugin errors, see the
     appropriate role.
   </Accordion>
 
-  <Accordion title="Cannot retrieve secret payload" icon="eye-off">
+  <Accordion title="Cannot retrieve secret payload" icon="eye-slash">
     **Cause**: The secret has an ACL that does not include your user, or the secret
     belongs to a different project.
 
@@ -45,7 +45,7 @@ backend connectivity failures or CA plugin errors, see the
     ```
   </Accordion>
 
-  <Accordion title="Load Balancer rejects the TLS container" icon="shield-alert">
+  <Accordion title="Load Balancer rejects the TLS container" icon="shield-halved">
     **Cause**: The certificate container is missing the private key reference, the
     certificate is expired, or the certificate does not match the private key.
 
@@ -85,7 +85,7 @@ backend connectivity failures or CA plugin errors, see the
     </Tip>
   </Accordion>
 
-  <Accordion title="Order returns error — certificate issuance failed" icon="badge-x">
+  <Accordion title="Order returns error — certificate issuance failed" icon="circle-xmark">
     **Cause**: The CA plugin is unreachable, the subject DN contains invalid fields, or
     the requested algorithm is not supported by the configured CA.
 

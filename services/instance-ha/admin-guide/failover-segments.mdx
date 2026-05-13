@@ -29,7 +29,7 @@ automatic recovery.
 ## Segment Design Principles
 
 <CardGroup cols={2}>
-  <Card title="Match Physical Topology" icon="network" color="#bf9667">
+  <Card title="Match Physical Topology" icon="network-wired" color="#bf9667">
     Group hosts that share a failure domain — the same power circuit, network switch,
     or rack. Hosts in the same fault domain should not be in the same segment.
   </Card>
@@ -37,7 +37,7 @@ automatic recovery.
     For `auto` recovery, maintain 20–30% unused capacity across all hosts in the segment.
     For `reserved_host`, the reserved node must absorb all instances from the largest host.
   </Card>
-  <Card title="Separate Critical Workloads" icon="shield-check" color="#bf9667">
+  <Card title="Separate Critical Workloads" icon="shield-halved" color="#bf9667">
     Place SLA-critical instances in segments with `reserved_host` recovery. Use `auto`
     segments for standard workloads where recovery capacity is shared.
   </Card>
@@ -170,7 +170,7 @@ automatic recovery.
 ## Manage Segment Lifecycle
 
 <Tabs>
-  <Tab title="Disable a Segment" icon="pause-circle">
+  <Tab title="Disable a Segment" icon="circle-pause">
     Temporarily disable a segment to suppress recovery during maintenance windows.
 
     ```bash title="Disable segment"

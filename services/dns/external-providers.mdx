@@ -265,7 +265,7 @@ configured external DNS server. Zone transfers can also be initiated manually
 for bulk migration of existing zones.
 
 <Tabs>
-  <Tab title="Dashboard" icon="monitor">
+  <Tab title="Dashboard" icon="desktop">
     <Steps titleSize="h3">
       <Step title="Create a zone" icon="plus">
         Navigate to **Network → DNS Zones** and click **Create Zone**.
@@ -281,7 +281,7 @@ for bulk migration of existing zones.
         dig @10.0.10.5 SOA example.com.
         ```
       </Step>
-      <Step title="Add records" icon="edit">
+      <Step title="Add records" icon="pen-to-square">
         Navigate to the zone and click **Create Record Set**. Records created
         here are automatically propagated to the external backend.
       </Step>
@@ -362,7 +362,7 @@ openstack zone create \
       `designate.conf`
   </Accordion>
 
-  <Accordion title="Records not appearing on external DNS server" icon="triangle-alert">
+  <Accordion title="Records not appearing on external DNS server" icon="triangle-exclamation">
     **Cause**: The zone may be active in Designate but the backend sync failed.
 
     **Resolution**:
@@ -382,7 +382,7 @@ openstack zone create \
     - Test manually: `nsupdate -k /etc/bind/designate.key`
   </Accordion>
 
-  <Accordion title="Custom driver fails to load at startup" icon="circle-x">
+  <Accordion title="Custom driver fails to load at startup" icon="circle-xmark">
     **Cause**: The driver is not registered as a setuptools entry point under
     the `designate.backend` group, or the Python package is not installed in
     the Designate virtualenv.

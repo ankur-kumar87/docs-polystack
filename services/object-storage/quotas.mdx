@@ -21,7 +21,7 @@ quota is exceeded, the storage service returns `413 Request Entity Too Large`.
 Account quotas limit the total storage consumed by a project across all containers.
 
 <Tabs>
-  <Tab title="Set account quota" icon="settings">
+  <Tab title="Set account quota" icon="gear">
     ```bash title="Set account-level quota (100 GB)"
     openstack object store account set \
       --property X-Account-Meta-Quota-Bytes=107374182400
@@ -33,7 +33,7 @@ Account quotas limit the total storage consumed by a project across all containe
       -c x-account-meta-quota-bytes
     ```
   </Tab>
-  <Tab title="Remove account quota" icon="trash-2">
+  <Tab title="Remove account quota" icon="trash">
     ```bash title="Remove account quota"
     openstack object store account set \
       --property X-Account-Meta-Quota-Bytes=

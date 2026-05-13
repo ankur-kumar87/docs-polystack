@@ -81,7 +81,7 @@ oscap info /usr/share/xml/scap/ssg/content/ssg-ubuntu2204-ds.xml | grep "Profile
     OpenSCAP can generate an Ansible remediation playbook for all failing rules:
 
     <Steps titleSize="h3">
-      <Step title="Generate remediation playbook" icon="layers">
+      <Step title="Generate remediation playbook" icon="layer-group">
         ```bash title="Generate Ansible remediation from scan results"
         oscap xccdf generate fix \
           --fix-type ansible \
@@ -101,7 +101,7 @@ oscap info /usr/share/xml/scap/ssg/content/ssg-ubuntu2204-ds.xml | grep "Profile
           Review the generated playbook before applying. Some remediations (e.g., disabling USB storage or changing kernel parameters) may affect running services. Apply during a maintenance window.
         </Warning>
       </Step>
-      <Step title="Re-scan to verify" icon="refresh-cw">
+      <Step title="Re-scan to verify" icon="arrows-rotate">
         ```bash title="Re-scan after remediation"
         oscap xccdf eval \
           --profile xccdf_org.ssgproject.content_profile_cis_level1_server \
@@ -113,7 +113,7 @@ oscap info /usr/share/xml/scap/ssg/content/ssg-ubuntu2204-ds.xml | grep "Profile
       </Step>
     </Steps>
   </Tab>
-  <Tab title="Fleet Scan (Ansible)" icon="layers">
+  <Tab title="Fleet Scan (Ansible)" icon="layer-group">
     Run OpenSCAP across all instances and collect reports centrally:
 
     ```yaml title="ansible/playbooks/openscap-scan.yml"
@@ -223,7 +223,7 @@ chmod +x /etc/cron.weekly/openscap-scan
 ## Profile Selection Guide
 
 <AccordionGroup>
-  <Accordion title="Which profile should I use?" icon="help-circle">
+  <Accordion title="Which profile should I use?" icon="circle-question">
     | Workload Type | Recommended Profile |
     |---------------|-------------------|
     | General production instances | CIS Level 1 Server |
@@ -236,7 +236,7 @@ chmod +x /etc/cron.weekly/openscap-scan
     Start with CIS Level 1 for all new deployments. Escalate to Level 2 or framework-specific profiles for regulated workloads.
   </Accordion>
 
-  <Accordion title="Custom profile development" icon="settings">
+  <Accordion title="Custom profile development" icon="gear">
     You can create tailored profiles by extending existing SSG content using SCAP Workbench or editing the XCCDF XML directly. Custom profiles allow you to:
     - Disable rules that conflict with your application requirements
     - Add organization-specific controls

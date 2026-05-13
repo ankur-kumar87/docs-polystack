@@ -67,7 +67,7 @@ pools correctly at the outset avoids disruptive reconfiguration later.
   </Tab>
   <Tab title="Erasure-Coded Pool" icon="code">
     <Steps titleSize="h3">
-      <Step title="Create an erasure code profile" icon="settings">
+      <Step title="Create an erasure code profile" icon="gear">
         ```bash title="Create erasure code profile (4+2 on HDD)"
         ceph osd erasure-code-profile set ec-4-2 \
           k=4 m=2 crush-device-class=hdd
@@ -105,7 +105,7 @@ pools correctly at the outset avoids disruptive reconfiguration later.
 ## Managing Existing Pools
 
 <Tabs>
-  <Tab title="Inspect Pools" icon="search">
+  <Tab title="Inspect Pools" icon="magnifying-glass">
     ```bash title="List all pools with details"
     ceph osd pool ls detail
     ```
@@ -118,7 +118,7 @@ pools correctly at the outset avoids disruptive reconfiguration later.
     ceph osd pool get <POOL_NAME> all
     ```
   </Tab>
-  <Tab title="Modify Pools" icon="settings">
+  <Tab title="Modify Pools" icon="gear">
     ```bash title="Enable PG autoscaling on a pool"
     ceph osd pool set <POOL_NAME> pg_autoscale_mode on
     ```

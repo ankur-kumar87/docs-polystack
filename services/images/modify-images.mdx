@@ -56,7 +56,7 @@ It is the fastest method for automatable, scripted modifications.
     cp ubuntu-24.04-lts.qcow2 ubuntu-24.04-lts-custom.qcow2
     ```
   </Step>
-  <Step title="Install packages" icon="package">
+  <Step title="Install packages" icon="box">
     Install software into the image using the native package manager:
     ```bash title="Install packages with virt-customize"
     virt-customize \
@@ -115,7 +115,7 @@ Use it for one-off edits, configuration file changes, or inspecting image conten
     ><fs> mount /dev/sda1 /
     ```
   </Step>
-  <Step title="Edit a configuration file" icon="edit">
+  <Step title="Edit a configuration file" icon="pen-to-square">
     Use the `edit` command to open a file in your default editor:
     ```text title="Edit a file inside the image"
     ><fs> edit /etc/cloud/cloud.cfg
@@ -125,13 +125,13 @@ Use it for one-off edits, configuration file changes, or inspecting image conten
     ><fs> write /etc/motd "Polystack Custom Image - $(date +%Y-%m)\n"
     ```
   </Step>
-  <Step title="Copy files into the image" icon="file-input">
+  <Step title="Copy files into the image" icon="file-import">
     Upload a local file into the image:
     ```text title="Copy local file into the image"
     ><fs> upload /local/path/custom-config.conf /etc/app/custom-config.conf
     ```
   </Step>
-  <Step title="Exit and close" icon="log-out">
+  <Step title="Exit and close" icon="right-from-bracket">
     ```text title="Exit guestfish"
     ><fs> umount /
     ><fs> exit
@@ -159,7 +159,7 @@ filesystem tools (`cp`, `vim`, `chmod`) to operate on image contents.
     ```
     The `-i` flag auto-detects the root filesystem.
   </Step>
-  <Step title="Make modifications" icon="edit">
+  <Step title="Make modifications" icon="pen-to-square">
     The image contents are accessible as a regular directory:
     ```bash title="Edit a file in the mounted image"
     echo "net.ipv4.tcp_tw_reuse = 1" >> /mnt/image/etc/sysctl.d/99-custom.conf

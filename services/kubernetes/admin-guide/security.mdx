@@ -86,7 +86,7 @@ Kubernetes RBAC is enabled by default on all K8SaaS clusters. The `--authorizati
 flag is set to `Node,RBAC` in the Kubernetes API server configuration.
 
 <AccordionGroup>
-  <Accordion title="Enforce least-privilege service accounts" icon="shield-check" defaultOpen>
+  <Accordion title="Enforce least-privilege service accounts" icon="shield-halved" defaultOpen>
     Do not grant the `cluster-admin` role to application service accounts. Use
     namespace-scoped roles and bindings:
 
@@ -162,7 +162,7 @@ openstack security group rule delete <rule-id>
 Use CIS-benchmarked or hardened node images for production cluster templates.
 
 <CardGroup cols={2}>
-  <Card title="Use Hardened Images" icon="shield-check" color="#bf9667">
+  <Card title="Use Hardened Images" icon="shield-halved" color="#bf9667">
     Use images with CIS Level 1 benchmark applied. Fedora CoreOS provides a minimal,
     immutable OS — a good baseline for Kubernetes node hardening.
   </Card>
@@ -180,10 +180,10 @@ Use CIS-benchmarked or hardened node images for production cluster templates.
   <Step title="TLS verified" icon="lock">
     API server TLS certificate is valid, issued by the cluster CA, and not expired.
   </Step>
-  <Step title="RBAC audited" icon="shield-check">
+  <Step title="RBAC audited" icon="shield-halved">
     No unnecessary `cluster-admin` bindings exist for application service accounts.
   </Step>
-  <Step title="Security groups restricted" icon="network">
+  <Step title="Security groups restricted" icon="network-wired">
     Master API port 6443 is restricted to management CIDR only.
   </Step>
   <Step title="Key Management configured" icon="key">

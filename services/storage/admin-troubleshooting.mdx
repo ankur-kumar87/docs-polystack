@@ -47,7 +47,7 @@ All services should show `state = up` and `status = enabled`. Any service showin
 ## Volume Service Issues
 
 <AccordionGroup>
-  <Accordion title="Volume service is 'down'" icon="circle-x">
+  <Accordion title="Volume service is 'down'" icon="circle-xmark">
     **Symptom**: `openstack volume service list` shows one or more services with
     state `down`.
 
@@ -77,7 +77,7 @@ All services should show `state = up` and `status = enabled`. Any service showin
     </Tip>
   </Accordion>
 
-  <Accordion title="Scheduler fails to place volumes — 'No valid backend'" icon="triangle-alert">
+  <Accordion title="Scheduler fails to place volumes — 'No valid backend'" icon="triangle-exclamation">
     **Symptom**: Volume creation fails with "No valid host was found" or scheduler
     filter messages appear in the logs.
 
@@ -149,7 +149,7 @@ All services should show `state = up` and `status = enabled`. Any service showin
 ## Data Operation Issues
 
 <AccordionGroup>
-  <Accordion title="Volume migration stuck in 'migrating' status" icon="move">
+  <Accordion title="Volume migration stuck in 'migrating' status" icon="arrows-up-down-left-right">
     **Symptom**: Volume status remains `migrating` for more than 30 minutes with no
     completion.
 

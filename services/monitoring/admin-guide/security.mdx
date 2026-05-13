@@ -42,14 +42,14 @@ suspected compromised.
       the old one, or the node will stop reporting metrics.
     </Warning>
   </Tab>
-  <Tab title="Token Rotation Procedure" icon="refresh-cw">
+  <Tab title="Token Rotation Procedure" icon="arrows-rotate">
     <Steps titleSize="h3">
       <Step title="Generate new token" icon="plus">
         ```bash title="Create replacement token"
         monitoring agent token create --node <HOSTNAME> --expires 365d
         ```
       </Step>
-      <Step title="Update agent configuration" icon="file-text">
+      <Step title="Update agent configuration" icon="file-lines">
         Update `/etc/monitoring/agent.yaml` on the node with the new token value:
         ```yaml title="/etc/monitoring/agent.yaml"
         server:
@@ -116,7 +116,7 @@ Certificates are managed by the deployment console and renewed automatically 30 
     Expected output shows certificate subjects, expiry dates, and days remaining.
     Certificates within 30 days of expiry trigger an automatic renewal.
   </Tab>
-  <Tab title="Manual Renewal" icon="refresh-cw">
+  <Tab title="Manual Renewal" icon="arrows-rotate">
     If automatic renewal fails (e.g., due to DNS misconfiguration):
 
     ```bash title="Manually renew all certificates"

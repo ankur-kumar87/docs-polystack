@@ -54,7 +54,7 @@ Third-party backup tools integrate with Polystack in one of two architectural pa
     disks via snapshots. **No software is installed inside the guest.** Best for
     standardized fleets and snapshot-consistent backups.
   </Card>
-  <Card title="With Agent" icon="cpu" color="#bf9667">
+  <Card title="With Agent" icon="microchip" color="#bf9667">
     A small agent runs inside each guest VM. The backup tool coordinates with the agent
     to quiesce applications, capture file-level metadata, and stream changed data.
     Best for application-aware and granular file-level recovery.
@@ -72,7 +72,7 @@ and stores it in its own catalog.
 ### How agentless backup works
 
 <Steps titleSize="h3">
-  <Step title="Discovery" icon="search">
+  <Step title="Discovery" icon="magnifying-glass">
     The backup tool authenticates with Polystack Identity and lists projects, instances,
     and volumes the backup user can see.
   </Step>
@@ -84,7 +84,7 @@ and stores it in its own catalog.
     The tool streams the snapshot data through the storage API and stores it in its
     own backup repository (object storage, NAS, dedup appliance, tape, etc.).
   </Step>
-  <Step title="Catalog and retain" icon="archive">
+  <Step title="Catalog and retain" icon="box-archive">
     The tool indexes the backup, applies the retention policy, and is ready to
     restore when needed.
   </Step>
@@ -97,7 +97,7 @@ and stores it in its own catalog.
     Nothing runs inside the VM — no extra package to install, patch, or troubleshoot.
     Works for any guest OS, including hardened or appliance images.
   </Card>
-  <Card title="Fleet-wide auto-discovery" icon="layers" color="#bf9667">
+  <Card title="Fleet-wide auto-discovery" icon="layer-group" color="#bf9667">
     The backup tool sees every VM through the Polystack API. New VMs are picked up
     automatically by tag-based or project-based policies.
   </Card>
@@ -105,7 +105,7 @@ and stores it in its own catalog.
     No agent rollouts, no agent-version drift across the fleet. Upgrades happen on
     the backup-tool side only.
   </Card>
-  <Card title="Snapshot-fast" icon="zap" color="#bf9667">
+  <Card title="Snapshot-fast" icon="bolt" color="#bf9667">
     Backup windows are short — the snapshot takes seconds, and reading happens
     asynchronously without locking the running VM.
   </Card>
@@ -221,7 +221,7 @@ and stores it in its own catalog.
     - [Storware Polystack integration docs](https://docs.storware.eu/protecting-virtual-machines/virtual-machines/openstack)
     - [Solution overview](https://storware.eu/solutions/virtual-machine-backup-and-recovery/openstack-backup-and-recovery/)
   </Accordion>
-  <Accordion title="Veeam — Backup Retention + GFS Schedules" icon="rotate-cw">
+  <Accordion title="Veeam — Backup Retention + GFS Schedules" icon="rotate-right">
     Veeam uses a job-level schedule combined with retention policies; GFS
     (Grandfather-Father-Son) schemes give you long-term tiered retention.
 
@@ -229,7 +229,7 @@ and stores it in its own catalog.
     - [Retention Policies](https://helpcenter.veeam.com/docs/vbr/userguide/sch_retention_policy.html)
     - [GFS Policy Schedules](https://helpcenter.veeam.com/docs/vbr/userguide/sch_backup_job_create_gfs.html)
   </Accordion>
-  <Accordion title="Cohesity — Protection Policies + Extended Retention" icon="layers">
+  <Accordion title="Cohesity — Protection Policies + Extended Retention" icon="layer-group">
     Cohesity Protection Policies define backup interval (minimum 12 h) and primary
     retention; Extended Retention adds longer hourly / daily / weekly / monthly /
     yearly snapshots beyond the primary policy.
@@ -328,7 +328,7 @@ application-aware consistency and full file-level granularity.
     - [Adding a VM Group for Polystack](https://documentation.commvault.com/saas/adding_vm_group_for_openstack.html)
     - [Days-Based Retention](https://documentation.commvault.com/v11/commcell-console/days_based_retention.html)
   </Accordion>
-  <Accordion title="Veeam — Backup Retention + Retention Policies" icon="rotate-cw">
+  <Accordion title="Veeam — Backup Retention + Retention Policies" icon="rotate-right">
     - [Backup Retention](https://helpcenter.veeam.com/docs/vbr/userguide/sch_backup_retention.html)
     - [Retention Policies](https://helpcenter.veeam.com/docs/vbr/userguide/sch_retention_policy.html)
   </Accordion>
@@ -339,7 +339,7 @@ application-aware consistency and full file-level granularity.
     - [Retention rules — how & when they work](https://kb.acronis.com/content/68304)
     - [Retention of Backups](https://kb.acronis.com/content/12366)
   </Accordion>
-  <Accordion title="Bacula Enterprise — Schedules + Retentions" icon="cog">
+  <Accordion title="Bacula Enterprise — Schedules + Retentions" icon="gear">
     Bacula uses per-Job File/Job Retention and per-Pool Volume Retention.
 
     - [Schedules and Retentions](https://docs.baculasystems.com/BEPlanningAndPreparation/BackupPolicy/SchedulesAndRetentions/index.html)
@@ -383,7 +383,7 @@ backup method per workload class via policy, not per-tool.
     corruption on restore. Trilio also offers app-aware workload types for databases
     via in-guest helper scripts.
   </Accordion>
-  <Accordion title="Microsoft Exchange / SharePoint / SQL Always-On" icon="mail">
+  <Accordion title="Microsoft Exchange / SharePoint / SQL Always-On" icon="envelope">
     **Pick with-agent.** VSS integration is essential. Veeam, Commvault, and Veritas
     all have strong Exchange and SQL Always-On support.
   </Accordion>
@@ -391,7 +391,7 @@ backup method per workload class via policy, not per-tool.
     **Pick agentless.** You cannot install an agent into a sealed appliance image.
     Snapshot-based backup is the only viable option.
   </Accordion>
-  <Accordion title="Long-term compliance archive (HIPAA, SOC2, financial)" icon="archive">
+  <Accordion title="Long-term compliance archive (HIPAA, SOC2, financial)" icon="box-archive">
     **Pick whatever your audit framework prefers** — most enterprise backup vendors
     offer immutable retention, write-once tiers, and audit reporting designed for
     these frameworks.
@@ -413,7 +413,7 @@ backup method per workload class via policy, not per-tool.
     want backed up. Grant the minimum roles required by the vendor (typically
     `member` plus `volume:create_snapshot` on Block Storage).
   </Step>
-  <Step title="Open Polystack APIs to the backup server" icon="network">
+  <Step title="Open Polystack APIs to the backup server" icon="network-wired">
     Ensure the backup tool can reach Polystack's Identity, Compute, Block Storage, and
     Image API endpoints. Open required network paths, configure TLS trust, and (for
     agent-based mode) ensure guest VMs can reach the backup server on its data port.

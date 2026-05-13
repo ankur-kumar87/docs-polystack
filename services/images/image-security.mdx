@@ -34,7 +34,7 @@ before launching an instance, preventing tampered images from being used.
     ```
     Note the `Secret href` — this is the `<CERT_UUID>`.
   </Step>
-  <Step title="Upload image with signature" icon="shield-check">
+  <Step title="Upload image with signature" icon="shield-halved">
     ```bash title="Upload image with signature metadata"
     openstack image create \
       --disk-format qcow2 \
@@ -47,7 +47,7 @@ before launching an instance, preventing tampered images from being used.
       ubuntu-24.04-signed
     ```
   </Step>
-  <Step title="Enable verification in Compute" icon="settings">
+  <Step title="Enable verification in Compute" icon="gear">
     Configure the compute service to verify image signatures before launching:
     ```yaml title="Compute service: enable image signature verification"
     nova_verify_glance_signatures: "true"
@@ -134,7 +134,7 @@ ironcore-ansible deploy --tags glance
 ## Security Checklist
 
 <AccordionGroup>
-  <Accordion title="Signature verification enabled" icon="shield-check" defaultOpen>
+  <Accordion title="Signature verification enabled" icon="shield-halved" defaultOpen>
     Verify that image signature verification is enforced in the compute service
     policy. Test by attempting to launch an unsigned image — it should be rejected.
   </Accordion>
@@ -147,7 +147,7 @@ ironcore-ansible deploy --tags glance
     Test with a project-member account: `openstack image set --public <image-id>`
     should return a policy violation error.
   </Accordion>
-  <Accordion title="Audit public and community images" icon="search">
+  <Accordion title="Audit public and community images" icon="magnifying-glass">
     Regularly audit the public image catalog:
     ```bash title="List all public images"
     openstack image list --public --all-projects \

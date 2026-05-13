@@ -37,7 +37,7 @@ user-facing issues such as replication lag and DR test access problems, see
     - Verify the replication port is accessible by clicking **Test Connectivity** on the site entry
   </Accordion>
 
-  <Accordion title="Automatic failover triggered unexpectedly" icon="zap">
+  <Accordion title="Automatic failover triggered unexpectedly" icon="bolt">
     **Cause**: A transient network issue caused the health check failure threshold
     to be exceeded, triggering an unintended automatic failover.
 
@@ -70,7 +70,7 @@ user-facing issues such as replication lag and DR test access problems, see
     After fixing the script, resume the stalled recovery from **Disaster Recovery → Failover Status → [Plan] → [Group] → Resume**.
   </Accordion>
 
-  <Accordion title="Site connectivity test fails" icon="network">
+  <Accordion title="Site connectivity test fails" icon="network-wired">
     **Cause**: A firewall rule change, routing update, or agent restart caused
     connectivity between sites to be interrupted.
 
@@ -85,7 +85,7 @@ user-facing issues such as replication lag and DR test access problems, see
     - Check agent logs for TLS certificate errors — certificates may have expired
   </Accordion>
 
-  <Accordion title="Plan status shows DEGRADED" icon="circle-x">
+  <Accordion title="Plan status shows DEGRADED" icon="circle-xmark">
     **Cause**: One or more resources in the plan have fallen behind their RPO target,
     or a resource has been removed from the project while still referenced by the plan.
 

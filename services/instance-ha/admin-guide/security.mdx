@@ -88,7 +88,7 @@ Instance HA authenticates to Polystack Identity and the Compute API using a dedi
     </Steps>
   </Accordion>
 
-  <Accordion title="Minimum required roles for service account" icon="shield-check">
+  <Accordion title="Minimum required roles for service account" icon="shield-halved">
     The `masakari` service account requires the following minimum roles:
 
     | Service | Role | Purpose |
@@ -119,7 +119,7 @@ column. These credentials grant physical access to compute hardware.
 
     Verify no other service accounts have access to the `masakari` database.
   </Accordion>
-  <Accordion title="Disable debug logging in production" icon="eye-off">
+  <Accordion title="Disable debug logging in production" icon="eye-slash">
     Debug logging may write `control_attributes` contents (including IPMI passwords)
     to log files. Ensure debug logging is disabled:
 
@@ -153,11 +153,11 @@ column. These credentials grant physical access to compute hardware.
 ## Network Access Controls
 
 <CardGroup cols={2}>
-  <Card title="IPMI Network Isolation" icon="network" color="#bf9667">
+  <Card title="IPMI Network Isolation" icon="network-wired" color="#bf9667">
     Place IPMI management interfaces on a dedicated management VLAN. Only the Instance
     HA controller should have network access to IPMI interfaces (UDP port 623).
   </Card>
-  <Card title="API Endpoint Protection" icon="shield-check" color="#bf9667">
+  <Card title="API Endpoint Protection" icon="shield-halved" color="#bf9667">
     The Instance HA API (port 15868) should only be accessible from trusted management
     networks. Do not expose it to project tenant networks.
   </Card>

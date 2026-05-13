@@ -60,7 +60,7 @@ graph LR
 
         Lynis runs all tests interactively and prints results to stdout. The full report is saved to `/var/log/lynis.log` and the report data to `/var/log/lynis-report.dat`.
       </Step>
-      <Step title="Review the hardening index" icon="bar-chart">
+      <Step title="Review the hardening index" icon="chart-bar">
         At the end of the scan output, Lynis shows:
 
         ```
@@ -71,7 +71,7 @@ graph LR
 
         Scores above 80 indicate a well-hardened system. Scores below 60 indicate significant gaps.
       </Step>
-      <Step title="Review warnings and suggestions" icon="circle-x">
+      <Step title="Review warnings and suggestions" icon="circle-xmark">
         ```bash title="Filter warnings from the log"
         grep "^\\[WARNING\\]" /var/log/lynis.log
         ```
@@ -82,7 +82,7 @@ graph LR
       </Step>
     </Steps>
   </Tab>
-  <Tab title="Non-Interactive (CI/CD)" icon="settings">
+  <Tab title="Non-Interactive (CI/CD)" icon="gear">
     Run Lynis in non-interactive mode for automated pipelines:
 
     ```bash title="Non-interactive audit with exit code"
@@ -102,7 +102,7 @@ graph LR
     grep "hardening_index" /var/log/lynis-report.dat | cut -d= -f2
     ```
   </Tab>
-  <Tab title="Fleet Audit (Ansible)" icon="layers">
+  <Tab title="Fleet Audit (Ansible)" icon="layer-group">
     Run Lynis across all instances in a project:
 
     ```yaml title="ansible/playbooks/lynis-audit.yml"
@@ -164,7 +164,7 @@ graph LR
     ```
   </Accordion>
 
-  <Accordion title="Kernel parameters not hardened" icon="cpu">
+  <Accordion title="Kernel parameters not hardened" icon="microchip">
     **Finding**: ASLR disabled, IP forwarding enabled unnecessarily, or core dumps allowed.
 
     ```bash title="Apply kernel hardening via sysctl"
@@ -201,7 +201,7 @@ graph LR
     ```
   </Accordion>
 
-  <Accordion title="World-writable files detected" icon="file-x">
+  <Accordion title="World-writable files detected" icon="file">
     **Finding**: Files or directories are world-writable, creating privilege escalation risk.
 
     ```bash title="Find world-writable files"

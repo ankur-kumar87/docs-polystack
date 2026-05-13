@@ -46,7 +46,7 @@ via the deployment console. These settings apply to all cluster nodes.
       <Step title="Open Networking configuration" icon="compass">
         In the deployment console, navigate to **Configuration → Networking**.
       </Step>
-      <Step title="Configure physical interface mapping" icon="settings">
+      <Step title="Configure physical interface mapping" icon="gear">
         Set the interface-to-bridge mapping for each network type:
 
         | Parameter | Example Value | Description |
@@ -80,7 +80,7 @@ via the deployment console. These settings apply to all cluster nodes.
       <Step title="Authenticate as admin" icon="key">
         <CliAuth />
       </Step>
-      <Step title="Create a VLAN provider network" icon="layers">
+      <Step title="Create a VLAN provider network" icon="layer-group">
         ```bash title="Create VLAN provider network"
         openstack network create provider-vlan100 \
           --provider-network-type vlan \
@@ -106,7 +106,7 @@ via the deployment console. These settings apply to all cluster nodes.
         ```
         Use `--external` to mark the network as a valid target for router external gateways.
       </Step>
-      <Step title="Create a VXLAN network" icon="layers">
+      <Step title="Create a VXLAN network" icon="layer-group">
         ```bash title="Create VXLAN tenant network"
         openstack network create overlay-vxlan \
           --provider-network-type vxlan \

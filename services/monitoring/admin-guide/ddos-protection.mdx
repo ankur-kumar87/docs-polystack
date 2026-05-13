@@ -30,7 +30,7 @@ blocking).
   <Step title="Navigate to DDoS Protection" icon="shield">
     Navigate to **Monitor Center > Monitoring** (DDoS Policies, admin view).
   </Step>
-  <Step title="Configure detection settings" icon="settings">
+  <Step title="Configure detection settings" icon="gear">
     | Setting | Description | Recommended |
     |---------|-------------|-------------|
     | **Detection Mode** | `Monitor` (alerts only) or `Mitigate` (automatic blocking) | Start with `Monitor` |
@@ -103,7 +103,7 @@ blocking).
 If a legitimate source is incorrectly blocked:
 
 <Steps titleSize="h3">
-  <Step title="Identify the blocked source" icon="search">
+  <Step title="Identify the blocked source" icon="magnifying-glass">
     ```bash title="Check if a specific IP is blocked"
     monitoring security ddos blocklist | grep <IP_ADDRESS>
     ```

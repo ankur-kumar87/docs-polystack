@@ -30,7 +30,7 @@ data source pointing to the cluster's Prometheus instance.
         Log in to Grafana and navigate to **Configuration → Data Sources → Add data source**.
         Select **Prometheus** from the time series databases section.
       </Step>
-      <Step title="Configure connection" icon="settings">
+      <Step title="Configure connection" icon="gear">
         | Field | Value | Description |
         |-------|-------|-------------|
         | Name | `Polystack Prometheus` | Display name in dashboard queries |
@@ -193,7 +193,7 @@ Configure notification channels:
     your alert labels (e.g., `severity=critical`) and routes to the appropriate
     contact point.
   </Step>
-  <Step title="Create an alert rule" icon="circle-x">
+  <Step title="Create an alert rule" icon="circle-xmark">
     Navigate to **Alerting → Alert rules → New alert rule**. Select the Prometheus
     data source, write the PromQL expression, set evaluation parameters, and assign
     the notification policy.
