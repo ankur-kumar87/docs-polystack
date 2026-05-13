@@ -1,7 +1,7 @@
 {
   "$schema": "https://mintlify.com/docs.json",
   "theme": "linden",
-  "name": "Docs",
+  "name": "Polystack Documentation",
   "colors": {
     "primary": "#bf9667",
     "light": "#d7b98e",
@@ -766,11 +766,7 @@
   },
   "contextual": {
     "options": [
-      "copy",
-      "chatgpt",
-      "claude",
-      "cursor",
-      "mcp"
+      "copy"
     ]
   },
   "footer": {
@@ -780,11 +776,11 @@
         "items": [
           {
             "label": "About Us",
-            "href": "https://polystack.tech/about"
+            "href": "https://polystack.tech/about-us/"
           },
           {
             "label": "Contact Us",
-            "href": "https://polystack.tech/contact"
+            "href": "https://polystack.tech/contact-us/"
           },
           {
             "label": "Knowledge Base",
@@ -797,20 +793,20 @@
         "title": "Solutions",
         "items": [
           {
-            "label": "Monitoring - Infrastructure Monitoring",
-            "href": "https://polystack.tech/Monitoring"
+            "label": "Edge Computing",
+            "href": "https://polystack.tech/products/edge-computing/"
           },
           {
-            "label": "Ironcore - Advanced Virtualization",
-            "href": "https://polystack.tech/ironcore"
+            "label": "DataCenter Solutions",
+            "href": "https://polystack.tech/products/datacenter-solutions/"
           },
           {
-            "label": "Disaster Recovery - Disaster Recovery",
-            "href": "https://polystack.tech/disaster-recovery"
+            "label": "IronPeak Servers",
+            "href": "https://polystack.tech/ironpeak-servers/"
           },
           {
-            "label": "Software-Defined-Storage - Software Defined Storage",
-            "href": "https://polystack.tech/ceph"
+            "label": "Polystack Support Services",
+            "href": "https://polystack.tech/polystack-support-services/"
           }
         ],
         "header": "Solutions"
@@ -819,12 +815,12 @@
         "title": "Products",
         "items": [
           {
-            "label": "XNAS - NAS Storage",
-            "href": "https://polystack.tech/xnas"
+            "label": "STAQ Edge Systems",
+            "href": "https://polystack.tech/products/edge-computing/"
           },
           {
-            "label": "XNexus - Unified Storage",
-            "href": "https://polystack.tech/xnexus"
+            "label": "IronFlex HCI",
+            "href": "https://polystack.tech/products/datacenter-solutions/"
           }
         ],
         "header": "Products"
@@ -877,5 +873,5 @@
       "weight": 400
     }
   },
-  "description": "Build, operate, and optimize your Ironcore environment with our documentation. Find step-by-step walkthroughs, administrative guides, API and CLI references, release updates, and troubleshooting resources."
+  "description": "Build, operate, and support Polystack infrastructure with documentation for cloud, edge computing, data center solutions, storage, networking, monitoring, and disaster recovery."
 }

@@ -1,15 +1,18 @@
 ---
 title: "Polystack"
 sidebarTitle: "Overview"
-description: "User guides, admin references, CLI documentation, and resources for the Polystack Cloud Platform."
+description: "Documentation for Polystack cloud, edge computing, data center, storage, networking, monitoring, and disaster recovery solutions."
 icon: "book-open"
 mode: "wide"
 ---
 
 <div style={{ display: 'flex', alignItems: 'center', gap: '2rem', marginBottom: '1rem' }}>
   <div style={{ flex: 1 }}>
+    <p style={{ fontSize: '1.35rem', lineHeight: '1.65', fontWeight: 700, marginBottom: '0.75rem' }}>
+      Innovation-led infrastructure for cloud, edge, data center, and sovereign deployments.
+    </p>
     <p style={{ fontSize: '1.15rem', lineHeight: '1.7' }}>
-      Compute &nbsp;·&nbsp; Storage &nbsp;·&nbsp; Networking &nbsp;·&nbsp; HCI &nbsp;·&nbsp; Monitoring &nbsp;·&nbsp; Disaster Recovery
+      Edge Computing &nbsp;·&nbsp; DataCenter Solutions &nbsp;·&nbsp; IronPeak Servers &nbsp;·&nbsp; HCI &nbsp;·&nbsp; Monitoring &nbsp;·&nbsp; Disaster Recovery
     </p>
   </div>
   <div style={{ flex: 1, display: 'flex', justifyContent: 'flex-end' }}>
@@ -19,58 +22,88 @@ mode: "wide"
 
 ---
 
-## Featured Services
+## From Polystack Technologies
+
+Polystack Technologies builds solutions for real-world infrastructure challenges across cloud, edge, and data center environments. The public Polystack site highlights a portfolio spanning edge systems, sovereign and private cloud, made-in-India servers, HCI, support services, and traffic-intelligence solutions.
+
+<CardGroup cols={4}>
+  <Card title="Innovation" icon="lightbulb" color="#bf9667">
+    Pushing technology boundaries with purpose-built infrastructure solutions.
+  </Card>
+  <Card title="Indigenous" icon="map" color="#bf9667">
+    Designed for Indian markets, operating conditions, and deployment realities.
+  </Card>
+  <Card title="Sustainable" icon="leaf" color="#bf9667">
+    Energy-aware infrastructure and responsible lifecycle practices.
+  </Card>
+  <Card title="Excellence" icon="award" color="#bf9667">
+    Customer-focused solutions engineered for reliability and quality.
+  </Card>
+</CardGroup>
+
+---
+
+## Featured Platform Services
 
 <CardGroup cols={3}>
-  <Card title="Compute" icon="cpu" href="/services/compute" color="#197560">
+  <Card title="Compute" icon="cpu" href="/services/compute" color="#bf9667">
     Virtual machines on bare-metal hypervisors
   </Card>
-  <Card title="Networking" icon="network" href="/services/networking/index" color="#197560">
+  <Card title="Networking" icon="network" href="/services/networking/index" color="#bf9667">
     SDN, floating IPs, security groups
   </Card>
-  <Card title="Block Storage" icon="hard-drive" href="/services/storage/index" color="#197560">
+  <Card title="Block Storage" icon="hard-drive" href="/services/storage/index" color="#bf9667">
     Persistent volumes, snapshots, and backups
   </Card>
 </CardGroup>
 
 ---
 
-## Polystack Products
+## Polystack Product Areas
 
 <Tabs>
-  <Tab title="Infrastructure" icon="boxes">
+  <Tab title="Edge Computing" icon="boxes">
     <CardGroup cols={3}>
-      <Card title="Ironcore — Advanced Virtualization Suite" icon="server" href="/products/ironcore" color="#197560">
-        Manage VMs and containers on a single optimized platform.
+      <Card title="STAQ R-Series" icon="server" href="https://polystack.tech/products/edge-computing/" color="#bf9667">
+        Edge systems for real-time processing, low-latency analytics, and demanding field environments.
       </Card>
     </CardGroup>
   </Tab>
-  <Tab title="Ironcore" icon="server">
-    <CardGroup cols={2}>
-      <Card title="Hypervisor" icon="cpu" href="/services/compute/hypervisor" color="#197560">
-        Hardware-assisted virtualization with near-bare-metal performance
+  <Tab title="Data Center" icon="server">
+    <CardGroup cols={3}>
+      <Card title="Sovereign Cloud" icon="shield" href="https://polystack.tech/products/datacenter-solutions/" color="#bf9667">
+        Secure, independent cloud environments with data, software, and operational sovereignty.
+      </Card>
+      <Card title="IronFlex HCI" icon="layers" href="https://polystack.tech/products/datacenter-solutions/" color="#bf9667">
+        Hyper-converged infrastructure for private cloud and controlled enterprise environments.
+      </Card>
+      <Card title="IronPeak Servers" icon="cpu" href="https://polystack.tech/ironpeak-servers/" color="#bf9667">
+        Made-in-India servers built for modern enterprise workloads and data center growth.
       </Card>
     </CardGroup>
   </Tab>
-  <Tab title="Storage" icon="database">
+  <Tab title="Cloud Platform" icon="database">
     <CardGroup cols={3}>
-      <Card title="Software-Defined-Storage — Software-Defined Storage" icon="database" href="/products/software-defined-storage" color="#197560">
+      <Card title="Ironcore — Advanced Virtualization Suite" icon="server" href="/products/ironcore" color="#bf9667">
+        Manage virtualized infrastructure on an optimized Polystack platform.
+      </Card>
+      <Card title="Software-Defined-Storage — Software-Defined Storage" icon="database" href="/products/software-defined-storage" color="#bf9667">
         Fault-tolerant distributed storage. Unified block, object, and file with self-healing.
       </Card>
-      <Card title="XNAS — NAS Storage" icon="hard-drive" href="/products/xnas" color="#197560">
+      <Card title="XNAS — NAS Storage" icon="hard-drive" href="/products/xnas" color="#bf9667">
         SMB, NFS, AFP, FTP with snapshots, HA, thin provisioning, deduplication
       </Card>
-      <Card title="XNexus — Unified Storage" icon="layers" href="/products/xnexus" color="#197560">
+      <Card title="XNexus — Unified Storage" icon="layers" href="/products/xnexus" color="#bf9667">
         Unified storage platform — coming soon
       </Card>
     </CardGroup>
   </Tab>
   <Tab title="Operations" icon="activity">
     <CardGroup cols={2}>
-      <Card title="Monitoring — Infrastructure Monitoring" icon="activity" href="/products/monitoring" color="#197560">
+      <Card title="Monitoring — Infrastructure Monitoring" icon="activity" href="/products/monitoring" color="#bf9667">
         End-to-end monitoring, APM, log management, and security
       </Card>
-      <Card title="Disaster Recovery" icon="rotate-ccw" href="/products/disaster-recovery" color="#197560">
+      <Card title="Disaster Recovery" icon="rotate-ccw" href="/products/disaster-recovery" color="#bf9667">
         Failover automation, replication, RPO/RTO management
       </Card>
     </CardGroup>
@@ -114,13 +147,13 @@ mode: "wide"
 ## Resources
 
 <CardGroup cols={3}>
-  <Card title="Blogs" icon="file-text" href="https://blog.polystack.tech/" color="#197560">
-    Articles, best practices, platform updates
+  <Card title="Contact Sales" icon="mail" href="mailto:sales@polystack.tech" color="#bf9667">
+    Talk to Polystack about products, deployments, and solution requirements
   </Card>
-  <Card title="Contact Support" icon="headphones" href="mailto:support@polystack.tech" color="#197560">
-    24/7/365 multilingual support
+  <Card title="Corporate Office" icon="building-2" href="https://polystack.tech/contact-us/" color="#bf9667">
+    1612, 16th Floor, Logix City Center Office Tower, Sector-32, Noida
   </Card>
-  <Card title="About Polystack" icon="building-2" href="https://polystack.tech/about" color="#197560">
-    Polystack Technologies — Made in India
+  <Card title="About Polystack" icon="globe" href="https://polystack.tech/about-us/" color="#bf9667">
+    Innovation, indigenous engineering, sustainability, and excellence
   </Card>
 </CardGroup>
