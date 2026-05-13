@@ -164,7 +164,7 @@ Documentation MUST use customer-facing names (from `polystack-public-content-gua
 | # | Feature | CP | Doc Status | Current Page | Gap |
 |---|---------|-----|-----------|--------------|-----|
 | J1 | **Ceph RBD Mirroring** (async DR) | CP-038 | PARTIAL | `disaster-recovery/` section | Check if Ceph-native DR covered |
-| J2 | **xDRS** (Hystax Acura) | CP-038-041 | MISSING | — | Blocked on license |
+| J2 | **Disaster Recovery Orchestration** (Hystax Acura) | CP-038-041 | MISSING | — | Blocked on license |
 | J3 | **Ceph Stretch Cluster** (RPO=0) | CP-040 | MISSING | — | Metro DR, sync replication |
 
 ## CATEGORY K: IDENTITY & GOVERNANCE
