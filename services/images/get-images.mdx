@@ -41,7 +41,16 @@ starting point for new instances rather than installing an operating system from
 | **Debian 12** | [cloud.debian.org](https://cloud.debian.org/images/cloud/bookworm/latest/) | QCOW2 | `debian` |
 | **Fedora 41** | [fedoraproject.org](https://fedoraproject.org/cloud/download) | QCOW2 | `fedora` |
 | **CirrOS 0.6.2** | [download.cirros-cloud.net](https://download.cirros-cloud.net/0.6.2/cirros-0.6.2-x86_64-disk.img) | QCOW2 | `cirros` / pass: `gocubsgo` |
-| **Windows Server 2022** | [microsoft.com/evalcenter](https://www.microsoft.com/en-us/evalcenter/evaluate-windows-server-2022) | VHD | `Administrator` |
+| **Windows Server and Windows Desktop** | Prepare from licensed installation media or evaluation media | VHD / QCOW2 | `Administrator` |
+
+<Info>
+  Polystack supports Windows Server and Windows desktop images when they are prepared
+  for virtualization with Cloudbase-Init and the required VirtIO drivers. Common
+  versions include Windows Server 2016, 2019, 2022, and 2025, plus Windows 10 and
+  Windows 11 desktop images. Use your organization's licensed media or approved
+  evaluation media, convert the disk to the required image format, and upload it as a
+  Windows image.
+</Info>
 
 <Warning>
   Windows Server evaluation images expire after 180 days. For production use, supply a
