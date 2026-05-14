@@ -651,7 +651,7 @@
   },
   "logo": {
     "light": "/images/PolyStack Light.png",
-    "dark": "/images/PolyStack-Dark.png"
+    "dark": "/images/PolyStack Light.png"
   },
   "navbar": {
     "links": [
