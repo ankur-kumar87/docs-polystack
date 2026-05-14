@@ -25,6 +25,48 @@ Ironcore (Advanced Virtualization Suite) is Polystack's flagship virtualization 
 
 ---
 
+## Deployment Types
+
+Ironcore can be deployed in two common models. Both use the same platform services and
+OpenStack-compatible APIs; the difference is how those services are placed and protected.
+
+<CardGroup cols={2}>
+  <Card title="All-in-One" icon="cube" color="#bf9667">
+    A compact deployment where controller, compute, storage, networking, dashboard, and
+    supporting services run on a single node. This is best for labs, demos, proofs of
+    concept, edge sites, and small environments where simplicity matters more than
+    service-level redundancy.
+  </Card>
+  <Card title="Multinode High Availability" icon="network-wired" color="#bf9667">
+    A production deployment spread across multiple controller, compute, storage, and
+    network nodes. Control-plane services run in HA, workloads can be distributed across
+    compute hosts, and the platform can tolerate planned maintenance or node failures.
+  </Card>
+</CardGroup>
+
+### Requirements at a Glance
+
+| Model | Typical Requirement | Best For |
+|---|---|---|
+| **All-in-One** | One capable server with CPU virtualization enabled, enough memory, local or attached storage, and network access for tenant and management traffic | Evaluation, demo, small private cloud, branch or edge use cases |
+| **Multinode High Availability** | Multiple servers with separate roles for controllers, compute, storage, and networking; redundant management and tenant networks; shared or distributed storage; planned IPs and DNS | Production private cloud, enterprise workloads, service-provider environments |
+
+### How HA Works
+
+In a multinode deployment, Ironcore runs key platform services in redundant mode. API
+services, identity, dashboard, networking control services, databases, message queues,
+monitoring, and load-balanced endpoints are deployed across controller nodes. Compute
+workloads run across multiple hypervisor nodes, and storage can use distributed backends
+so data remains available even when individual nodes need maintenance.
+
+<Note>
+  Choose All-in-One when you want the fastest path to a working environment. Choose
+  Multinode High Availability when uptime, scale, maintenance windows, and production
+  resiliency matter.
+</Note>
+
+---
+
 <p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Ironcore Documentation</p>
 
 <CardGroup cols={2}>
