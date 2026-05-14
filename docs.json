@@ -47,7 +47,8 @@
         "root": "products/index",
         "pages": [
           "products/edge-computing",
-          "products/ironcore"
+          "products/ironcore",
+          "products/vm2cloud"
         ]
       },
       {
