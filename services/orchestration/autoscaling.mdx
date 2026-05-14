@@ -1,12 +1,12 @@
 ---
-title: "Auto-Scaling with Polystack Orchestration"
+title: "Auto-Scaling with Heat Orchestration"
 description: "Configure auto-scaling groups with Heat templates. Scale instances based on Prometheus metrics and webhooks."
 sidebarTitle: "Auto-Scaling"
 ---
 
 ## Overview
 
-Polystack Orchestration provides native auto-scaling through three coordinated resource types: a
+Heat Orchestration provides native auto-scaling through three coordinated resource types: a
 <Tooltip tip="A managed group of identical instances that can scale in or out as a unit.">scaling group</Tooltip>,
 a scaling policy, and an alarm trigger. When a metric threshold is breached — such as CPU
 utilization exceeding 80% — the alarm fires a webhook that activates the scaling policy, which
@@ -18,7 +18,7 @@ support for multi-dimensional labels, alerting rules, and long-retention storage
 
 <Note>
   **Prerequisites**
-  - Polystack Orchestration enabled in your project
+  - Heat Orchestration enabled in your project
   - A compatible image and flavor for scaled instances
   - Prometheus deployed and scraping compute metrics
   - Basic familiarity with [orchestration templates](/services/orchestration/template-guide)
