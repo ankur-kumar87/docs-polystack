@@ -39,7 +39,7 @@ graph TD
     end
 
     subgraph Execution
-        CA[Polystack Compute API]
+        CA[OpenStack Compute API]
     end
 
     HM -->|Host fault| NE
@@ -136,7 +136,7 @@ sequenceDiagram
     participant NE as Notification Engine
     participant DB as Instance HA DB
     participant RE as Recovery Engine
-    participant NOVA as Polystack Compute API
+    participant NOVA as OpenStack Compute API
 
     HM->>NE: IPMI / SSH timeout — host unreachable
     NE->>DB: Create notification record (status: new)

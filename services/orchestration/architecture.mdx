@@ -26,10 +26,10 @@ graph TD
     API -->|Parse template| ENG[Orchestration Engine]
     ENG -->|Store state| DB[(Database)]
     ENG -->|Resolve graph| GRAPH[Dependency Resolver]
-    GRAPH -->|Provision resource| COMPUTE[Polystack Compute API<br/>:8774]
-    GRAPH -->|Provision resource| NET[Polystack Networking API<br/>:9696]
-    GRAPH -->|Provision resource| STORE[Polystack Block Storage API<br/>:8776]
-    GRAPH -->|Provision resource| ID[Polystack Identity API<br/>:5000]
+    GRAPH -->|Provision resource| COMPUTE[OpenStack Compute API<br/>:8774]
+    GRAPH -->|Provision resource| NET[OpenStack Networking API<br/>:9696]
+    GRAPH -->|Provision resource| STORE[OpenStack Block Storage API<br/>:8776]
+    GRAPH -->|Provision resource| ID[OpenStack Identity API<br/>:5000]
     COMPUTE & NET & STORE & ID -->|Resource status| ENG
     ENG -->|Stack status + outputs| API
     API -->|Response| U

@@ -12,7 +12,7 @@ application-aware protection, long-term off-site retention, regulatory archive d
 or a single backup pane across multi-cloud and on-premises infrastructure can plug in
 the backup vendor of their choice.
 
-Third-party backup tools integrate with Polystack through standard APIs and snapshot
+Third-party backup tools integrate with Polystack through OpenStack-compatible APIs and snapshot
 mechanisms — no proprietary backend changes are required.
 
 <Note>
@@ -50,7 +50,7 @@ Third-party backup tools integrate with Polystack in one of two architectural pa
 
 <CardGroup cols={2}>
   <Card title="Agentless" icon="server" color="#bf9667">
-    The backup tool talks to Polystack APIs (Block Storage, Image, Compute) and reads VM
+    The backup tool talks to OpenStack APIs (Block Storage, Image, Compute) and reads VM
     disks via snapshots. **No software is installed inside the guest.** Best for
     standardized fleets and snapshot-consistent backups.
   </Card>
@@ -65,8 +65,8 @@ Third-party backup tools integrate with Polystack in one of two architectural pa
 
 ## Agentless Backup
 
-Agentless backup uses Polystack's snapshot APIs to read VM disks. The backup tool calls
-Polystack, asks for a snapshot, reads the snapshot's data through standard storage APIs,
+Agentless backup uses OpenStack snapshot APIs to read VM disks. The backup tool calls
+the platform, asks for a snapshot, reads the snapshot's data through standard storage APIs,
 and stores it in its own catalog.
 
 ### How agentless backup works
@@ -98,7 +98,7 @@ and stores it in its own catalog.
     Works for any guest OS, including hardened or appliance images.
   </Card>
   <Card title="Fleet-wide auto-discovery" icon="layer-group" color="#bf9667">
-    The backup tool sees every VM through the Polystack API. New VMs are picked up
+    The backup tool sees every VM through the OpenStack API. New VMs are picked up
     automatically by tag-based or project-based policies.
   </Card>
   <Card title="Lower operational overhead" icon="users" color="#bf9667">
@@ -120,7 +120,7 @@ and stores it in its own catalog.
 - **File-level restore needs extra work** — the backup tool must mount and parse the
   guest filesystem to expose individual files (most agentless tools do support this).
 
-### Vendors that integrate with Polystack APIs (agentless)
+### Vendors that integrate with OpenStack APIs (agentless)
 
 <Info>
   **Recommended — Commvault** has explicit, link-backed documentation for the four
@@ -413,7 +413,7 @@ backup method per workload class via policy, not per-tool.
     want backed up. Grant the minimum roles required by the vendor (typically
     `member` plus `volume:create_snapshot` on Block Storage).
   </Step>
-  <Step title="Open Polystack APIs to the backup server" icon="network-wired">
+  <Step title="Allow OpenStack API access from the backup server" icon="network-wired">
     Ensure the backup tool can reach Polystack's Identity, Compute, Block Storage, and
     Image API endpoints. Open required network paths, configure TLS trust, and (for
     agent-based mode) ensure guest VMs can reach the backup server on its data port.
@@ -451,7 +451,7 @@ backup method per workload class via policy, not per-tool.
 
 ## What Polystack Provides for Backup Vendors
 
-Polystack exposes the standard cloud APIs that every modern backup vendor expects:
+Polystack exposes OpenStack-compatible cloud APIs that every modern backup vendor expects:
 
 | API | Used for |
 |-----|----------|

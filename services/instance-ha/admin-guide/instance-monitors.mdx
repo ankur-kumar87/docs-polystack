@@ -34,7 +34,7 @@ graph TD
 
     G2 -->|Instance fault| NE[Notification Engine]
     NE -->|COMPUTE_INSTANCE notification| RE[Recovery Engine]
-    RE -->|Restart instance| NOVA[Polystack Compute API]
+    RE -->|Restart instance| NOVA[OpenStack Compute API]
 ```
 
 The instance monitor runs on each compute host and monitors all running instances.

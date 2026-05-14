@@ -81,7 +81,7 @@ graph TD
     D -->|Reviewed by operator| E{Start?}
     E -->|Yes| F[Action Applier]
     E -->|No| G[Discard / Modify]
-    F -->|Start migrations| H[Polystack Compute API]
+    F -->|Start migrations| H[OpenStack Compute API]
     H -->|Live migrate workloads| I[Optimized Cluster]
 ```
 

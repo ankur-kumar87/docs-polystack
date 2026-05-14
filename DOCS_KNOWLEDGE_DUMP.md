@@ -73,8 +73,8 @@
 - HTTP headers: `X-OpenStack-Nova-Microversion`
 - Horizon UI button: "Download OpenStack RC File"
 
-### Where "OpenStack" is NOT acceptable
-- Prose descriptions: "OpenStack API layer" → "Polystack API layer"
+### Where "OpenStack" is acceptable
+- API prose: use "OpenStack API layer" and "OpenStack APIs"
 - Prerequisites: "OpenStack CLI configured" → "Polystack CLI configured"
 - Marketing text: never say "OpenStack cloud" → "Polystack platform"
 
